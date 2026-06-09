@@ -44,7 +44,7 @@ class CloudAccountDB(Base):
     role_arn = Column(String(255), nullable=True)
     status = Column(String(50), default="ACTIVE") # ACTIVE, DISCONNECTED, ERROR
     credentials_type = Column(String(100), nullable=True, default="STS_ROLE") # STS_ROLE, SERVICE_PRINCIPAL, SERVICE_ACCOUNT
-    cloud_metadata = Column("metadata", Text, nullable=True) # JSON Metadata string
+    cloud_metadata = Column(Text, nullable=True) # JSON Metadata string
     permissions = Column(Text, nullable=True) # comma-separated permissions string
     created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
@@ -153,6 +153,7 @@ class ResourceDB(Base):
 
 # Initialize Database (creates all tables in Postgres)
 def init_db():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
 # Dependency to get db session
