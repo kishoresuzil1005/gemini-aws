@@ -18,6 +18,7 @@ class UserDB(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     organization_id = Column(Integer, nullable=True)
+    role = Column(String(50), default="ORG_ADMIN") # SUPER_ADMIN, ORG_ADMIN, ENGINEER, VIEWER
     created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
 

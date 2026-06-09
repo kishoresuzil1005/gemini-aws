@@ -83,6 +83,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _jwtToken = MutableStateFlow<String?>(null)
     val jwtToken = _jwtToken.asStateFlow()
 
+    private val _currentUserRole = MutableStateFlow<String?>(null)
+    val currentUserRole = _currentUserRole.asStateFlow()
+
     private val _lastTemporaryCredentials = MutableStateFlow<com.example.api.TemporaryCredentialsResponse?>(null)
     val lastTemporaryCredentials = _lastTemporaryCredentials.asStateFlow()
 
@@ -164,6 +167,22 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
         // Seed initial data so the user has beautiful instant visualization
         seedInitialDatabaseData()
+
+        // Persistent Session Restoration via Hardware AES-KeyStore Vault
+        try {
+            val recovered = com.example.api.SecureStorage.restoreSession(application)
+            if (recovered != null) {
+                _jwtToken.value = recovered.accessToken
+                _currentUserEmail.value = recovered.email
+                _currentOrgName.value = recovered.orgName
+                _currentOrgId.value = recovered.orgId
+                _currentOrgPlan.value = recovered.plan
+                _currentUserRole.value = recovered.role
+                Log.i("CloudViewModel", "Successfully restored SRE operator profile from secure storage: ${recovered.email}")
+            }
+        } catch (e: Exception) {
+            Log.e("CloudViewModel", "Secure storage session automatic recovery failed: ${e.message}")
+        }
 
         // Sync and refresh from local FastAPI SRE backend on launch and periodically every 4 seconds for real-time telemetry!
         viewModelScope.launch(Dispatchers.IO) {
@@ -419,6 +438,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         password: String,
         organisation: String,
         plan: String = "BASIC",
+        role: String = "ORG_ADMIN",
         onCompleted: (String) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -426,13 +446,27 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 if (_useBackend.value) {
                     val res = com.example.api.CloudOpsBackendClient.service.register(
-                        com.example.api.UserRegisterRequest(email, password, organisation, plan)
+                        com.example.api.UserRegisterRequest(email, password, organisation, plan, role)
                     )
+                    val finalRole = res.role ?: role
                     _currentUserEmail.value = res.userEmail
                     _currentOrgName.value = res.organizationName
                     _currentOrgId.value = res.organizationId
                     _currentOrgPlan.value = res.plan
                     _jwtToken.value = res.accessToken
+                    _currentUserRole.value = finalRole
+
+                    // Save safely in KeyStore encrypted session storage
+                    com.example.api.SecureStorage.saveSession(
+                        getApplication(),
+                        res.accessToken,
+                        res.userEmail,
+                        res.organizationName,
+                        res.organizationId,
+                        res.plan,
+                        finalRole
+                    )
+
                     onCompleted("Successfully registered SRE control profile for ${res.organizationName}!")
                 } else {
                     _currentUserEmail.value = email
@@ -440,10 +474,22 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     _currentOrgId.value = 42
                     _currentOrgPlan.value = plan
                     _jwtToken.value = "jwt_offline_mock"
+                    _currentUserRole.value = role
+
+                    com.example.api.SecureStorage.saveSession(
+                        getApplication(),
+                        "jwt_offline_mock",
+                        email,
+                        organisation,
+                        42,
+                        plan,
+                        role
+                    )
+
                     onCompleted("Offline registration success! Org context enabled.")
                 }
             } catch (e: Exception) {
-                Log.e("CloudViewModel", "Register request failed: ${e.message}")
+                Log.e("CloudViewModel", "Register SRE profile failed: ${e.message}")
                 onError(e.message ?: "Authentication server timeout")
             }
         }
@@ -456,18 +502,44 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     val res = com.example.api.CloudOpsBackendClient.service.login(
                         com.example.api.UserLoginRequest(email, password)
                     )
+                    val finalRole = res.role ?: "ORG_ADMIN"
                     _currentUserEmail.value = res.userEmail
                     _currentOrgName.value = res.organizationName
                     _currentOrgId.value = res.organizationId
                     _currentOrgPlan.value = res.plan
                     _jwtToken.value = res.accessToken
-                    onCompleted("Welcome back SRE specialist!")
+                    _currentUserRole.value = finalRole
+
+                    // Save safely in KeyStore encrypted session storage
+                    com.example.api.SecureStorage.saveSession(
+                        getApplication(),
+                        res.accessToken,
+                        res.userEmail,
+                        res.organizationName,
+                        res.organizationId,
+                        res.plan,
+                        finalRole
+                    )
+
+                    onCompleted("Welcome back SRE specialist! Access level: $finalRole")
                 } else {
                     _currentUserEmail.value = email
                     _currentOrgName.value = "Local Operations"
                     _currentOrgId.value = 1
                     _currentOrgPlan.value = "ENTERPRISE"
                     _jwtToken.value = "jwt_offline_mock"
+                    _currentUserRole.value = "ORG_ADMIN"
+
+                    com.example.api.SecureStorage.saveSession(
+                        getApplication(),
+                        "jwt_offline_mock",
+                        email,
+                        "Local Operations",
+                        1,
+                        "ENTERPRISE",
+                        "ORG_ADMIN"
+                    )
+
                     onCompleted("Logged in successfully offline as SRE Operator.")
                 }
             } catch (e: Exception) {
@@ -478,12 +550,26 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun logoutUser() {
-        _currentUserEmail.value = null
-        _currentOrgName.value = null
-        _currentOrgId.value = null
-        _currentOrgPlan.value = null
-        _jwtToken.value = null
-        _lastTemporaryCredentials.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value && _jwtToken.value != null && _jwtToken.value != "jwt_offline_mock") {
+                    com.example.api.CloudOpsBackendClient.service.logout()
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Silent server logout notification failed: ${e.message}")
+            }
+            
+            _currentUserEmail.value = null
+            _currentOrgName.value = null
+            _currentOrgId.value = null
+            _currentOrgPlan.value = null
+            _jwtToken.value = null
+            _currentUserRole.value = null
+            _lastTemporaryCredentials.value = null
+
+            // Erase hardware KeyStore secret records
+            com.example.api.SecureStorage.clearSession(getApplication())
+        }
     }
 
     // --- Provider-Specific Connect Actions (Federations with STS validation) ---

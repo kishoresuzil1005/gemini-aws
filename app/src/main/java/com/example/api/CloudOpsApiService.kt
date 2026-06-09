@@ -30,7 +30,8 @@ data class UserRegisterRequest(
     val email: String,
     val password: String,
     val organizationName: String,
-    val plan: String = "BASIC"
+    val plan: String = "BASIC",
+    val role: String = "ORG_ADMIN"
 )
 
 @JsonClass(generateAdapter = true)
@@ -47,7 +48,8 @@ data class AuthTokenResponse(
     val userEmail: String,
     val organizationName: String,
     val organizationId: Int,
-    val plan: String
+    val plan: String,
+    val role: String? = "ORG_ADMIN"
 )
 
 @JsonClass(generateAdapter = true)
@@ -103,12 +105,22 @@ data class TemporaryCredentialsResponse(
     val permissions: List<String>
 )
 
+object TokenStorage {
+    var jwtToken: String? = null
+}
+
 interface CloudOpsApiService {
-    @POST("api/auth/register")
+    @POST("api/v1/auth/register")
     suspend fun register(@Body request: UserRegisterRequest): AuthTokenResponse
 
-    @POST("api/auth/login")
+    @POST("api/v1/auth/login")
     suspend fun login(@Body request: UserLoginRequest): AuthTokenResponse
+
+    @POST("api/v1/auth/logout")
+    suspend fun logout(): Map<String, String>
+
+    @GET("api/v1/auth/me")
+    suspend fun getMe(): AuthTokenResponse
 
     @POST("api/cloud/connect/aws")
     suspend fun connectAws(@Body payload: AwsConnectPayload): CloudConnectResponse
@@ -168,14 +180,23 @@ object CloudOpsBackendClient {
     // Fall back to clean default URL if empty or not configured
     val baseUrl: String
         get() {
-            val url = try {
-                BuildConfig.BACKEND_URL
+            var url = try {
+                BuildConfig.BACKEND_URL.trim().removeSurrounding("\"").removeSurrounding("'")
             } catch (e: Exception) {
                 ""
             }
-            return if (url.isNullOrEmpty() || url == "placeholder") "http://10.0.2.2:8000/" else {
-                if (url.endsWith("/")) url else "$url/"
+            if (url.isNullOrEmpty() || url == "placeholder") {
+                url = "http://10.0.2.2:8000/"
             }
+            // Map 0.0.0.0 wildcard address to 10.0.2.2 for Android emulator routing compatibility
+            if (url.contains("0.0.0.0")) {
+                url = url.replace("0.0.0.0", "10.0.2.2")
+            }
+            // Ensure proper http/https protocol prefix
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "http://$url"
+            }
+            return if (url.endsWith("/")) url else "$url/"
         }
 
     private val moshi = Moshi.Builder()
@@ -190,6 +211,18 @@ object CloudOpsBackendClient {
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val original = chain.request()
+            val token = TokenStorage.jwtToken
+            val request = if (!token.isNullOrEmpty()) {
+                original.newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            } else {
+                original
+            }
+            chain.proceed(request)
+        }
         .addInterceptor(loggingInterceptor)
         .build()
 
