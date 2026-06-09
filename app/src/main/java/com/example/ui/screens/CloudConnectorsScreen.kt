@@ -389,113 +389,49 @@ fun CloudConnectorsScreen(
             }
         }
 
-        // BENTO BOX CARD: FastAPI Integration Switchboard
+        // BENTO BOX CARD: Live Backend API Configuration
         item {
-            val useBackend by viewModel.useBackend.collectAsState()
-            val isBackendConnected by viewModel.isBackendConnected.collectAsState()
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("fastapi_switchboard_card"),
-                colors = CardDefaults.cardColors(containerColor = if (isBackendConnected) Color(0xFFF0FDF4) else Color(0xFFFEF2F2)),
-                border = BorderStroke(1.dp, if (isBackendConnected) Color(0xFFBBF7D0) else Color(0xFFFCA5A5)),
+                    .testTag("fastapi_config_card"),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, BentoBorderMedium),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "INTEGRATION SWITCHBOARD",
-                                color = if (isBackendConnected) Color(0xFF15803D) else Color(0xFFB91C1C),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                "FastAPI SRE Engine",
-                                fontWeight = FontWeight.ExtraBold,
-                                color = BentoTextDark,
-                                fontSize = 18.sp
-                            )
-                        }
-                        
-                        Switch(
-                            checked = useBackend,
-                            onCheckedChange = { viewModel.setUseBackend(it) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = BentoPurplePrimary,
-                             ),
-                            modifier = Modifier.testTag("fastapi_gateway_switch")
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "LIVE API ENGINE CONFIGURATION",
+                        color = BentoTextSubtitle,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isBackendConnected) Color(0xFFDCFCE7) else Color(0xFFFEE2E2))
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    var newBackendUrl by remember { mutableStateOf(com.example.api.CloudOpsBackendClient.baseUrl) }
+                    
+                    OutlinedTextField(
+                        value = newBackendUrl,
+                        onValueChange = { newBackendUrl = it },
+                        label = { Text("EC2 Machine IP / Backend URL", fontSize = 12.sp) },
+                        placeholder = { Text("e.g., http://<your-ec2-ip>:8000", fontSize = 13.sp) },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Button(
+                        onClick = {
+                            viewModel.updateBackendUrl(newBackendUrl)
+                            Toast.makeText(context, "Backend URL updated to $newBackendUrl", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = BentoPurplePrimary, contentColor = Color.White),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(42.dp)
                     ) {
-                        Icon(
-                            imageVector = if (isBackendConnected) Icons.Default.CloudDone else Icons.Default.CloudOff,
-                            contentDescription = null,
-                            tint = if (isBackendConnected) Color(0xFF166534) else Color(0xFF991B1B),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = if (isBackendConnected) "ONLINE: SRE Core Active" else "OFFLINE: Local Cache State",
-                                fontWeight = FontWeight.Bold,
-                                color = if (isBackendConnected) Color(0xFF166534) else Color(0xFF991B1B),
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = if (isBackendConnected) "Scanning live IAM credentials + STS credentials" else "Relying on standalone local Room Database simulation",
-                                color = if (isBackendConnected) Color(0xFF15803D) else Color(0xFFB91C1C),
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-
-                    if (useBackend) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Gateway Endpoint: ${com.example.api.CloudOpsBackendClient.baseUrl}",
-                                color = BentoTextSubtitle,
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.weight(1f)
-                            )
-                            
-                            IconButton(
-                                onClick = { viewModel.refreshAllFeeds() },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = "Sync",
-                                    tint = BentoPurplePrimary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
+                        Text("Apply EC2 Backend Configuration", fontWeight = FontWeight.Bold)
                     }
                 }
             }

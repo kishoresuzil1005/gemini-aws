@@ -33,12 +33,12 @@ import com.example.ui.theme.*
 import kotlinx.coroutines.launch
 
 enum class CloudScreen(val title: String, val icon: ImageVector) {
-    DASHBOARD("Dashboard & Telemetry", Icons.Default.Dashboard),
-    AI_DOCTOR("AI Self-Healing Doctor", Icons.Default.LocalHospital),
-    GRAPH_VIEW("SRE Topology Graph", Icons.Default.Hub),
-    TERRAFORM_GENERATOR("HCL Migrate Generator", Icons.Default.Code),
-    AI_CONSULTANT("Gemini SRE Advisor", Icons.Default.Chat),
-    CONNECTORS("Cloud Connectors", Icons.Default.Cloud)
+    DASHBOARD("Dashboard", Icons.Default.Dashboard),
+    AI("AI Engine", Icons.Default.SmartToy),
+    SRE("SRE Plane", Icons.Default.Hub),
+    HCL("HCL Migrate", Icons.Default.Code),
+    GEMINI("Gemini Advisor", Icons.Default.Chat),
+    CLOUD("Cloud Connectors", Icons.Default.Cloud)
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -376,16 +376,16 @@ class MainActivity : ComponentActivity() {
                                 when (currentScreen) {
                                     CloudScreen.DASHBOARD -> DashboardScreen(
                                         viewModel = viewModel,
-                                        onNavigateToGraph = { currentScreen = CloudScreen.GRAPH_VIEW }
+                                        onNavigateToGraph = { currentScreen = CloudScreen.SRE }
                                     )
-                                    CloudScreen.AI_DOCTOR -> AiDoctorScreen(viewModel = viewModel)
-                                    CloudScreen.GRAPH_VIEW -> DependencyGraphScreen(
+                                    CloudScreen.AI -> AiDoctorScreen(viewModel = viewModel)
+                                    CloudScreen.SRE -> DependencyGraphScreen(
                                         viewModel = viewModel,
-                                        onNavigateToGenerator = { currentScreen = CloudScreen.TERRAFORM_GENERATOR }
+                                        onNavigateToGenerator = { currentScreen = CloudScreen.HCL }
                                     )
-                                    CloudScreen.TERRAFORM_GENERATOR -> TerraformGeneratorScreen(viewModel = viewModel)
-                                    CloudScreen.AI_CONSULTANT -> AiConsultantScreen(viewModel = viewModel)
-                                    CloudScreen.CONNECTORS -> CloudConnectorsScreen(viewModel = viewModel)
+                                    CloudScreen.HCL -> TerraformGeneratorScreen(viewModel = viewModel)
+                                    CloudScreen.GEMINI -> AiConsultantScreen(viewModel = viewModel)
+                                    CloudScreen.CLOUD -> CloudConnectorsScreen(viewModel = viewModel)
                                 }
                             }
                         }

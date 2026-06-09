@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from .config import is_aws_configured, AWS_DEFAULT_REGION
 from .database import (
     init_db, get_db, SessionLocal, CloudAccountDB, DiscoveryResourceDB, 
-    SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB
+    SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB, ResourceDB
 )
 from .services.session_manager import (
     assume_target_aws_role, connect_azure_tenant, connect_gcp_project
@@ -20,12 +20,14 @@ from .services.session_manager import (
 from .aws_scanner import (
     scan_aws_resources, heal_security_group_ssh, heal_s3_bucket_encryption
 )
+from app.inventory.routes import router as inventory_router
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
     description="FastAPI Backend for programmatically scanning multi-cloud systems & executing DevSecOps repairs.",
     version="1.0.0"
 )
+app.include_router(inventory_router, prefix="/api/v1/inventory", tags=["Inventory Management"])
 
 # Enable CORS so our local Android Emulators (10.0.2.2 or real devices) can speak to our services
 app.add_middleware(
@@ -904,7 +906,7 @@ def connect_aws(payload: AwsConnectPayload, db: Session = Depends(get_db)):
         status="ACTIVE",
         credentials_type="STS_ROLE",
         permissions=",".join(session["permissions"]),
-        metadata=str(session["credentials"])
+        cloud_metadata=str(session["credentials"])
     )
     db.add(db_acct)
     db.commit()
@@ -944,7 +946,7 @@ def connect_azure(payload: AzureConnectPayload, db: Session = Depends(get_db)):
         status="ACTIVE",
         credentials_type="SERVICE_PRINCIPAL",
         permissions=",".join(session["permissions"]),
-        metadata=str(session["credentials"])
+        cloud_metadata=str(session["credentials"])
     )
     db.add(db_acct)
     db.commit()
@@ -984,7 +986,7 @@ def connect_gcp(payload: GcpConnectPayload, db: Session = Depends(get_db)):
         status="ACTIVE",
         credentials_type="SERVICE_ACCOUNT",
         permissions=",".join(session["permissions"]),
-        metadata=str(session["credentials"])
+        cloud_metadata=str(session["credentials"])
     )
     db.add(db_acct)
     db.commit()

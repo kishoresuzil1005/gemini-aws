@@ -182,45 +182,6 @@ fun LoginScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
-                                
-                                val isConnectionIssue = error_text.contains("connect", ignoreCase = true) || 
-                                        error_text.contains("timeout", ignoreCase = true) || 
-                                        error_text.contains("cleartext", ignoreCase = true) ||
-                                        error_text.contains("security policy", ignoreCase = true)
-                                
-                                val useBackend by viewModel.useBackend.collectAsState()
-                                if (isConnectionIssue && useBackend) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = {
-                                            viewModel.setUseBackend(false)
-                                            errorMessage = null
-                                            if (email.isEmpty()) email = "admin"
-                                            if (password.isEmpty()) password = "admin123"
-                                            if (orgName.isEmpty()) orgName = "aws"
-                                            Toast.makeText(context, "Switched to high-performance local simulation mode!", Toast.LENGTH_LONG).show()
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = BentoPurplePrimary),
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentPadding = PaddingValues(vertical = 8.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Dns,
-                                            contentDescription = "Local Sandbox",
-                                            modifier = Modifier.size(16.dp),
-                                            tint = Color.White
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Switch to Local Sandbox Mode",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White,
-                                            fontFamily = FontFamily.Monospace
-                                        )
-                                    }
-                                }
                             }
                         }
                     }
@@ -238,92 +199,132 @@ fun LoginScreen(
                     when (stage) {
                         AuthStage.MAIN -> {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                // Connection Engine Segmented Selector (Local Sandbox vs Live FastAPI)
-                                Text(
-                                    text = "CONOPS Connection Engine",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    color = CyberCyan,
-                                    modifier = Modifier.padding(bottom = 6.dp)
-                                )
-                                Row(
+                                // Connection Engine Segmented Selector (Removed: Live API Engine only)
+
+                                // EC2 GATEWAY INTERCONNECT CONFIGURATION
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 20.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF0F0E13))
-                                        .border(1.dp, Color(0xFF2C2A35), RoundedCornerShape(12.dp))
-                                        .padding(4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(bottom = 16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F0E13)),
+                                    border = BorderStroke(1.dp, Color(0xFF2C2A35)),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    val useBackend by viewModel.useBackend.collectAsState()
-                                    
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (!useBackend) BentoPurplePrimary.copy(alpha = 0.4f) else Color.Transparent)
-                                            .border(1.dp, if (!useBackend) BentoPurplePrimary else Color.Transparent, RoundedCornerShape(8.dp))
-                                            .clickable { 
-                                                viewModel.setUseBackend(false)
-                                                errorMessage = null
-                                            }
-                                            .padding(vertical = 10.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
                                         Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Dns,
-                                                contentDescription = "Local Sandbox",
-                                                tint = if (!useBackend) Color.White else Color(0xFF9E9BA8),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "Local Sandbox",
-                                                color = if (!useBackend) Color.White else Color(0xFF9E9BA8),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp,
-                                                fontFamily = FontFamily.Monospace
-                                            )
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SettingsEthernet,
+                                                    contentDescription = "Gateway",
+                                                    tint = CyberCyan,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "AWS EC2 API GATEWAY",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 9.sp,
+                                                    color = CyberCyan,
+                                                    fontFamily = FontFamily.Monospace
+                                                )
+                                            }
+                                            
+                                            val useBackend by viewModel.useBackend.collectAsState()
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(if (useBackend) Color(0xFF064E3B) else Color(0xFF7F1D1D))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = if (useBackend) "FASTAPI ACTIVE" else "STANDALONE",
+                                                    color = if (useBackend) Color(0xFF34D399) else Color(0xFFFCA5A5),
+                                                    fontSize = 8.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontFamily = FontFamily.Monospace
+                                                )
+                                            }
                                         }
-                                    }
-                                    
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (useBackend) CyberCyan.copy(alpha = 0.2f) else Color.Transparent)
-                                            .border(1.dp, if (useBackend) CyberCyan else Color.Transparent, RoundedCornerShape(8.dp))
-                                            .clickable { 
-                                                viewModel.setUseBackend(true)
-                                                errorMessage = null
+                                        
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        
+                                        var editingUrl by remember { mutableStateOf(com.example.api.CloudOpsBackendClient.baseUrl) }
+                                        var isEditing by remember { mutableStateOf(false) }
+                                        
+                                        if (isEditing) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                OutlinedTextField(
+                                                    value = editingUrl,
+                                                    onValueChange = { editingUrl = it },
+                                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                                        color = Color.White,
+                                                        fontSize = 11.sp,
+                                                        fontFamily = FontFamily.Monospace
+                                                    ),
+                                                    colors = OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = CyberCyan,
+                                                        unfocusedBorderColor = Color(0xFF332D44),
+                                                        focusedTextColor = Color.White,
+                                                        unfocusedTextColor = Color.White
+                                                    ),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .height(44.dp)
+                                                        .testTag("ec2_ip_input_field"),
+                                                    singleLine = true
+                                                )
+                                                Button(
+                                                    onClick = {
+                                                        viewModel.updateBackendUrl(editingUrl)
+                                                        isEditing = false
+                                                        Toast.makeText(context, "Gateway updated: $editingUrl", Toast.LENGTH_SHORT).show()
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = BentoPurplePrimary),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    contentPadding = PaddingValues(horizontal = 12.dp),
+                                                    modifier = Modifier.height(34.dp)
+                                                ) {
+                                                    Text("Save", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                }
                                             }
-                                            .padding(vertical = 10.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Bolt,
-                                                contentDescription = "Live Backend API",
-                                                tint = if (useBackend) CyberCyan else Color(0xFF9E9BA8),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "Live API Engine",
-                                                color = if (useBackend) Color.White else Color(0xFF9E9BA8),
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp,
-                                                fontFamily = FontFamily.Monospace
-                                            )
+                                        } else {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = com.example.api.CloudOpsBackendClient.baseUrl,
+                                                    color = Color.White,
+                                                    fontSize = 11.sp,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .background(Color(0xFF1E1C24))
+                                                        .clickable { isEditing = true }
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "CONVERT",
+                                                        color = CyberCyan,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = FontFamily.Monospace
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }

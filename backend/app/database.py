@@ -44,7 +44,7 @@ class CloudAccountDB(Base):
     role_arn = Column(String(255), nullable=True)
     status = Column(String(50), default="ACTIVE") # ACTIVE, DISCONNECTED, ERROR
     credentials_type = Column(String(100), nullable=True, default="STS_ROLE") # STS_ROLE, SERVICE_PRINCIPAL, SERVICE_ACCOUNT
-    metadata = Column(Text, nullable=True) # JSON Metadata string
+    cloud_metadata = Column("metadata", Text, nullable=True) # JSON Metadata string
     permissions = Column(Text, nullable=True) # comma-separated permissions string
     created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
@@ -94,6 +94,62 @@ class BackgroundJobDB(Base):
     status = Column(String(50), default="QUEUED") # QUEUED, RUNNING, COMPLETED, FAILED
     timestamp = Column(String(50), nullable=False)
 
+
+class MetricDB(Base):
+    __tablename__ = "metrics"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    resource_id = Column(String(100), index=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    value = Column(Float, nullable=False)
+    timestamp = Column(BigInteger, index=True, nullable=False)
+
+class LogDB(Base):
+    __tablename__ = "logs"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    resource_id = Column(String(100), index=True, nullable=True)
+    severity = Column(String(50), default="INFO")
+    message = Column(Text, nullable=False)
+    timestamp = Column(BigInteger, index=True, nullable=False)
+
+class AlertDB(Base):
+    __tablename__ = "alerts"
+    id = Column(String(100), primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    severity = Column(String(50), nullable=False)
+    status = Column(String(50), default="ACTIVE")
+    timestamp = Column(BigInteger, index=True, nullable=False)
+
+class CostReportDB(Base):
+    __tablename__ = "cost_reports"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    provider = Column(String(50), nullable=False)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="USD")
+    period_start = Column(BigInteger, index=True, nullable=False)
+    period_end = Column(BigInteger, index=True, nullable=False)
+
+class AutomationActionDB(Base):
+    __tablename__ = "automation_actions"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    target_resource_id = Column(String(100), nullable=True)
+    action_type = Column(String(50), nullable=False)
+    status = Column(String(50), default="PENDING")
+    created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+
+class ResourceDB(Base):
+    __tablename__ = "resources"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    cloud_account_id = Column(Integer, nullable=False)
+    provider = Column(String(50), nullable=False)
+    resource_type = Column(String(100), nullable=False)
+    resource_id = Column(String(100), index=True, nullable=False)
+    name = Column(String(255), nullable=True)
+    region = Column(String(100), nullable=True)
+    status = Column(String(50), nullable=True)
+    tags = Column(Text, nullable=True) # JSON store
+    discovered_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
 # Initialize Database (creates all tables in Postgres)
 def init_db():
