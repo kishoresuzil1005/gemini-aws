@@ -25,7 +25,103 @@ data class SelfHealResponse(
     val logs: List<String>
 )
 
+@JsonClass(generateAdapter = true)
+data class UserRegisterRequest(
+    val email: String,
+    val password: String,
+    val organizationName: String,
+    val plan: String = "BASIC"
+)
+
+@JsonClass(generateAdapter = true)
+data class UserLoginRequest(
+    val email: String,
+    val password: String
+)
+
+@JsonClass(generateAdapter = true)
+data class AuthTokenResponse(
+    val accessToken: String,
+    val tokenType: String,
+    val userId: Int,
+    val userEmail: String,
+    val organizationName: String,
+    val organizationId: Int,
+    val plan: String
+)
+
+@JsonClass(generateAdapter = true)
+data class AwsConnectPayload(
+    val roleArn: String,
+    val region: String,
+    val accountName: String
+)
+
+@JsonClass(generateAdapter = true)
+data class AzureConnectPayload(
+    val tenantId: String,
+    val clientId: String,
+    val clientSecret: String,
+    val region: String,
+    val accountName: String
+)
+
+@JsonClass(generateAdapter = true)
+data class GcpConnectPayload(
+    val serviceAccountJson: String,
+    val region: String,
+    val accountName: String
+)
+
+@JsonClass(generateAdapter = true)
+data class CloudAccountInner(
+    val id: Int,
+    val provider: String,
+    val name: String,
+    val accountId: String?,
+    val roleArn: String?,
+    val region: String,
+    val status: String
+)
+
+@JsonClass(generateAdapter = true)
+data class CloudConnectResponse(
+    val status: String,
+    val message: String,
+    val account: CloudAccountInner
+)
+
+@JsonClass(generateAdapter = true)
+data class TemporaryCredentialsResponse(
+    val accountId: String?,
+    val provider: String,
+    val region: String,
+    val status: String,
+    val assumedRole: String?,
+    val credentialsType: String,
+    val credentials: Map<String, String>,
+    val permissions: List<String>
+)
+
 interface CloudOpsApiService {
+    @POST("api/auth/register")
+    suspend fun register(@Body request: UserRegisterRequest): AuthTokenResponse
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: UserLoginRequest): AuthTokenResponse
+
+    @POST("api/cloud/connect/aws")
+    suspend fun connectAws(@Body payload: AwsConnectPayload): CloudConnectResponse
+
+    @POST("api/cloud/connect/azure")
+    suspend fun connectAzure(@Body payload: AzureConnectPayload): CloudConnectResponse
+
+    @POST("api/cloud/connect/gcp")
+    suspend fun connectGcp(@Body payload: GcpConnectPayload): CloudConnectResponse
+
+    @GET("api/cloud/credentials/{id}")
+    suspend fun getTemporaryCredentials(@Path("id") id: Int): TemporaryCredentialsResponse
+
     @GET("api/accounts")
     suspend fun getAccounts(): List<CloudAccount>
 

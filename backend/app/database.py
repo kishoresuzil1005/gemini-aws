@@ -11,14 +11,40 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+class UserDB(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    organization_id = Column(Integer, nullable=True)
+    created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+
+
+class OrganizationDB(Base):
+    __tablename__ = "organizations"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    plan = Column(String(50), default="BASIC") # BASIC, PREMIUM, ENTERPRISE
+    created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+
+
 class CloudAccountDB(Base):
     __tablename__ = "cloud_accounts"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    organization_id = Column(Integer, nullable=True)
     provider = Column(String(50), nullable=False)
     name = Column(String(255), nullable=False)
     credentials_hint = Column(String(255), nullable=True)
     region = Column(String(100), nullable=False)
+    account_id = Column(String(100), nullable=True)
+    role_arn = Column(String(255), nullable=True)
+    status = Column(String(50), default="ACTIVE") # ACTIVE, DISCONNECTED, ERROR
+    credentials_type = Column(String(100), nullable=True, default="STS_ROLE") # STS_ROLE, SERVICE_PRINCIPAL, SERVICE_ACCOUNT
+    metadata = Column(Text, nullable=True) # JSON Metadata string
+    permissions = Column(Text, nullable=True) # comma-separated permissions string
     created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
 

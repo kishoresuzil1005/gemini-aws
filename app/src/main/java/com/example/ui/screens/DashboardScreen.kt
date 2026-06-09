@@ -44,6 +44,20 @@ fun DashboardScreen(
     val accounts by viewModel.accounts.collectAsState()
     val incidents by viewModel.incidents.collectAsState()
 
+    var selectedRegion by remember { mutableStateOf("ALL") }
+    val regionsList = listOf("ALL", "US-EAST-1", "US-WEST-2", "AP-SOUTH-1", "EU-CENTRAL-1")
+
+    val filteredResources = remember(resources, selectedRegion) {
+        if (selectedRegion == "ALL") {
+            resources
+        } else {
+            resources.filter {
+                it.configurationHint.contains(selectedRegion, ignoreCase = true) ||
+                it.name.contains(selectedRegion, ignoreCase = true)
+            }
+        }
+    }
+
     val activeIncidentsCount = incidents.count { it.status == "ACTIVE" }
 
     // Pulsing transition for the AI Insights red alarm dot
@@ -119,13 +133,55 @@ fun DashboardScreen(
                                 letterSpacing = 1.sp
                             )
                         }
-                        Text(
-                            text = "US-EAST-1",
-                            color = BentoPurpleDark,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        var expanded by remember { mutableStateOf(false) }
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(BentoPurpleDark.copy(alpha = 0.15f))
+                                    .clickable { expanded = true }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedRegion,
+                                    color = BentoPurpleDark,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select Region",
+                                    tint = BentoPurpleDark,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.background(Color.White)
+                            ) {
+                                regionsList.forEach { regionItem ->
+                                    DropdownMenuItem(
+                                        text = { 
+                                            Text(
+                                                text = regionItem, 
+                                                fontFamily = FontFamily.Monospace,
+                                                fontSize = 13.sp,
+                                                fontWeight = if (selectedRegion == regionItem) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (selectedRegion == regionItem) BentoPurplePrimary else BentoTextDark
+                                            )
+                                        },
+                                        onClick = {
+                                            selectedRegion = regionItem
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -178,7 +234,7 @@ fun DashboardScreen(
                         // Nodes Count
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "${resources.size}",
+                                text = "${filteredResources.size}",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = BentoPurpleDark
@@ -479,7 +535,7 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Discovered Catalog (${resources.size})",
+                    text = if (selectedRegion == "ALL") "Discovered Catalog (${filteredResources.size})" else "Catalog: $selectedRegion (${filteredResources.size})",
                     fontWeight = FontWeight.ExtraBold,
                     color = BentoTextDark,
                     fontSize = 18.sp
@@ -496,7 +552,7 @@ fun DashboardScreen(
             }
         }
 
-        items(resources.take(4)) { resource ->
+        items(filteredResources.take(8)) { resource ->
             ResourceItemRow(resource = resource)
         }
     }

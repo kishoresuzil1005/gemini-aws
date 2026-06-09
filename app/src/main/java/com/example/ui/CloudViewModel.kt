@@ -67,6 +67,25 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _isBackendConnected = MutableStateFlow(false)
     val isBackendConnected = _isBackendConnected.asStateFlow()
 
+    // SRE Portal user authentication & organization state flows
+    private val _currentUserEmail = MutableStateFlow<String?>(null)
+    val currentUserEmail = _currentUserEmail.asStateFlow()
+
+    private val _currentOrgName = MutableStateFlow<String?>(null)
+    val currentOrgName = _currentOrgName.asStateFlow()
+
+    private val _currentOrgId = MutableStateFlow<Int?>(null)
+    val currentOrgId = _currentOrgId.asStateFlow()
+
+    private val _currentOrgPlan = MutableStateFlow<String?>(null)
+    val currentOrgPlan = _currentOrgPlan.asStateFlow()
+
+    private val _jwtToken = MutableStateFlow<String?>(null)
+    val jwtToken = _jwtToken.asStateFlow()
+
+    private val _lastTemporaryCredentials = MutableStateFlow<com.example.api.TemporaryCredentialsResponse?>(null)
+    val lastTemporaryCredentials = _lastTemporaryCredentials.asStateFlow()
+
     // Local runtime states
     private val _isDiscovering = MutableStateFlow(false)
     val isDiscovering = _isDiscovering.asStateFlow()
@@ -146,8 +165,17 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         // Seed initial data so the user has beautiful instant visualization
         seedInitialDatabaseData()
 
-        // Sync and refresh from local FastAPI SRE backend
-        refreshAllFeeds()
+        // Sync and refresh from local FastAPI SRE backend on launch and periodically every 4 seconds for real-time telemetry!
+        viewModelScope.launch(Dispatchers.IO) {
+            while (true) {
+                try {
+                    refreshAllFeeds()
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Periodic background sync failed: ${e.message}")
+                }
+                delay(4000)
+            }
+        }
     }
 
     /**
@@ -249,14 +277,14 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
             // Check if discovered resources exist
             resources.take(1).collect { list ->
-                if (list.isEmpty()) {
+                if (list.size < 8) {
                     val defaultResources = listOf(
                         DiscoveryResource(
                             id = "vpc-09ab02c",
                             provider = "AWS",
                             type = "VPC",
                             name = "Main-Corporate-Net",
-                            configurationHint = "CIDR Block: 10.0.0.0/16 | Subnets: 4 Active",
+                            configurationHint = "Region: us-east-1 | CIDR Block: 10.0.0.0/16 | Subnets: 4 Active",
                             costEstimate = 0.00,
                             dependenciesString = "app-web-servers,rds-primary"
                         ),
@@ -265,7 +293,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "ALB",
                             name = "App-Public-Ingress",
-                            configurationHint = "Port: 443 | Certificate: AWS ACM Wildcard | Target: app-web-servers",
+                            configurationHint = "Region: us-east-1 | Port: 443 | Certificate: AWS ACM Wildcard | Target: app-web-servers",
                             costEstimate = 22.50,
                             dependenciesString = "app-web-servers"
                         ),
@@ -274,7 +302,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "EC2",
                             name = "FastAPI-Web-Cluster",
-                            configurationHint = "AMI: Ubuntu 22.04 LTS | Instance Size: m5.large | Scale Policy: Min 2 - Max 8",
+                            configurationHint = "Region: us-east-1 | AMI: Ubuntu 22.04 LTS | Instance Size: m5.large | Scale Policy: Min 2 - Max 8",
                             costEstimate = 152.40,
                             dependenciesString = "rds-primary,sqs-event-queue"
                         ),
@@ -283,7 +311,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "RDS",
                             name = "PostgreSQL-MasterDB",
-                            configurationHint = "Engine: PostgreSQL 14.2 | Class: db.m5.xlarge | Multi-AZ Deployment",
+                            configurationHint = "Region: us-west-2 | Engine: PostgreSQL 14.2 | Class: db.m5.xlarge | Multi-AZ Deployment",
                             costEstimate = 340.00,
                             dependenciesString = ""
                         ),
@@ -292,7 +320,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "S3",
                             name = "s3-corporate-archive-992",
-                            configurationHint = "Storage size: 14.2TB | Encryption: None | Object Lock: Enabled",
+                            configurationHint = "Region: eu-central-1 | Storage size: 14.2TB | Encryption: None | Object Lock: Enabled",
                             costEstimate = 820.00,
                             dependenciesString = ""
                         ),
@@ -301,7 +329,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "Lambda",
                             name = "Telemetry-Sanitize-Worker",
-                            configurationHint = "Runtime: Python 3.10 | Timeout: 120s | Memory: 512MB",
+                            configurationHint = "Region: ap-south-1 | Runtime: Python 3.10 | Timeout: 120s | Memory: 512MB",
                             costEstimate = 15.00,
                             dependenciesString = "sqs-event-queue"
                         ),
@@ -310,7 +338,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "SQS",
                             name = "billing-events-queue.fifo",
-                            configurationHint = "Type: FIFO | Message Retention: 4 Days | Target: sns-billing-topic",
+                            configurationHint = "Region: us-east-1 | Type: FIFO | Message Retention: 4 Days | Target: sns-billing-topic",
                             costEstimate = 18.20,
                             dependenciesString = "sns-billing-topic"
                         ),
@@ -319,11 +347,12 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                             provider = "AWS",
                             type = "SNS",
                             name = "billing-notifications",
-                            configurationHint = "Subscribers: 3 Active (HTTP Webhook, AWS Lambda, DevOps Emails)",
+                            configurationHint = "Region: us-east-1 | Subscribers: 3 Active (HTTP Webhook, AWS Lambda, DevOps Emails)",
                             costEstimate = 8.10,
                             dependenciesString = ""
                         )
                     )
+                    repository.clearResources()
                     repository.insertResources(defaultResources)
                 }
             }
@@ -382,6 +411,213 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     // --- Graph Interaction ---
     fun selectGraphNode(resource: DiscoveryResource?) {
         _selectedGraphNode.value = resource
+    }
+
+    // --- User Authentication Actions ---
+    fun registerUser(
+        email: String,
+        password: String,
+        organisation: String,
+        plan: String = "BASIC",
+        onCompleted: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value) {
+                    val res = com.example.api.CloudOpsBackendClient.service.register(
+                        com.example.api.UserRegisterRequest(email, password, organisation, plan)
+                    )
+                    _currentUserEmail.value = res.userEmail
+                    _currentOrgName.value = res.organizationName
+                    _currentOrgId.value = res.organizationId
+                    _currentOrgPlan.value = res.plan
+                    _jwtToken.value = res.accessToken
+                    onCompleted("Successfully registered SRE control profile for ${res.organizationName}!")
+                } else {
+                    _currentUserEmail.value = email
+                    _currentOrgName.value = organisation
+                    _currentOrgId.value = 42
+                    _currentOrgPlan.value = plan
+                    _jwtToken.value = "jwt_offline_mock"
+                    onCompleted("Offline registration success! Org context enabled.")
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Register request failed: ${e.message}")
+                onError(e.message ?: "Authentication server timeout")
+            }
+        }
+    }
+
+    fun loginUser(email: String, password: String, onCompleted: (String) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value) {
+                    val res = com.example.api.CloudOpsBackendClient.service.login(
+                        com.example.api.UserLoginRequest(email, password)
+                    )
+                    _currentUserEmail.value = res.userEmail
+                    _currentOrgName.value = res.organizationName
+                    _currentOrgId.value = res.organizationId
+                    _currentOrgPlan.value = res.plan
+                    _jwtToken.value = res.accessToken
+                    onCompleted("Welcome back SRE specialist!")
+                } else {
+                    _currentUserEmail.value = email
+                    _currentOrgName.value = "Local Operations"
+                    _currentOrgId.value = 1
+                    _currentOrgPlan.value = "ENTERPRISE"
+                    _jwtToken.value = "jwt_offline_mock"
+                    onCompleted("Logged in successfully offline as SRE Operator.")
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Login request failed: ${e.message}")
+                onError(e.message ?: "Invalid email or credentials matching")
+            }
+        }
+    }
+
+    fun logoutUser() {
+        _currentUserEmail.value = null
+        _currentOrgName.value = null
+        _currentOrgId.value = null
+        _currentOrgPlan.value = null
+        _jwtToken.value = null
+        _lastTemporaryCredentials.value = null
+    }
+
+    // --- Provider-Specific Connect Actions (Federations with STS validation) ---
+    fun connectAwsCloud(
+        roleArn: String,
+        region: String,
+        accountName: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value && _isBackendConnected.value) {
+                    val response = com.example.api.CloudOpsBackendClient.service.connectAws(
+                        com.example.api.AwsConnectPayload(roleArn, region, accountName)
+                    )
+                    val account = CloudAccount(
+                        provider = "AWS",
+                        name = accountName,
+                        credentialsHint = "Role: " + roleArn.takeLast(24),
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    refreshAllFeeds()
+                    onSuccess("AWS bounded successfully! Temp credentials: ${response.account.accountId}")
+                } else {
+                    val account = CloudAccount(
+                        provider = "AWS",
+                        name = accountName,
+                        credentialsHint = "Role: " + roleArn.takeLast(24),
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    onSuccess("AWS STS Connection mapped in local database.")
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "AWS Connect integration failed: ${e.message}")
+                onError(e.message ?: "Role assumption forbidden or invalid ARN format")
+            }
+        }
+    }
+
+    fun connectAzureCloud(
+        tenantId: String,
+        clientId: String,
+        clientSecret: String,
+        region: String,
+        accountName: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value && _isBackendConnected.value) {
+                    val response = com.example.api.CloudOpsBackendClient.service.connectAzure(
+                        com.example.api.AzureConnectPayload(tenantId, clientId, clientSecret, region, accountName)
+                    )
+                    val account = CloudAccount(
+                        provider = "Azure",
+                        name = accountName,
+                        credentialsHint = "Tenant: " + tenantId.take(12) + "...",
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    refreshAllFeeds()
+                    onSuccess("Azure Subscription connected! Session established.")
+                } else {
+                    val account = CloudAccount(
+                        provider = "Azure",
+                        name = accountName,
+                        credentialsHint = "Tenant: " + tenantId.take(12),
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    onSuccess("Azure federation mapped locally.")
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Azure Service Principal authentication failed: ${e.message}")
+                onError(e.message ?: "Client Secret unauthorized")
+            }
+        }
+    }
+
+    fun connectGcpCloud(
+        serviceAccountJson: String,
+        region: String,
+        accountName: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value && _isBackendConnected.value) {
+                    val response = com.example.api.CloudOpsBackendClient.service.connectGcp(
+                        com.example.api.GcpConnectPayload(serviceAccountJson, region, accountName)
+                    )
+                    val account = CloudAccount(
+                        provider = "GCP",
+                        name = accountName,
+                        credentialsHint = "Service Account Keystore",
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    refreshAllFeeds()
+                    onSuccess("GCP connected via OAuth2! Multi-cloud control plane synchronized.")
+                } else {
+                    val account = CloudAccount(
+                        provider = "GCP",
+                        name = accountName,
+                        credentialsHint = "SA Private Key",
+                        region = region
+                    )
+                    repository.insertAccount(account)
+                    onSuccess("GCP Service Account linked locally.")
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "GCP Service Account validation failed: ${e.message}")
+                onError(e.message ?: "Invalid private JSON key")
+            }
+        }
+    }
+
+    fun fetchTemporalCredentialsDetails(accountId: Int, onComplete: () -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value && _isBackendConnected.value) {
+                    val details = com.example.api.CloudOpsBackendClient.service.getTemporaryCredentials(accountId)
+                    _lastTemporaryCredentials.value = details
+                    onComplete()
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Could not fetch temporal credentials: ${e.message}")
+            }
+        }
     }
 
     // --- Account Forms ---
