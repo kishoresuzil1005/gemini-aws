@@ -76,7 +76,7 @@ fun AiConsultantScreen(
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "GEMINI MIGRATION ADVISOR",
+                    text = "AMAZON Q MIGRATION ADVISOR",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -101,7 +101,7 @@ fun AiConsultantScreen(
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = if (GeminiClient.isApiKeyConfigured()) "LIVE Gemini" else "Simulated",
+                    text = if (GeminiClient.isApiKeyConfigured()) "LIVE Amazon Q" else "Simulated",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,

@@ -187,13 +187,13 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "AWS Production Environment",
+                        text = "Environment",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = BentoPurpleDark
                     )
                     Text(
-                        text = if (isDiscovering) "Indexing EC2, RDS, and S3 assets in real-time..." else "Sync status: secured, indexing completed.",
+                        text = if (isDiscovering) "Syncing services in real-time..." else "Sync status: secured, indexing completed.",
                         fontSize = 13.sp,
                         color = BentoTextSubtitle,
                         lineHeight = 17.sp,
@@ -207,22 +207,21 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Avatar elements
+                        // Service types
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy((-6).dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val services = listOf("EC2", "RDS", "S3", "VPC")
-                            services.forEach { service ->
+                            val serviceTypes = resources.map { it.type }.distinct().take(4)
+                            serviceTypes.forEach { type ->
                                 Box(
                                     modifier = Modifier
-                                        .size(34.dp)
-                                        .clip(RoundedCornerShape(100.dp))
-                                        .background(Color.White)
-                                        .border(1.dp, BentoBorderLight, RoundedCornerShape(100.dp)),
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(BentoPurpleDark.copy(alpha = 0.1f))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = service,
+                                        text = type,
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = BentoPurpleDark
@@ -234,14 +233,14 @@ fun DashboardScreen(
                         // Nodes Count
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "${filteredResources.size}",
+                                text = "${resources.size}",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = BentoPurpleDark
                             )
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "nodes",
+                                text = "running services",
                                 fontSize = 12.sp,
                                 color = BentoPurpleDark,
                                 modifier = Modifier.padding(bottom = 3.dp)
@@ -378,40 +377,40 @@ fun DashboardScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Cost Efficiency Projection",
+                                text = "Total Monthly Cost Estimate",
                                 fontWeight = FontWeight.Bold,
                                 color = BentoTextDark,
                                 fontSize = 16.sp
                             )
                             Text(
-                                text = "Multi-cloud optimization forecast models (USD)",
+                                text = "Based on current real-time inventory scan",
                                 color = BentoTextSubtitle,
                                 fontSize = 12.sp
                             )
                         }
                         Icon(
-                            imageVector = Icons.Default.Leaderboard,
-                            contentDescription = "Stats Chart",
+                            imageVector = Icons.Default.AttachMoney,
+                            contentDescription = "Cost",
                             tint = BentoPurplePrimary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Draw custom multi-layer projection chart
-                    MultiCloudProjectionChart()
+                    Text(
+                        text = "$${String.format(Locale.US, "%,.2f", resources.sumOf { it.costEstimate })}",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = BentoPurplePrimary
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Legend markers
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        LegendItem(color = AWSColor, label = "Source (AWS)")
-                        LegendItem(color = AzureColor, label = "Projected (Azure)")
-                        LegendItem(color = BentoTermGreen, label = "Optimized (GCP)")
-                    }
+                    Text(
+                        text = "Aggregated asset cost across all active cloud regions.",
+                        color = BentoTextSubtitle,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -558,106 +557,6 @@ fun DashboardScreen(
     }
 }
 
-@Composable
-fun MultiCloudProjectionChart() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .drawBehind {
-                val width = size.width
-                val height = size.height
-
-                // Draw background grid lines (horizontal)
-                val gridLines = 4
-                for (i in 0..gridLines) {
-                    val y = (height / gridLines) * i
-                    drawLine(
-                        color = BentoBorderMedium.copy(alpha = 0.4f),
-                        start = Offset(0f, y),
-                        end = Offset(width, y),
-                        strokeWidth = 1f
-                    )
-                }
-
-                // Values representing fictional costs
-                val awsPoints = listOf(
-                    Offset(0f, height * 0.82f),
-                    Offset(width * 0.25f, height * 0.78f),
-                    Offset(width * 0.5f, height * 0.81f),
-                    Offset(width * 0.75f, height * 0.84f),
-                    Offset(width, height * 0.88f)
-                )
-
-                val azurePoints = listOf(
-                    Offset(0f, height * 0.82f),
-                    Offset(width * 0.25f, height * 0.92f), 
-                    Offset(width * 0.5f, height * 0.56f), 
-                    Offset(width * 0.75f, height * 0.48f),
-                    Offset(width, height * 0.44f)
-                )
-
-                val gcpPoints = listOf(
-                    Offset(0f, height * 0.82f),
-                    Offset(width * 0.25f, height * 0.65f),
-                    Offset(width * 0.5f, height * 0.45f),
-                    Offset(width * 0.75f, height * 0.32f),
-                    Offset(width, height * 0.22f) 
-                )
-
-                // Draw Paths for line series
-                fun drawTrendLine(points: List<Offset>, color: Color) {
-                    val path = Path().apply {
-                        moveTo(points[0].x, points[0].y)
-                        for (i in 1 until points.size) {
-                            cubicTo(
-                                (points[i - 1].x + points[i].x) / 2, points[i - 1].y,
-                                (points[i - 1].x + points[i].x) / 2, points[i].y,
-                                points[i].x, points[i].y
-                            )
-                        }
-                    }
-                    drawPath(
-                        path = path,
-                        color = color,
-                        style = Stroke(width = 3.dp.toPx())
-                    )
-
-                    // Draw points on vertices
-                    points.forEach { point ->
-                        drawCircle(
-                            color = color,
-                            radius = 6f,
-                            center = point
-                        )
-                        drawCircle(
-                            color = Color.White,
-                            radius = 2.5f,
-                            center = point
-                        )
-                    }
-                }
-
-                drawTrendLine(awsPoints, AWSColor)
-                drawTrendLine(azurePoints, AzureColor)
-                drawTrendLine(gcpPoints, BentoTermGreen)
-            }
-    )
-}
-
-@Composable
-fun LegendItem(color: Color, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(text = label, color = BentoTextSubtitle, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-    }
-}
 
 @Composable
 fun ResourceItemRow(resource: DiscoveryResource) {
