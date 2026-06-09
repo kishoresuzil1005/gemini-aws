@@ -177,10 +177,16 @@ interface CloudOpsApiService {
 object CloudOpsBackendClient {
     private const val TAG = "CloudOpsBackendClient"
     
+    private var customBaseUrl: String? = null
+
+    fun setCustomBaseUrl(url: String) {
+        customBaseUrl = url
+    }
+
     // Fall back to clean default URL if empty or not configured
     val baseUrl: String
         get() {
-            var url = try {
+            var url = customBaseUrl ?: try {
                 BuildConfig.BACKEND_URL.trim().removeSurrounding("\"").removeSurrounding("'")
             } catch (e: Exception) {
                 ""
@@ -226,15 +232,26 @@ object CloudOpsBackendClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val service: CloudOpsApiService by lazy {
-        Log.i(TAG, "Initializing Retrofit with Base URL: $baseUrl")
-        Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(CloudOpsApiService::class.java)
-    }
+    private var cachedService: CloudOpsApiService? = null
+    private var lastUsedBaseUrl: String? = null
+
+    val service: CloudOpsApiService
+        get() {
+            val currentUrl = baseUrl
+            synchronized(this) {
+                if (cachedService == null || lastUsedBaseUrl != currentUrl) {
+                    Log.i(TAG, "Initializing Retrofit with Base URL: $currentUrl")
+                    lastUsedBaseUrl = currentUrl
+                    cachedService = Retrofit.Builder()
+                        .baseUrl(currentUrl)
+                        .client(okHttpClient)
+                        .addConverterFactory(MoshiConverterFactory.create(moshi))
+                        .build()
+                        .create(CloudOpsApiService::class.java)
+                }
+                return cachedService!!
+            }
+        }
 
     /**
      * Diagnostic utility to verify if the server is reachable and active.

@@ -199,9 +199,29 @@ object SecureStorage {
         return SessionData(token, email, orgName, orgId, plan, role)
     }
 
+    fun saveCustomBaseUrl(context: Context, url: String) {
+        val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPrefs.edit().putString("custom_base_url", url).apply()
+        CloudOpsBackendClient.setCustomBaseUrl(url)
+    }
+
+    fun getCustomBaseUrl(context: Context): String? {
+        val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val url = sharedPrefs.getString("custom_base_url", null)
+        if (!url.isNullOrEmpty()) {
+            CloudOpsBackendClient.setCustomBaseUrl(url)
+        }
+        return url
+    }
+
     fun clearSession(context: Context) {
         val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        // Keep the custom URL so users don't have to re-type it upon logging out
+        val customUrl = sharedPrefs.getString("custom_base_url", null)
         sharedPrefs.edit().clear().apply()
+        if (customUrl != null) {
+            sharedPrefs.edit().putString("custom_base_url", customUrl).apply()
+        }
         TokenStorage.jwtToken = null
     }
 }

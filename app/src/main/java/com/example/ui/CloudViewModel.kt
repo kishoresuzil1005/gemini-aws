@@ -168,6 +168,16 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         // Seed initial data so the user has beautiful instant visualization
         seedInitialDatabaseData()
 
+        // Load custom backend URL from secure storage if set
+        try {
+            val savedUrl = com.example.api.SecureStorage.getCustomBaseUrl(application)
+            if (savedUrl != null) {
+                Log.i("CloudViewModel", "Successfully loaded persistent custom backend URL: $savedUrl")
+            }
+        } catch (e: java.lang.Exception) {
+            Log.e("CloudViewModel", "Failed to restore custom backend URL: ${e.message}")
+        }
+
         // Persistent Session Restoration via Hardware AES-KeyStore Vault
         try {
             val recovered = com.example.api.SecureStorage.restoreSession(application)
@@ -204,6 +214,19 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     fun setUseBackend(enabled: Boolean) {
         _useBackend.value = enabled
         refreshAllFeeds()
+    }
+
+    /**
+     * Updates and persists custom live EC2 backend address dynamically.
+     */
+    fun updateBackendUrl(url: String) {
+        try {
+            com.example.api.SecureStorage.saveCustomBaseUrl(getApplication(), url.trim())
+            Log.i("CloudViewModel", "Configured and saved new live gateway IP/URL: $url")
+            refreshAllFeeds()
+        } catch (e: Exception) {
+            Log.e("CloudViewModel", "Failed to save backend URL custom configuration: ${e.message}")
+        }
     }
 
     /**

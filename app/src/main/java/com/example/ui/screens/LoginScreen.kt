@@ -155,7 +155,7 @@ fun LoginScreen(
                     enter = fadeIn() + slideInVertically(),
                     exit = fadeOut() + slideOutVertically()
                 ) {
-                    errorMessage?.let { error ->
+                    errorMessage?.let { error_text ->
                         Card(
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFFF2B55).copy(alpha = 0.15f)),
                             border = BorderStroke(1.dp, Color(0xFFFF2B55)),
@@ -164,22 +164,63 @@ fun LoginScreen(
                                 .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Error,
-                                    contentDescription = "Error message",
-                                    tint = Color(0xFFFF2B55)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = error,
-                                    fontSize = 12.sp,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Error,
+                                        contentDescription = "Error message",
+                                        tint = Color(0xFFFF2B55)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = error_text,
+                                        fontSize = 12.sp,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                
+                                val isConnectionIssue = error_text.contains("connect", ignoreCase = true) || 
+                                        error_text.contains("timeout", ignoreCase = true) || 
+                                        error_text.contains("cleartext", ignoreCase = true) ||
+                                        error_text.contains("security policy", ignoreCase = true)
+                                
+                                val useBackend by viewModel.useBackend.collectAsState()
+                                if (isConnectionIssue && useBackend) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Button(
+                                        onClick = {
+                                            viewModel.setUseBackend(false)
+                                            errorMessage = null
+                                            if (email.isEmpty()) email = "admin"
+                                            if (password.isEmpty()) password = "admin123"
+                                            if (orgName.isEmpty()) orgName = "aws"
+                                            Toast.makeText(context, "Switched to high-performance local simulation mode!", Toast.LENGTH_LONG).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = BentoPurplePrimary),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(vertical = 8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Dns,
+                                            contentDescription = "Local Sandbox",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Switch to Local Sandbox Mode",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -197,6 +238,96 @@ fun LoginScreen(
                     when (stage) {
                         AuthStage.MAIN -> {
                             Column(modifier = Modifier.fillMaxWidth()) {
+                                // Connection Engine Segmented Selector (Local Sandbox vs Live FastAPI)
+                                Text(
+                                    text = "CONOPS Connection Engine",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = CyberCyan,
+                                    modifier = Modifier.padding(bottom = 6.dp)
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 20.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFF0F0E13))
+                                        .border(1.dp, Color(0xFF2C2A35), RoundedCornerShape(12.dp))
+                                        .padding(4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val useBackend by viewModel.useBackend.collectAsState()
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (!useBackend) BentoPurplePrimary.copy(alpha = 0.4f) else Color.Transparent)
+                                            .border(1.dp, if (!useBackend) BentoPurplePrimary else Color.Transparent, RoundedCornerShape(8.dp))
+                                            .clickable { 
+                                                viewModel.setUseBackend(false)
+                                                errorMessage = null
+                                            }
+                                            .padding(vertical = 10.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Dns,
+                                                contentDescription = "Local Sandbox",
+                                                tint = if (!useBackend) Color.White else Color(0xFF9E9BA8),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Local Sandbox",
+                                                color = if (!useBackend) Color.White else Color(0xFF9E9BA8),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
+                                    }
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (useBackend) CyberCyan.copy(alpha = 0.2f) else Color.Transparent)
+                                            .border(1.dp, if (useBackend) CyberCyan else Color.Transparent, RoundedCornerShape(8.dp))
+                                            .clickable { 
+                                                viewModel.setUseBackend(true)
+                                                errorMessage = null
+                                            }
+                                            .padding(vertical = 10.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Bolt,
+                                                contentDescription = "Live Backend API",
+                                                tint = if (useBackend) CyberCyan else Color(0xFF9E9BA8),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Live API Engine",
+                                                color = if (useBackend) Color.White else Color(0xFF9E9BA8),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
+                                    }
+                                }
+
                                 // Form Tab Buttons
                                 Row(
                                     modifier = Modifier
