@@ -1,5 +1,7 @@
 import time
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, BigInteger
+import uuid
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, BigInteger, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import DATABASE_URL
@@ -141,7 +143,7 @@ class AutomationActionDB(Base):
 class ResourceDB(Base):
     __tablename__ = "resources"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    cloud_account_id = Column(Integer, nullable=False)
+    cloud_account_id = Column(Integer, nullable=True)
     provider = Column(String(50), nullable=False)
     resource_type = Column(String(100), nullable=False)
     resource_id = Column(String(100), index=True, nullable=False)
@@ -159,12 +161,37 @@ class ResourceDB(Base):
 
 class ScanHistoryDB(Base):
     __tablename__ = "scan_history"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    account_id = Column(String(50), nullable=False)
-    scan_start = Column(BigInteger, nullable=False)
-    scan_end = Column(BigInteger, nullable=True)
-    status = Column(String(50), default="COMPLETED")
-    resources_found = Column(Integer, default=0)
+
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+
+    account_id = Column(
+        String(50),
+        nullable=True
+    )
+
+    scan_start = Column(
+        DateTime,
+        nullable=True
+    )
+
+    scan_end = Column(
+        DateTime,
+        nullable=True
+    )
+
+    status = Column(
+        String(50),
+        nullable=True
+    )
+
+    resources_found = Column(
+        Integer,
+        default=0
+    )
 
 class ResourceRelationshipDB(Base):
     __tablename__ = "resource_relationships"
@@ -373,6 +400,13 @@ def init_db():
             except Exception:
                 # Silently catch as the column might already exist or driver doesn't support transaction commits
                 pass
+        
+        # Drop NOT NULL on cloud_account_id if needed
+        try:
+            conn.execute(text("ALTER TABLE resources ALTER COLUMN cloud_account_id DROP NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
         
         # columns to add to remediation_requests
         remediation_cols = [

@@ -60,8 +60,22 @@ class CostAggregator:
 
             metadata = {}
 
-            if hasattr(r, "metadata") and r.metadata:
-                metadata = r.metadata
+            try:
+
+                if hasattr(r, "tags") and r.tags:
+
+                    import json
+
+                    if isinstance(r.tags, str):
+
+                        metadata = json.loads(r.tags)
+
+                    elif isinstance(r.tags, dict):
+
+                        metadata = r.tags
+
+            except Exception:
+                metadata = {}
 
             try:
 
