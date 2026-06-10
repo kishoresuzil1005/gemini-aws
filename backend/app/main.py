@@ -545,6 +545,35 @@ def get_resources(db: Session = Depends(get_db)):
 def get_resources_double_route(db: Session = Depends(get_db)):
     return get_resources(db)
 
+@app.get("/resources/summary", response_model=ResourceSummarySchema)
+@app.get("/api/resources/summary", response_model=ResourceSummarySchema)
+def get_resources_summary(db: Session = Depends(get_db)):
+    resources = db.query(ResourceDB).all()
+    if not resources:
+        # Fallback to simulated mapping
+        return ResourceSummarySchema(
+            totalResources=8,
+            countsByType={
+                "VPC": 1,
+                "ALB": 1,
+                "EC2": 1,
+                "RDS": 1,
+                "S3": 1,
+                "Lambda": 1,
+                "SQS": 1,
+                "SNS": 1
+            }
+        )
+    
+    counts = {}
+    for r in resources:
+        counts[r.resource_type] = counts.get(r.resource_type, 0) + 1
+        
+    return ResourceSummarySchema(
+        totalResources=len(resources),
+        countsByType=counts
+    )
+
 @app.get("/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 @app.get("/api/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
@@ -603,34 +632,6 @@ def get_scan_history(db: Session = Depends(get_db)):
             history = [placeholder]
     return history
 
-@app.get("/resources/summary", response_model=ResourceSummarySchema)
-@app.get("/api/resources/summary", response_model=ResourceSummarySchema)
-def get_resources_summary(db: Session = Depends(get_db)):
-    resources = db.query(ResourceDB).all()
-    if not resources:
-        # Fallback to simulated mapping
-        return ResourceSummarySchema(
-            totalResources=8,
-            countsByType={
-                "VPC": 1,
-                "ALB": 1,
-                "EC2": 1,
-                "RDS": 1,
-                "S3": 1,
-                "Lambda": 1,
-                "SQS": 1,
-                "SNS": 1
-            }
-        )
-    
-    counts = {}
-    for r in resources:
-        counts[r.resource_type] = counts.get(r.resource_type, 0) + 1
-        
-    return ResourceSummarySchema(
-        totalResources=len(resources),
-        countsByType=counts
-    )
 
 @app.get("/relationships", response_model=List[ResourceRelationshipSchema])
 @app.get("/api/relationships", response_model=List[ResourceRelationshipSchema])
