@@ -1,8 +1,22 @@
-from .auth import get_aws_client
+import boto3
 
-class RDSAdapter:
-    def __init__(self, cloud_account_id):
-        self.client = get_aws_client("rds", cloud_account_id)
-    
-    def describe_db_instances(self):
-        return self.client.describe_db_instances()
+class RDSDiscovery:
+    @staticmethod
+    def discover(region):
+        try:
+            client = boto3.client("rds", region_name=region)
+            response = client.describe_db_instances()
+            rds_instances = []
+            for db in response.get("DBInstances", []):
+                rds_instances.append({
+                    "resource_id": db["DBInstanceIdentifier"],
+                    "resource_type": "RDS",
+                    "region": region,
+                    "engine": db.get("Engine"),
+                    "class": db.get("DBInstanceClass"),
+                    "status": db.get("DBInstanceStatus"),
+                    "multi_az": db.get("MultiAZ", False)
+                })
+            return rds_instances
+        except Exception:
+            return []

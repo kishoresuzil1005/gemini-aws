@@ -105,6 +105,65 @@ data class TemporaryCredentialsResponse(
     val permissions: List<String>
 )
 
+@JsonClass(generateAdapter = true)
+data class DirectCostService(
+    val service: String,
+    val amount: Double
+)
+
+@JsonClass(generateAdapter = true)
+data class DirectCostDaily(
+    val date: String,
+    val amount: Double
+)
+
+@JsonClass(generateAdapter = true)
+data class CloudCostSummary(
+    val month: String,
+    val actualCost: Double,
+    val forecastCost: Double,
+    val currency: String,
+    val byService: List<DirectCostService>,
+    val dailyTrend: List<DirectCostDaily>
+)
+
+@JsonClass(generateAdapter = true)
+data class RecommendationItem(
+    val resource_id: String,
+    val resource_name: String,
+    val resource_type: String,
+    val issue: String,
+    val action: String,
+    val savings: Double,
+    val severity: String,
+    val remediation_type: String
+)
+
+@JsonClass(generateAdapter = true)
+data class OptimizationSavings(
+    val monthly_savings: Double,
+    val annual_savings: Double
+)
+
+@JsonClass(generateAdapter = true)
+data class AIInsightsResponse(
+    val executive_summary: String,
+    val risks: List<String>,
+    val savings_opportunities: List<String>,
+    val recommendations: List<String>,
+    val finops_score: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class AIChatPayload(
+    val question: String
+)
+
+@JsonClass(generateAdapter = true)
+data class AIChatResponse(
+    val answer: String
+)
+
 object TokenStorage {
     var jwtToken: String? = null
 }
@@ -172,6 +231,21 @@ interface CloudOpsApiService {
 
     @DELETE("api/migrations/{id}")
     suspend fun deleteMigration(@Path("id") id: Int): Map<String, String>
+
+    @GET("api/cost/summary")
+    suspend fun getCostSummary(): CloudCostSummary
+
+    @GET("api/optimization/recommendations")
+    suspend fun getOptimizationRecommendations(): List<RecommendationItem>
+
+    @GET("api/optimization/savings")
+    suspend fun getOptimizationSavings(): OptimizationSavings
+
+    @GET("api/ai/insights")
+    suspend fun getAIInsights(): AIInsightsResponse
+
+    @POST("api/ai/chat")
+    suspend fun getAICopilotResponse(@Body payload: AIChatPayload): AIChatResponse
 }
 
 object CloudOpsBackendClient {

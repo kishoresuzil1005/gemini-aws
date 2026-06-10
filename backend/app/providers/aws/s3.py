@@ -1,8 +1,24 @@
-from .auth import get_aws_client
+import boto3
 
-class S3Adapter:
-    def __init__(self, cloud_account_id):
-        self.client = get_aws_client("s3", cloud_account_id)
-    
-    def list_buckets(self):
-        return self.client.list_buckets()
+class S3Discovery:
+
+    @staticmethod
+    def discover():
+
+        client = boto3.client("s3")
+
+        response = client.list_buckets()
+
+        resources = []
+
+        for bucket in response["Buckets"]:
+
+            resources.append({
+                "resource_id": bucket["Name"],
+                "resource_type": "S3",
+                "created": str(
+                    bucket["CreationDate"]
+                )
+            })
+
+        return resources

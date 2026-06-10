@@ -49,6 +49,12 @@ interface CloudDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAccount(account: CloudAccount)
 
+    @Query("DELETE FROM cloud_accounts")
+    suspend fun clearAllAccounts()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAccounts(accounts: List<CloudAccount>)
+
     @Query("DELETE FROM cloud_accounts WHERE id = :id")
     suspend fun deleteAccountById(id: Int)
 
@@ -119,6 +125,14 @@ class CloudRepository(private val dao: CloudDao) {
 
     suspend fun insertAccount(account: CloudAccount) {
         dao.insertAccount(account)
+    }
+
+    suspend fun clearAccounts() {
+        dao.clearAllAccounts()
+    }
+
+    suspend fun insertAccounts(accounts: List<CloudAccount>) {
+        dao.insertAccounts(accounts)
     }
 
     suspend fun deleteAccount(id: Int) {

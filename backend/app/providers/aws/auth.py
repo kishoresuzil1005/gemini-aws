@@ -9,6 +9,10 @@ def get_aws_client(service, cloud_account_id, region="us-east-1"):
     if not account:
         raise Exception("Cloud account not found")
 
+    # AWS Cost Explorer's API endpoint is only available globally in the us-east-1 region.
+    # Therefore, we always query ce using us-east-1.
+    client_region = "us-east-1" if service == "ce" else (account.region or "us-east-1")
+    
     # In production, use STS AssumeRole using account.role_arn
     # For now, using default credentials + region override
-    return boto3.client(service, region_name=account.region)
+    return boto3.client(service, region_name=client_region)

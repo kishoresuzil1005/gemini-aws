@@ -150,10 +150,51 @@ class ResourceDB(Base):
     status = Column(String(50), nullable=True)
     tags = Column(Text, nullable=True) # JSON store
     discovered_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+    instance_type = Column(String(100), nullable=True)
+    instance_class = Column(String(100), nullable=True)
+    size_gb = Column(Float, nullable=True)
+    memory_size = Column(Integer, nullable=True)
+    monthly_requests = Column(BigInteger, nullable=True)
+    avg_duration_ms = Column(Float, nullable=True)
+
+class ScanHistoryDB(Base):
+    __tablename__ = "scan_history"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    account_id = Column(String(50), nullable=False)
+    scan_start = Column(BigInteger, nullable=False)
+    scan_end = Column(BigInteger, nullable=True)
+    status = Column(String(50), default="COMPLETED")
+    resources_found = Column(Integer, default=0)
+
+class ResourceRelationshipDB(Base):
+    __tablename__ = "resource_relationships"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    source_resource_id = Column(String(255), nullable=False)
+    target_resource_id = Column(String(255), nullable=False)
+    relationship_type = Column(String(100), nullable=False)
+
+class ResourceSnapshotDB(Base):
+    __tablename__ = "resource_snapshots"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    resource_id = Column(String(255), index=True, nullable=False)
+    snapshot_json = Column(Text, nullable=False)
+    created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+
+
+class PricingCacheDB(Base):
+    __tablename__ = "pricing_cache"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    service = Column(String(50), nullable=False)
+    sku = Column(String(255), nullable=True)
+    resource_type = Column(String(100), nullable=True)
+    price_per_hour = Column(Float, nullable=False)
+    region = Column(String(50), nullable=False)
+    updated_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+
+
 
 # Initialize Database (creates all tables in Postgres)
 def init_db():
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
 # Dependency to get db session

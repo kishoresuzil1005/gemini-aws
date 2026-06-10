@@ -166,6 +166,21 @@ fun TerraformGeneratorScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = module, color = TextWhite, fontSize = 14.sp)
                         }
+                        
+                        if (module == "Compute (EC2/VM)" && selectedServices.contains(module)) {
+                            // Show real-time EC2 list from viewModel
+                            val ec2Resources = viewModel.resources.collectAsState().value.filter { it.type == "EC2" }
+                            if (ec2Resources.isNotEmpty()) {
+                                Column(modifier = Modifier.padding(start = 32.dp, top = 8.dp, bottom = 8.dp)) {
+                                    Text("Analyzed EC2 Instances:", color = CyberCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    ec2Resources.forEach { res ->
+                                        Ec2InstanceAnalyticsPanel(res.name, res.configurationHint)
+                                    }
+                                }
+                            } else {
+                                Text("No EC2 compute resources discovered yet.", color = TextDim, fontSize = 12.sp, modifier = Modifier.padding(start = 32.dp, bottom = 8.dp))
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -447,6 +462,40 @@ fun SavedMigrationRow(
                         Icon(Icons.Default.Delete, contentDescription = "Delete Saved", tint = WarningAmber, modifier = Modifier.size(16.dp))
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun Ec2InstanceAnalyticsPanel(name: String, configurationHint: String) {
+    var isExpanded by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .border(BorderStroke(1.dp, BorderGrey), RoundedCornerShape(4.dp))
+            .clickable { isExpanded = !isExpanded }
+            .padding(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = name, color = TextWhite, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            val state = if (configurationHint.contains("State: stopped") || configurationHint.contains("stopped")) "STOPPED" else "RUNNING"
+            Text(text = state, color = if (state == "RUNNING") TerminalGreen else WarningAmber, fontSize = 10.sp)
+        }
+        if (isExpanded) {
+            Divider(color = BorderGrey, modifier = Modifier.padding(vertical = 4.dp))
+            Button(
+                onClick = { /* Implicitly covered by run generator */ },
+                colors = ButtonDefaults.buttonColors(containerColor = CyberCyan, contentColor = SpaceSlate),
+                modifier = Modifier.padding(top = 8.dp).height(24.dp),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("Ready for Migration", fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp))
             }
         }
     }

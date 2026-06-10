@@ -89,6 +89,19 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _lastTemporaryCredentials = MutableStateFlow<com.example.api.TemporaryCredentialsResponse?>(null)
     val lastTemporaryCredentials = _lastTemporaryCredentials.asStateFlow()
 
+    private val _costSummary = MutableStateFlow<com.example.api.CloudCostSummary?>(null)
+    val costSummary = _costSummary.asStateFlow()
+
+    private val _optimizationRecommendations = MutableStateFlow<List<com.example.api.RecommendationItem>>(emptyList())
+    val optimizationRecommendations = _optimizationRecommendations.asStateFlow()
+
+    private val _optimizationSavings = MutableStateFlow<com.example.api.OptimizationSavings?>(null)
+    val optimizationSavings = _optimizationSavings.asStateFlow()
+
+    private val _aiInsights = MutableStateFlow<com.example.api.AIInsightsResponse?>(null)
+    val aiInsights = _aiInsights.asStateFlow()
+
+
     // Local runtime states
     private val _isDiscovering = MutableStateFlow(false)
     val isDiscovering = _isDiscovering.asStateFlow()
@@ -166,6 +179,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         // Seed initial data so the user has beautiful instant visualization
+        _costSummary.value = getDefaultMockCostSummary()
         seedInitialDatabaseData()
 
         // Load custom backend URL from secure storage if set
@@ -245,6 +259,8 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Fetch accounts and sync with local Room
                 val remoteAccounts = apiService.getAccounts()
+                repository.clearAccounts()
+                repository.insertAccounts(remoteAccounts)
                 _isBackendConnected.value = true
                 Log.i("CloudViewModel", "Successfully connected to FastAPI. Synced accounts.")
 
@@ -252,6 +268,37 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 val remoteResources = apiService.getResources()
                 repository.clearResources()
                 repository.insertResources(remoteResources)
+
+                // Fetch Cost Explorer Summary statistics
+                try {
+                    val remoteCost = apiService.getCostSummary()
+                    _costSummary.value = remoteCost
+                } catch (ceError: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch Cost Explorer billing details from REST gateway: ${ceError.message}")
+                }
+
+                // Fetch dynamic cloud optimization results (Phase 6)
+                try {
+                    val remoteOps = apiService.getOptimizationRecommendations()
+                    _optimizationRecommendations.value = remoteOps
+                } catch (ce: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch cloud optimizations: ${ce.message}")
+                }
+
+                try {
+                    val remoteSavings = apiService.getOptimizationSavings()
+                    _optimizationSavings.value = remoteSavings
+                } catch (ce: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch cloud savings: ${ce.message}")
+                }
+
+                // Fetch live generative Gemini intelligence reports (Phase 7)
+                try {
+                    val remoteAI = apiService.getAIInsights()
+                    _aiInsights.value = remoteAI
+                } catch (ce: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch generative AI insights: ${ce.message}")
+                }
 
                 // Populate live scanned incidents from PostgreSQL/Boto3 scan
                 val remoteIncidents = apiService.getIncidents()
@@ -319,83 +366,83 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
             // Check if discovered resources exist
             resources.take(1).collect { list ->
-                if (list.size < 8) {
-                    val defaultResources = listOf(
-                        DiscoveryResource(
-                            id = "vpc-09ab02c",
-                            provider = "AWS",
-                            type = "VPC",
-                            name = "Main-Corporate-Net",
-                            configurationHint = "Region: us-east-1 | CIDR Block: 10.0.0.0/16 | Subnets: 4 Active",
-                            costEstimate = 0.00,
-                            dependenciesString = "app-web-servers,rds-primary"
-                        ),
-                        DiscoveryResource(
-                            id = "alb-ingress-01",
-                            provider = "AWS",
-                            type = "ALB",
-                            name = "App-Public-Ingress",
-                            configurationHint = "Region: us-east-1 | Port: 443 | Certificate: AWS ACM Wildcard | Target: app-web-servers",
-                            costEstimate = 22.50,
-                            dependenciesString = "app-web-servers"
-                        ),
-                        DiscoveryResource(
-                            id = "app-web-servers",
-                            provider = "AWS",
-                            type = "EC2",
-                            name = "FastAPI-Web-Cluster",
-                            configurationHint = "Region: us-east-1 | AMI: Ubuntu 22.04 LTS | Instance Size: m5.large | Scale Policy: Min 2 - Max 8",
-                            costEstimate = 152.40,
-                            dependenciesString = "rds-primary,sqs-event-queue"
-                        ),
-                        DiscoveryResource(
-                            id = "rds-primary",
-                            provider = "AWS",
-                            type = "RDS",
-                            name = "PostgreSQL-MasterDB",
-                            configurationHint = "Region: us-west-2 | Engine: PostgreSQL 14.2 | Class: db.m5.xlarge | Multi-AZ Deployment",
-                            costEstimate = 340.00,
-                            dependenciesString = ""
-                        ),
-                        DiscoveryResource(
-                            id = "s3-corporate-archive",
-                            provider = "AWS",
-                            type = "S3",
-                            name = "s3-corporate-archive-992",
-                            configurationHint = "Region: eu-central-1 | Storage size: 14.2TB | Encryption: None | Object Lock: Enabled",
-                            costEstimate = 820.00,
-                            dependenciesString = ""
-                        ),
-                        DiscoveryResource(
-                            id = "lambda-processor",
-                            provider = "AWS",
-                            type = "Lambda",
-                            name = "Telemetry-Sanitize-Worker",
-                            configurationHint = "Region: ap-south-1 | Runtime: Python 3.10 | Timeout: 120s | Memory: 512MB",
-                            costEstimate = 15.00,
-                            dependenciesString = "sqs-event-queue"
-                        ),
-                        DiscoveryResource(
-                            id = "sqs-event-queue",
-                            provider = "AWS",
-                            type = "SQS",
-                            name = "billing-events-queue.fifo",
-                            configurationHint = "Region: us-east-1 | Type: FIFO | Message Retention: 4 Days | Target: sns-billing-topic",
-                            costEstimate = 18.20,
-                            dependenciesString = "sns-billing-topic"
-                        ),
-                        DiscoveryResource(
-                            id = "sns-billing-topic",
-                            provider = "AWS",
-                            type = "SNS",
-                            name = "billing-notifications",
-                            configurationHint = "Region: us-east-1 | Subscribers: 3 Active (HTTP Webhook, AWS Lambda, DevOps Emails)",
-                            costEstimate = 8.10,
-                            dependenciesString = ""
+                if (list.isEmpty()) {
+                    repository.insertResources(
+                        listOf(
+                            com.example.data.DiscoveryResource(
+                                id = "vpc-09ab02c",
+                                provider = "AWS",
+                                type = "VPC",
+                                name = "Main-Corporate-Net",
+                                configurationHint = "Region: us-east-1 | CIDR: 10.0.0.0/16",
+                                costEstimate = 0.0,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "alb-ingress-01",
+                                provider = "AWS",
+                                type = "ALB",
+                                name = "App-Public-Ingress",
+                                configurationHint = "Region: us-east-1 | Port: 443 | Cert active",
+                                costEstimate = 22.50,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "app-web-servers",
+                                provider = "AWS",
+                                type = "EC2",
+                                name = "FastAPI-Web-Cluster",
+                                configurationHint = "Region: us-east-1 | AMI: Ubuntu 22.04 LTS",
+                                costEstimate = 154.70,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "rds-primary",
+                                provider = "AWS",
+                                type = "RDS",
+                                name = "PostgreSQL-MasterDB",
+                                configurationHint = "Region: us-west-2 | Engine: PostgreSQL 14.2",
+                                costEstimate = 343.50,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "s3-corporate-archive",
+                                provider = "AWS",
+                                type = "S3",
+                                name = "s3-corporate-archive-992",
+                                configurationHint = "Region: eu-central-1 | Storage size: 14.2TB",
+                                costEstimate = 819.50,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "lambda-processor",
+                                provider = "AWS",
+                                type = "Lambda",
+                                name = "Telemetry-Sanitize-Worker",
+                                configurationHint = "Region: ap-south-1 | Python 3.10 | Crux trigger",
+                                costEstimate = 15.00,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "sqs-event-queue",
+                                provider = "AWS",
+                                type = "SQS",
+                                name = "billing-events-queue.fifo",
+                                configurationHint = "Region: us-east-1 | Type: FIFO | Retention: 4d",
+                                costEstimate = 18.20,
+                                dependenciesString = ""
+                            ),
+                            com.example.data.DiscoveryResource(
+                                id = "sns-billing-topic",
+                                provider = "AWS",
+                                type = "SNS",
+                                name = "billing-notifications",
+                                configurationHint = "Region: us-east-1 | Subscribers: 3 endpoints",
+                                costEstimate = 8.50,
+                                dependenciesString = ""
+                            )
                         )
                     )
-                    repository.clearResources()
-                    repository.insertResources(defaultResources)
                 }
             }
 
@@ -775,17 +822,33 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
         _isGeneratingAi.value = true
         viewModelScope.launch {
-            val systemInstruction = "You are an intelligent, senior multi-cloud migration and dependency analysis architect. Your goal is to guide developers on Cloudamize-grade topology diagrams, cost models, IAM vulnerabilities, and target deployments. Provide rich, highly structured, technical feedback utilizing Markdown schemas."
-            
-            val apiResponse = GeminiClient.generateMigrationFeedback(
-                prompt = text,
-                systemInstruction = systemInstruction
-            )
-            
-            _chatMessages.update {
-                it + ChatMessage(text = apiResponse, isUser = false)
+            if (_useBackend.value && _isBackendConnected.value) {
+                try {
+                    val response = com.example.api.CloudOpsBackendClient.service.getAICopilotResponse(
+                        com.example.api.AIChatPayload(text)
+                    )
+                    _chatMessages.update {
+                        it + ChatMessage(text = response.answer, isUser = false)
+                    }
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "FastAPI Copilot connection failed: ${e.message}")
+                    fallbackToLocalGemini(text)
+                }
+            } else {
+                fallbackToLocalGemini(text)
             }
             _isGeneratingAi.value = false
+        }
+    }
+
+    private suspend fun fallbackToLocalGemini(text: String) {
+        val systemInstruction = "You are an intelligent, senior multi-cloud migration and dependency analysis architect. Your goal is to guide developers on Cloudamize-grade topology diagrams, cost models, IAM vulnerabilities, and target deployments. Provide rich, highly structured, technical feedback utilizing Markdown schemas."
+        val apiResponse = GeminiClient.generateMigrationFeedback(
+            prompt = text,
+            systemInstruction = systemInstruction
+        )
+        _chatMessages.update {
+            it + ChatMessage(text = apiResponse, isUser = false)
         }
     }
 
@@ -897,6 +960,89 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     } else job
                 }
             }
+        }
+
+        // Sync simulated resources locally on offline discovery completion
+        try {
+            repository.clearResources()
+            repository.insertResources(
+                listOf(
+                    com.example.data.DiscoveryResource(
+                        id = "vpc-09ab02c",
+                        provider = "AWS",
+                        type = "VPC",
+                        name = "Main-Corporate-Net",
+                        configurationHint = "Region: us-east-1 | CIDR: 10.0.0.0/16",
+                        costEstimate = 0.0,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "alb-ingress-01",
+                        provider = "AWS",
+                        type = "ALB",
+                        name = "App-Public-Ingress",
+                        configurationHint = "Region: us-east-1 | Port: 443 | Cert active",
+                        costEstimate = 22.50,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "app-web-servers",
+                        provider = "AWS",
+                        type = "EC2",
+                        name = "FastAPI-Web-Cluster",
+                        configurationHint = "Region: us-east-1 | AMI: Ubuntu 22.04 LTS",
+                        costEstimate = 154.70,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "rds-primary",
+                        provider = "AWS",
+                        type = "RDS",
+                        name = "PostgreSQL-MasterDB",
+                        configurationHint = "Region: us-west-2 | Engine: PostgreSQL 14.2",
+                        costEstimate = 343.50,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "s3-corporate-archive",
+                        provider = "AWS",
+                        type = "S3",
+                        name = "s3-corporate-archive-992",
+                        configurationHint = "Region: eu-central-1 | Storage size: 14.2TB",
+                        costEstimate = 819.50,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "lambda-processor",
+                        provider = "AWS",
+                        type = "Lambda",
+                        name = "Telemetry-Sanitize-Worker",
+                        configurationHint = "Region: ap-south-1 | Python 3.10 | Crux trigger",
+                        costEstimate = 15.00,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "sqs-event-queue",
+                        provider = "AWS",
+                        type = "SQS",
+                        name = "billing-events-queue.fifo",
+                        configurationHint = "Region: us-east-1 | Type: FIFO | Retention: 4d",
+                        costEstimate = 18.20,
+                        dependenciesString = ""
+                    ),
+                    com.example.data.DiscoveryResource(
+                        id = "sns-billing-topic",
+                        provider = "AWS",
+                        type = "SNS",
+                        name = "billing-notifications",
+                        configurationHint = "Region: us-east-1 | Subscribers: 3 endpoints",
+                        costEstimate = 8.50,
+                        dependenciesString = ""
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            Log.e("CloudViewModel", "Failed to seed demo resources locally: ${e.message}")
         }
     }
 
@@ -1205,5 +1351,33 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             )
         )
         _healActions.value = emptyList()
+    }
+
+    private fun getDefaultMockCostSummary(): com.example.api.CloudCostSummary {
+        val trendList = mutableListOf<com.example.api.DirectCostDaily>()
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        
+        for (i in 30 downTo 1) {
+            val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -i) }
+            val amt = 40.0 + (i % 7) * 2.5 + (i * 0.1)
+            trendList.add(com.example.api.DirectCostDaily(format.format(cal.time), amt))
+        }
+        
+        return com.example.api.CloudCostSummary(
+            month = SimpleDateFormat("yyyy-MM", Locale.US).format(Date()),
+            actualCost = 1340.22,
+            forecastCost = 1450.00,
+            currency = "USD",
+            byService = listOf(
+                com.example.api.DirectCostService("Amazon Elastic Compute Cloud - Compute", 154.70),
+                com.example.api.DirectCostService("Amazon Relational Database Service", 343.50),
+                com.example.api.DirectCostService("Amazon Simple Storage Service", 819.50),
+                com.example.api.DirectCostService("Elastic Load Balancing", 22.50),
+                com.example.api.DirectCostService("AWS Lambda", 15.00),
+                com.example.api.DirectCostService("Amazon Simple Queue Service", 18.20),
+                com.example.api.DirectCostService("Amazon Simple Notification Service", 8.50)
+            ),
+            dailyTrend = trendList
+        )
     }
 }
