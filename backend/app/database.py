@@ -192,10 +192,199 @@ class PricingCacheDB(Base):
     updated_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
 
+class OptimizationRecommendationDB(Base):
+    __tablename__ = "optimization_recommendations"
 
-# Initialize Database (creates all tables in Postgres)
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    resource_id = Column(
+        String(255),
+        nullable=False
+    )
+
+    resource_type = Column(
+        String(100),
+        nullable=False
+    )
+
+    severity = Column(
+        String(50),
+        nullable=False
+    )
+
+    issue = Column(
+        Text,
+        nullable=False
+    )
+
+    recommendation = Column(
+        Text,
+        nullable=False
+    )
+
+    monthly_savings = Column(
+        Float,
+        default=0.0
+    )
+
+    created_at = Column(
+        BigInteger,
+        default=lambda:
+        int(time.time() * 1000)
+    )
+
+
+class AnomalyDB(Base):
+    __tablename__ = "anomalies"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True
+    )
+
+    anomaly_type = Column(
+        String(100),
+        nullable=False
+    )
+
+    severity = Column(
+        String(50),
+        nullable=False
+    )
+
+    resource_id = Column(
+        String(255),
+        nullable=True
+    )
+
+    message = Column(
+        Text,
+        nullable=False
+    )
+
+    status = Column(
+        String(50),
+        default="ACTIVE"
+    )
+
+    detected_at = Column(
+        BigInteger,
+        default=lambda: int(time.time() * 1000)
+    )
+
+
+class BudgetDB(Base):
+    __tablename__ = "budgets"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    name = Column(
+        String(255),
+        nullable=False
+    )
+
+    limit_amount = Column(
+        Float,
+        nullable=False
+    )
+
+    created_at = Column(
+        BigInteger,
+        default=lambda: int(time.time() * 1000)
+    )
+
+
+class RemediationRequestDB(Base):
+    __tablename__ = "remediation_requests"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    resource_id = Column(
+        String(255),
+        nullable=False
+    )
+
+    resource_type = Column(
+        String(100),
+        nullable=False
+    )
+
+    action = Column(
+        String(100),
+        nullable=False
+    )
+
+    status = Column(
+        String(50),
+        default="PENDING"
+    )
+
+    execution_result = Column(
+        Text,
+        nullable=True
+    )
+
+    executed_at = Column(
+        BigInteger,
+        nullable=True
+    )
+
+    created_at = Column(
+        BigInteger,
+        default=lambda: int(time.time() * 1000)
+    )
+
+
+
+# Initialize Database (creates all tables in Postgres or SQLite)
 def init_db():
     Base.metadata.create_all(bind=engine)
+    
+    # Self-healing migrations for existing tables and newly added schema properties
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        # columns to add to resources if not already present
+        resources_cols = [
+            ("instance_type", "VARCHAR(100)"),
+            ("instance_class", "VARCHAR(100)"),
+            ("size_gb", "DOUBLE PRECISION"),
+            ("memory_size", "INTEGER"),
+            ("monthly_requests", "BIGINT"),
+            ("avg_duration_ms", "DOUBLE PRECISION")
+        ]
+        for col_name, col_type in resources_cols:
+            try:
+                conn.execute(text(f"ALTER TABLE resources ADD COLUMN {col_name} {col_type}"))
+                conn.commit()
+            except Exception:
+                # Silently catch as the column might already exist or driver doesn't support transaction commits
+                pass
+        
+        # columns to add to remediation_requests
+        remediation_cols = [
+            ("execution_result", "TEXT"),
+            ("executed_at", "BIGINT")
+        ]
+        for col_name, col_type in remediation_cols:
+            try:
+                conn.execute(text(f"ALTER TABLE remediation_requests ADD COLUMN {col_name} {col_type}"))
+                conn.commit()
+            except Exception:
+                pass
 
 # Dependency to get db session
 def get_db():

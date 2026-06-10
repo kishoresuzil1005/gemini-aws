@@ -377,6 +377,9 @@ def startup_event():
     
     # 3. Seed baseline incidents if empty (Removed)
 
+    from app.jobs.scheduler import start_scheduler
+    start_scheduler()
+
     db.commit()
     db.close()
 
@@ -894,47 +897,32 @@ def get_billing_forecast(db: Session = Depends(get_db)):
     )
 
 
-from app.services.optimization.recommendations import RecommendationsEngine
-from app.services.optimization.savings_calculator import SavingsCalculator
+from app.routes.optimization import router as optimization_router
 
-@app.get("/optimization/recommendations", response_model=List[RecommendationItemSchema])
-@app.get("/api/optimization/recommendations", response_model=List[RecommendationItemSchema])
-def get_optimization_recommendations(db: Session = Depends(get_db)):
-    """
-    Scans the existing PostgreSQL cloud resources to inspect and locate wasted cloud expenditures (Phase 6).
-    """
-    return RecommendationsEngine.get_recommendations(db, 1)
-
-@app.get("/optimization/savings", response_model=OptimizationSavingsSchema)
-@app.get("/api/optimization/savings", response_model=OptimizationSavingsSchema)
-def get_optimization_savings(db: Session = Depends(get_db)):
-    """
-    Computes potential sum of monthly and annual SRE savings metrics (Phase 6).
-    """
-    recs = RecommendationsEngine.get_recommendations(db, 1)
-    return SavingsCalculator.calculate_totals(recs)
+app.include_router(
+    optimization_router
+)
 
 
-from app.services.ai.insights_engine import AIInsightsEngine
+from app.routes.ai import router as ai_router
 
-@app.get("/ai/insights", response_model=AIInsightsResponseSchema)
-@app.get("/api/ai/insights", response_model=AIInsightsResponseSchema)
-def get_ai_insights(db: Session = Depends(get_db)):
-    """
-    Evaluates resource configurations, waste ratios, and cost streams via Gemini AI
-    to deliver high-value architectural, security, and financial optimization feedback (Phase 7).
-    """
-    return AIInsightsEngine.get_insights(db, 1)
+app.include_router(
+    ai_router
+)
 
 
-@app.post("/ai/chat", response_model=AIChatResponseSchema)
-@app.post("/api/ai/chat", response_model=AIChatResponseSchema)
-def post_ai_chat(payload: AIChatPayloadSchema, db: Session = Depends(get_db)):
-    """
-    Interactive natural language Copilot chat for cloud topology and FinOps Q&A (Phase 7).
-    """
-    answer_text = AIInsightsEngine.chat_copilot(db, payload.question, 1)
-    return AIChatResponseSchema(answer=answer_text)
+from app.routes.operations import router as operations_router
+
+app.include_router(
+    operations_router
+)
+
+
+from app.routes.metrics import router as metrics_router
+
+app.include_router(
+    metrics_router
+)
 
 
 

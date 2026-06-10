@@ -42,15 +42,15 @@ def scan_aws_resources():
     """
     session = get_session()
 
-     if not is_aws_configured():
-         raise Exception(
-        "AWS credentials not configured"
-     )
+    if not is_aws_configured():
+        raise Exception(
+            "AWS credentials not configured"
+        )
 
     if not verify_aws_credentials(session):
         raise Exception(
-        "AWS credentials are invalid"
-    )
+            "AWS credentials are invalid"
+        )
 
     resources = []
     incidents = []
