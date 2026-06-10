@@ -3,6 +3,7 @@ import json
 import logging
 import time
 from sqlalchemy.orm import Session
+from datetime import datetime
 from app.database import PricingCacheDB
 
 logger = logging.getLogger("PricingService")
@@ -146,7 +147,7 @@ class PricingService:
 
         if existing:
             existing.price_per_hour = price
-            existing.updated_at = int(time.time() * 1000)
+            existing.updated_at = datetime.utcnow()
         else:
             new_entry = PricingCacheDB(
                 service=service,
@@ -154,7 +155,7 @@ class PricingService:
                 resource_type=resource_type,
                 price_per_hour=price,
                 region=region,
-                updated_at=int(time.time() * 1000)
+                updated_at=datetime.utcnow()
             )
             self.db.add(new_entry)
         self.db.commit()

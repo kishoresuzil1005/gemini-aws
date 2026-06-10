@@ -1,5 +1,6 @@
 import time
 import uuid
+from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text, BigInteger, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -216,7 +217,7 @@ class PricingCacheDB(Base):
     resource_type = Column(String(100), nullable=True)
     price_per_hour = Column(Float, nullable=False)
     region = Column(String(50), nullable=False)
-    updated_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
 
 class OptimizationRecommendationDB(Base):
