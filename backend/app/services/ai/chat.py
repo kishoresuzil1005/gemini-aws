@@ -23,12 +23,18 @@ class CloudAssistant:
             try:
                 # Compile comprehensive context for LLM
                 from app.services.ai.prompt_builder import PromptBuilder
+                from app.providers.aws.cost_explorer import CostExplorerAdapter
+                
+                adapter = CostExplorerAdapter(1)
+                actual_cost = adapter.get_current_month_cost()
+                forecast = adapter.get_forecast_cost()
+
                 context = {
                     "resources": data.get("raw_recommendations", []),
                     "costs": {
-                        "actual_cost": data["savings"].get("monthly_savings", 85.0) * 4,
-                        "forecast": data["savings"].get("monthly_savings", 85.0) * 4.8,
-                        "estimated_monthly": data["savings"].get("monthly_savings", 85.0) * 4.2
+                        "actual_cost": actual_cost,
+                        "forecast": forecast,
+                        "estimated_monthly": forecast
                     },
                     "recommendations": data.get("raw_recommendations", [])
                 }

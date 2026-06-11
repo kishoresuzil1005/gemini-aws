@@ -13,13 +13,9 @@ class BillingService:
 
         adapter = CostExplorerAdapter(1)
 
-        actual_cost = adapter.get_current_month_cost()
-
-        forecast = adapter.get_forecast_cost()
-
         return {
-            "actual_cost": round(actual_cost, 2),
-            "forecast": round(forecast, 2)
+            "actual_cost": adapter.get_current_month_cost(),
+            "forecast": adapter.get_forecast_cost()
         }
 
     def get_cost_by_service(self):
@@ -32,7 +28,4 @@ class BillingService:
 
         adapter = CostExplorerAdapter(1)
 
-        return round(
-            adapter.get_forecast_cost(),
-            2
-        )
+        return adapter.get_forecast_cost()
