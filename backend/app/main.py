@@ -23,6 +23,7 @@ from .aws_scanner import (
 )
 from app.inventory.routes import router as inventory_router
 from app.services.graph.neo4j_service import Neo4jService
+from app.services.graph.graph_sync_service import GraphSyncService
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -320,6 +321,11 @@ class GraphResponseSchema(BaseModel):
 class GraphHealthResponseSchema(BaseModel):
     status: str
     neo4j_uri: str
+
+class GraphSyncResponseSchema(BaseModel):
+    status: str
+    synced_resources: int
+    total_resources: int
 
 class DirectCostServiceSchema(BaseModel):
     service: str
@@ -1565,6 +1571,56 @@ def graph_health():
             status=f"failed: {str(e)}",
             neo4j_uri="unreachable"
         )
+    finally:
+        if graph:
+            graph.close()
+
+@app.post(
+    "/api/graph/sync",
+    response_model=GraphSyncResponseSchema
+)
+def sync_graph(
+    db: Session = Depends(get_db)
+):
+    sync_service = None
+    try:
+        sync_service = GraphSyncService(db)
+        result = sync_service.sync_resources()
+        return GraphSyncResponseSchema(
+            status="success",
+            synced_resources=result["synced_resources"],
+            total_resources=result["total_resources"]
+        )
+    except Exception as e:
+        return GraphSyncResponseSchema(
+            status=f"failed: {str(e)}",
+            synced_resources=0,
+            total_resources=0
+        )
+    finally:
+        if sync_service:
+            sync_service.close()
+
+@app.get("/api/graph")
+def get_graph():
+    graph = None
+    try:
+        graph = Neo4jService()
+        return graph.get_graph()
+    finally:
+        if graph:
+            graph.close()
+
+@app.delete("/api/graph")
+def clear_graph():
+    graph = None
+    try:
+        graph = Neo4jService()
+        graph.clear_graph()
+        return {
+            "status": "success",
+            "message": "Graph cleared"
+        }
     finally:
         if graph:
             graph.close()
