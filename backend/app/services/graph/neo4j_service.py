@@ -21,11 +21,22 @@ class MemoryGraphStore:
         cls.edges.clear()
 
     @classmethod
-    def merge_node(cls, resource_id, resource_type, name, region=None, status=None, state=None):
+    def merge_node(
+        cls,
+        resource_id,
+        resource_type,
+        name,
+        provider=None,
+        region=None,
+        status=None,
+        state=None,
+        **kwargs
+    ):
         cls.nodes[resource_id] = {
             "id": resource_id,
             "type": resource_type or "resource",
             "name": name or resource_id,
+            "provider": provider or "AWS",
             "region": region or "us-east-1",
             "status": status or state or "active",
             "state": state or status or "active"
