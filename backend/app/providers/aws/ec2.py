@@ -18,6 +18,13 @@ class EC2Discovery:
         for reservation in response["Reservations"]:
             for instance in reservation["Instances"]:
 
+                vols = []
+                for bdm in instance.get("BlockDeviceMappings", []):
+                    ebs_sec = bdm.get("Ebs", {})
+                    vol_id = ebs_sec.get("VolumeId")
+                    if vol_id:
+                        vols.append(vol_id)
+
                 instances.append({
                     "resource_id": instance["InstanceId"],
                     "resource_type": "EC2",
@@ -29,7 +36,9 @@ class EC2Discovery:
                     ),
                     "subnet_id": instance.get("SubnetId"),
                     "vpc_id": instance.get("VpcId"),
-                    "security_groups": [sg.get("GroupId") for sg in instance.get("SecurityGroups", [])]
+                    "security_groups": [sg.get("GroupId") for sg in instance.get("SecurityGroups", [])],
+                    "iam_instance_profile": instance.get("IamInstanceProfile", {}).get("Arn"),
+                    "ebs_volumes": vols
                 })
 
         return instances

@@ -160,15 +160,12 @@ data class TopologyCategory(
 )
 
 @JsonClass(generateAdapter = true)
-data class TopologyLevel2Node(
+data class TopologyResource(
     val id: String,
     val type: String,
-    val name: String
-)
-
-@JsonClass(generateAdapter = true)
-data class TopologyLevel2Response(
-    val nodes: List<TopologyLevel2Node>
+    val name: String,
+    val region: String,
+    val status: String
 )
 
 @JsonClass(generateAdapter = true)
@@ -187,6 +184,36 @@ data class TopologyLevel3Dependency(
 data class TopologyLevel3Response(
     val resource: TopologyLevel3Resource,
     val dependencies: List<TopologyLevel3Dependency>
+)
+
+@JsonClass(generateAdapter = true)
+data class GraphResourceNode(
+    val id: String,
+    val type: String,
+    val name: String
+)
+
+@JsonClass(generateAdapter = true)
+data class GraphResourceEdge(
+    val source: String,
+    val target: String,
+    val relation: String
+)
+
+@JsonClass(generateAdapter = true)
+data class ImpactedResource(
+    val id: String,
+    val type: String,
+    val name: String,
+    val impact: String
+)
+
+@JsonClass(generateAdapter = true)
+data class ResourceGraphResponse(
+    val resource: GraphResourceNode,
+    val nodes: List<GraphResourceNode>,
+    val edges: List<GraphResourceEdge>,
+    val impact_analysis: List<ImpactedResource>
 )
 
 @JsonClass(generateAdapter = true)
@@ -274,10 +301,13 @@ interface CloudOpsApiService {
     suspend fun getTopologySummary(): List<TopologyCategory>
 
     @GET("api/topology/{category}")
-    suspend fun getTopologyLevel2(@Path("category") category: String): TopologyLevel2Response
+    suspend fun getTopologyResources(@Path("category") category: String): List<TopologyResource>
 
     @GET("api/topology/resource/{id}")
     suspend fun getTopologyLevel3(@Path("id") id: String): TopologyLevel3Response
+
+    @GET("api/graph/resource/{id}")
+    suspend fun getResourceGraph(@Path("id") id: String): ResourceGraphResponse
 
     @GET("api/graph")
     suspend fun getGraph(): GraphResponse

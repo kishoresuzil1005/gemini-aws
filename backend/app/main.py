@@ -22,6 +22,7 @@ from .aws_scanner import (
     scan_aws_resources, heal_security_group_ssh, heal_s3_bucket_encryption
 )
 from app.inventory.routes import router as inventory_router
+from app.services.graph.neo4j_service import Neo4jService
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -266,13 +267,12 @@ class GraphNodeSchema(BaseModel):
     type: str
     name: str
 
-class TopologyLevel2Node(BaseModel):
+class TopologyResource(BaseModel):
     id: str
     type: str
     name: str
-
-class TopologyLevel2Response(BaseModel):
-    nodes: List[TopologyLevel2Node]
+    region: str
+    status: str
 
 class TopologyLevel3Resource(BaseModel):
     id: str
@@ -286,6 +286,28 @@ class TopologyLevel3Response(BaseModel):
     resource: TopologyLevel3Resource
     dependencies: List[TopologyLevel3Dependency]
 
+class GraphResourceNode(BaseModel):
+    id: str
+    type: str
+    name: str
+
+class GraphResourceEdge(BaseModel):
+    source: str
+    target: str
+    relation: str
+
+class ImpactedResource(BaseModel):
+    id: str
+    type: str
+    name: str
+    impact: str
+
+class ResourceGraphResponse(BaseModel):
+    resource: GraphResourceNode
+    nodes: List[GraphResourceNode]
+    edges: List[GraphResourceEdge]
+    impact_analysis: List[ImpactedResource]
+
 class GraphEdgeSchema(BaseModel):
     source: str
     target: str
@@ -294,6 +316,10 @@ class GraphEdgeSchema(BaseModel):
 class GraphResponseSchema(BaseModel):
     nodes: List[GraphNodeSchema]
     edges: List[GraphEdgeSchema]
+
+class GraphHealthResponseSchema(BaseModel):
+    status: str
+    neo4j_uri: str
 
 class DirectCostServiceSchema(BaseModel):
     service: str
@@ -669,22 +695,8 @@ def get_relationships_endpoint(db: Session = Depends(get_db)):
 
 
 from app.database import ResourceNodeDB, ResourceEdgeDB
-
-# Category mapping globally
-category_mapping = {
-    "compute": ["EC2", "LAMBDA", "ECS", "EKS"],
-    "storage": ["S3", "EBS"],
-    "database": ["RDS", "DYNAMODB"],
-    "network": ["VPC", "SUBNET", "ALB"],
-    "security": ["SECURITYGROUP", "IAM"]
-}
-
-def get_category(res_type: str) -> str:
-    res_type = res_type.upper() if res_type else ""
-    for cat, types in category_mapping.items():
-        if res_type in types:
-            return cat
-    return "other"
+from app.services.topology.topology_service import TopologyService
+from app.services.topology.dependency_service import DependencyService
 
 class TopologyCategory(BaseModel):
     name: str
@@ -692,107 +704,90 @@ class TopologyCategory(BaseModel):
 
 @app.get("/api/topology", response_model=List[TopologyCategory])
 def get_topology_summary(db: Session = Depends(get_db)):
-    resources = db.query(ResourceDB).all()
-    compute = 0
-    storage = 0
-    database = 0
-    network = 0
-    security = 0
-
-    for r in resources:
-        if r.resource_type in ["EC2", "Lambda", "ECS", "EKS"]:
-            compute += 1
-        elif r.resource_type in ["S3", "EBS"]:
-            storage += 1
-        elif r.resource_type in ["RDS", "DYNAMODB"]:
-            database += 1
-        elif r.resource_type in ["VPC", "ALB", "SUBNET", "SECURITYGROUP"]:
-            network += 1
-        elif r.resource_type in ["IAM"]:
-            security += 1
-
+    categories = TopologyService(db).get_categories()
     return [
-        {"name": "Compute", "count": compute},
-        {"name": "Storage", "count": storage},
-        {"name": "Database", "count": database},
-        {"name": "Network", "count": network},
-        {"name": "Security", "count": security},
+        TopologyCategory(name=c["name"], count=c["count"])
+        for c in categories
     ]
 
 @app.get("/api/topology/resource/{resource_id}", response_model=TopologyLevel3Response)
 def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
-    node = db.query(ResourceNodeDB).filter(ResourceNodeDB.resource_id == resource_id).first()
-    if not node:
+    data = DependencyService(db).get_resource_dependencies(resource_id)
+    if not data:
         raise HTTPException(status_code=404, detail="Resource not found")
         
-    edges = db.query(ResourceEdgeDB).filter(ResourceEdgeDB.source_id == resource_id).all()
-    deps = []
-    for e in edges:
-        target = db.query(ResourceNodeDB).filter(ResourceNodeDB.resource_id == e.target_id).first()
-        if target:
-            deps.append(TopologyLevel3Dependency(
-                type=target.resource_type,
-                name=target.name or target.resource_id
-            ))
-            
     return TopologyLevel3Response(
-        resource=TopologyLevel3Resource(id=node.resource_id, name=node.name or node.resource_id),
-        dependencies=deps
+        resource=TopologyLevel3Resource(
+            id=data["resource"]["id"],
+            name=data["resource"]["name"]
+        ),
+        dependencies=[
+            TopologyLevel3Dependency(type=d["type"], name=d["name"])
+            for d in data["dependencies"]
+        ]
     )
 
-@app.get("/api/topology/{category}", response_model=TopologyLevel2Response)
+@app.get("/api/graph/resource/{resource_id}", response_model=ResourceGraphResponse)
+def get_resource_graph(resource_id: str, db: Session = Depends(get_db)):
+    data = DependencyService(db).get_resource_graph(resource_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    return ResourceGraphResponse(
+        resource=GraphResourceNode(
+            id=data["resource"]["id"],
+            type=data["resource"]["type"],
+            name=data["resource"]["name"]
+        ),
+        nodes=[
+            GraphResourceNode(id=n["id"], type=n["type"], name=n["name"])
+            for n in data["nodes"]
+        ],
+        edges=[
+            GraphResourceEdge(source=e["source"], target=e["target"], relation=e["relation"])
+            for e in data["edges"]
+        ],
+        impact_analysis=[
+            ImpactedResource(id=i["id"], type=i["type"], name=i["name"], impact=i["impact"])
+            for i in data["impact_analysis"]
+        ]
+    )
+
+@app.get("/api/topology/{category}", response_model=List[TopologyResource])
 def get_topology_level_2(category: str, db: Session = Depends(get_db)):
-    all_nodes = db.query(ResourceNodeDB).all()
-    nodes = []
-    
-    for n in all_nodes:
-        if get_category(n.resource_type) == category.lower():
-            nodes.append(TopologyLevel2Node(
-                id=n.resource_id,
-                type=n.resource_type,
-                name=n.name or n.resource_id
-            ))
-            
-    return TopologyLevel2Response(nodes=nodes)
+    resources = TopologyService(db).get_resources_by_category(category)
+    return [
+        TopologyResource(
+            id=r["id"],
+            type=r["type"],
+            name=r["name"],
+            region=r["region"],
+            status=r["status"]
+        )
+        for r in resources
+    ]
 
 @app.get("/graph", response_model=GraphResponseSchema)
 @app.get("/api/graph", response_model=GraphResponseSchema)
 def get_graph_topology(db: Session = Depends(get_db)):
     """
     Retrieves the entire connected cloud topology map from Neo4j (Phase 3).
-    Falls back gracefully to PostgreSQL relational database mappings.
+    Falls back gracefully to PostgreSQL relational database mappings or high-fidelity memory store.
     """
-    from app.database_neo4j import driver
+    from app.services.graph.neo4j_service import Neo4jService
+    try:
+        data = Neo4jService.get_full_graph()
+        if data and data.get("nodes"):
+            return GraphResponseSchema(
+                nodes=[GraphNodeSchema(id=n["id"], type=n["type"], name=n["name"]) for n in data["nodes"]],
+                edges=[GraphEdgeSchema(source=e["source"], target=e["target"], type=e["type"]) for e in data["edges"]]
+            )
+    except Exception as e:
+        print(f"Neo4jService graph query failed: {e}")
+
+    # Fallback to high-fidelity PostgreSQL relational data
     nodes = []
     edges = []
-
-    # 1. Attempt Neo4j query
-    if driver:
-        try:
-            with driver.session() as session:
-                # Retrieve nodes
-                nodes_res = session.run("MATCH (n:Resource) RETURN n.resource_id, n.resource_type, n.name")
-                seen_ids = set()
-                for record in nodes_res:
-                    res_id, r_type, name = record[0], record[1], record[2]
-                    if res_id and res_id not in seen_ids:
-                        nodes.append(GraphNodeSchema(id=res_id, type=r_type, name=name or res_id))
-                        seen_ids.add(res_id)
-
-                # Retrieve edges
-                edges_res = session.run("MATCH (a)-[r]->(b) RETURN a.resource_id, b.resource_id, type(r)")
-                for record in edges_res:
-                    src, tgt, rel_type = record[0], record[1], record[2]
-                    if src and tgt:
-                        edges.append(GraphEdgeSchema(source=src, target=tgt, type=rel_type))
-                        
-                if nodes:
-                    return GraphResponseSchema(nodes=nodes, edges=edges)
-        except Exception as e:
-            # Fall back to postgres below
-            print(f"Neo4j query failed, falling back to PostgreSQL relational models: {e}")
-
-    # 2. High-fidelity fallback from PostgreSQL Inventory DB (Phase 2 integration)
     try:
         resources = db.query(ResourceDB).all()
         relationships = db.query(ResourceRelationshipDB).all()
@@ -1551,3 +1546,25 @@ def get_temporary_credentials(account_id: int, db: Session = Depends(get_db)):
 
 def seed_discovery_for_new_connection(db: Session, provider: str, region: str):
     pass
+
+@app.get(
+    "/api/graph/health",
+    response_model=GraphHealthResponseSchema
+)
+def graph_health():
+    graph = None
+    try:
+        graph = Neo4jService()
+        status = graph.health_check()
+        return GraphHealthResponseSchema(
+            status=status,
+            neo4j_uri="connected"
+        )
+    except Exception as e:
+        return GraphHealthResponseSchema(
+            status=f"failed: {str(e)}",
+            neo4j_uri="unreachable"
+        )
+    finally:
+        if graph:
+            graph.close()

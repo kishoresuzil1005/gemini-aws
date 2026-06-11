@@ -34,6 +34,12 @@ class AWSDiscoveryScanner:
                     deps.append({"type": "Subnet", "id": inst["subnet_id"], "name": inst["subnet_id"]})
                 for sg in inst.get("security_groups", []):
                     deps.append({"type": "SecurityGroup", "id": sg, "name": sg})
+                for vol_id in inst.get("ebs_volumes", []):
+                    deps.append({"type": "EBS", "id": vol_id, "name": vol_id})
+                if inst.get("iam_instance_profile"):
+                    arn = inst["iam_instance_profile"]
+                    name = arn.split("/")[-1] if "/" in arn else arn
+                    deps.append({"type": "IAM", "id": arn, "name": name})
 
                 resources.append({
                     "provider": "AWS",

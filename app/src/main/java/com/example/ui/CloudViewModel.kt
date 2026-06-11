@@ -110,11 +110,14 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _topologyCategories = MutableStateFlow<List<com.example.api.TopologyCategory>>(emptyList())
     val topologyCategories = _topologyCategories.asStateFlow()
 
-    private val _topologyLevel2 = MutableStateFlow<com.example.api.TopologyLevel2Response?>(null)
-    val topologyLevel2 = _topologyLevel2.asStateFlow()
+    private val _topologyResources = MutableStateFlow<List<com.example.api.TopologyResource>>(emptyList())
+    val topologyResources = _topologyResources.asStateFlow()
 
     private val _topologyLevel3 = MutableStateFlow<com.example.api.TopologyLevel3Response?>(null)
     val topologyLevel3 = _topologyLevel3.asStateFlow()
+
+    private val _resourceGraph = MutableStateFlow<com.example.api.ResourceGraphResponse?>(null)
+    val resourceGraph = _resourceGraph.asStateFlow()
 
     private val _currentTopologyCategory = MutableStateFlow<String?>(null)
     val currentTopologyCategory = _currentTopologyCategory.asStateFlow()
@@ -820,14 +823,15 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         _currentTopologyCategory.value = category
         _currentTopologyResourceId.value = null
         _topologyLevel3.value = null
+        _resourceGraph.value = null
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (_useBackend.value) {
                     val apiService = com.example.api.CloudOpsBackendClient.service
-                    _topologyLevel2.value = apiService.getTopologyLevel2(category)
+                    _topologyResources.value = apiService.getTopologyResources(category)
                 }
             } catch (e: Exception) {
-                Log.e("CloudViewModel", "Failed to fetch topology level 2: ${e.message}")
+                Log.e("CloudViewModel", "Failed to fetch topology resources: ${e.message}")
             }
         }
     }
@@ -839,9 +843,10 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 if (_useBackend.value) {
                     val apiService = com.example.api.CloudOpsBackendClient.service
                     _topologyLevel3.value = apiService.getTopologyLevel3(resourceId)
+                    _resourceGraph.value = apiService.getResourceGraph(resourceId)
                 }
             } catch (e: Exception) {
-                Log.e("CloudViewModel", "Failed to fetch topology level 3: ${e.message}")
+                Log.e("CloudViewModel", "Failed to fetch topology level 3 or graph: ${e.message}")
             }
         }
     }
@@ -850,9 +855,10 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         if (_currentTopologyResourceId.value != null) {
             _currentTopologyResourceId.value = null
             _topologyLevel3.value = null
+            _resourceGraph.value = null
         } else if (_currentTopologyCategory.value != null) {
             _currentTopologyCategory.value = null
-            _topologyLevel2.value = null
+            _topologyResources.value = emptyList()
         }
     }
 

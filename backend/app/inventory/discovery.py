@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
-from app.database import ResourceDB, CloudAccountDB, ResourceNodeDB, ResourceEdgeDB
+from app.database import ResourceDB, CloudAccountDB, ResourceNodeDB, ResourceEdgeDB, ResourceRelationshipDB
 from app.services.discovery.scanner import AWSDiscoveryScanner
+from app.services.graph.neo4j_service import Neo4jService
 
 
 def discover_resources(
@@ -110,14 +111,22 @@ def discover_resources(
         cloud_account_id
     ).delete()
     
-    # Also clear nodes and edges
+    # Also clear nodes, edges, and relationships
     db.query(ResourceNodeDB).delete()
     db.query(ResourceEdgeDB).delete()
+    db.query(ResourceRelationshipDB).delete()
+    
+    # Reset/clear Neo4j database graph
+    try:
+        Neo4jService.clear_graph()
+    except Exception as ne_e:
+        print(f"Failed to clear Neo4j graph during discovery: {ne_e}")
 
     db.add_all(resources)
 
     nodes = []
     edges = []
+    relationships = []
     for r in discovered:
         # Avoid creating duplicate nodes (e.g. EC2 instance discovered twice in different regions somehow, just in case)
         nodes.append(ResourceNodeDB(
@@ -126,20 +135,67 @@ def discover_resources(
             name=r.get("name"),
             provider=r.get("provider", "AWS")
         ))
+        
+        # Merge source node in Neo4j
+        try:
+            Neo4jService.create_resource({
+                "id": r.get("id"),
+                "type": r.get("type"),
+                "name": r.get("name"),
+                "region": r.get("region"),
+                "status": r.get("status") or r.get("state")
+            })
+        except Exception as ne_e:
+            print(f"Failed to merge source state to Neo4j: {ne_e}")
+
         for dep in r.get("dependencies", []):
+            dep_type = dep.get("type", "").upper()
+            rel_type = "DEPENDS_ON"
+            if dep_type == "VPC":
+                rel_type = "IN_VPC"
+            elif dep_type == "SUBNET":
+                rel_type = "IN_SUBNET"
+            elif dep_type in ("SECURITYGROUP", "SECURITY_GROUP"):
+                rel_type = "USES_SG"
+            elif dep_type == "EBS":
+                rel_type = "ATTACHED_TO"
+            elif dep_type in ("IAM", "IAM_ROLE", "IAM_USER"):
+                rel_type = "USES_ROLE"
+
             edges.append(ResourceEdgeDB(
                 source_id=r.get("id"),
                 target_id=dep.get("id"),
-                relationship="depends_on"
+                relationship=rel_type.lower()
             ))
-            # Also add the target node if it doesn't exist? Well, since nodes has unique constraint, we'll wait and commit at the end, handling unique constraint by merging. Actually it's easier to just upsert or handle them manually.
-            # But the prompt says "Store: ResourceNode, ResourceEdge". I will add target nodes to nodes list if we want to show them? Actually, the prompt says for Level 3: "returns dependencies [{type, name}]", which can be queried from ResourceEdgeDB and ResourceNodeDB. Wait, if the target is just a VPC or Subnet, maybe we don't have its record in `ResourceNodeDB`? We can create a dummy node.
+            relationships.append(ResourceRelationshipDB(
+                source_resource_id=r.get("id"),
+                target_resource_id=dep.get("id"),
+                relationship_type=rel_type
+            ))
+            # Also add the target node if it doesn't exist
             nodes.append(ResourceNodeDB(
                 resource_id=dep.get("id"),
                 resource_type=dep.get("type"),
                 name=dep.get("name") or dep.get("id"),
                 provider="AWS"
             ))
+
+            # Merge target node and relation in Neo4j
+            try:
+                Neo4jService.create_resource({
+                    "id": dep.get("id"),
+                    "type": dep.get("type"),
+                    "name": dep.get("name") or dep.get("id"),
+                    "region": "global",
+                    "status": "active"
+                })
+                Neo4jService.create_relationship(
+                    source_id=r.get("id"),
+                    target_id=dep.get("id"),
+                    relationship_type=rel_type
+                )
+            except Exception as ne_e:
+                print(f"Failed to merge target/relation to Neo4j: {ne_e}")
 
     # Add nodes directly with ignoring duplicates
     # Since we might have duplicates in the nodes list, let's filter them out by resource_id
@@ -150,5 +206,6 @@ def discover_resources(
     
     db.add_all(unique_nodes.values())
     db.add_all(edges)
+    db.add_all(relationships)
 
     db.commit()
