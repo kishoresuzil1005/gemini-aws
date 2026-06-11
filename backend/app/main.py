@@ -752,9 +752,14 @@ def get_cost_summary(db: Session = Depends(get_db)):
                 adapter = CostExplorerAdapter(account.id)
                 total_actual += adapter.get_current_month_cost()
                 
-                forecast_value = adapter.get_forecast_cost()
-                if forecast_value < 0:
-                    forecast_value = 0
+                forecast_value = 0.0
+                try:
+                    forecast_value = adapter.get_forecast_cost()
+                    if abs(forecast_value) < 0.01:
+                        forecast_value = 0.0
+                except Exception:
+                    forecast_value = 0.0
+                
                 total_forecast += forecast_value
                 
                 by_service = adapter.get_cost_by_service()

@@ -28,4 +28,7 @@ class BillingService:
 
         adapter = CostExplorerAdapter(1)
 
-        return adapter.get_forecast_cost()
+        return round(
+            adapter.get_forecast_cost(),
+            2
+        )
