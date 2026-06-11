@@ -24,6 +24,7 @@ from .aws_scanner import (
 from app.inventory.routes import router as inventory_router
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.graph_sync_service import GraphSyncService
+from app.services.graph.graph_analysis_service import GraphAnalysisService
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -327,6 +328,12 @@ class GraphSyncResponseSchema(BaseModel):
     synced_resources: int
     total_resources: int
 
+class GraphSyncStatusSchema(BaseModel):
+    total_resources: int
+    synced_resources: int
+    failed_resources: int
+    success_rate: float
+
 class DirectCostServiceSchema(BaseModel):
     service: str
     amount: float
@@ -432,6 +439,13 @@ def startup_event():
 
     from app.jobs.scheduler import start_scheduler
     start_scheduler()
+
+    # Create first-time startup auto sync
+    try:
+        from app.services.graph.auto_sync import AutoGraphSync
+        AutoGraphSync.sync(db)
+    except Exception as ge_e:
+        print(f"[GRAPH AUTO SYNC] {ge_e}")
 
     db.commit()
     db.close()
@@ -1146,6 +1160,12 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS")
             except Exception as e:
                 print(f"Failed discovering for account {account.id}: {e}")
 
+        try:
+            from app.services.graph.auto_sync import AutoGraphSync
+            AutoGraphSync.sync(db)
+        except Exception as ge:
+            print(f"Auto graph sync failed during discovery: {ge}")
+
         job.progress = 0.8
         db.commit()
 
@@ -1624,3 +1644,140 @@ def clear_graph():
     finally:
         if graph:
             graph.close()
+
+@app.get(
+    "/api/graph/sync/status",
+    response_model=GraphSyncStatusSchema
+)
+def graph_sync_status(
+    db: Session = Depends(get_db)
+):
+    total = db.query(ResourceDB).count()
+    return GraphSyncStatusSchema(
+        total_resources=total,
+        synced_resources=0,
+        failed_resources=0,
+        success_rate=0
+    )
+
+@app.get("/api/graph/stats")
+def graph_stats():
+    graph = None
+    try:
+        graph = Neo4jService()
+        data = graph.get_graph()
+        return {
+            "nodes": len(data["nodes"]),
+            "edges": len(data["edges"])
+        }
+    finally:
+        if graph:
+            graph.close()
+
+@app.get("/api/graph/verify")
+def verify_graph():
+    graph = None
+    try:
+        graph = Neo4jService()
+        return {
+            "health": graph.health_check(),
+            "nodes": graph.get_node_count(),
+            "edges": graph.get_edge_count()
+        }
+    finally:
+        if graph:
+            graph.close()
+
+@app.get("/api/graph/dashboard")
+def graph_dashboard():
+    graph = None
+    try:
+        graph = Neo4jService()
+        data = graph.get_graph()
+        return {
+            "nodes": len(data["nodes"]),
+            "edges": len(data["edges"]),
+            "status": "healthy"
+        }
+    except Exception as e:
+        return {
+            "nodes": 0,
+            "edges": 0,
+            "status": str(e)
+        }
+    finally:
+        if graph:
+            graph.close()
+
+@app.get("/api/graph/last-sync")
+def graph_last_sync():
+    from app.services.graph.sync_tracker import SyncTracker
+    return {
+        "last_sync": SyncTracker.get()
+    }
+
+@app.get("/api/graph/relationships")
+def graph_relationships():
+    graph = None
+    try:
+        graph = Neo4jService()
+        query = """
+        MATCH ()-[r]->()
+        RETURN
+        type(r) as relationship,
+        count(r) as count
+        """
+        result = graph.query(query)
+        return result
+    finally:
+        if graph:
+            graph.close()
+
+@app.get("/api/graph/downstream/{resource_id}")
+def downstream(resource_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.downstream_dependencies(resource_id)
+    finally:
+        service.close()
+
+@app.get("/api/graph/upstream/{resource_id}")
+def upstream(resource_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.upstream_dependencies(resource_id)
+    finally:
+        service.close()
+
+@app.get("/api/graph/blast-radius/{resource_id}")
+def blast_radius(resource_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.blast_radius(resource_id)
+    finally:
+        service.close()
+
+@app.get("/api/graph/criticality/{resource_id}")
+def criticality(resource_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.criticality_score(resource_id)
+    finally:
+        service.close()
+
+@app.get("/api/graph/security-group/{sg_id}")
+def security_group_analysis(sg_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.security_group_exposure(sg_id)
+    finally:
+        service.close()
+
+@app.get("/api/graph/tree/{resource_id}")
+def dependency_tree(resource_id: str):
+    service = GraphAnalysisService()
+    try:
+        return service.dependency_tree(resource_id)
+    finally:
+        service.close()
+
