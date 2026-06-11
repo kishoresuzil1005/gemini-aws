@@ -39,6 +39,8 @@ fun DependencyGraphScreen(
 ) {
     val resources by viewModel.resources.collectAsState()
     val selectedNode by viewModel.selectedGraphNode.collectAsState()
+    val graphTopology by viewModel.graphTopology.collectAsState()
+    val graphNodes = graphTopology?.nodes ?: emptyList()
 
     Box(
         modifier = modifier
@@ -81,6 +83,24 @@ fun DependencyGraphScreen(
             val verticalScrollState = rememberScrollState()
             val horizontalScrollState = rememberScrollState()
 
+            val edges = graphTopology?.edges ?: emptyList()
+            val nodePositions = remember(graphNodes) {
+                val map = mutableMapOf<String, Offset>()
+                val count = graphNodes.size
+                if (count > 0) {
+                    val centerX = 500f
+                    val centerY = 360f
+                    val radius = 240f
+                    graphNodes.forEachIndexed { i, node ->
+                        val angle = (2 * Math.PI * i) / count
+                        val x = centerX + radius * Math.cos(angle).toFloat()
+                        val y = centerY + radius * Math.sin(angle).toFloat()
+                        map[node.id] = Offset(x, y)
+                    }
+                }
+                map
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -92,30 +112,6 @@ fun DependencyGraphScreen(
                     modifier = Modifier
                         .size(width = 1000.dp, height = 720.dp)
                         .drawBehind {
-                            // Link mapping configurations
-                            // Mapped Relative Node Center Positions (in Pixels)
-                            val albX = 500.dp.toPx()
-                            val albY = 100.dp.toPx()
-
-                            val webX = 500.dp.toPx()
-                            val webY = 280.dp.toPx()
-
-                            val dbX = 250.dp.toPx()
-                            val dbY = 500.dp.toPx()
-
-                            val s3X = 180.dp.toPx()
-                            val s3Y = 280.dp.toPx()
-
-                            val lambdaX = 780.dp.toPx()
-                            val lambdaY = 280.dp.toPx()
-
-                            val sqsX = 640.dp.toPx()
-                            val sqsY = 500.dp.toPx()
-
-                            val snsX = 860.dp.toPx()
-                            val snsY = 500.dp.toPx()
-
-                            // Link drawings
                             fun drawDependencyCurve(start: Offset, end: Offset, color: Color) {
                                 val path = Path().apply {
                                     moveTo(start.x, start.y)
@@ -134,67 +130,38 @@ fun DependencyGraphScreen(
                                 )
                             }
 
-                            // 1. Ingress ALB ➔ FastAPI Web Nodes
-                            drawDependencyCurve(Offset(albX, albY), Offset(webX, webY), CyberCyan)
-                            // 2. Web Nodes ➔ PostgreSQL RDS Master DB
-                            drawDependencyCurve(Offset(webX, webY), Offset(dbX, dbY), ElectricBlue)
-                            // 3. Web Nodes ➔ SQS queue
-                            drawDependencyCurve(Offset(webX, webY), Offset(sqsX, sqsY), WarningAmber)
-                            // 4. Lambda processor ➔ SQS queue
-                            drawDependencyCurve(Offset(lambdaX, lambdaY), Offset(sqsX, sqsY), NebulaPurple)
-                            // 5. SQS queue ➔ SNS Billing pubsub
-                            drawDependencyCurve(Offset(sqsX, sqsY), Offset(snsX, snsY), TerminalGreen)
+                            edges.forEach { edge ->
+                                val startPos = nodePositions[edge.source]
+                                val endPos = nodePositions[edge.target]
+                                if (startPos != null && endPos != null) {
+                                    drawDependencyCurve(
+                                        Offset(startPos.x.dp.toPx(), startPos.y.dp.toPx()),
+                                        Offset(endPos.x.dp.toPx(), endPos.y.dp.toPx()),
+                                        CyberCyan
+                                    )
+                                }
+                            }
                         }
                 ) {
                     // Node Overlay Components with absolute positions matching the Canvas coordinates
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "alb-ingress-01" },
-                        x = 500, y = 100,
-                        isSelected = selectedNode?.id == "alb-ingress-01",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "app-web-servers" },
-                        x = 500, y = 280,
-                        isSelected = selectedNode?.id == "app-web-servers",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "rds-primary" },
-                        x = 250, y = 500,
-                        isSelected = selectedNode?.id == "rds-primary",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "s3-corporate-archive" },
-                        x = 180, y = 280,
-                        isSelected = selectedNode?.id == "s3-corporate-archive",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "lambda-processor" },
-                        x = 780, y = 280,
-                        isSelected = selectedNode?.id == "lambda-processor",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "sqs-event-queue" },
-                        x = 640, y = 500,
-                        isSelected = selectedNode?.id == "sqs-event-queue",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
-
-                    GraphNodeItem(
-                        resource = resources.firstOrNull { it.id == "sns-billing-topic" },
-                        x = 860, y = 500,
-                        isSelected = selectedNode?.id == "sns-billing-topic",
-                        onClick = { viewModel.selectGraphNode(it) }
-                    )
+                    graphNodes.forEach { node ->
+                        val pos = nodePositions[node.id]
+                        if (pos != null) {
+                            val activeResource = resources.firstOrNull { it.id == node.id }
+                                ?: DiscoveryResource(
+                                    id = node.id, provider = "AWS", type = node.type,
+                                    name = node.name, configurationHint = "",
+                                    costEstimate = 0.0, dependenciesString = ""
+                                )
+                            GraphNodeItem(
+                                resource = activeResource,
+                                x = pos.x.toInt(),
+                                y = pos.y.toInt(),
+                                isSelected = selectedNode?.id == node.id,
+                                onClick = { viewModel.selectGraphNode(it) }
+                            )
+                        }
+                    }
                 }
             }
 

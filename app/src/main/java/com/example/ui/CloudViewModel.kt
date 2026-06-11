@@ -101,6 +101,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _aiInsights = MutableStateFlow<com.example.api.AIInsightsResponse?>(null)
     val aiInsights = _aiInsights.asStateFlow()
 
+    private val _resourceSummary = MutableStateFlow<com.example.api.ResourceSummary?>(null)
+    val resourceSummary = _resourceSummary.asStateFlow()
+
+    private val _graphTopology = MutableStateFlow<com.example.api.GraphResponse?>(null)
+    val graphTopology = _graphTopology.asStateFlow()
 
     // Local runtime states
     private val _isDiscovering = MutableStateFlow(false)
@@ -265,9 +270,25 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 Log.i("CloudViewModel", "Successfully connected to FastAPI. Synced accounts.")
 
                 // Sync remote resources with local Room to keep everything in sync
-                val remoteResources = apiService.getResources()
-                repository.clearResources()
-                repository.insertResources(remoteResources)
+                try {
+                    val remoteResources = apiService.getResources()
+                    repository.clearResources()
+                    repository.insertResources(remoteResources)
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to sync remote resources: ${e.message}")
+                }
+
+                try {
+                    _resourceSummary.value = apiService.getResourcesSummary()
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch resource summary: ${e.message}")
+                }
+
+                try {
+                    _graphTopology.value = apiService.getGraph()
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch graph topology: ${e.message}")
+                }
 
                 // Fetch Cost Explorer Summary statistics
                 try {

@@ -736,70 +736,46 @@ from app.services.cost.forecast import CostForecastEngine
 
 @app.get("/api/cost/summary", response_model=CloudCostSummarySchema)
 def get_cost_summary(db: Session = Depends(get_db)):
-    # Find all AWS accounts
-    aws_accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == "AWS").all()
-    
-    total_actual = 0.0
-    total_forecast = 0.0
-    service_breakdown = {}
-    aggregated_trend = {}
-    
     import datetime
     today = datetime.date.today()
     month_str = today.strftime("%Y-%m")
     
-    # 1. Gather active pricing inventory estimates
-    agg_totals = CostAggregator.calculate_account_monthly(db, 1)
-    estimated_monthly = agg_totals.get("total", 1381.90)
-    
+    aws_accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == "AWS").all()
+    total_actual = 0.0
+    total_forecast = 0.0
+    service_breakdown = {}
+    aggregated_trend = {}
+
     if aws_accounts:
         for account in aws_accounts:
-            adapter = CostExplorerAdapter(account.id)
-            # 1. Monthly Cost
-            total_actual += adapter.get_current_month_cost()
-            # 2. Forecast
-            total_forecast += adapter.get_forecast_cost()
-            # 3. Cost by service
-            by_service = adapter.get_cost_by_service()
-            for service, cost_val in by_service.items():
-                service_breakdown[service] = service_breakdown.get(service, 0.0) + cost_val
-            # 4. Daily trend
-            daily_trend = adapter.get_daily_cost_trend(days=30)
-            for entry in daily_trend:
-                date_key = entry["date"]
-                aggregated_trend[date_key] = aggregated_trend.get(date_key, 0.0) + entry["amount"]
+            try:
+                adapter = CostExplorerAdapter(account.id)
+                total_actual += adapter.get_current_month_cost()
                 
+                forecast_value = adapter.get_forecast_cost()
+                if forecast_value < 0:
+                    forecast_value = 0
+                total_forecast += forecast_value
+                
+                by_service = adapter.get_cost_by_service()
+                for service, cost_val in by_service.items():
+                    service_breakdown[service] = service_breakdown.get(service, 0.0) + cost_val
+
+                daily_trend = adapter.get_daily_cost_trend(30)
+                for entry in daily_trend:
+                    date_key = entry["date"]
+                    aggregated_trend[date_key] = aggregated_trend.get(date_key, 0.0) + entry["amount"]
+            except Exception as e:
+                print(f"Cost summary error for account {account.id}: {e}")
     else:
-        # High fidelity dynamic active calculations
-        total_actual = estimated_monthly
-        total_forecast = CostForecastEngine.forecast_monthly_spend(estimated_monthly, days_elapsed=12)
-        
-        service_display_names = {
-            "ec2": "Amazon Elastic Compute Cloud - Compute",
-            "rds": "Amazon Relational Database Service",
-            "s3": "Amazon Simple Storage Service",
-            "alb": "Elastic Load Balancing",
-            "lambda": "AWS Lambda",
-            "sqs": "Amazon Simple Queue Service",
-            "sns": "Amazon Simple Notification Service"
-        }
-        
-        for key, val in agg_totals.items():
-            if key in service_display_names and val > 0:
-                service_breakdown[service_display_names[key]] = val
-                
-        for i in range(30, 0, -1):
-            day_date = today - datetime.timedelta(days=i)
-            # Daily segment calculated dynamically from calculated runrate
-            daily_base = round(total_actual / 30.0, 2)
-            aggregated_trend[day_date.strftime("%Y-%m-%d")] = round(daily_base + (i % 5) * 1.5, 2)
-            
-    # Format the outputs
+        total_actual = 0.0
+        total_forecast = 0.0
+    
     by_service_list = [
         DirectCostServiceSchema(service=srv, amount=round(amt, 2))
         for srv, amt in service_breakdown.items()
     ]
-    # Sort history chronologically
+    
     sorted_trend = sorted(aggregated_trend.items())
     daily_trend_list = [
         DirectCostDailySchema(date=dt, amount=round(amt, 2))

@@ -47,6 +47,7 @@ fun DashboardScreen(
     val optimizationSavings by viewModel.optimizationSavings.collectAsState()
     val optimizationRecommendations by viewModel.optimizationRecommendations.collectAsState()
     val aiInsights by viewModel.aiInsights.collectAsState()
+    val resourceSummary by viewModel.resourceSummary.collectAsState()
 
 
     var selectedRegion by remember { mutableStateOf("ALL") }
@@ -238,7 +239,7 @@ fun DashboardScreen(
                         // Nodes Count
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "${resources.size}",
+                                text = "${resourceSummary?.totalResources ?: resources.size}",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = BentoPurpleDark

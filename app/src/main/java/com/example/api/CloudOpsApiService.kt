@@ -128,6 +128,32 @@ data class CloudCostSummary(
 )
 
 @JsonClass(generateAdapter = true)
+data class ResourceSummary(
+    val totalResources: Int,
+    val countsByType: Map<String, Int>
+)
+
+@JsonClass(generateAdapter = true)
+data class GraphNode(
+    val id: String,
+    val type: String,
+    val name: String
+)
+
+@JsonClass(generateAdapter = true)
+data class GraphEdge(
+    val source: String,
+    val target: String,
+    val type: String
+)
+
+@JsonClass(generateAdapter = true)
+data class GraphResponse(
+    val nodes: List<GraphNode>,
+    val edges: List<GraphEdge>
+)
+
+@JsonClass(generateAdapter = true)
 data class RecommendationItem(
     val resource_id: String,
     val resource_name: String,
@@ -204,6 +230,12 @@ interface CloudOpsApiService {
 
     @GET("api/resources")
     suspend fun getResources(): List<DiscoveryResource>
+
+    @GET("api/resources/summary")
+    suspend fun getResourcesSummary(): ResourceSummary
+
+    @GET("api/graph")
+    suspend fun getGraph(): GraphResponse
 
     @GET("api/incidents")
     suspend fun getIncidents(): List<CloudIncident>
