@@ -285,9 +285,8 @@ class CostExplorerAdapter:
                 self.get_current_month_cost()
             )
 
-            print("CURRENT COST:", current)
-            print("FORECAST RESPONSE:", forecast)
-            print("REMAINING:", remaining)
+            if abs(current) < 0.01:
+                return 0.0
 
             return round(
                 current + remaining,
