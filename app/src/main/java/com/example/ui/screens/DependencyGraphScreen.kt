@@ -30,14 +30,14 @@ fun DependencyGraphScreen(
     onNavigateToGenerator: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val level1 by viewModel.topologyLevel1.collectAsState()
+    val categories by viewModel.topologyCategories.collectAsState()
     val level2 by viewModel.topologyLevel2.collectAsState()
     val level3 by viewModel.topologyLevel3.collectAsState()
     
     val currentCategory by viewModel.currentTopologyCategory.collectAsState()
     val currentId by viewModel.currentTopologyResourceId.collectAsState()
 
-    val hasData = (level1 != null && level1!!.nodes.isNotEmpty())
+    val hasData = categories.isNotEmpty()
 
     Box(
         modifier = modifier
@@ -103,10 +103,10 @@ fun DependencyGraphScreen(
                 
                 // Content Switcher
                 AnimatedContent(
-                    targetState = Triple(currentCategory, currentId, level1),
+                    targetState = Triple(currentCategory, currentId, categories),
                     label = "Topology Transition"
                 ) { state ->
-                    val (cat, id, l1) = state
+                    val (cat, id, cats) = state
                     if (id != null && level3 != null) {
                         // LEVEL 3
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -157,13 +157,13 @@ fun DependencyGraphScreen(
                                 }
                             }
                         }
-                    } else if (l1 != null) {
+                    } else if (cats.isNotEmpty()) {
                         // LEVEL 1
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(l1.nodes) { node ->
+                            items(cats) { node ->
                                 Card(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                                        .clickable { viewModel.loadTopologyCategory(node.id) },
+                                        .clickable { viewModel.loadTopologyCategory(node.name) },
                                     colors = CardDefaults.cardColors(containerColor = DeepCard)
                                 ) {
                                     Row(

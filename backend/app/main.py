@@ -266,15 +266,6 @@ class GraphNodeSchema(BaseModel):
     type: str
     name: str
 
-class TopologyLevel1Node(BaseModel):
-    id: str
-    name: str
-    count: int
-
-class TopologyLevel1Response(BaseModel):
-    level: int
-    nodes: List[TopologyLevel1Node]
-
 class TopologyLevel2Node(BaseModel):
     id: str
     type: str
@@ -695,24 +686,38 @@ def get_category(res_type: str) -> str:
             return cat
     return "other"
 
-@app.get("/api/topology", response_model=TopologyLevel1Response)
-def get_topology_level_1(db: Session = Depends(get_db)):
-    nodes = db.query(ResourceNodeDB).all()
-    counts = {"compute": 0, "storage": 0, "database": 0, "network": 0, "security": 0, "other": 0}
-    for n in nodes:
-        cat = get_category(n.resource_type)
-        counts[cat] = counts.get(cat, 0) + 1
-    
-    result_nodes = []
-    for cat, count in counts.items():
-        if count > 0 or cat in ["compute", "storage", "database", "network", "security"]:
-            result_nodes.append(TopologyLevel1Node(
-                id=cat,
-                name=cat.capitalize(),
-                count=count
-            ))
-            
-    return TopologyLevel1Response(level=1, nodes=result_nodes)
+class TopologyCategory(BaseModel):
+    name: str
+    count: int
+
+@app.get("/api/topology", response_model=List[TopologyCategory])
+def get_topology_summary(db: Session = Depends(get_db)):
+    resources = db.query(ResourceDB).all()
+    compute = 0
+    storage = 0
+    database = 0
+    network = 0
+    security = 0
+
+    for r in resources:
+        if r.resource_type in ["EC2", "Lambda", "ECS", "EKS"]:
+            compute += 1
+        elif r.resource_type in ["S3", "EBS"]:
+            storage += 1
+        elif r.resource_type in ["RDS", "DYNAMODB"]:
+            database += 1
+        elif r.resource_type in ["VPC", "ALB", "SUBNET", "SECURITYGROUP"]:
+            network += 1
+        elif r.resource_type in ["IAM"]:
+            security += 1
+
+    return [
+        {"name": "Compute", "count": compute},
+        {"name": "Storage", "count": storage},
+        {"name": "Database", "count": database},
+        {"name": "Network", "count": network},
+        {"name": "Security", "count": security},
+    ]
 
 @app.get("/api/topology/resource/{resource_id}", response_model=TopologyLevel3Response)
 def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):

@@ -107,8 +107,8 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _graphTopology = MutableStateFlow<com.example.api.GraphResponse?>(null)
     val graphTopology = _graphTopology.asStateFlow()
 
-    private val _topologyLevel1 = MutableStateFlow<com.example.api.TopologyLevel1Response?>(null)
-    val topologyLevel1 = _topologyLevel1.asStateFlow()
+    private val _topologyCategories = MutableStateFlow<List<com.example.api.TopologyCategory>>(emptyList())
+    val topologyCategories = _topologyCategories.asStateFlow()
 
     private val _topologyLevel2 = MutableStateFlow<com.example.api.TopologyLevel2Response?>(null)
     val topologyLevel2 = _topologyLevel2.asStateFlow()
@@ -306,7 +306,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 try {
-                    _topologyLevel1.value = apiService.getTopologyLevel1()
+                    _topologyCategories.value = apiService.getTopologySummary()
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch topology level 1: ${e.message}")
                 }
