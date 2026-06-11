@@ -15,7 +15,9 @@ class LambdaDiscovery:
                     "runtime": f.get("Runtime"),
                     "handler": f.get("Handler"),
                     "timeout": f.get("Timeout"),
-                    "memory_size": f.get("MemorySize")
+                    "memory_size": f.get("MemorySize"),
+                    "role": f.get("Role"),
+                    "vpc_config": f.get("VpcConfig", {})
                 })
             return functions
         except Exception:

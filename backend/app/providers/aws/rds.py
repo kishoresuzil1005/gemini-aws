@@ -15,7 +15,9 @@ class RDSDiscovery:
                     "engine": db.get("Engine"),
                     "class": db.get("DBInstanceClass"),
                     "status": db.get("DBInstanceStatus"),
-                    "multi_az": db.get("MultiAZ", False)
+                    "multi_az": db.get("MultiAZ", False),
+                    "vpc_security_groups": db.get("VpcSecurityGroups", []),
+                    "subnet_group": db.get("DBSubnetGroup", {})
                 })
             return rds_instances
         except Exception:

@@ -27,6 +27,13 @@ class AWSDiscoveryScanner:
         # EC2
         try:
             for inst in EC2Discovery.discover(region):
+                deps = []
+                if inst.get("vpc_id"):
+                    deps.append({"type": "VPC", "id": inst["vpc_id"], "name": inst["vpc_id"]})
+                if inst.get("subnet_id"):
+                    deps.append({"type": "Subnet", "id": inst["subnet_id"], "name": inst["subnet_id"]})
+                for sg in inst.get("security_groups", []):
+                    deps.append({"type": "SecurityGroup", "id": sg, "name": sg})
 
                 resources.append({
                     "provider": "AWS",
@@ -35,13 +42,9 @@ class AWSDiscoveryScanner:
                     "name": inst["resource_id"],
                     "status": inst["state"],
                     "region": region,
-
-                    "instance_type":
-                        inst.get("instance_type"),
-
-                    "configuration_hint":
-                        f"Type={inst.get('instance_type')} "
-                        f"Launch={inst.get('launch_time')}"
+                    "instance_type": inst.get("instance_type"),
+                    "configuration_hint": f"Type={inst.get('instance_type')} Launch={inst.get('launch_time')}",
+                    "dependencies": deps
                 })
 
         except Exception as e:
@@ -75,6 +78,20 @@ class AWSDiscoveryScanner:
         # RDS
         try:
             for db in RDSDiscovery.discover(region):
+                deps = []
+                subnet_group = db.get("subnet_group", {})
+                if subnet_group:
+                    vpc_id = subnet_group.get("VpcId")
+                    if vpc_id:
+                        deps.append({"type": "VPC", "id": vpc_id, "name": vpc_id})
+                    for sub in subnet_group.get("Subnets", []):
+                        sub_id = sub.get("SubnetIdentifier")
+                        if sub_id:
+                            deps.append({"type": "Subnet", "id": sub_id, "name": sub_id})
+                for sg in db.get("vpc_security_groups", []):
+                    sg_id = sg.get("VpcSecurityGroupId")
+                    if sg_id:
+                        deps.append({"type": "SecurityGroup", "id": sg_id, "name": sg_id})
 
                 resources.append({
                     "provider": "AWS",
@@ -83,13 +100,9 @@ class AWSDiscoveryScanner:
                     "name": db["resource_id"],
                     "status": db["status"],
                     "region": region,
-
-                    "instance_class":
-                        db.get("class"),
-
-                    "configuration_hint":
-                        f"Engine={db.get('engine')} "
-                        f"Class={db.get('class')}"
+                    "instance_class": db.get("class"),
+                    "configuration_hint": f"Engine={db.get('engine')} Class={db.get('class')}",
+                    "dependencies": deps
                 })
 
         except Exception as e:
@@ -100,6 +113,19 @@ class AWSDiscoveryScanner:
         # Lambda
         try:
             for fn in LambdaDiscovery.discover(region):
+                deps = []
+                role_arn = fn.get("role")
+                if role_arn:
+                    deps.append({"type": "IAM", "id": role_arn, "name": role_arn})
+                vpc_config = fn.get("vpc_config", {})
+                if vpc_config:
+                    vpc_id = vpc_config.get("VpcId")
+                    if vpc_id:
+                        deps.append({"type": "VPC", "id": vpc_id, "name": vpc_id})
+                    for sub in vpc_config.get("SubnetIds", []):
+                        deps.append({"type": "Subnet", "id": sub, "name": sub})
+                    for sg in vpc_config.get("SecurityGroupIds", []):
+                        deps.append({"type": "SecurityGroup", "id": sg, "name": sg})
 
                 resources.append({
                     "provider": "AWS",
@@ -108,13 +134,9 @@ class AWSDiscoveryScanner:
                     "name": fn["resource_id"],
                     "status": "active",
                     "region": region,
-
-                    "memory_size":
-                        fn.get("memory_size"),
-
-                    "configuration_hint":
-                        f"Runtime={fn.get('runtime')} "
-                        f"Memory={fn.get('memory_size')}MB"
+                    "memory_size": fn.get("memory_size"),
+                    "configuration_hint": f"Runtime={fn.get('runtime')} Memory={fn.get('memory_size')}MB",
+                    "dependencies": deps
                 })
 
         except Exception as e:

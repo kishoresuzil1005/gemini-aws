@@ -266,6 +266,35 @@ class GraphNodeSchema(BaseModel):
     type: str
     name: str
 
+class TopologyLevel1Node(BaseModel):
+    id: str
+    name: str
+    count: int
+
+class TopologyLevel1Response(BaseModel):
+    level: int
+    nodes: List[TopologyLevel1Node]
+
+class TopologyLevel2Node(BaseModel):
+    id: str
+    type: str
+    name: str
+
+class TopologyLevel2Response(BaseModel):
+    nodes: List[TopologyLevel2Node]
+
+class TopologyLevel3Resource(BaseModel):
+    id: str
+    name: str
+
+class TopologyLevel3Dependency(BaseModel):
+    type: str
+    name: str
+
+class TopologyLevel3Response(BaseModel):
+    resource: TopologyLevel3Resource
+    dependencies: List[TopologyLevel3Dependency]
+
 class GraphEdgeSchema(BaseModel):
     source: str
     target: str
@@ -647,6 +676,79 @@ def get_relationships_endpoint(db: Session = Depends(get_db)):
         ]
     return rels
 
+
+from app.database import ResourceNodeDB, ResourceEdgeDB
+
+# Category mapping globally
+category_mapping = {
+    "compute": ["EC2", "LAMBDA", "ECS", "EKS"],
+    "storage": ["S3", "EBS"],
+    "database": ["RDS", "DYNAMODB"],
+    "network": ["VPC", "SUBNET", "ALB"],
+    "security": ["SECURITYGROUP", "IAM"]
+}
+
+def get_category(res_type: str) -> str:
+    res_type = res_type.upper() if res_type else ""
+    for cat, types in category_mapping.items():
+        if res_type in types:
+            return cat
+    return "other"
+
+@app.get("/api/topology", response_model=TopologyLevel1Response)
+def get_topology_level_1(db: Session = Depends(get_db)):
+    nodes = db.query(ResourceNodeDB).all()
+    counts = {"compute": 0, "storage": 0, "database": 0, "network": 0, "security": 0, "other": 0}
+    for n in nodes:
+        cat = get_category(n.resource_type)
+        counts[cat] = counts.get(cat, 0) + 1
+    
+    result_nodes = []
+    for cat, count in counts.items():
+        if count > 0 or cat in ["compute", "storage", "database", "network", "security"]:
+            result_nodes.append(TopologyLevel1Node(
+                id=cat,
+                name=cat.capitalize(),
+                count=count
+            ))
+            
+    return TopologyLevel1Response(level=1, nodes=result_nodes)
+
+@app.get("/api/topology/resource/{resource_id}", response_model=TopologyLevel3Response)
+def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
+    node = db.query(ResourceNodeDB).filter(ResourceNodeDB.resource_id == resource_id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    edges = db.query(ResourceEdgeDB).filter(ResourceEdgeDB.source_id == resource_id).all()
+    deps = []
+    for e in edges:
+        target = db.query(ResourceNodeDB).filter(ResourceNodeDB.resource_id == e.target_id).first()
+        if target:
+            deps.append(TopologyLevel3Dependency(
+                type=target.resource_type,
+                name=target.name or target.resource_id
+            ))
+            
+    return TopologyLevel3Response(
+        resource=TopologyLevel3Resource(id=node.resource_id, name=node.name or node.resource_id),
+        dependencies=deps
+    )
+
+@app.get("/api/topology/{category}", response_model=TopologyLevel2Response)
+def get_topology_level_2(category: str, db: Session = Depends(get_db)):
+    all_nodes = db.query(ResourceNodeDB).all()
+    nodes = []
+    
+    for n in all_nodes:
+        if get_category(n.resource_type) == category.lower():
+            nodes.append(TopologyLevel2Node(
+                id=n.resource_id,
+                type=n.resource_type,
+                name=n.name or n.resource_id
+            ))
+            
+    return TopologyLevel2Response(nodes=nodes)
 
 @app.get("/graph", response_model=GraphResponseSchema)
 @app.get("/api/graph", response_model=GraphResponseSchema)

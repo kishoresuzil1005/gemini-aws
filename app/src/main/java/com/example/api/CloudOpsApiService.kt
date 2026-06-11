@@ -154,6 +154,49 @@ data class GraphResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class TopologyLevel1Node(
+    val id: String,
+    val name: String,
+    val count: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel1Response(
+    val level: Int,
+    val nodes: List<TopologyLevel1Node>
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel2Node(
+    val id: String,
+    val type: String,
+    val name: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel2Response(
+    val nodes: List<TopologyLevel2Node>
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel3Resource(
+    val id: String,
+    val name: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel3Dependency(
+    val type: String,
+    val name: String
+)
+
+@JsonClass(generateAdapter = true)
+data class TopologyLevel3Response(
+    val resource: TopologyLevel3Resource,
+    val dependencies: List<TopologyLevel3Dependency>
+)
+
+@JsonClass(generateAdapter = true)
 data class RecommendationItem(
     val resource_id: String,
     val resource_name: String,
@@ -233,6 +276,15 @@ interface CloudOpsApiService {
 
     @GET("api/resources/summary")
     suspend fun getResourcesSummary(): ResourceSummary
+
+    @GET("api/topology")
+    suspend fun getTopologyLevel1(): TopologyLevel1Response
+
+    @GET("api/topology/{category}")
+    suspend fun getTopologyLevel2(@Path("category") category: String): TopologyLevel2Response
+
+    @GET("api/topology/resource/{id}")
+    suspend fun getTopologyLevel3(@Path("id") id: String): TopologyLevel3Response
 
     @GET("api/graph")
     suspend fun getGraph(): GraphResponse

@@ -107,6 +107,21 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _graphTopology = MutableStateFlow<com.example.api.GraphResponse?>(null)
     val graphTopology = _graphTopology.asStateFlow()
 
+    private val _topologyLevel1 = MutableStateFlow<com.example.api.TopologyLevel1Response?>(null)
+    val topologyLevel1 = _topologyLevel1.asStateFlow()
+
+    private val _topologyLevel2 = MutableStateFlow<com.example.api.TopologyLevel2Response?>(null)
+    val topologyLevel2 = _topologyLevel2.asStateFlow()
+
+    private val _topologyLevel3 = MutableStateFlow<com.example.api.TopologyLevel3Response?>(null)
+    val topologyLevel3 = _topologyLevel3.asStateFlow()
+
+    private val _currentTopologyCategory = MutableStateFlow<String?>(null)
+    val currentTopologyCategory = _currentTopologyCategory.asStateFlow()
+
+    private val _currentTopologyResourceId = MutableStateFlow<String?>(null)
+    val currentTopologyResourceId = _currentTopologyResourceId.asStateFlow()
+
     // Local runtime states
     private val _isDiscovering = MutableStateFlow(false)
     val isDiscovering = _isDiscovering.asStateFlow()
@@ -288,6 +303,12 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     _graphTopology.value = apiService.getGraph()
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch graph topology: ${e.message}")
+                }
+
+                try {
+                    _topologyLevel1.value = apiService.getTopologyLevel1()
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch topology level 1: ${e.message}")
                 }
 
                 // Fetch Cost Explorer Summary statistics
@@ -793,6 +814,46 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
     fun submitPresetQuery(query: String) {
         sendChatMessage(query)
+    }
+
+    fun loadTopologyCategory(category: String) {
+        _currentTopologyCategory.value = category
+        _currentTopologyResourceId.value = null
+        _topologyLevel3.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value) {
+                    val apiService = com.example.api.CloudOpsBackendClient.service
+                    _topologyLevel2.value = apiService.getTopologyLevel2(category)
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to fetch topology level 2: ${e.message}")
+            }
+        }
+    }
+
+    fun loadTopologyResource(resourceId: String) {
+        _currentTopologyResourceId.value = resourceId
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_useBackend.value) {
+                    val apiService = com.example.api.CloudOpsBackendClient.service
+                    _topologyLevel3.value = apiService.getTopologyLevel3(resourceId)
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to fetch topology level 3: ${e.message}")
+            }
+        }
+    }
+
+    fun clearTopologySelection() {
+        if (_currentTopologyResourceId.value != null) {
+            _currentTopologyResourceId.value = null
+            _topologyLevel3.value = null
+        } else if (_currentTopologyCategory.value != null) {
+            _currentTopologyCategory.value = null
+            _topologyLevel2.value = null
+        }
     }
 
     // --- Core Discovery Worker Simulation & Polling Engine ---

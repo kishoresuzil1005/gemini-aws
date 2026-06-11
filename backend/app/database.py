@@ -141,6 +141,21 @@ class AutomationActionDB(Base):
     status = Column(String(50), default="PENDING")
     created_at = Column(BigInteger, default=lambda: int(time.time() * 1000))
 
+class ResourceNodeDB(Base):
+    __tablename__ = "resource_nodes"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    resource_id = Column(String(100), index=True, nullable=False, unique=True)
+    resource_type = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=True)
+    provider = Column(String(50), nullable=False)
+
+class ResourceEdgeDB(Base):
+    __tablename__ = "resource_edges"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    source_id = Column(String(100), index=True, nullable=False)
+    target_id = Column(String(100), index=True, nullable=False)
+    relationship = Column(String(100), nullable=True)
+
 class ResourceDB(Base):
     __tablename__ = "resources"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
