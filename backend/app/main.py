@@ -769,10 +769,6 @@ def get_cost_summary(db: Session = Depends(get_db)):
                 date_key = entry["date"]
                 aggregated_trend[date_key] = aggregated_trend.get(date_key, 0.0) + entry["amount"]
                 
-        # If Cost Explorer is empty or returning zero, fill with dynamic engine data
-        if total_actual <= 0:
-            total_actual = estimated_monthly
-            total_forecast = CostForecastEngine.forecast_monthly_spend(estimated_monthly, days_elapsed=today.day)
     else:
         # High fidelity dynamic active calculations
         total_actual = estimated_monthly

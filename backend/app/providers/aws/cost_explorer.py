@@ -64,43 +64,11 @@ class CostExplorerAdapter:
 
             except Exception as e:
 
-                print(
-                    f"Cost Explorer error: {e}"
+                raise Exception(
+                    f"AWS Cost Explorer failed: {e}"
                 )
 
-        try:
-
-            from app.database import SessionLocal
-            from app.services.cost.aggregator import (
-                CostAggregator
-            )
-
-            db = SessionLocal()
-
-            totals = (
-                CostAggregator
-                .calculate_account_monthly(
-                    db,
-                    self.cloud_account_id
-                )
-            )
-
-            db.close()
-
-            return float(
-                totals.get(
-                    "total",
-                    0.0
-                )
-            )
-
-        except Exception as e:
-
-            print(
-                f"Cost Aggregator error: {e}"
-            )
-
-            return 0.0
+        return 0.0
 
     def get_cost_by_service(self) -> Dict[str, float]:
         """
@@ -173,73 +141,11 @@ class CostExplorerAdapter:
 
             except Exception as e:
 
-                print(
-                    f"Cost Explorer service error: {e}"
+                raise Exception(
+                    f"AWS Cost Explorer failed: {e}"
                 )
 
-        try:
-
-            from app.database import SessionLocal
-            from app.services.cost.aggregator import (
-                CostAggregator
-            )
-
-            db = SessionLocal()
-
-            totals = (
-                CostAggregator
-                .calculate_account_monthly(
-                    db,
-                    self.cloud_account_id
-                )
-            )
-
-            db.close()
-
-            mapping = {
-                "ec2":
-                "Amazon Elastic Compute Cloud - Compute",
-
-                "rds":
-                "Amazon Relational Database Service",
-
-                "s3":
-                "Amazon Simple Storage Service",
-
-                "alb":
-                "Elastic Load Balancing",
-
-                "lambda":
-                "AWS Lambda",
-
-                "sqs":
-                "Amazon Simple Queue Service",
-
-                "sns":
-                "Amazon Simple Notification Service"
-            }
-
-            result = {}
-
-            for key, value in totals.items():
-
-                if (
-                    key in mapping
-                    and value > 0
-                ):
-                    result[
-                        mapping[key]
-                    ] = value
-
-            return result
-
-        except Exception as e:
-
-            print(
-                f"Aggregator service error: {e}"
-            )
-
-            return {}
+        return {}
 
     def get_daily_cost_trend(
         self,
@@ -386,8 +292,6 @@ class CostExplorerAdapter:
 
         except Exception as e:
 
-            print(
-                f"Forecast error: {e}"
+            raise Exception(
+                f"AWS Cost Explorer failed: {e}"
             )
-
-            return 0.0

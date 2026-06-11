@@ -434,7 +434,7 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             val scanTotal = resources.sumOf { it.costEstimate }
                             Text(
-                                text = "$${String.format(Locale.US, "%,.2f", if (scanTotal > 0) scanTotal else 1369.62)}",
+                                text = "$${String.format(Locale.US, "%,.2f", if (scanTotal > 0) scanTotal else 0.0)}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = BentoPurplePrimary
@@ -463,7 +463,7 @@ fun DashboardScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(6.dp))
-                            val actualBill = costSummary?.actualCost ?: 1340.22
+                            val actualBill = costSummary?.actualCost ?: 0.0
                             Text(
                                 text = "$${String.format(Locale.US, "%,.2f", actualBill)}",
                                 fontSize = 18.sp,
@@ -517,7 +517,7 @@ fun DashboardScreen(
                         val savingsText = if (optimizationSavings != null) {
                             "$${String.format(Locale.US, "%.2f", optimizationSavings!!.monthly_savings)}/mo potential"
                         } else {
-                            "$82.00/mo potential"
+                            "$0.00/mo potential"
                         }
                         Text(
                             text = savingsText,
@@ -572,7 +572,7 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "Phase 7: Generative SRE Advisor (${aiInsights?.finops_score ?: 85} FinOps Score)",
+                                    text = "Phase 7: Generative SRE Advisor (${aiInsights?.finops_score ?: 0} FinOps Score)",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = BentoPurplePrimary

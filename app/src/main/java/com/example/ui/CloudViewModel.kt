@@ -179,7 +179,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         // Seed initial data so the user has beautiful instant visualization
-        _costSummary.value = getDefaultMockCostSummary()
+        _costSummary.value = null
         seedInitialDatabaseData()
 
         // Load custom backend URL from secure storage if set
@@ -1354,30 +1354,13 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun getDefaultMockCostSummary(): com.example.api.CloudCostSummary {
-        val trendList = mutableListOf<com.example.api.DirectCostDaily>()
-        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        
-        for (i in 30 downTo 1) {
-            val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -i) }
-            val amt = 40.0 + (i % 7) * 2.5 + (i * 0.1)
-            trendList.add(com.example.api.DirectCostDaily(format.format(cal.time), amt))
-        }
-        
         return com.example.api.CloudCostSummary(
-            month = SimpleDateFormat("yyyy-MM", Locale.US).format(Date()),
-            actualCost = 1340.22,
-            forecastCost = 1450.00,
+            month = "",
+            actualCost = 0.0,
+            forecastCost = 0.0,
             currency = "USD",
-            byService = listOf(
-                com.example.api.DirectCostService("Amazon Elastic Compute Cloud - Compute", 154.70),
-                com.example.api.DirectCostService("Amazon Relational Database Service", 343.50),
-                com.example.api.DirectCostService("Amazon Simple Storage Service", 819.50),
-                com.example.api.DirectCostService("Elastic Load Balancing", 22.50),
-                com.example.api.DirectCostService("AWS Lambda", 15.00),
-                com.example.api.DirectCostService("Amazon Simple Queue Service", 18.20),
-                com.example.api.DirectCostService("Amazon Simple Notification Service", 8.50)
-            ),
-            dailyTrend = trendList
+            byService = emptyList(),
+            dailyTrend = emptyList()
         )
     }
 }
