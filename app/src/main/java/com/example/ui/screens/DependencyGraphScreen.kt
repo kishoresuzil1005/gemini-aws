@@ -44,6 +44,10 @@ fun DependencyGraphScreen(
     val currentCategory by viewModel.currentTopologyCategory.collectAsState()
     val currentId by viewModel.currentTopologyResourceId.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.refreshAllFeeds()
+    }
+
     val hasData = categories.isNotEmpty()
 
     Box(
