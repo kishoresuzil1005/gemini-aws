@@ -358,31 +358,32 @@ interface CloudOpsApiService {
 object CloudOpsBackendClient {
     private const val TAG = "CloudOpsBackendClient"
     
-    private var customBaseUrl: String? = null
+    private var customBaseUrl: String? = try {
+        val url = BuildConfig.BACKEND_URL.trim().removeSurrounding("\"").removeSurrounding("'")
+        if (url.isNotEmpty() && url != "placeholder") url else null
+    } catch (e: Exception) {
+        null
+    }
 
     fun setCustomBaseUrl(url: String) {
         customBaseUrl = url
     }
 
-    // Fall back to clean default URL if empty or not configured
     val baseUrl: String
         get() {
-            var url = customBaseUrl ?: try {
-                BuildConfig.BACKEND_URL.trim().removeSurrounding("\"").removeSurrounding("'")
-            } catch (e: Exception) {
-                ""
+            var url = customBaseUrl ?: ""
+
+            if (url.isBlank()) {
+                throw IllegalStateException(
+                    "Backend URL not configured"
+                )
             }
-            if (url.isNullOrEmpty() || url == "placeholder") {
-                url = "http://10.0.2.2:8000/"
-            }
-            // Map 0.0.0.0 wildcard address to 10.0.2.2 for Android emulator routing compatibility
-            if (url.contains("0.0.0.0")) {
-                url = url.replace("0.0.0.0", "10.0.2.2")
-            }
-            // Ensure proper http/https protocol prefix
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+
+            if (!url.startsWith("http://") &&
+                !url.startsWith("https://")) {
                 url = "http://$url"
             }
+
             return if (url.endsWith("/")) url else "$url/"
         }
 
@@ -438,6 +439,10 @@ object CloudOpsBackendClient {
      * Diagnostic utility to verify if the server is reachable and active.
      */
     fun isBackendConfigured(): Boolean {
-        return baseUrl.contains("10.0.2.2") || baseUrl.contains("localhost") || baseUrl.startsWith("http")
+        return try {
+            baseUrl.isNotBlank()
+        } catch (e: Exception) {
+            false
+        }
     }
 }
