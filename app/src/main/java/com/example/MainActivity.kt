@@ -299,18 +299,12 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             topBar = {
                                 OptIn(ExperimentalMaterial3Api::class)
+                                var regionExpanded by remember { mutableStateOf(false) }
+                                val selectedRegion by viewModel.selectedRegion.collectAsState()
+                                val regions by viewModel.regions.collectAsState()
+
                                 TopAppBar(
-                                    title = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = currentScreen.title,
-                                                fontWeight = FontWeight.ExtraBold,
-                                                fontSize = 18.sp,
-                                                fontFamily = FontFamily.Monospace,
-                                                color = if (isDarkTheme) Color.White else BentoPurpleDark
-                                            )
-                                        }
-                                    },
+                                    title = {},
                                     navigationIcon = {
                                         IconButton(
                                             onClick = { scope.launch { drawerState.open() } },
@@ -319,45 +313,181 @@ class MainActivity : ComponentActivity() {
                                             Icon(
                                                 imageVector = Icons.Default.Menu,
                                                 contentDescription = "Open Drawer",
-                                                tint = if (isDarkTheme) Color.White else BentoTextDark
+                                                tint = if (isDarkTheme) Color.White else Color.Black
                                             )
                                         }
                                     },
                                     actions = {
-                                        // Header status button
-                                        Row(
-                                            modifier = Modifier
-                                                .padding(end = 12.dp)
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(if (isDarkTheme) Color(0xFF1C1A24) else Color(0xFFF3EFFF))
-                                                .border(1.dp, if (isDarkTheme) CyberCyan.copy(alpha = 0.5f) else BentoBorderLight, RoundedCornerShape(20.dp))
-                                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Box(
+                                        Box {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier
-                                                    .size(6.dp)
-                                                    .clip(CircleShape)
-                                                    .background(if (isDarkTheme) CyberCyan else BentoTermGreen)
-                                            )
+                                                    .clickable { regionExpanded = true }
+                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                                                    .testTag("region_selector")
+                                            ) {
+                                                Text(
+                                                    text = when (selectedRegion) {
+                                                        "ap-south-1", "Mumbai" -> "Mumbai"
+                                                        "us-east-1", "N. Virginia" -> "N. Virginia"
+                                                        "ap-southeast-1", "Singapore" -> "Singapore"
+                                                        "eu-central-1", "Frankfurt" -> "Frankfurt"
+                                                        "us-east-2" -> "Ohio"
+                                                        "us-west-1" -> "N. California"
+                                                        "us-west-2" -> "Oregon"
+                                                        else -> selectedRegion
+                                                    },
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    color = if (isDarkTheme) Color.White else Color.Black,
+                                                    fontFamily = FontFamily.SansSerif
+                                                )
+                                                Spacer(modifier = Modifier.width(3.dp))
+                                                Icon(
+                                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = "Select Region",
+                                                    tint = if (isDarkTheme) Color.White else Color.Black,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+
+                                            DropdownMenu(
+                                                expanded = regionExpanded,
+                                                onDismissRequest = { regionExpanded = false },
+                                                modifier = Modifier.background(if (isDarkTheme) Color(0xFF151419) else Color.White)
+                                            ) {
+                                                val listToUse = if (regions.isEmpty()) {
+                                                     listOf(
+                                                         com.example.api.AwsRegion("ap-south-1", "ec2.ap-south-1.amazonaws.com"),
+                                                         com.example.api.AwsRegion("us-east-1", "ec2.us-east-1.amazonaws.com"),
+                                                         com.example.api.AwsRegion("ap-southeast-1", "ec2.ap-southeast-1.amazonaws.com"),
+                                                         com.example.api.AwsRegion("eu-central-1", "ec2.eu-central-1.amazonaws.com")
+                                                     )
+                                                 } else regions
+
+                                                 listToUse.map { it.name }.forEach { r ->
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                text = when (r) {
+                                                                    "ap-south-1" -> "Mumbai ($r)"
+                                                                    "us-east-1" -> "N. Virginia ($r)"
+                                                                    "ap-southeast-1" -> "Singapore ($r)"
+                                                                    "eu-central-1" -> "Frankfurt ($r)"
+                                                                    "us-east-2" -> "Ohio ($r)"
+                                                                    "us-west-1" -> "N. California ($r)"
+                                                                    "us-west-2" -> "Oregon ($r)"
+                                                                    else -> r
+                                                                },
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = if (isDarkTheme) {
+                                                                    if (selectedRegion == r) CyberCyan else Color.White
+                                                                } else {
+                                                                    if (selectedRegion == r) Color.Black else BentoTextDark
+                                                                }
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            viewModel.updateSelectedRegion(r)
+                                                            regionExpanded = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        // Premium AI Badge Button designed look wise better
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .clickable {
+                                                    currentScreen = CloudScreen.AI
+                                                }
+                                                .background(
+                                                    if (isDarkTheme) Color(0xFF1E1C24) else Color(0xFFF3EFFF)
+                                                )
+                                                .border(
+                                                    width = 1.5.dp,
+                                                    color = if (isDarkTheme) Color(0xFFD500F9) else Color(0xFF6200EA),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                                .testTag("hexagon_logo_ai"),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            // Modern four-pointed vector sparkle
+                                            Box(
+                                                modifier = Modifier.size(12.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                                                    val w = size.width
+                                                    val h = size.height
+                                                    val path = androidx.compose.ui.graphics.Path().apply {
+                                                        moveTo(w / 2f, 0f)
+                                                        quadraticTo(w / 2f, h / 2f, w, h / 2f)
+                                                        quadraticTo(w / 2f, h / 2f, w / 2f, h)
+                                                        quadraticTo(w / 2f, h / 2f, 0f, h / 2f)
+                                                        quadraticTo(w / 2f, h / 2f, w / 2f, 0f)
+                                                        close()
+                                                    }
+                                                    drawPath(
+                                                        path = path,
+                                                        color = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF6200EA)
+                                                    )
+                                                }
+                                            }
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = if (isDarkTheme) "Cosmic Active" else "Bento Stable",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isDarkTheme) CyberCyan else BentoTermGreen
+                                                text = "AI",
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 12.sp,
+                                                color = if (isDarkTheme) Color.White else Color.Black,
+                                                fontFamily = FontFamily.SansSerif
                                             )
                                         }
-                                        // Direct theme toggle button
-                                        IconButton(
-                                            onClick = { isDarkTheme = !isDarkTheme },
-                                            modifier = Modifier.testTag("header_theme_toggle")
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        // Command Line Terminal Outlined Box conforming to Image 2
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(end = 8.dp)
+                                                .size(31.dp)
+                                                .border(
+                                                    width = 2.dp,
+                                                    color = if (isDarkTheme) Color.White else Color.Black,
+                                                    shape = RoundedCornerShape(8.dp)
+                                                )
+                                                .clickable {
+                                                    viewModel.manualRefresh()
+                                                }
+                                                .testTag("terminal_refresh_button"),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                                contentDescription = "Theme Switch",
-                                                tint = if (isDarkTheme) Color(0xFFFF9900) else BentoTextDark
-                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = ">",
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontSize = 13.sp,
+                                                    color = if (isDarkTheme) Color.White else Color.Black,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    modifier = Modifier.offset(y = (-1).dp)
+                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(6.dp)
+                                                        .height(2.dp)
+                                                        .background(if (isDarkTheme) Color.White else Color.Black)
+                                                        .offset(x = 1.dp, y = 4.dp)
+                                                )
+                                            }
                                         }
                                     },
                                     colors = TopAppBarDefaults.topAppBarColors(

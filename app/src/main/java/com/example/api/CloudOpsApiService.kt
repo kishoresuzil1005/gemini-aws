@@ -18,6 +18,32 @@ import java.util.concurrent.TimeUnit
 import android.util.Log
 
 @JsonClass(generateAdapter = true)
+data class AwsRegion(
+    val name: String,
+    val endpoint: String
+)
+
+@JsonClass(generateAdapter = true)
+data class RegionsResponse(
+    val success: Boolean,
+    val regions: List<AwsRegion>
+)
+
+@JsonClass(generateAdapter = true)
+data class AwsConnectRequest(
+    val account_name: String,
+    val account_id: String,
+    val role_arn: String,
+    val external_id: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class AwsConnectResponse(
+    val success: Boolean,
+    val account_id: Int
+)
+
+@JsonClass(generateAdapter = true)
 data class SelfHealResponse(
     val status: String,
     val message: String,
@@ -255,9 +281,19 @@ data class AIChatResponse(
 
 object TokenStorage {
     var jwtToken: String? = null
+    var selectedRegion: String? = "ap-south-1"
 }
 
 interface CloudOpsApiService {
+    @GET("api/regions")
+    suspend fun getRegions(): RegionsResponse
+
+    @POST("api/cloud/aws/connect")
+    suspend fun connectAwsPost(@Body request: AwsConnectRequest): AwsConnectResponse
+
+    @GET("api/cloud/accounts/{accountId}/regions")
+    suspend fun getAccountRegions(@Path("accountId") accountId: Int): RegionsResponse
+
     @POST("api/v1/auth/register")
     suspend fun register(@Body request: UserRegisterRequest): AuthTokenResponse
 
@@ -402,14 +438,15 @@ object CloudOpsBackendClient {
         .addInterceptor { chain ->
             val original = chain.request()
             val token = TokenStorage.jwtToken
-            val request = if (!token.isNullOrEmpty()) {
-                original.newBuilder()
-                    .header("Authorization", "Bearer $token")
-                    .build()
-            } else {
-                original
+            val region = TokenStorage.selectedRegion
+            var requestBuilder = original.newBuilder()
+            if (!token.isNullOrEmpty()) {
+                requestBuilder = requestBuilder.header("Authorization", "Bearer $token")
             }
-            chain.proceed(request)
+            if (!region.isNullOrEmpty()) {
+                requestBuilder = requestBuilder.header("X-Selected-Region", region)
+            }
+            chain.proceed(requestBuilder.build())
         }
         .addInterceptor(loggingInterceptor)
         .build()

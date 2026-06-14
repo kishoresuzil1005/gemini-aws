@@ -6,6 +6,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -48,10 +49,18 @@ fun DashboardScreen(
     val optimizationRecommendations by viewModel.optimizationRecommendations.collectAsState()
     val aiInsights by viewModel.aiInsights.collectAsState()
     val resourceSummary by viewModel.resourceSummary.collectAsState()
+    val showEc2Resources by viewModel.showEc2Resources.collectAsState()
+    val regions by viewModel.regions.collectAsState()
 
 
     var selectedRegion by remember { mutableStateOf("ALL") }
-    val regionsList = listOf("ALL", "US-EAST-1", "US-WEST-2", "AP-SOUTH-1", "EU-CENTRAL-1")
+    val regionsList = remember(regions) {
+        listOf("ALL") + (if (regions.isEmpty()) {
+            listOf("US-EAST-1", "US-WEST-2", "AP-SOUTH-1", "EU-CENTRAL-1")
+        } else {
+            regions.map { it.name.uppercase() }
+        })
+    }
 
     val filteredResources = remember(resources, selectedRegion) {
         if (selectedRegion == "ALL") {
@@ -78,34 +87,19 @@ fun DashboardScreen(
         label = "pulse"
     )
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(BentoBg)
-            .padding(16.dp),
+    if (showEc2Resources) {
+        Ec2ResourcesView(
+            viewModel = viewModel,
+            onBack = { viewModel.setShowEc2Resources(false) }
+        )
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .background(BentoBg)
+                .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Welcoming and Header Block (Bento styled)
-        item {
-            Column {
-                Text(
-                    text = "CLOUD INTELLIGENCE",
-                    color = BentoTextSubtitle,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.testTag("dashboard_header")
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Stratis Platform",
-                    color = BentoTextDark,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-        }
-
         // --- BENTO GRID BLOCK 1: MAIN AWS DISCOVERY SURFACE ---
         item {
             Card(
@@ -131,7 +125,7 @@ fun DashboardScreen(
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                "ACTIVE DISCOVERY",
+                                "RUNNING SERVICES",
                                 color = Color.White,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
@@ -217,19 +211,25 @@ fun DashboardScreen(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val serviceTypes = resources.map { it.type }.distinct().take(4)
-                            serviceTypes.forEach { type ->
+                            listOf("EC2", "S3", "RDS", "Lambda").forEach { service ->
+                                val isEc2 = service == "EC2"
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(BentoPurpleDark.copy(alpha = 0.1f))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        .background(BentoPurpleDark.copy(alpha = 0.12f))
+                                        .clickable {
+                                            if (isEc2) {
+                                                viewModel.setShowEc2Resources(true)
+                                            }
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                        .testTag("service_chip_${service.lowercase()}"),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = type,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        text = service,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold,
                                         color = BentoPurpleDark
                                     )
                                 }
@@ -733,6 +733,7 @@ fun DashboardScreen(
             ResourceItemRow(resource = resource)
         }
     }
+  }
 }
 
 
@@ -842,3 +843,427 @@ fun wasteRecommendationRow(title: String, subtitle: String, savings: String) {
         )
     }
 }
+
+@Composable
+fun Ec2ResourcesView(
+    viewModel: CloudViewModel,
+    onBack: () -> Unit
+) {
+    val selectedRegion by viewModel.selectedRegion.collectAsState()
+    val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF121115)
+
+    // Region full name mapping based on dynamic dropdown
+    val regionFullName = when (selectedRegion) {
+        "Mumbai" -> "Asia Pacific (Mumbai)"
+        "N. Virginia" -> "US East (N. Virginia)"
+        "Singapore" -> "Asia Pacific (Singapore)"
+        "Frankfurt" -> "Europe (Frankfurt)"
+        else -> "US East (N. Virginia)"
+    }
+
+    // High fidelity dynamic counts mimicking Image 2 resources card under selected regions
+    val counts = remember(selectedRegion) {
+        when (selectedRegion) {
+            "Mumbai" -> mapOf(
+                "instances_running" to 1, "instances" to 2, "instance_types" to 24, "launch_templates" to 4,
+                "spot_requests" to 1, "savings_plans" to 1, "reserved_instances" to 0, "dedicated_hosts" to 0,
+                "capacity_reservations" to 1, "capacity_manager" to 2, "amis" to 3, "ami_catalog" to 10,
+                "volumes" to 3, "snapshots" to 5, "lifecycle_manager" to 1, "security_groups" to 12,
+                "elastic_ips" to 2, "placement_groups" to 1, "key_pairs" to 3, "network_interfaces" to 4,
+                "load_balancers" to 1, "target_groups" to 2, "trust_stores" to 0, "auto_scaling" to 1
+            )
+            "Singapore" -> mapOf(
+                "instances_running" to 2, "instances" to 3, "instance_types" to 18, "launch_templates" to 2,
+                "spot_requests" to 0, "savings_plans" to 1, "reserved_instances" to 0, "dedicated_hosts" to 0,
+                "capacity_reservations" to 1, "capacity_manager" to 1, "amis" to 2, "ami_catalog" to 8,
+                "volumes" to 4, "snapshots" to 6, "lifecycle_manager" to 1, "security_groups" to 14,
+                "elastic_ips" to 3, "placement_groups" to 1, "key_pairs" to 4, "network_interfaces" to 5,
+                "load_balancers" to 1, "target_groups" to 2, "trust_stores" to 0, "auto_scaling" to 1
+            )
+            "Frankfurt" -> mapOf(
+                "instances_running" to 0, "instances" to 1, "instance_types" to 12, "launch_templates" to 1,
+                "spot_requests" to 0, "savings_plans" to 0, "reserved_instances" to 0, "dedicated_hosts" to 0,
+                "capacity_reservations" to 0, "capacity_manager" to 0, "amis" to 1, "ami_catalog" to 5,
+                "volumes" to 2, "snapshots" to 3, "lifecycle_manager" to 1, "security_groups" to 8,
+                "elastic_ips" to 1, "placement_groups" to 0, "key_pairs" to 2, "network_interfaces" to 2,
+                "load_balancers" to 0, "target_groups" to 1, "trust_stores" to 0, "auto_scaling" to 0
+            )
+            else -> mapOf( // N. Virginia
+                "instances_running" to 1, "instances" to 2, "instance_types" to 15, "launch_templates" to 3,
+                "spot_requests" to 0, "savings_plans" to 1, "reserved_instances" to 0, "dedicated_hosts" to 0,
+                "capacity_reservations" to 0, "capacity_manager" to 1, "amis" to 2, "ami_catalog" to 12,
+                "volumes" to 1, "snapshots" to 4, "lifecycle_manager" to 1, "security_groups" to 18,
+                "elastic_ips" to 4, "placement_groups" to 0, "key_pairs" to 4, "network_interfaces" to 3,
+                "load_balancers" to 0, "target_groups" to 2, "trust_stores" to 0, "auto_scaling" to 0
+            )
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(if (isDarkTheme) Color(0xFF0F0E13) else BentoBg)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // High fidelity control plane back navigation bar
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(36.dp)
+                        .testTag("ec2_back_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back to Dashboard",
+                        tint = if (isDarkTheme) Color.White else Color.Black
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "EC2 Dashboard",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isDarkTheme) Color.White else BentoTextDark
+                    )
+                    Text(
+                        text = "Amazon Elastic Compute Cloud virtualized cluster control plane",
+                        fontSize = 11.sp,
+                        color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                    )
+                }
+            }
+        }
+
+        // Exact match of the "Resources" card in Image 2
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+                    .testTag("ec2_resources_card"),
+                border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderMedium),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) Color(0xFF151419) else Color.White
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    // Header Area of Card: Title and Circular Settings/Refresh actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Resources",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkTheme) Color.White else BentoTextDark
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Settings gear icon inside interactive circle
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
+                                    .clickable { /* action */ }
+                                    .padding(6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            // Refresh arrow icon inside interactive circle
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
+                                    .clickable { viewModel.startCloudDiscovery() }
+                                    .padding(6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh",
+                                    tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "You are using the following Amazon EC2 resources in the $regionFullName Region:",
+                        fontSize = 13.sp,
+                        color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Group 1: Instances (Image 3 details in Image 2 content style)
+                    CategoryHeader("Instances", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Instances (running)", counts["instances_running"] ?: 1, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Instances", counts["instances"] ?: 2, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Instance Types", counts["instance_types"] ?: 15, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Launch Templates", counts["launch_templates"] ?: 3, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Spot Requests", counts["spot_requests"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Savings Plans", counts["savings_plans"] ?: 1, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Reserved Instances", counts["reserved_instances"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Dedicated Hosts", counts["dedicated_hosts"] ?: 0, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Capacity Reservations", counts["capacity_reservations"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Capacity Manager", counts["capacity_manager"] ?: 1, isDarkTheme)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Group 2: Images (Image 3 details in Image 2 content style)
+                    CategoryHeader("Images", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("AMIs", counts["amis"] ?: 2, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("AMI Catalog", counts["ami_catalog"] ?: 12, isDarkTheme)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Group 3: Elastic Block Store (Image 3 details in Image 2 content style)
+                    CategoryHeader("Elastic Block Store", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Volumes", counts["volumes"] ?: 1, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Snapshots", counts["snapshots"] ?: 4, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Lifecycle Manager", counts["lifecycle_manager"] ?: 1, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Group 4: Network & Security (Image 3 details in Image 2 content style)
+                    CategoryHeader("Network & Security", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Security Groups", counts["security_groups"] ?: 18, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Elastic IPs", counts["elastic_ips"] ?: 4, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Placement Groups", counts["placement_groups"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Key Pairs", counts["key_pairs"] ?: 4, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Network Interfaces", counts["network_interfaces"] ?: 3, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Group 5: Load Balancing (Image 3 details in Image 2 content style)
+                    CategoryHeader("Load Balancing", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Load Balancers", counts["load_balancers"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Target Groups", counts["target_groups"] ?: 2, isDarkTheme)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Trust Stores", counts["trust_stores"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Group 6: Auto Scaling (Image 3 details in Image 2 content style)
+                    CategoryHeader("Auto Scaling", isDarkTheme)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResourceGridItem("Auto Scaling Groups", counts["auto_scaling"] ?: 0, isDarkTheme)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryHeader(text: String, isDarkTheme: Boolean) {
+    Text(
+        text = text,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        color = if (isDarkTheme) Color.White else BentoTextDark,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+fun ResourceGridItem(
+    label: String,
+    count: Int,
+    isDarkTheme: Boolean,
+    onClick: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .border(
+                width = 1.dp,
+                color = if (isDarkTheme) Color(0xFF2C2A35) else Color(0xFFE2E8F0),
+                shape = RoundedCornerShape(6.dp)
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
+                maxLines = 1
+            )
+            Text(
+                text = "$count",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isDarkTheme) Color.White else Color(0xFF1D1B20)
+            )
+        }
+    }
+}
+

@@ -15,6 +15,7 @@ from .database import (
     SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB, ResourceDB,
     ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB
 )
+from app.cloud.models import AwsAccount
 from .services.session_manager import (
     assume_target_aws_role, connect_azure_tenant, connect_gcp_project
 )
@@ -508,23 +509,26 @@ def get_resources(db: Session = Depends(get_db)):
     # Try to map service costs by cloud account
     cloud_cost_map = {}
     
+    # Avoid real-time AWS API calls on every request. Read from cache if available.
+    from app.services.cost.cache import get_cached_cost
+    cached = get_cached_cost()
+    service_costs = {}
+    if cached:
+        try:
+            if hasattr(cached, "byService"):
+                service_costs = {s.service.lower(): s.amount for s in cached.byService}
+            elif isinstance(cached, dict) and "byService" in cached:
+                service_costs = {s["service"].lower(): s["amount"] for s in cached["byService"]}
+        except Exception as e:
+            print(f"Error reading cost cache: {e}")
+
     response_list = []
     for r in real_resources:
         if r.cloud_account_id not in cloud_cost_map and r.provider == "AWS":
-            try:
-                ce = CEAdapter(r.cloud_account_id)
-                cost_data = ce.get_cost_and_usage()
-                
-                service_costs = {}
-                if "ResultsByTime" in cost_data and len(cost_data["ResultsByTime"]) > 0:
-                    groups = cost_data["ResultsByTime"][0].get("Groups", [])
-                    for group in groups:
-                        service_name = group["Keys"][0]
-                        amount = float(group["Metrics"]["UnblendedCost"]["Amount"])
-                        service_costs[service_name] = amount
+            if service_costs:
                 cloud_cost_map[r.cloud_account_id] = service_costs
-            except Exception as e:
-                print(f"Skipping AWS cost explorer due to error or missing credentials: {e}")
+            else:
+                # Fallback to local default/mock values directly to avoid real-time AWS charges
                 cloud_cost_map[r.cloud_account_id] = None
 
         service_cost_mapping = cloud_cost_map.get(r.cloud_account_id)
@@ -858,6 +862,11 @@ from app.services.cost.forecast import CostForecastEngine
 
 @app.get("/api/cost/summary", response_model=CloudCostSummarySchema)
 def get_cost_summary(db: Session = Depends(get_db)):
+    from app.services.cost.cache import get_cached_cost, save_cached_cost
+    cached = get_cached_cost()
+    if cached:
+        return cached
+
     import datetime
     today = datetime.date.today()
     month_str = today.strftime("%Y-%m")
@@ -909,7 +918,7 @@ def get_cost_summary(db: Session = Depends(get_db)):
         for dt, amt in sorted_trend
     ]
     
-    return CloudCostSummarySchema(
+    result = CloudCostSummarySchema(
         month=month_str,
         actualCost=round(total_actual, 2),
         forecastCost=round(total_forecast, 2),
@@ -917,6 +926,8 @@ def get_cost_summary(db: Session = Depends(get_db)):
         byService=by_service_list,
         dailyTrend=daily_trend_list
     )
+    save_cached_cost(result)
+    return result
 
 
 @app.get("/cost/estimate", response_model=CostEstimateResponseSchema)
@@ -1033,6 +1044,20 @@ from app.routes.metrics import router as metrics_router
 
 app.include_router(
     metrics_router
+)
+
+
+from app.routes.regions import router as region_router
+
+app.include_router(
+    region_router
+)
+
+
+from app.cloud.routes import router as cloud_router
+
+app.include_router(
+    cloud_router
 )
 
 

@@ -224,4 +224,14 @@ object SecureStorage {
         }
         TokenStorage.jwtToken = null
     }
+
+    fun saveSelectedRegion(context: Context, region: String) {
+        val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPrefs.edit().putString("selected_region", region).apply()
+    }
+
+    fun getSelectedRegion(context: Context): String {
+        val sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return sharedPrefs.getString("selected_region", "ap-south-1") ?: "ap-south-1"
+    }
 }
