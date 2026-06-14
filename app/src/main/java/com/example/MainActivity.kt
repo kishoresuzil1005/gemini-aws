@@ -1,3 +1,4 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
 package com.example
 
 import android.os.Bundle
@@ -42,7 +43,27 @@ enum class CloudScreen(val title: String, val icon: ImageVector) {
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+fun regionLabel(region: String): String {
+    return when (region) {
+        "ap-south-1" -> "Mumbai ($region)"
+        "us-east-1" -> "N. Virginia ($region)"
+        "ap-southeast-1" -> "Singapore ($region)"
+        "eu-central-1" -> "Frankfurt ($region)"
+        "ap-northeast-1" -> "Tokyo ($region)"
+        "ap-northeast-2" -> "Seoul ($region)"
+        "ap-northeast-3" -> "Osaka ($region)"
+        "ca-central-1" -> "Canada ($region)"
+        "eu-west-1" -> "Ireland ($region)"
+        "eu-west-2" -> "London ($region)"
+        "eu-west-3" -> "Paris ($region)"
+        "us-west-1" -> "California ($region)"
+        "us-west-2" -> "Oregon ($region)"
+        else -> region
+    }
+}
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -298,7 +319,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Scaffold(
                             topBar = {
-                                OptIn(ExperimentalMaterial3Api::class)
+                                @OptIn(ExperimentalMaterial3Api::class)
                                 var regionExpanded by remember { mutableStateOf(false) }
                                 val selectedRegion by viewModel.selectedRegion.collectAsState()
                                 val regions by viewModel.regions.collectAsState()
@@ -356,39 +377,21 @@ class MainActivity : ComponentActivity() {
                                                 onDismissRequest = { regionExpanded = false },
                                                 modifier = Modifier.background(if (isDarkTheme) Color(0xFF151419) else Color.White)
                                             ) {
-                                                val listToUse = if (regions.isEmpty()) {
-                                                     listOf(
-                                                         com.example.api.AwsRegion("ap-south-1", "ec2.ap-south-1.amazonaws.com"),
-                                                         com.example.api.AwsRegion("us-east-1", "ec2.us-east-1.amazonaws.com"),
-                                                         com.example.api.AwsRegion("ap-southeast-1", "ec2.ap-southeast-1.amazonaws.com"),
-                                                         com.example.api.AwsRegion("eu-central-1", "ec2.eu-central-1.amazonaws.com")
-                                                     )
-                                                 } else regions
-
-                                                 listToUse.map { it.name }.forEach { r ->
+                                                regions.forEach { region ->
                                                     DropdownMenuItem(
                                                         text = {
                                                             Text(
-                                                                text = when (r) {
-                                                                    "ap-south-1" -> "Mumbai ($r)"
-                                                                    "us-east-1" -> "N. Virginia ($r)"
-                                                                    "ap-southeast-1" -> "Singapore ($r)"
-                                                                    "eu-central-1" -> "Frankfurt ($r)"
-                                                                    "us-east-2" -> "Ohio ($r)"
-                                                                    "us-west-1" -> "N. California ($r)"
-                                                                    "us-west-2" -> "Oregon ($r)"
-                                                                    else -> r
-                                                                },
+                                                                text = regionLabel(region.name),
                                                                 fontWeight = FontWeight.Bold,
                                                                 color = if (isDarkTheme) {
-                                                                    if (selectedRegion == r) CyberCyan else Color.White
+                                                                    if (selectedRegion == region.name) CyberCyan else Color.White
                                                                 } else {
-                                                                    if (selectedRegion == r) Color.Black else BentoTextDark
+                                                                    if (selectedRegion == region.name) Color.Black else BentoTextDark
                                                                 }
                                                             )
                                                         },
                                                         onClick = {
-                                                            viewModel.updateSelectedRegion(r)
+                                                            viewModel.updateSelectedRegion(region.name)
                                                             regionExpanded = false
                                                         }
                                                     )

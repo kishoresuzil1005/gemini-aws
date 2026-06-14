@@ -113,14 +113,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                         _regions.value = response.regions
                         Log.i("CloudViewModel", "Successfully loaded regions from backend: ${response.regions}")
                     } else {
-                        throw Exception("Backend API success is false")
+                        Log.e("CloudViewModel", "Backend API success is false")
                     }
-                } else {
-                    _regions.value = getOfflineRegions()
                 }
             } catch (e: Exception) {
                 Log.e("CloudViewModel", "Failed to load regions from backend: ${e.message}")
-                _regions.value = getOfflineRegions()
             }
         }
     }
