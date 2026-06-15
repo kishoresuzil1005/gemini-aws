@@ -372,6 +372,10 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
 
+                                            LaunchedEffect(regions.size) {
+                                                android.util.Log.e("REGION_UI", "Dropdown has ${regions.size} regions")
+                                            }
+
                                             DropdownMenu(
                                                 expanded = regionExpanded,
                                                 onDismissRequest = { regionExpanded = false },

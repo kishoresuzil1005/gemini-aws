@@ -110,8 +110,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     val apiService = com.example.api.CloudOpsBackendClient.service
                     val response = apiService.getRegions()
                     if (response.success) {
-                        _regions.value = response.regions
-                        Log.i("CloudViewModel", "Successfully loaded regions from backend: ${response.regions}")
+                        _regions.emit(response.regions)
+                        Log.e("REGION_DEBUG", "Loaded ${response.regions.size} regions")
+                        response.regions.forEach {
+                            Log.e("REGION_DEBUG", "Region: ${it.name}")
+                        }
                     } else {
                         Log.e("CloudViewModel", "Backend API success is false")
                     }
@@ -125,21 +128,13 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     fun loadRegionsForAccount(accountId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (_useBackend.value) {
-                    val apiService = com.example.api.CloudOpsBackendClient.service
-                    val response = apiService.getAccountRegions(accountId)
-                    if (response.success) {
-                        _regions.value = response.regions
-                        Log.i("CloudViewModel", "Successfully loaded account $accountId regions from backend: ${response.regions}")
-                    } else {
-                        throw Exception("Backend API success is false")
-                    }
-                } else {
-                    _regions.value = getOfflineRegions()
+                val apiService = com.example.api.CloudOpsBackendClient.service
+                val response = apiService.getAccountRegions(accountId)
+                if (response.success) {
+                    _regions.emit(response.regions)
                 }
             } catch (e: Exception) {
-                Log.e("CloudViewModel", "Failed to load dynamic regions for account $accountId: ${e.message}")
-                _regions.value = getOfflineRegions()
+                Log.e("REGION_ERROR", "Account region load failed: ${e.message}")
             }
         }
     }
@@ -380,7 +375,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 try {
                     val response = apiService.getRegions()
                     if (response.success) {
-                        _regions.value = response.regions
+                        _regions.emit(response.regions)
                     }
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch regions during sync: ${e.message}")
