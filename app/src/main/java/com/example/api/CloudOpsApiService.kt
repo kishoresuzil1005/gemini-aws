@@ -421,6 +421,11 @@ object CloudOpsBackendClient {
                 url = "http://$url"
             }
 
+            Log.i(
+                "BACKEND_DEBUG",
+                "Using backend URL = $url"
+            )
+
             return if (url.endsWith("/")) url else "$url/"
         }
 

@@ -909,8 +909,19 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                         it + ChatMessage(text = response.response, isUser = false)
                     }
                 } catch (e: Exception) {
-                    Log.e("CloudViewModel", "FastAPI Copilot connection failed: ${e.message}")
-                    fallbackToLocalGemini(text)
+                    Log.e("AI_DEBUG", "Backend failed", e)
+                    _chatMessages.update {
+                        it + ChatMessage(
+                            text = """
+                                ERROR
+                                
+                                ${e.javaClass.simpleName}
+                                
+                                ${e.message}
+                            """.trimIndent(),
+                            isUser = false
+                        )
+                    }
                 }
             } else {
                 fallbackToLocalGemini(text)
