@@ -109,14 +109,14 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 if (_useBackend.value) {
                     val apiService = com.example.api.CloudOpsBackendClient.service
                     val response = apiService.getRegions()
-                    if (response.success) {
+                    if (response.success && response.regions.isNotEmpty()) {
                         _regions.emit(response.regions)
                         Log.e("REGION_DEBUG", "Loaded ${response.regions.size} regions")
                         response.regions.forEach {
                             Log.e("REGION_DEBUG", "Region: ${it.name}")
                         }
                     } else {
-                        Log.e("CloudViewModel", "Backend API success is false")
+                        Log.e("CloudViewModel", "Backend API returned success = ${response.success} or of empty size")
                     }
                 }
             } catch (e: Exception) {
@@ -130,7 +130,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val apiService = com.example.api.CloudOpsBackendClient.service
                 val response = apiService.getAccountRegions(accountId)
-                if (response.success) {
+                if (response.success && response.regions.isNotEmpty()) {
                     _regions.emit(response.regions)
                 }
             } catch (e: Exception) {
@@ -144,7 +144,16 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             com.example.api.AwsRegion("ap-south-1", "ec2.ap-south-1.amazonaws.com"),
             com.example.api.AwsRegion("us-east-1", "ec2.us-east-1.amazonaws.com"),
             com.example.api.AwsRegion("ap-southeast-1", "ec2.ap-southeast-1.amazonaws.com"),
-            com.example.api.AwsRegion("eu-central-1", "ec2.eu-central-1.amazonaws.com")
+            com.example.api.AwsRegion("eu-central-1", "ec2.eu-central-1.amazonaws.com"),
+            com.example.api.AwsRegion("ap-northeast-1", "ec2.ap-northeast-1.amazonaws.com"),
+            com.example.api.AwsRegion("ap-northeast-2", "ec2.ap-northeast-2.amazonaws.com"),
+            com.example.api.AwsRegion("ap-northeast-3", "ec2.ap-northeast-3.amazonaws.com"),
+            com.example.api.AwsRegion("ca-central-1", "ec2.ca-central-1.amazonaws.com"),
+            com.example.api.AwsRegion("eu-west-1", "ec2.eu-west-1.amazonaws.com"),
+            com.example.api.AwsRegion("eu-west-2", "ec2.eu-west-2.amazonaws.com"),
+            com.example.api.AwsRegion("eu-west-3", "ec2.eu-west-3.amazonaws.com"),
+            com.example.api.AwsRegion("us-west-1", "ec2.us-west-1.amazonaws.com"),
+            com.example.api.AwsRegion("us-west-2", "ec2.us-west-2.amazonaws.com")
         )
     }
 
@@ -310,6 +319,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             Log.e("CloudViewModel", "Failed to restore selected region: ${e.message}")
         }
 
+        // Initialize with real regions immediately so that the dropdown works and is functional right away
+        _regions.value = getOfflineRegions()
+
         // Fetch dynamic cloud regions
         loadRegions()
 
@@ -376,7 +388,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 // Fetch dynamic cloud regions
                 try {
                     val response = apiService.getRegions()
-                    if (response.success) {
+                    if (response.success && response.regions.isNotEmpty()) {
                         _regions.emit(response.regions)
                     }
                 } catch (e: Exception) {

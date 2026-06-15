@@ -271,7 +271,7 @@ data class AIInsightsResponse(
 
 @JsonClass(generateAdapter = true)
 data class AIChatPayload(
-    val question: String
+    val message: String
 )
 
 @JsonClass(generateAdapter = true)
