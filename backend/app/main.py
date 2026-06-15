@@ -1026,11 +1026,12 @@ app.include_router(
 )
 
 
-from app.routes.ai import router as ai_router
+# Commented out to prevent conflict with modern Ollama AI chat router:
+# from app.routes.ai import router as ai_router
 
-app.include_router(
-    ai_router
-)
+# app.include_router(
+#     ai_router
+# )
 
 
 from app.api.ai import router as ollama_ai_router
