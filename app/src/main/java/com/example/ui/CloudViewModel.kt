@@ -80,7 +80,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentOrgPlan = MutableStateFlow<String?>("PRO_ENTERPRISE_SRE")
     val currentOrgPlan = _currentOrgPlan.asStateFlow()
 
-    private val _jwtToken = MutableStateFlow<String?>("bypass-token-sre-s3-dynamodb-ec2")
+    private val _jwtToken = MutableStateFlow<String?>(null)
     val jwtToken = _jwtToken.asStateFlow()
 
     private val _currentUserRole = MutableStateFlow<String?>("SUPER_ADMIN")
@@ -278,6 +278,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val savedUrl = com.example.api.SecureStorage.getCustomBaseUrl(application)
             if (savedUrl != null) {
+                com.example.api.CloudOpsBackendClient.setCustomBaseUrl(savedUrl)
                 Log.i("CloudViewModel", "Successfully loaded persistent custom backend URL: $savedUrl")
             }
         } catch (e: java.lang.Exception) {
@@ -350,6 +351,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     fun updateBackendUrl(url: String) {
         try {
             com.example.api.SecureStorage.saveCustomBaseUrl(getApplication(), url.trim())
+            com.example.api.CloudOpsBackendClient.setCustomBaseUrl(url.trim())
             Log.i("CloudViewModel", "Configured and saved new live gateway IP/URL: $url")
             refreshAllFeeds()
         } catch (e: Exception) {
@@ -686,7 +688,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     fun logoutUser() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (_useBackend.value && _jwtToken.value != null && _jwtToken.value != "jwt_offline_mock" && _jwtToken.value != "bypass-token-sre-s3-dynamodb-ec2") {
+                if (_useBackend.value && _jwtToken.value != null && _jwtToken.value != "jwt_offline_mock") {
                     com.example.api.CloudOpsBackendClient.service.logout()
                 }
             } catch (e: Exception) {
@@ -697,7 +699,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             _currentOrgName.value = "Mumbai Operations Center"
             _currentOrgId.value = 1
             _currentOrgPlan.value = "PRO_ENTERPRISE_SRE"
-            _jwtToken.value = "bypass-token-sre-s3-dynamodb-ec2"
+            _jwtToken.value = null
             _currentUserRole.value = "SUPER_ADMIN"
             _lastTemporaryCredentials.value = null
 

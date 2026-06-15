@@ -205,12 +205,12 @@ fun LoginScreen(
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
+                                        .padding(bottom = 24.dp)
+                                        .border(2.dp, CyberCyan, RoundedCornerShape(16.dp)),
                                     colors = CardDefaults.cardColors(containerColor = Color(0xFF0F0E13)),
-                                    border = BorderStroke(1.dp, Color(0xFF2C2A35)),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(16.dp)
                                 ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -221,13 +221,13 @@ fun LoginScreen(
                                                     imageVector = Icons.Default.SettingsEthernet,
                                                     contentDescription = "Gateway",
                                                     tint = CyberCyan,
-                                                    modifier = Modifier.size(14.dp)
+                                                    modifier = Modifier.size(18.dp)
                                                 )
-                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = "AWS EC2 API GATEWAY",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 9.sp,
+                                                    text = "GATEWAY CONFIGURATION",
+                                                    fontWeight = FontWeight.Black,
+                                                    fontSize = 11.sp,
                                                     color = CyberCyan,
                                                     fontFamily = FontFamily.Monospace
                                                 )
@@ -236,21 +236,20 @@ fun LoginScreen(
                                             val useBackend by viewModel.useBackend.collectAsState()
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .clip(RoundedCornerShape(6.dp))
                                                     .background(if (useBackend) Color(0xFF064E3B) else Color(0xFF7F1D1D))
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    .padding(horizontal = 8.dp, vertical = 2.dp)
                                             ) {
                                                 Text(
-                                                    text = if (useBackend) "FASTAPI ACTIVE" else "STANDALONE",
+                                                    text = if (useBackend) "BACKEND CONNECTED" else "OFFLINE MODE",
                                                     color = if (useBackend) Color(0xFF34D399) else Color(0xFFFCA5A5),
-                                                    fontSize = 8.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontFamily = FontFamily.Monospace
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
                                         
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(12.dp))
                                         
                                         var editingUrl by remember { mutableStateOf(com.example.api.CloudOpsBackendClient.baseUrl) }
                                         var isEditing by remember { mutableStateOf(false) }
@@ -266,19 +265,15 @@ fun LoginScreen(
                                                     onValueChange = { editingUrl = it },
                                                     textStyle = androidx.compose.ui.text.TextStyle(
                                                         color = Color.White,
-                                                        fontSize = 11.sp,
-                                                        fontFamily = FontFamily.Monospace
+                                                        fontSize = 14.sp
                                                     ),
                                                     colors = OutlinedTextFieldDefaults.colors(
                                                         focusedBorderColor = CyberCyan,
-                                                        unfocusedBorderColor = Color(0xFF332D44),
-                                                        focusedTextColor = Color.White,
-                                                        unfocusedTextColor = Color.White
+                                                        unfocusedBorderColor = Color(0xFF332D44)
                                                     ),
                                                     modifier = Modifier
                                                         .weight(1f)
-                                                        .height(44.dp)
-                                                        .testTag("ec2_ip_input_field"),
+                                                        .height(50.dp),
                                                     singleLine = true
                                                 )
                                                 Button(
@@ -287,12 +282,11 @@ fun LoginScreen(
                                                         isEditing = false
                                                         Toast.makeText(context, "Gateway updated: $editingUrl", Toast.LENGTH_SHORT).show()
                                                     },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = BentoPurplePrimary),
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = CyberCyan),
                                                     contentPadding = PaddingValues(horizontal = 12.dp),
-                                                    modifier = Modifier.height(34.dp)
+                                                    modifier = Modifier.height(44.dp)
                                                 ) {
-                                                    Text("Save", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                    Text("Save", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D0C10))
                                                 }
                                             }
                                         } else {
@@ -304,25 +298,18 @@ fun LoginScreen(
                                                 Text(
                                                     text = com.example.api.CloudOpsBackendClient.baseUrl,
                                                     color = Color.White,
-                                                    fontSize = 11.sp,
-                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
                                                     modifier = Modifier.weight(1f)
                                                 )
                                                 
-                                                Box(
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(6.dp))
-                                                        .background(Color(0xFF1E1C24))
-                                                        .clickable { isEditing = true }
-                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                Button(
+                                                    onClick = { isEditing = true },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2A35)),
+                                                    contentPadding = PaddingValues(horizontal = 12.dp),
+                                                    modifier = Modifier.height(34.dp)
                                                 ) {
-                                                    Text(
-                                                        text = "CONVERT",
-                                                        color = CyberCyan,
-                                                        fontSize = 9.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontFamily = FontFamily.Monospace
-                                                    )
+                                                    Text("Edit Gateway", color = CyberCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                                 }
                                             }
                                         }
