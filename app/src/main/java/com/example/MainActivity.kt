@@ -508,6 +508,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
+                                    .imePadding()
                                     .background(if (isDarkTheme) Color(0xFF0F0E13) else BentoBg)
                             ) {
                                 when (currentScreen) {

@@ -92,6 +92,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Brush.verticalGradient(gradientColors))
             .padding(20.dp)
+            .imePadding()
             .verticalScroll(scrollState),
         contentAlignment = Alignment.Center
     ) {

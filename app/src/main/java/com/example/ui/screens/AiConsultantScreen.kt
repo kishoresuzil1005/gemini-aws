@@ -217,7 +217,7 @@ fun AiConsultantScreen(
 
         // Typing Box Container
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().imePadding(),
             tonalElevation = 8.dp,
             border = BorderStroke(1.dp, BorderGrey),
             color = DeepCard

@@ -1042,6 +1042,14 @@ app.include_router(
     tags=["AI"]
 )
 
+from app.api.terminal import router as terminal_router
+
+app.include_router(
+    terminal_router,
+    prefix="/api/terminal",
+    tags=["Terminal"]
+)
+
 
 from app.routes.operations import router as operations_router
 
