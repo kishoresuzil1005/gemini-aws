@@ -4,7 +4,7 @@ import os
 
 router = APIRouter()
 
-AWS_DIR = "/home/ubuntu/aws-credentials"
+AWS_DIR = "/shared/aws"
 
 class AWSCredentialsRequest(BaseModel):
     access_key: str
