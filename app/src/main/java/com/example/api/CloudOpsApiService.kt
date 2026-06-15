@@ -276,7 +276,8 @@ data class AIChatPayload(
 
 @JsonClass(generateAdapter = true)
 data class AIChatResponse(
-    val answer: String
+    val success: Boolean,
+    val response: String
 )
 
 object TokenStorage {

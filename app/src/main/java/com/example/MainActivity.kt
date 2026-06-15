@@ -38,7 +38,7 @@ enum class CloudScreen(val title: String, val icon: ImageVector) {
     AI("AI Engine", Icons.Default.SmartToy),
     SRE("SRE Plane", Icons.Default.Hub),
     HCL("HCL Migrate", Icons.Default.Code),
-    GEMINI("Gemini Advisor", Icons.Default.Chat),
+    GEMINI("AI", Icons.Default.Chat),
     CLOUD("Cloud Connectors", Icons.Default.Cloud)
 }
 
@@ -206,7 +206,7 @@ class MainActivity : ComponentActivity() {
                                     Divider(color = if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderLight, modifier = Modifier.padding(bottom = 12.dp))
 
                                     // Navigation List
-                                    CloudScreen.values().forEach { screen ->
+                                    CloudScreen.values().filter { it != CloudScreen.AI }.forEach { screen ->
                                         val isSelected = currentScreen == screen
                                         NavigationDrawerItem(
                                             label = {
@@ -411,7 +411,7 @@ class MainActivity : ComponentActivity() {
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(12.dp))
                                                 .clickable {
-                                                    currentScreen = CloudScreen.AI
+                                                    currentScreen = CloudScreen.GEMINI
                                                 }
                                                 .background(
                                                     if (isDarkTheme) Color(0xFF1E1C24) else Color(0xFFF3EFFF)

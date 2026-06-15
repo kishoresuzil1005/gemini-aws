@@ -1033,6 +1033,15 @@ app.include_router(
 )
 
 
+from app.api.ai import router as ollama_ai_router
+
+app.include_router(
+    ollama_ai_router,
+    prefix="/api/ai",
+    tags=["AI"]
+)
+
+
 from app.routes.operations import router as operations_router
 
 app.include_router(

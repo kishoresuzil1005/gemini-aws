@@ -894,7 +894,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                         com.example.api.AIChatPayload(text)
                     )
                     _chatMessages.update {
-                        it + ChatMessage(text = response.answer, isUser = false)
+                        it + ChatMessage(text = response.response, isUser = false)
                     }
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "FastAPI Copilot connection failed: ${e.message}")
