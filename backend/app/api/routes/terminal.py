@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-import subprocess
+import requests
 
 router = APIRouter()
 
@@ -11,29 +11,18 @@ class CommandRequest(BaseModel):
 @router.post("/execute")
 async def execute_command(req: CommandRequest):
     try:
-        result = subprocess.run(
-            [
-                "docker",
-                "exec",
-                "cloudshell",
-                "bash",
-                "-c",
-                req.command
-            ],
-            capture_output=True,
-            text=True,
-            timeout=60
+        response = requests.post(
+            "http://cloudshell:9000/execute",
+            json={
+                "command": req.command
+            },
+            timeout=180
         )
-
-        return {
-            "success": True,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "exit_code": result.returncode
-        }
+        return response.json()
 
     except Exception as e:
         return {
             "success": False,
             "error": str(e)
         }
+
