@@ -51,10 +51,11 @@ def insights(db: Session = Depends(get_db)):
     "/ai/chat",
     response_model=LocalAIChatResponseSchema
 )
-@router.post(
-    "/api/ai/chat",
-    response_model=LocalAIChatResponseSchema
-)
+# Commented out to resolve conflict with modern Ollama AI chat router:
+# @router.post(
+#     "/api/ai/chat",
+#     response_model=LocalAIChatResponseSchema
+# )
 def chat(payload: ChatRequest, db: Session = Depends(get_db)):
     """
     Interactive natural language Copilot chat for cloud topology and FinOps Q&A.
