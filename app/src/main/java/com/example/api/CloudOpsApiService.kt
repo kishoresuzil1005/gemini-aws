@@ -438,9 +438,9 @@ object CloudOpsBackendClient {
     }
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(200, TimeUnit.SECONDS)
+        .readTimeout(200, TimeUnit.SECONDS)
+        .writeTimeout(200, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val original = chain.request()
             val token = TokenStorage.jwtToken
