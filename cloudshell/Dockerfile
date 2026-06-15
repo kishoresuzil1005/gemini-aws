@@ -1,27 +1,15 @@
 FROM amazonlinux:2023
 
-RUN yum install -y \
+RUN dnf update -y && \
+    dnf install -y \
+    awscli \
     python3 \
     unzip \
-    curl \
-    python3-pip
+    curl && \
+    dnf clean all
 
-RUN pip3 install \
-    fastapi \
-    uvicorn \
-    boto3
+RUN curl -LO https://releases.hashicorp.com/terraform/1.9.0/terraform_1.9.0_linux_amd64.zip && \
+    unzip terraform_1.9.0_linux_amd64.zip && \
+    mv terraform /usr/local/bin/
 
-RUN curl -LO \
-https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
-
-RUN unzip awscli-exe-linux-x86_64.zip
-
-RUN ./aws/install
-
-WORKDIR /app
-
-COPY main.py .
-
-EXPOSE 9000
-
-CMD [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000" ]
+CMD ["sleep","infinity"]
