@@ -1050,6 +1050,14 @@ app.include_router(
     tags=["Terminal"]
 )
 
+from app.api.routes import aws_credentials
+
+app.include_router(
+    aws_credentials.router,
+    prefix="/api/aws",
+    tags=["AWS Credentials"]
+)
+
 
 from app.routes.operations import router as operations_router
 
