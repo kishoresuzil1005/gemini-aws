@@ -93,6 +93,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     val regions = _regions.asStateFlow()
 
     fun updateSelectedRegion(region: String) {
+        Log.d("REGION", "Changed to $region")
         _selectedRegion.value = region
         com.example.api.TokenStorage.selectedRegion = region
         try {

@@ -348,21 +348,19 @@ class MainActivity : ComponentActivity() {
                                                     .padding(horizontal = 8.dp, vertical = 6.dp)
                                                     .testTag("region_selector")
                                             ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Public,
+                                                    contentDescription = "Region Selector",
+                                                    tint = if (isDarkTheme) Color.White else Color.Black,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(5.dp))
                                                 Text(
-                                                    text = when (selectedRegion) {
-                                                        "ap-south-1", "Mumbai" -> "Mumbai"
-                                                        "us-east-1", "N. Virginia" -> "N. Virginia"
-                                                        "ap-southeast-1", "Singapore" -> "Singapore"
-                                                        "eu-central-1", "Frankfurt" -> "Frankfurt"
-                                                        "us-east-2" -> "Ohio"
-                                                        "us-west-1" -> "N. California"
-                                                        "us-west-2" -> "Oregon"
-                                                        else -> selectedRegion
-                                                    },
+                                                    text = selectedRegion,
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 15.sp,
+                                                    fontSize = 14.sp,
                                                     color = if (isDarkTheme) Color.White else Color.Black,
-                                                    fontFamily = FontFamily.SansSerif
+                                                    fontFamily = FontFamily.Monospace
                                                 )
                                                 Spacer(modifier = Modifier.width(3.dp))
                                                 Icon(
