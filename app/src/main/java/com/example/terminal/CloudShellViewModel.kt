@@ -54,10 +54,17 @@ class CloudShellViewModel : ViewModel() {
             onStatusChange = { status ->
                 connectionStatus = status
                 terminalModel.writeData("\n[System] Link $status\n")
+                if (status == "Connected") {
+                    sendResize(terminalModel.cols, terminalModel.rows)
+                }
             }
         )
 
         socket?.connect(targetUrl)
+    }
+
+    fun sendResize(cols: Int, rows: Int) {
+        socket?.send("{\"type\": \"resize\", \"cols\": $cols, \"rows\": $rows}")
     }
 
     fun execute(command: String) {

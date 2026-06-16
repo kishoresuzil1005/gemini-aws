@@ -57,7 +57,23 @@ async def cloudshell(
     try:
         while True:
             command = await ws.receive_text()
-            shell.send(command)
+            try:
+                import json
+                data = json.loads(command)
+                if isinstance(data, dict):
+                    msg_type = data.get("type")
+                    if msg_type == "resize":
+                        cols = int(data.get("cols", 120))
+                        rows = int(data.get("rows", 40))
+                        shell.setwinsize(rows, cols)
+                    elif msg_type == "input":
+                        shell.send(data.get("data", ""))
+                    else:
+                        shell.send(command)
+                else:
+                    shell.send(command)
+            except Exception:
+                shell.send(command)
 
     except WebSocketDisconnect:
         pass

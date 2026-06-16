@@ -1,5 +1,8 @@
 package com.example.terminal
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -28,6 +31,8 @@ class TerminalModel(
     private var savedCol = 0
 
     val linesState = mutableStateListOf<AnnotatedString>()
+    var terminalText by mutableStateOf<AnnotatedString>(AnnotatedString(""))
+        private set
 
     init {
         clearScreen()
@@ -51,8 +56,8 @@ class TerminalModel(
 
     private fun commitToState() {
         linesState.clear()
-        for (r in 0 until bufferRows) {
-            val annotated = buildAnnotatedString {
+        val combined = buildAnnotatedString {
+            for (r in 0 until bufferRows) {
                 var currentIndex = 0
                 while (currentIndex < bufferCols) {
                     val start = currentIndex
@@ -75,9 +80,15 @@ class TerminalModel(
                     append(textRun)
                     pop()
                 }
+                
+                // Add first item element to linesState for backward compatibility, if needed,
+                // but our main view is going to use terminalText!
+                if (r < bufferRows - 1) {
+                    append("\n")
+                }
             }
-            linesState.add(annotated)
         }
+        terminalText = combined
     }
 
     @Synchronized

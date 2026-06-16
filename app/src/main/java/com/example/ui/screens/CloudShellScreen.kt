@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +43,7 @@ fun CloudShellScreen() {
     var commandInput by remember { mutableStateOf("") }
     var wsUrlInput by remember { mutableStateOf(vm.currentWsUrl) }
     var showSettings by remember { mutableStateOf(false) }
+    var fullScreenTerminal by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
@@ -51,9 +53,15 @@ fun CloudShellScreen() {
         vm.connect()
     }
 
-    // No auto-scroll required since we render a fixed-viewport text console.
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
+
+    // Auto-scroll when terminal text changes
+    LaunchedEffect(vm.terminalModel.terminalText) {
+        if (verticalScrollState.maxValue > 0) {
+            verticalScrollState.animateScrollTo(verticalScrollState.maxValue)
+        }
+    }
 
     val activeStatusColor = when {
         vm.connectionStatus.contains("Connected", ignoreCase = true) -> Color(0xFF00FF66)
@@ -103,6 +111,18 @@ fun CloudShellScreen() {
                     }
 
                     Row {
+                        IconButton(
+                            onClick = { fullScreenTerminal = !fullScreenTerminal },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (fullScreenTerminal) Icons.Default.FullscreenExit else Icons.Default.Terminal,
+                                contentDescription = "Toggle Fullscreen Mode",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
                         IconButton(
                             onClick = { vm.connect() },
                             modifier = Modifier.size(32.dp)
@@ -208,17 +228,13 @@ fun CloudShellScreen() {
                     .verticalScroll(verticalScrollState)
                     .horizontalScroll(horizontalScrollState)
             ) {
-                Column {
-                    vm.terminalModel.linesState.forEach { annotatedLine ->
-                        Text(
-                            text = annotatedLine,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            lineHeight = 13.sp,
-                            softWrap = false
-                        )
-                    }
-                }
+                Text(
+                    text = vm.terminalModel.terminalText,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    lineHeight = 13.sp,
+                    softWrap = false
+                )
             }
 
             // Top-right mini overlay controls
@@ -245,129 +261,97 @@ fun CloudShellScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        if (!fullScreenTerminal) {
+            Spacer(modifier = Modifier.height(10.dp))
 
-        // Quick Command Shortcuts helper Row
-        Text(
-            text = "QUIKCOMMANDS MACRO",
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            listOf(
-                "aws --version",
-                "aws sts get-caller-identity",
-                "terraform -version",
-                "pwd && ls -la"
-            ).forEach { cmd ->
-                SuggestionChip(
-                    onClick = {
-                        commandInput = cmd
-                    },
-                    label = {
-                        Text(
-                            text = cmd,
-                            fontSize = 10.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    },
-                    modifier = Modifier.height(32.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // Interactive Keypad Row
-        Text(
-            text = "SHELL CONTROLS",
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-        )
-        
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val controlKeys = listOf(
-                Pair("TAB", "\t"),
-                Pair("ESC", "\u001b"),
-                Pair("Ctrl+C", "\u0003"),
-                Pair("Ctrl+D", "\u0004"),
-                Pair("Ctrl+L", "\u000c")
+            // Quick Command Shortcuts helper Row
+            Text(
+                text = "QUIKCOMMANDS MACRO",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
             )
-            
-            controlKeys.forEach { (label, value) ->
-                FilledTonalButton(
-                    onClick = { vm.execute(value) },
-                    contentPadding = PaddingValues(horizontal = 6.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier
-                        .height(36.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val macros = listOf(
+                    "aws --version",
+                    "aws sts get-caller-identity",
+                    "terraform -version",
+                    "pwd && ls -la"
+                )
+                items(macros) { cmd ->
+                    SuggestionChip(
+                        onClick = {
+                            commandInput = cmd
+                        },
+                        label = {
+                            Text(
+                                text = cmd,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        },
+                        modifier = Modifier.height(28.dp)
                     )
                 }
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Interactive Horizontally Scrollable Keys Row
             Text(
-                text = "Directional Navigation:",
+                text = "SHELL KEYS & NAVIGATION",
                 fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(start = 4.dp)
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
             )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                listOf(
-                    Pair("◀", "\u001b[D"),
-                    Pair("▲", "\u001b[A"),
-                    Pair("▼", "\u001b[B"),
-                    Pair("▶", "\u001b[C")
-                ).forEach { (symbol, code) ->
+                val ctrlKeysList = listOf(
+                    Triple("TAB", "\t", true),
+                    Triple("ESC", "\u001b", true),
+                    Triple("Ctrl+C", "\u0003", true),
+                    Triple("Ctrl+D", "\u0004", true),
+                    Triple("Ctrl+L", "\u000c", true),
+                    Triple("◀", "\u001b[D", false),
+                    Triple("▲", "\u001b[A", false),
+                    Triple("▼", "\u001b[B", false),
+                    Triple("▶", "\u001b[C", false)
+                )
+
+                items(ctrlKeysList) { (label, code, isControl) ->
                     FilledTonalButton(
                         onClick = { vm.execute(code) },
-                        contentPadding = PaddingValues(0.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            containerColor = if (isControl) {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                            } else {
+                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
+                            },
+                            contentColor = if (isControl) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            }
                         ),
-                        modifier = Modifier
-                            .size(36.dp)
+                        modifier = Modifier.height(34.dp)
                     ) {
                         Text(
-                            text = symbol,
-                            fontSize = 11.sp,
+                            text = label,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace
                         )
@@ -378,12 +362,12 @@ fun CloudShellScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Command Inputs Row
+        // Command Inputs Row - Optimized to be very compact and elegant
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
+                .padding(bottom = 6.dp)
         ) {
             OutlinedTextField(
                 value = commandInput,
@@ -391,12 +375,13 @@ fun CloudShellScreen() {
                 placeholder = {
                     Text(
                         "Input standard CLI commands...",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace
                     )
                 },
                 modifier = Modifier
                     .weight(1f)
+                    .height(48.dp)
                     .testTag("terminal_command_input"),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -404,28 +389,30 @@ fun CloudShellScreen() {
                 ),
                 keyboardActions = KeyboardActions(
                     onSend = {
-                        vm.execute(commandInput + "\n")
-                        commandInput = ""
+                        if (commandInput.isNotEmpty()) {
+                            vm.execute(commandInput + "\n")
+                            commandInput = ""
+                        }
                     }
                 ),
                 textStyle = LocalTextStyle.current.copy(
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace
                 ),
                 leadingIcon = {
                     Text(
                         text = "$",
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 12.dp, end = 4.dp)
+                        modifier = Modifier.padding(start = 10.dp, end = 2.dp)
                     )
                 },
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(24.dp)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
             FloatingActionButton(
                 onClick = {
@@ -436,13 +423,13 @@ fun CloudShellScreen() {
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(44.dp)
                     .testTag("terminal_send_button")
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Execute Command",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
