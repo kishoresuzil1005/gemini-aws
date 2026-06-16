@@ -4,21 +4,34 @@ import pexpect
 
 router = APIRouter()
 
-@router.get("/cloudshell-health")
-async def health():
-    return {"status": "ok"}
+SESSIONS = {}
 
-
-@router.websocket("/ws/cloudshell")
-async def cloudshell(ws: WebSocket):
-
-    await ws.accept()
-
+def create_shell():
     shell = pexpect.spawn(
         "docker exec -it cloud-shell bash",
         encoding="utf-8",
         echo=False
     )
+    shell.setwinsize(40, 120)
+    shell.setecho(False)
+    return shell
+
+@router.get("/cloudshell-health")
+async def health():
+    return {"status": "ok"}
+
+
+@router.websocket("/ws/cloudshell/{session_id}")
+async def cloudshell(
+    ws: WebSocket,
+    session_id: str
+):
+    await ws.accept()
+
+    if session_id not in SESSIONS:
+        SESSIONS[session_id] = create_shell()
+
+    shell = SESSIONS[session_id]
 
     async def stream_output():
         while True:
@@ -43,9 +56,7 @@ async def cloudshell(ws: WebSocket):
 
     try:
         while True:
-
             command = await ws.receive_text()
-
             shell.sendline(command)
 
     except WebSocketDisconnect:
@@ -53,8 +64,3 @@ async def cloudshell(ws: WebSocket):
 
     finally:
         output_task.cancel()
-
-        try:
-            shell.close(force=True)
-        except:
-            pass

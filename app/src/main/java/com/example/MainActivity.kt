@@ -39,7 +39,8 @@ enum class CloudScreen(val title: String, val icon: ImageVector) {
     SRE("SRE Plane", Icons.Default.Hub),
     HCL("HCL Migrate", Icons.Default.Code),
     GEMINI("AI", Icons.Default.Chat),
-    CLOUD("Cloud Connectors", Icons.Default.Cloud)
+    CLOUD("Cloud Connectors", Icons.Default.Cloud),
+    CLOUDSHELL("CloudShell", Icons.Default.Terminal)
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -470,7 +471,7 @@ class MainActivity : ComponentActivity() {
                                                     shape = RoundedCornerShape(8.dp)
                                                 )
                                                 .clickable {
-                                                    viewModel.manualRefresh()
+                                                    currentScreen = CloudScreen.CLOUDSHELL
                                                 }
                                                 .testTag("terminal_refresh_button"),
                                             contentAlignment = Alignment.Center
@@ -524,6 +525,7 @@ class MainActivity : ComponentActivity() {
                                     CloudScreen.HCL -> TerraformGeneratorScreen(viewModel = viewModel)
                                     CloudScreen.GEMINI -> AiConsultantScreen(viewModel = viewModel)
                                     CloudScreen.CLOUD -> CloudConnectorsScreen(viewModel = viewModel)
+                                    CloudScreen.CLOUDSHELL -> CloudShellScreen()
                                 }
                             }
                         }
