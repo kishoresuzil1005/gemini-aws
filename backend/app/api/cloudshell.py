@@ -57,7 +57,7 @@ async def cloudshell(
     try:
         while True:
             command = await ws.receive_text()
-            shell.sendline(command)
+            shell.send(command)
 
     except WebSocketDisconnect:
         pass

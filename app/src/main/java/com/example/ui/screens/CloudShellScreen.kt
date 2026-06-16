@@ -290,6 +290,99 @@ fun CloudShellScreen() {
 
         Spacer(modifier = Modifier.height(6.dp))
 
+        // Interactive Keypad Row
+        Text(
+            text = "SHELL CONTROLS",
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        )
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val controlKeys = listOf(
+                Pair("TAB", "\t"),
+                Pair("ESC", "\u001b"),
+                Pair("Ctrl+C", "\u0003"),
+                Pair("Ctrl+D", "\u0004"),
+                Pair("Ctrl+L", "\u000c")
+            )
+            
+            controlKeys.forEach { (label, value) ->
+                FilledTonalButton(
+                    onClick = { vm.execute(value) },
+                    contentPadding = PaddingValues(horizontal = 6.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .weight(1f)
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Directional Navigation:",
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                listOf(
+                    Pair("◀", "\u001b[D"),
+                    Pair("▲", "\u001b[A"),
+                    Pair("▼", "\u001b[B"),
+                    Pair("▶", "\u001b[C")
+                ).forEach { (symbol, code) ->
+                    FilledTonalButton(
+                        onClick = { vm.execute(code) },
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        modifier = Modifier
+                            .size(36.dp)
+                    ) {
+                        Text(
+                            text = symbol,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Command Inputs Row
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -316,10 +409,8 @@ fun CloudShellScreen() {
                 ),
                 keyboardActions = KeyboardActions(
                     onSend = {
-                        if (commandInput.isNotBlank()) {
-                            vm.execute(commandInput)
-                            commandInput = ""
-                        }
+                        vm.execute(commandInput + "\n")
+                        commandInput = ""
                     }
                 ),
                 textStyle = LocalTextStyle.current.copy(
@@ -343,11 +434,9 @@ fun CloudShellScreen() {
 
             FloatingActionButton(
                 onClick = {
-                    if (commandInput.isNotBlank()) {
-                        vm.execute(commandInput)
-                        commandInput = ""
-                        focusManager.clearFocus()
-                    }
+                    vm.execute(commandInput + "\n")
+                    commandInput = ""
+                    focusManager.clearFocus()
                 },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
