@@ -862,11 +862,13 @@ from app.services.cost.forecast import CostForecastEngine
 
 @app.get("/api/cost/summary", response_model=CloudCostSummarySchema)
 def get_cost_summary(db: Session = Depends(get_db)):
-    from app.services.cost.cache import get_cached_cost, save_cached_cost
-    cached = get_cached_cost()
+    from app.services.cost.cache import CostSummaryCache
+    cached = CostSummaryCache.get()
     if cached:
+        print("[COST CACHE] Returning cached data")
         return cached
 
+    print("[COST CACHE] Calling AWS Cost Explorer")
     import datetime
     today = datetime.date.today()
     month_str = today.strftime("%Y-%m")
@@ -926,8 +928,23 @@ def get_cost_summary(db: Session = Depends(get_db)):
         byService=by_service_list,
         dailyTrend=daily_trend_list
     )
-    save_cached_cost(result)
+    CostSummaryCache.set(result)
     return result
+
+
+@app.post("/api/cost/refresh", response_model=CloudCostSummarySchema)
+def refresh_cost_summary(db: Session = Depends(get_db)):
+    from app.services.cost.cache import CostSummaryCache
+    print("[COST CACHE] Clearing cache and refreshing from AWS Cost Explorer")
+    CostSummaryCache.clear()
+    return get_cost_summary(db=db)
+
+
+@app.get("/api/cost/cache")
+def cost_cache_status():
+    from app.services.cost.cache import CostSummaryCache
+    return CostSummaryCache.status()
+
 
 
 @app.get("/cost/estimate", response_model=CostEstimateResponseSchema)

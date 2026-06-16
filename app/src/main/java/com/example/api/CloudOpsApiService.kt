@@ -379,6 +379,9 @@ interface CloudOpsApiService {
     @GET("api/cost/summary")
     suspend fun getCostSummary(): CloudCostSummary
 
+    @POST("api/cost/refresh")
+    suspend fun refreshCostSummary(): CloudCostSummary
+
     @GET("api/optimization/recommendations")
     suspend fun getOptimizationRecommendations(): List<RecommendationItem>
 

@@ -92,6 +92,15 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _regions = MutableStateFlow<List<com.example.api.AwsRegion>>(emptyList())
     val regions = _regions.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
+    private val _lastRefresh = MutableStateFlow("Never")
+    val lastRefresh = _lastRefresh.asStateFlow()
+
+    private var lastCostRefresh = 0L
+    private val COST_CACHE_MS = 300000L // 5 minutes
+
     fun updateSelectedRegion(region: String) {
         Log.d("REGION", "Changed to $region")
         _selectedRegion.value = region
@@ -378,11 +387,12 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun refreshAllFeeds() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (!_useBackend.value) {
-                _isBackendConnected.value = false
-                return@launch
-            }
+            _isRefreshing.value = true
             try {
+                if (!_useBackend.value) {
+                    _isBackendConnected.value = false
+                    return@launch
+                }
                 Log.i("CloudViewModel", "Attempting backend sync with url: ${com.example.api.CloudOpsBackendClient.baseUrl}")
                 val apiService = com.example.api.CloudOpsBackendClient.service
                 
@@ -430,13 +440,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e("CloudViewModel", "Failed to fetch topology level 1: ${e.message}")
                 }
 
-                // Fetch Cost Explorer Summary statistics
-                try {
-                    val remoteCost = apiService.getCostSummary()
-                    _costSummary.value = remoteCost
-                } catch (ceError: Exception) {
-                    Log.e("CloudViewModel", "Failed to fetch Cost Explorer billing details from REST gateway: ${ceError.message}")
-                }
+                // Cost Explorer intentionally removed from global feeds sync
 
                 // Fetch dynamic cloud optimization results (Phase 6)
                 try {
@@ -447,8 +451,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 try {
-                    val remoteSavings = apiService.getOptimizationSavings()
-                    _optimizationSavings.value = remoteSavings
+                    _optimizationSavings.value = apiService.getOptimizationSavings()
                 } catch (ce: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch cloud savings: ${ce.message}")
                 }
@@ -464,9 +467,40 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 // Populate live scanned incidents from PostgreSQL/Boto3 scan
                 val remoteIncidents = apiService.getIncidents()
                 _incidents.value = remoteIncidents
+
+                // Successfully synced all feeds
+                val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                _lastRefresh.value = dateFormat.format(java.util.Date())
             } catch (e: Exception) {
                 _isBackendConnected.value = false
                 Log.w("CloudViewModel", "Local FastAPI server not reachable. Running on high-performance Room fallback. Details: ${e.message}")
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    fun refreshCostSummary(forceRefresh: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!forceRefresh && now - lastCostRefresh < COST_CACHE_MS && _costSummary.value != null) {
+            Log.d("CloudViewModel", "Using cached Cost Explorer data")
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (!_useBackend.value) return@launch
+                Log.d("CloudViewModel", "Refreshing Cost Explorer data (forceRefresh=$forceRefresh)")
+                val apiService = com.example.api.CloudOpsBackendClient.service
+                val remoteCost = if (forceRefresh) {
+                    apiService.refreshCostSummary()
+                } else {
+                    apiService.getCostSummary()
+                }
+                _costSummary.value = remoteCost
+                lastCostRefresh = System.currentTimeMillis()
+                Log.d("CloudViewModel", "Cost Explorer refresh complete")
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Cost Explorer refresh failed: ${e.message}")
             }
         }
     }

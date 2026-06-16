@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -51,6 +52,8 @@ fun DashboardScreen(
     val resourceSummary by viewModel.resourceSummary.collectAsState()
     val showEc2Resources by viewModel.showEc2Resources.collectAsState()
     val regions by viewModel.regions.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val lastRefresh by viewModel.lastRefresh.collectAsState()
 
 
     val selectedRegionRaw by viewModel.selectedRegion.collectAsState()
@@ -86,6 +89,16 @@ fun DashboardScreen(
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulse"
+    )
+
+    val refreshRotationProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "refreshRotation"
     )
 
     if (showEc2Resources) {
@@ -137,6 +150,7 @@ fun DashboardScreen(
                         IconButton(
                             onClick = {
                                 viewModel.refreshAllFeeds()
+                                viewModel.refreshCostSummary(forceRefresh = true)
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
@@ -144,7 +158,9 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Refresh Dashboard",
                                 tint = BentoPurpleDark,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .rotate(if (isRefreshing) refreshRotationProgress else 0f)
                             )
                         }
                     }
@@ -163,6 +179,17 @@ fun DashboardScreen(
                         color = BentoTextSubtitle,
                         lineHeight = 17.sp,
                         modifier = Modifier.padding(top = 2.dp)
+                    )
+                    if (lastRefresh != "Never") {
+                        Text(
+                            text = "Last synced: $lastRefresh",
+                            fontSize = 11.sp,
+                            color = BentoTextSubtitle.copy(alpha = 0.7f),
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(0.dp)
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -360,19 +387,37 @@ fun DashboardScreen(
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(BentoTermGreen.copy(alpha = 0.15f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = "USD",
-                                color = BentoTermGreen,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
+                            IconButton(
+                                onClick = {
+                                    viewModel.refreshCostSummary(forceRefresh = true)
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh FinOps Cost",
+                                    tint = BentoPurpleDark,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(BentoTermGreen.copy(alpha = 0.15f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "USD",
+                                    color = BentoTermGreen,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
                         }
                     }
 
