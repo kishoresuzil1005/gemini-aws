@@ -2,7 +2,11 @@ from fastapi import APIRouter, WebSocket
 import asyncio
 import pexpect
 
-router = APIRouter()
+router = APIRouter(prefix="")
+
+@router.get("/cloudshell-health")
+async def health():
+    return {"status": "ok"}
 
 @router.websocket("/ws/cloudshell")
 async def cloudshell(ws: WebSocket):
@@ -30,4 +34,4 @@ async def cloudshell(ws: WebSocket):
 
     while True:
         cmd = await ws.receive_text()
-        shell.send(cmd)
+        shell.send(cmd + "\n")
