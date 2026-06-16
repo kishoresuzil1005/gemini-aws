@@ -27,8 +27,7 @@ class CloudShellSocket(
                 }
 
                 override fun onMessage(webSocket: WebSocket, text: String) {
-                    val clean = text.replace(Regex("\\u001B\\[[;\\d]*m"), "")
-                    onMessage(clean)
+                    onMessage(text)
                 }
 
                 override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {

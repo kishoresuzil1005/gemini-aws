@@ -1,7 +1,6 @@
 package com.example.terminal
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -12,7 +11,7 @@ class CloudShellViewModel : ViewModel() {
 
     private val sessionId = UUID.randomUUID().toString()
 
-    val terminalLines = mutableStateListOf<String>()
+    val terminalModel = TerminalModel(rows = 35, cols = 100)
     
     var connectionStatus by mutableStateOf("Disconnected")
         private set
@@ -27,7 +26,7 @@ class CloudShellViewModel : ViewModel() {
         val backendUrl = try {
             CloudOpsBackendClient.baseUrl
         } catch (e: Exception) {
-            "http://154.205.123.215"
+            "http://154.205.123.215:8000"
         }
 
         val wsScheme = if (backendUrl.startsWith("https://")) "wss://" else "ws://"
@@ -45,16 +44,16 @@ class CloudShellViewModel : ViewModel() {
         }
         
         socket?.disconnect()
-        terminalLines.clear()
-        terminalLines.add("[System] Initiating link with: $targetUrl")
+        terminalModel.clearScreen()
+        terminalModel.writeData("[System] Initiating link with: $targetUrl\n")
 
         socket = CloudShellSocket(
             onMessage = { message ->
-                terminalLines.add(message)
+                terminalModel.writeData(message)
             },
             onStatusChange = { status ->
                 connectionStatus = status
-                terminalLines.add("[System] Link $status")
+                terminalModel.writeData("\n[System] Link $status\n")
             }
         )
 
@@ -66,8 +65,8 @@ class CloudShellViewModel : ViewModel() {
     }
 
     fun clearTerminal() {
-        terminalLines.clear()
-        terminalLines.add("[System] Terminal state reset.")
+        terminalModel.clearScreen()
+        terminalModel.writeData("[System] Terminal state reset.\n")
     }
 
     override fun onCleared() {

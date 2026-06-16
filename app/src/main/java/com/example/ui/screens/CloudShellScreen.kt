@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -40,7 +43,6 @@ fun CloudShellScreen() {
     var wsUrlInput by remember { mutableStateOf(vm.currentWsUrl) }
     var showSettings by remember { mutableStateOf(false) }
 
-    val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
@@ -49,14 +51,9 @@ fun CloudShellScreen() {
         vm.connect()
     }
 
-    // Auto-scroll when terminal appends lines
-    LaunchedEffect(vm.terminalLines.size) {
-        if (vm.terminalLines.isNotEmpty()) {
-            coroutineScope.launch {
-                listState.animateScrollToItem(vm.terminalLines.size - 1)
-            }
-        }
-    }
+    // No auto-scroll required since we render a fixed-viewport text console.
+    val verticalScrollState = rememberScrollState()
+    val horizontalScrollState = rememberScrollState()
 
     val activeStatusColor = when {
         vm.connectionStatus.contains("Connected", ignoreCase = true) -> Color(0xFF00FF66)
@@ -205,24 +202,22 @@ fun CloudShellScreen() {
                 .border(1.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
                 .padding(12.dp)
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(verticalScrollState)
+                    .horizontalScroll(horizontalScrollState)
             ) {
-                items(vm.terminalLines) { line ->
-                    val color = when {
-                        line.startsWith("[System]") -> Color(0xFF00E5FF)
-                        line.contains("error", ignoreCase = true) -> Color(0xFFFF5252)
-                        else -> Color(0xFF00FF88)
+                Column {
+                    vm.terminalModel.linesState.forEach { annotatedLine ->
+                        Text(
+                            text = annotatedLine,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            lineHeight = 13.sp,
+                            softWrap = false
+                        )
                     }
-                    Text(
-                        text = line,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        color = color,
-                        lineHeight = 16.sp,
-                        modifier = Modifier.padding(vertical = 1.dp)
-                    )
                 }
             }
 
