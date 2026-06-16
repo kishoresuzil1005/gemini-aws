@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,6 +64,15 @@ fun CloudShellScreen() {
         }
     }
 
+    // Dynamic terminal resizing effect on fullscreen state change
+    LaunchedEffect(fullScreenTerminal) {
+        if (fullScreenTerminal) {
+            vm.resizeTerminal(cols = 120, rows = 45)
+        } else {
+            vm.resizeTerminal(cols = 100, rows = 35)
+        }
+    }
+
     val activeStatusColor = when {
         vm.connectionStatus.contains("Connected", ignoreCase = true) -> Color(0xFF00FF66)
         vm.connectionStatus.contains("Connecting", ignoreCase = true) -> Color(0xFFFFCC00)
@@ -72,7 +82,7 @@ fun CloudShellScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(if (fullScreenTerminal) 6.dp else 12.dp)
             .testTag("cloud_shell_screen_root")
     ) {
         // Upper Control / Status Header Card
@@ -212,51 +222,58 @@ fun CloudShellScreen() {
             }
         }
 
-        // Terminal Output Screen
-        Box(
+        // Terminal Output Screen - Upgraded to prevent character clipping or margin truncation
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF0F0E13)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF0F0E13))
-                .border(1.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                .padding(12.dp)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(verticalScrollState)
-                    .horizontalScroll(horizontalScrollState)
-            ) {
-                Text(
-                    text = vm.terminalModel.terminalText,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp,
-                    softWrap = false
-                )
-            }
-
-            // Top-right mini overlay controls
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
+                    .padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.1f))
-                        .clickable { vm.clearTerminal() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .fillMaxSize()
+                        .verticalScroll(verticalScrollState)
+                        .horizontalScroll(horizontalScrollState)
                 ) {
                     Text(
-                        text = "CLEAR LOGS",
-                        color = Color.LightGray,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace
+                        text = vm.terminalModel.terminalText,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        lineHeight = 13.sp,
+                        softWrap = false
                     )
+                }
+
+                // Top-right mini overlay controls
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.1f))
+                            .clickable { vm.clearTerminal() }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "CLEAR LOGS",
+                            color = Color.LightGray,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
                 }
             }
         }
@@ -360,77 +377,79 @@ fun CloudShellScreen() {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        if (!fullScreenTerminal) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Command Inputs Row - Optimized to be very compact and elegant
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 6.dp)
-        ) {
-            OutlinedTextField(
-                value = commandInput,
-                onValueChange = { commandInput = it },
-                placeholder = {
-                    Text(
-                        "Input standard CLI commands...",
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
-                },
+            // Command Inputs Row - Optimized to be very compact and elegant
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .testTag("terminal_command_input"),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Send
-                ),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (commandInput.isNotEmpty()) {
-                            vm.execute(commandInput + "\n")
-                            commandInput = ""
-                        }
-                    }
-                ),
-                textStyle = LocalTextStyle.current.copy(
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace
-                ),
-                leadingIcon = {
-                    Text(
-                        text = "$",
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 10.dp, end = 2.dp)
-                    )
-                },
-                shape = RoundedCornerShape(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            FloatingActionButton(
-                onClick = {
-                    vm.execute(commandInput + "\n")
-                    commandInput = ""
-                    focusManager.clearFocus()
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier
-                    .size(44.dp)
-                    .testTag("terminal_send_button")
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Execute Command",
-                    modifier = Modifier.size(18.dp)
+                OutlinedTextField(
+                    value = commandInput,
+                    onValueChange = { commandInput = it },
+                    placeholder = {
+                        Text(
+                            "Input standard CLI commands...",
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .testTag("terminal_command_input"),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (commandInput.isNotEmpty()) {
+                                vm.execute(commandInput + "\n")
+                                commandInput = ""
+                            }
+                        }
+                    ),
+                    textStyle = LocalTextStyle.current.copy(
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    leadingIcon = {
+                        Text(
+                            text = "$",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 10.dp, end = 2.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(24.dp)
                 )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                FloatingActionButton(
+                    onClick = {
+                        vm.execute(commandInput + "\n")
+                        commandInput = ""
+                        focusManager.clearFocus()
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .testTag("terminal_send_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Execute Command",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

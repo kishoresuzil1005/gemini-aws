@@ -11,7 +11,7 @@ class CloudShellViewModel : ViewModel() {
 
     private val sessionId = UUID.randomUUID().toString()
 
-    val terminalModel = TerminalModel(rows = 35, cols = 100)
+    val terminalModel = TerminalModel(initialRows = 35, initialCols = 100)
     
     var connectionStatus by mutableStateOf("Disconnected")
         private set
@@ -65,6 +65,11 @@ class CloudShellViewModel : ViewModel() {
 
     fun sendResize(cols: Int, rows: Int) {
         socket?.send("{\"type\": \"resize\", \"cols\": $cols, \"rows\": $rows}")
+    }
+
+    fun resizeTerminal(cols: Int, rows: Int) {
+        terminalModel.resize(newRows = rows, newCols = cols)
+        sendResize(cols, rows)
     }
 
     fun execute(command: String) {

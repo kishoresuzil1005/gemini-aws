@@ -12,15 +12,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 
 class TerminalModel(
-    val rows: Int = 30,
-    val cols: Int = 80
+    initialRows: Int = 35,
+    initialCols: Int = 100
 ) {
-    private val bufferCols = cols
-    private val bufferRows = rows
+    var rows: Int = initialRows
+        private set
+    var cols: Int = initialCols
+        private set
     
-    private val grid = Array(bufferRows) { CharArray(bufferCols) { ' ' } }
-    private val colors = Array(bufferRows) { LongArray(bufferCols) { 0xFF00FF88 } }
-    private val boldState = Array(bufferRows) { BooleanArray(bufferCols) { false } }
+    private var grid = Array(rows) { CharArray(cols) { ' ' } }
+    private var colors = Array(rows) { LongArray(cols) { 0xFF00FF88 } }
+    private var boldState = Array(rows) { BooleanArray(cols) { false } }
     
     var cursorRow = 0
     var cursorCol = 0
@@ -39,9 +41,41 @@ class TerminalModel(
     }
 
     @Synchronized
+    fun resize(newRows: Int, newCols: Int) {
+        if (newRows == rows && newCols == cols) return
+        
+        val newGrid = Array(newRows) { CharArray(newCols) { ' ' } }
+        val newColors = Array(newRows) { LongArray(newCols) { 0xFF00FF88 } }
+        val newBoldState = Array(newRows) { BooleanArray(newCols) { false } }
+
+        val copyRows = minOf(rows, newRows)
+        val copyCols = minOf(cols, newCols)
+        for (r in 0 until copyRows) {
+            for (c in 0 until copyCols) {
+                newGrid[r][c] = grid[r][c]
+                newColors[r][c] = colors[r][c]
+                newBoldState[r][c] = boldState[r][c]
+            }
+        }
+
+        grid = newGrid
+        colors = newColors
+        boldState = newBoldState
+        rows = newRows
+        cols = newCols
+
+        cursorRow = cursorRow.coerceIn(0, rows - 1)
+        cursorCol = cursorCol.coerceIn(0, cols - 1)
+        savedRow = savedRow.coerceIn(0, rows - 1)
+        savedCol = savedCol.coerceIn(0, cols - 1)
+
+        commitToState()
+    }
+
+    @Synchronized
     fun clearScreen() {
-        for (r in 0 until bufferRows) {
-            for (c in 0 until bufferCols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 grid[r][c] = ' '
                 colors[r][c] = 0xFF00FF88
                 boldState[r][c] = false
@@ -57,14 +91,26 @@ class TerminalModel(
     private fun commitToState() {
         linesState.clear()
         val combined = buildAnnotatedString {
-            for (r in 0 until bufferRows) {
+            for (r in 0 until rows) {
+                // Find last non-space character index to avoid giant empty trail scroll space
+                var lastNonSpaceCol = -1
+                for (c in cols - 1 downTo 0) {
+                    if (grid[r][c] != ' ') {
+                        lastNonSpaceCol = c
+                        break
+                    }
+                }
+                
+                // Keep cursor column in viewport bounds
+                val endCol = maxOf(lastNonSpaceCol + 1, if (r == cursorRow) cursorCol + 1 else 0).coerceAtMost(cols)
+
                 var currentIndex = 0
-                while (currentIndex < bufferCols) {
+                while (currentIndex < endCol) {
                     val start = currentIndex
                     val colValue = colors[r][start]
                     val isCellBold = boldState[r][start]
                     
-                    while (currentIndex < bufferCols && 
+                    while (currentIndex < endCol && 
                            colors[r][currentIndex] == colValue && 
                            boldState[r][currentIndex] == isCellBold) {
                         currentIndex++
@@ -81,9 +127,7 @@ class TerminalModel(
                     pop()
                 }
                 
-                // Add first item element to linesState for backward compatibility, if needed,
-                // but our main view is going to use terminalText!
-                if (r < bufferRows - 1) {
+                if (r < rows - 1) {
                     append("\n")
                 }
             }
@@ -131,9 +175,9 @@ class TerminalModel(
                 when (char) {
                     '\n' -> {
                         cursorRow++
-                        if (cursorRow >= bufferRows) {
+                        if (cursorRow >= rows) {
                             scrollUp()
-                            cursorRow = bufferRows - 1
+                            cursorRow = rows - 1
                         }
                     }
                     '\r' -> {
@@ -163,12 +207,12 @@ class TerminalModel(
     }
 
     private fun writeNormalChar(char: Char) {
-        if (cursorCol >= bufferCols) {
+        if (cursorCol >= cols) {
             cursorCol = 0
             cursorRow++
-            if (cursorRow >= bufferRows) {
+            if (cursorRow >= rows) {
                 scrollUp()
-                cursorRow = bufferRows - 1
+                cursorRow = rows - 1
             }
         }
         grid[cursorRow][cursorCol] = char
@@ -178,17 +222,17 @@ class TerminalModel(
     }
 
     private fun scrollUp() {
-        for (r in 0 until bufferRows - 1) {
-            for (c in 0 until bufferCols) {
+        for (r in 0 until rows - 1) {
+            for (c in 0 until cols) {
                 grid[r][c] = grid[r + 1][c]
                 colors[r][c] = colors[r + 1][c]
                 boldState[r][c] = boldState[r + 1][c]
             }
         }
-        for (c in 0 until bufferCols) {
-            grid[bufferRows - 1][c] = ' '
-            colors[bufferRows - 1][c] = 0xFF00FF88
-            boldState[bufferRows - 1][c] = false
+        for (c in 0 until cols) {
+            grid[rows - 1][c] = ' '
+            colors[rows - 1][c] = 0xFF00FF88
+            boldState[rows - 1][c] = false
         }
     }
 
@@ -229,14 +273,14 @@ class TerminalModel(
             'H', 'f' -> {
                 val destRow = if (params.isNotEmpty() && params[0] != null) params[0]!! - 1 else 0
                 val destCol = if (params.size > 1 && params[1] != null) params[1]!! - 1 else 0
-                cursorRow = destRow.coerceIn(0, bufferRows - 1)
-                cursorCol = destCol.coerceIn(0, bufferCols - 1)
+                cursorRow = destRow.coerceIn(0, rows - 1)
+                cursorCol = destCol.coerceIn(0, cols - 1)
             }
             'J' -> {
                 val clearMode = if (params.isNotEmpty() && params[0] != null) params[0]!! else 0
                 if (clearMode == 2 || clearMode == 3) {
-                    for (r in 0 until bufferRows) {
-                        for (c in 0 until bufferCols) {
+                    for (r in 0 until rows) {
+                        for (c in 0 until cols) {
                             grid[r][c] = ' '
                             colors[r][c] = activeColor
                             boldState[r][c] = false
@@ -245,11 +289,11 @@ class TerminalModel(
                     cursorRow = 0
                     cursorCol = 0
                 } else if (clearMode == 0) {
-                    for (c in cursorCol until bufferCols) {
+                    for (c in cursorCol until cols) {
                         grid[cursorRow][c] = ' '
                     }
-                    for (r in cursorRow + 1 until bufferRows) {
-                        for (c in 0 until bufferCols) {
+                    for (r in cursorRow + 1 until rows) {
+                        for (c in 0 until cols) {
                             grid[r][c] = ' '
                         }
                     }
@@ -258,15 +302,15 @@ class TerminalModel(
             'K' -> {
                 val clearMode = if (params.isNotEmpty() && params[0] != null) params[0]!! else 0
                 if (clearMode == 0) {
-                    for (c in cursorCol until bufferCols) {
+                    for (c in cursorCol until cols) {
                         grid[cursorRow][c] = ' '
                     }
                 } else if (clearMode == 1) {
-                    for (c in 0 until minOf(cursorCol, bufferCols)) {
+                    for (c in 0 until minOf(cursorCol, cols)) {
                         grid[cursorRow][c] = ' '
                     }
                 } else if (clearMode == 2) {
-                    for (c in 0 until bufferCols) {
+                    for (c in 0 until cols) {
                         grid[cursorRow][c] = ' '
                     }
                 }
@@ -277,11 +321,11 @@ class TerminalModel(
             }
             'B' -> {
                 val dist = if (params.isNotEmpty() && params[0] != null) params[0]!! else 1
-                cursorRow = minOf(bufferRows - 1, cursorRow + dist)
+                cursorRow = minOf(rows - 1, cursorRow + dist)
             }
             'C' -> {
                 val dist = if (params.isNotEmpty() && params[0] != null) params[0]!! else 1
-                cursorCol = minOf(bufferCols - 1, cursorCol + dist)
+                cursorCol = minOf(cols - 1, cursorCol + dist)
             }
             'D' -> {
                 val dist = if (params.isNotEmpty() && params[0] != null) params[0]!! else 1
