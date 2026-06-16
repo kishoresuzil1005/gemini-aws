@@ -1058,6 +1058,10 @@ app.include_router(
     tags=["AWS Credentials"]
 )
 
+from app.api.cloudshell import router as cloudshell_router
+
+app.include_router(cloudshell_router)
+
 
 from app.routes.operations import router as operations_router
 
