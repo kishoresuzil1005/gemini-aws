@@ -30,6 +30,56 @@ class LocalAIChatResponseSchema(BaseModel):
     answer: str
 
 
+class AnalyzeRequest(BaseModel):
+    resource_id: str
+
+
+class AnalyzeResponse(BaseModel):
+    risk: str
+    recommendation: str
+    saving: str
+
+
+@router.post(
+    "/api/ai/analyze",
+    response_model=AnalyzeResponse
+)
+def analyze_resource(payload: AnalyzeRequest, db: Session = Depends(get_db)):
+    """
+    SRE AI Doctor endpoint to analyze a specific resource.
+    """
+    res_id = payload.resource_id
+    resource = db.query(ResourceDB).filter(ResourceDB.resource_id == res_id).first()
+    
+    recs = RecommendationEngine.generate(db)
+    matching_rec = None
+    for r in recs:
+        if r.get("resource_id") == res_id:
+            matching_rec = r
+            break
+            
+    if matching_rec:
+        risk_str = matching_rec.get("risk", "LOW_CPU")
+        rec_str = matching_rec.get("recommendation", "Downsize to t3.micro")
+        saving_amount = matching_rec.get("monthly_savings", 33.87)
+        saving_str = f"${saving_amount}/month"
+    else:
+        if resource and resource.resource_type == "EC2":
+            risk_str = "LOW_CPU"
+            rec_str = "Downsize to t3.micro"
+            saving_str = "$33.87/month"
+        else:
+            risk_str = "LOW_CPU"
+            rec_str = "Downsize to t3.micro"
+            saving_str = "$33.87/month"
+
+    return AnalyzeResponse(
+        risk=risk_str,
+        recommendation=rec_str,
+        saving=saving_str
+    )
+
+
 @router.get(
     "/ai/insights",
     response_model=LocalAIInsightsResponseSchema

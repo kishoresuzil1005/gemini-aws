@@ -120,7 +120,35 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: Exception) {
             Log.e("CloudViewModel", "Failed to save selected region: ${e.message}")
         }
-        refreshAllFeeds()
+        refreshRegionData()
+    }
+
+    fun refreshRegionData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (!_useBackend.value) return@launch
+            val apiService = com.example.api.CloudOpsBackendClient.service
+            
+            try {
+                _resourceSummary.value = apiService.getResourcesSummary(selectedRegion.value)
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to fetch resource summary: ${e.message}")
+            }
+
+            try {
+                _dashboardSummary.value = apiService.getDashboardSummary(selectedRegion.value)
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to fetch dashboard summary: ${e.message}")
+            }
+
+            try {
+                _graphTopology.value = apiService.getGraph()
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to fetch graph topology: ${e.message}")
+            }
+
+            loadEC2Summary(forceRefresh = true)
+            loadEC2Extended(forceRefresh = true)
+        }
     }
 
     fun loadRegions() {
@@ -128,15 +156,21 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 if (_useBackend.value) {
                     val apiService = com.example.api.CloudOpsBackendClient.service
-                    val response = apiService.getRegions()
-                    if (response.success && response.regions.isNotEmpty()) {
-                        _regions.emit(response.regions)
-                        Log.e("REGION_DEBUG", "Loaded ${response.regions.size} regions")
-                        response.regions.forEach {
-                            Log.e("REGION_DEBUG", "Region: ${it.name}")
+                    val regionStrings = apiService.getRegions()
+                    if (regionStrings.isNotEmpty()) {
+                        val mappedRegions = regionStrings.map { regionName ->
+                            com.example.api.AwsRegion(name = regionName, endpoint = "")
+                        }
+                        _regions.emit(mappedRegions)
+                        Log.e("REGION_DEBUG", "Loaded ${mappedRegions.size} dynamic regions from database")
+                        
+                        // Default to first region if existing selected region is not supported
+                        if (_selectedRegion.value !in regionStrings && regionStrings.isNotEmpty()) {
+                            _selectedRegion.value = regionStrings.first()
+                            com.example.api.TokenStorage.selectedRegion = regionStrings.first()
                         }
                     } else {
-                        Log.e("CloudViewModel", "Backend API returned success = ${response.success} or of empty size")
+                        Log.e("CloudViewModel", "Backend API returned of empty size strings")
                     }
                 }
             } catch (e: Exception) {
@@ -207,6 +241,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _resourceSummary = MutableStateFlow<com.example.api.ResourceSummary?>(null)
     val resourceSummary = _resourceSummary.asStateFlow()
+
+    private val _dashboardSummary = MutableStateFlow<com.example.api.DashboardSummary?>(null)
+    val dashboardSummary = _dashboardSummary.asStateFlow()
 
     private val _graphTopology = MutableStateFlow<com.example.api.GraphResponse?>(null)
     val graphTopology = _graphTopology.asStateFlow()
@@ -417,9 +454,12 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Fetch dynamic cloud regions
                 try {
-                    val response = apiService.getRegions()
-                    if (response.success && response.regions.isNotEmpty()) {
-                        _regions.emit(response.regions)
+                    val regionStrings = apiService.getRegions()
+                    if (regionStrings.isNotEmpty()) {
+                        val mappedRegions = regionStrings.map { regionName ->
+                            com.example.api.AwsRegion(name = regionName, endpoint = "")
+                        }
+                        _regions.emit(mappedRegions)
                     }
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch regions during sync: ${e.message}")
@@ -434,7 +474,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Sync remote resources with local Room to keep everything in sync
                 try {
-                    val remoteResources = apiService.getResources()
+                    val remoteResources = apiService.getResources(selectedRegion.value)
                     repository.clearResources()
                     repository.insertResources(remoteResources)
                 } catch (e: Exception) {
@@ -442,9 +482,15 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 try {
-                    _resourceSummary.value = apiService.getResourcesSummary()
+                    _resourceSummary.value = apiService.getResourcesSummary(selectedRegion.value)
                 } catch (e: Exception) {
                     Log.e("CloudViewModel", "Failed to fetch resource summary: ${e.message}")
+                }
+
+                try {
+                    _dashboardSummary.value = apiService.getDashboardSummary(selectedRegion.value)
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch dashboard summary: ${e.message}")
                 }
 
                 try {

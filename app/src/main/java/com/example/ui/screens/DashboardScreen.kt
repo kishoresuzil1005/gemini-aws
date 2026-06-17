@@ -52,6 +52,7 @@ fun DashboardScreen(
     val optimizationRecommendations by viewModel.optimizationRecommendations.collectAsState()
     val aiInsights by viewModel.aiInsights.collectAsState()
     val resourceSummary by viewModel.resourceSummary.collectAsState()
+    val dashboardSummary by viewModel.dashboardSummary.collectAsState()
     val showEc2Resources by viewModel.showEc2Resources.collectAsState()
     val regions by viewModel.regions.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -175,7 +176,13 @@ fun DashboardScreen(
                         color = BentoPurpleDark
                     )
                     Text(
-                        text = if (isDiscovering) "Syncing services in real-time..." else "Sync status: secured, indexing completed.",
+                        text = if (isDiscovering) {
+                            "Syncing services in real-time..."
+                        } else if (dashboardSummary != null) {
+                            "Live scan: ${dashboardSummary?.running_resources ?: 0} running, ${dashboardSummary?.stopped_resources ?: 0} stopped. ${dashboardSummary?.region_count ?: 0} regions indexed."
+                        } else {
+                            "Sync status: secured, indexing completed."
+                        },
                         fontSize = 13.sp,
                         color = BentoTextSubtitle,
                         lineHeight = 17.sp,
@@ -206,6 +213,13 @@ fun DashboardScreen(
                         ) {
                             listOf("EC2", "S3", "RDS", "Lambda").forEach { service ->
                                 val isEc2 = service == "EC2"
+                                val serviceCount = when (service) {
+                                    "EC2" -> dashboardSummary?.ec2
+                                    "S3" -> dashboardSummary?.s3
+                                    "RDS" -> dashboardSummary?.rds
+                                    "Lambda" -> dashboardSummary?.lambdaCount
+                                    else -> null
+                                }
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
@@ -220,7 +234,7 @@ fun DashboardScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = service,
+                                        text = if (serviceCount != null) "$service ($serviceCount)" else service,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = BentoPurpleDark
@@ -231,15 +245,16 @@ fun DashboardScreen(
 
                         // Nodes Count
                         Row(verticalAlignment = Alignment.Bottom) {
+                            val displayTotal = dashboardSummary?.total_resources ?: filteredResources.size
                             Text(
-                                text = "${filteredResources.size}",
+                                text = "$displayTotal",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = BentoPurpleDark
                             )
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "running services",
+                                text = "total resources",
                                 fontSize = 12.sp,
                                 color = BentoPurpleDark,
                                 modifier = Modifier.padding(bottom = 3.dp)
@@ -883,6 +898,7 @@ fun Ec2ResourcesView(
     val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF121115)
     val ec2SummaryState by viewModel.ec2Summary.collectAsState()
     val ec2ExtendedState by viewModel.ec2Extended.collectAsState()
+    val dashboardSummary by viewModel.dashboardSummary.collectAsState()
 
     LaunchedEffect(selectedRegion) {
         viewModel.loadEC2Summary()
@@ -915,7 +931,7 @@ fun Ec2ResourcesView(
     }
 
     // High fidelity dynamic counts mimicking Image 2 resources card under selected regions
-    val counts = remember(selectedRegion, ec2SummaryState, ec2ExtendedState) {
+    val counts = remember(selectedRegion, ec2SummaryState, ec2ExtendedState, dashboardSummary) {
         val baseMap = when (selectedRegion) {
             "Mumbai" -> mapOf(
                 "instances_running" to 1, "instances" to 2, "instance_types" to 24, "launch_templates" to 4,
@@ -952,7 +968,13 @@ fun Ec2ResourcesView(
         }
 
         val updatedMap = baseMap.toMutableMap()
-        if (ec2SummaryState != null) {
+        if (dashboardSummary != null) {
+            updatedMap["instances_running"] = dashboardSummary!!.running_resources
+            updatedMap["instances"] = dashboardSummary!!.ec2
+            updatedMap["volumes"] = dashboardSummary!!.ebs
+            updatedMap["security_groups"] = dashboardSummary!!.vpc
+            updatedMap["elastic_ips"] = dashboardSummary!!.iam
+        } else if (ec2SummaryState != null) {
             updatedMap["instances_running"] = ec2SummaryState!!.running_instances
             updatedMap["instances"] = ec2SummaryState!!.total_instances
             updatedMap["instance_types"] = ec2SummaryState!!.instance_types

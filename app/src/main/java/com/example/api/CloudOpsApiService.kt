@@ -7,6 +7,7 @@ import com.example.data.SavedMigration
 import com.example.ui.BackgroundJob
 import com.example.ui.CloudIncident
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -157,6 +158,24 @@ data class CloudCostSummary(
 data class ResourceSummary(
     val totalResources: Int,
     val countsByType: Map<String, Int>
+)
+
+@JsonClass(generateAdapter = true)
+data class DashboardSummary(
+    val region: String?,
+    val total_resources: Int,
+    val running_resources: Int,
+    val stopped_resources: Int,
+    val region_count: Int,
+    val provider_count: Int,
+    val ec2: Int,
+    val s3: Int,
+    val rds: Int,
+    @Json(name = "lambda") val lambdaCount: Int,
+    val vpc: Int,
+    val iam: Int,
+    val ebs: Int,
+    val service_breakdown: Map<String, Int>
 )
 
 @JsonClass(generateAdapter = true)
@@ -314,9 +333,6 @@ object TokenStorage {
 }
 
 interface CloudOpsApiService {
-    @GET("api/regions")
-    suspend fun getRegions(): RegionsResponse
-
     @POST("api/cloud/aws/connect")
     suspend fun connectAwsPost(@Body request: AwsConnectRequest): AwsConnectResponse
 
@@ -357,10 +373,22 @@ interface CloudOpsApiService {
     suspend fun deleteAccount(@Path("id") id: Int): Map<String, String>
 
     @GET("api/resources")
-    suspend fun getResources(): List<DiscoveryResource>
+    suspend fun getResources(
+        @Query("region") region: String? = null
+    ): List<DiscoveryResource>
 
     @GET("api/resources/summary")
-    suspend fun getResourcesSummary(): ResourceSummary
+    suspend fun getResourcesSummary(
+        @Query("region") region: String? = null
+    ): ResourceSummary
+
+    @GET("api/dashboard/summary")
+    suspend fun getDashboardSummary(
+        @Query("region") region: String? = null
+    ): DashboardSummary
+
+    @GET("api/regions")
+    suspend fun getRegions(): List<String>
 
     @GET("api/ec2/summary")
     suspend fun getEC2Summary(

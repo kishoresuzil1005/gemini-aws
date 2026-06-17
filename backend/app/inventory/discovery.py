@@ -25,9 +25,19 @@ def discover_resources(
 
         try:
 
-            discovered = AWSDiscoveryScanner.scan_all(
-                region=account.region
-            )
+            regions_to_scan = ["us-east-1", "ap-south-1", "us-west-2", "eu-west-1", "eu-central-1"]
+            discovered = []
+            seen_global_ids = set()
+
+            for r_name in regions_to_scan:
+                scan_res = AWSDiscoveryScanner.scan_all(region=r_name)
+                for item in scan_res:
+                    if item.get("region") == "global":
+                        if item.get("id") not in seen_global_ids:
+                            seen_global_ids.add(item.get("id"))
+                            discovered.append(item)
+                    else:
+                        discovered.append(item)
 
             if not discovered:
                 raise Exception(

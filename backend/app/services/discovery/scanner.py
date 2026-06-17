@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List, Dict, Any
 
 from app.providers.aws.ec2 import EC2Discovery
@@ -14,6 +15,9 @@ from app.providers.aws.iam import IAMDiscovery
 
 logger = logging.getLogger("AWS_Discovery_Scanner")
 
+DISCOVERY_CACHE = {}
+CACHE_TTL = 900
+
 
 class AWSDiscoveryScanner:
 
@@ -22,6 +26,14 @@ class AWSDiscoveryScanner:
         region: str = "us-east-1"
     ) -> List[Dict[str, Any]]:
 
+        now = time.time()
+        if region in DISCOVERY_CACHE:
+            cached_data, timestamp = DISCOVERY_CACHE[region]
+            if now - timestamp < CACHE_TTL:
+                logger.info(f"[DISCOVERY CACHE] HIT for region: {region}")
+                return cached_data
+
+        logger.info(f"[DISCOVERY CACHE] MISS for region: {region}")
         resources = []
 
         # EC2
@@ -265,4 +277,5 @@ class AWSDiscoveryScanner:
                 f"IAM Discovery failed: {e}"
             )
 
+        DISCOVERY_CACHE[region] = (resources, now)
         return resources
