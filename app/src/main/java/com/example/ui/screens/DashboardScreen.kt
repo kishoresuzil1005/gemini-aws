@@ -53,6 +53,7 @@ fun DashboardScreen(
     val aiInsights by viewModel.aiInsights.collectAsState()
     val resourceSummary by viewModel.resourceSummary.collectAsState()
     val dashboardSummary by viewModel.dashboardSummary.collectAsState()
+    val dashboardState by viewModel.dashboardState.collectAsState()
     val showEc2Resources by viewModel.showEc2Resources.collectAsState()
     val regions by viewModel.regions.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -115,57 +116,85 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .background(BentoBg)
                 .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // --- BENTO GRID BLOCK 1: MAIN AWS DISCOVERY SURFACE ---
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("bento_aws_discovery_card"),
-                colors = CardDefaults.cardColors(containerColor = BentoContainerActive),
-                border = BorderStroke(1.dp, BentoBorderLight),
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Row(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (dashboardState.isLoading) {
+                item {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)),
+                        color = BentoPurpleDark,
+                        trackColor = BentoPurpleDark.copy(alpha = 0.2f)
+                    )
+                }
+            }
+            if (dashboardState.error != null) {
+                item {
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                        border = BorderStroke(1.dp, Color(0xFFEF5350)),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(100.dp))
-                                .background(BentoPurpleDark)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                "RUNNING SERVICES",
-                                color = Color.White,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                viewModel.forceRefreshDashboard()
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh Dashboard",
-                                tint = BentoPurpleDark,
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .rotate(if (isRefreshing) refreshRotationProgress else 0f)
-                            )
-                        }
+                        Text(
+                            text = "Dashboard API Error: ${dashboardState.error}",
+                            color = Color(0xFFC62828),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(12.dp)
+                        )
                     }
+                }
+            }
+
+            // --- BENTO GRID BLOCK 1: MAIN AWS DISCOVERY SURFACE ---
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("bento_aws_discovery_card"),
+                    colors = CardDefaults.cardColors(containerColor = BentoContainerActive),
+                    border = BorderStroke(1.dp, BentoBorderLight),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(100.dp))
+                                    .background(BentoPurpleDark)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    "RUNNING SERVICES",
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    viewModel.onRefreshClicked()
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh Dashboard",
+                                    tint = BentoPurpleDark,
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .rotate(if (isRefreshing) refreshRotationProgress else 0f)
+                                )
+                            }
+                        }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -178,10 +207,13 @@ fun DashboardScreen(
                     Text(
                         text = if (isDiscovering) {
                             "Syncing services in real-time..."
-                        } else if (dashboardSummary != null) {
-                            "Live scan: ${dashboardSummary?.running_resources ?: 0} running, ${dashboardSummary?.stopped_resources ?: 0} stopped. ${dashboardSummary?.region_count ?: 0} regions indexed."
                         } else {
-                            "Sync status: secured, indexing completed."
+                            val activeSummary = dashboardState.data ?: dashboardSummary
+                            if (activeSummary != null) {
+                                "Live scan: ${activeSummary.running_resources} running, ${activeSummary.stopped_resources} stopped. ${activeSummary.region_count} regions indexed."
+                            } else {
+                                "Sync status: secured, indexing completed."
+                            }
                         },
                         fontSize = 13.sp,
                         color = BentoTextSubtitle,
@@ -209,16 +241,30 @@ fun DashboardScreen(
                     ) {
                         // Service types
                         Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .horizontalScroll(rememberScrollState())
+                                .padding(end = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            listOf("EC2", "S3", "RDS", "Lambda").forEach { service ->
-                                val isEc2 = service == "EC2"
-                                val serviceCount = when (service) {
-                                    "EC2" -> dashboardSummary?.ec2
-                                    "S3" -> dashboardSummary?.s3
-                                    "RDS" -> dashboardSummary?.rds
-                                    "Lambda" -> dashboardSummary?.lambdaCount
-                                    else -> null
+                            val activeSummary = dashboardState.data ?: dashboardSummary
+                            val activeServices = if (activeSummary != null && !activeSummary.service_breakdown.isEmpty()) {
+                                activeSummary.service_breakdown.keys.toList()
+                            } else {
+                                listOf("EC2", "S3", "RDS", "Lambda")
+                            }
+                            activeServices.forEach { serviceName ->
+                                val serviceUpper = serviceName.uppercase()
+                                val isEc2 = serviceUpper == "EC2"
+                                val serviceCount = when (serviceUpper) {
+                                    "EC2" -> activeSummary?.ec2
+                                    "S3" -> activeSummary?.s3
+                                    "RDS" -> activeSummary?.rds
+                                    "LAMBDA" -> activeSummary?.lambda
+                                    "VPC" -> activeSummary?.vpc
+                                    "IAM" -> activeSummary?.iam
+                                    "EBS" -> activeSummary?.ebs
+                                    else -> activeSummary?.service_breakdown?.get(serviceName) ?: activeSummary?.service_breakdown?.get(serviceUpper)
                                 }
                                 Box(
                                     modifier = Modifier
@@ -230,11 +276,11 @@ fun DashboardScreen(
                                             }
                                         }
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
-                                        .testTag("service_chip_${service.lowercase()}"),
+                                        .testTag("service_chip_${serviceName.lowercase()}"),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = if (serviceCount != null) "$service ($serviceCount)" else service,
+                                        text = if (serviceCount != null) "$serviceUpper ($serviceCount)" else serviceUpper,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = BentoPurpleDark
@@ -244,8 +290,12 @@ fun DashboardScreen(
                         }
 
                         // Nodes Count
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            val displayTotal = dashboardSummary?.total_resources ?: filteredResources.size
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            val activeSummary = dashboardState.data ?: dashboardSummary
+                            val displayTotal = activeSummary?.total_resources ?: filteredResources.size
                             Text(
                                 text = "$displayTotal",
                                 fontSize = 24.sp,

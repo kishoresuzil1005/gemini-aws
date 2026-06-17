@@ -6,6 +6,7 @@ import com.example.data.DiscoveryResource
 import com.example.data.SavedMigration
 import com.example.ui.BackgroundJob
 import com.example.ui.CloudIncident
+import com.example.api.models.DashboardSummary
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
@@ -158,24 +159,6 @@ data class CloudCostSummary(
 data class ResourceSummary(
     val totalResources: Int,
     val countsByType: Map<String, Int>
-)
-
-@JsonClass(generateAdapter = true)
-data class DashboardSummary(
-    val region: String?,
-    val total_resources: Int,
-    val running_resources: Int,
-    val stopped_resources: Int,
-    val region_count: Int,
-    val provider_count: Int,
-    val ec2: Int,
-    val s3: Int,
-    val rds: Int,
-    @Json(name = "lambda") val lambdaCount: Int,
-    val vpc: Int,
-    val iam: Int,
-    val ebs: Int,
-    val service_breakdown: Map<String, Int>
 )
 
 @JsonClass(generateAdapter = true)

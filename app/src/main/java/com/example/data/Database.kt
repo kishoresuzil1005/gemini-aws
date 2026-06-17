@@ -115,9 +115,17 @@ abstract class CloudDatabase : RoomDatabase() {
 // --- Repository Pattern ---
 
 class CloudRepository(private val dao: CloudDao) {
+    private val apiService = com.example.api.CloudOpsBackendClient.service
+
     val allAccounts: Flow<List<CloudAccount>> = dao.getAllAccounts()
     val allResources: Flow<List<DiscoveryResource>> = dao.getAllResources()
     val allSavedMigrations: Flow<List<SavedMigration>> = dao.getAllMigrations()
+
+    suspend fun getDashboardSummary(
+        region: String? = null
+    ): com.example.api.models.DashboardSummary {
+        return apiService.getDashboardSummary(region)
+    }
 
     fun getResourcesForCloud(provider: String): Flow<List<DiscoveryResource>> {
         return dao.getResourcesByProvider(provider)

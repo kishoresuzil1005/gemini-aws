@@ -8,6 +8,8 @@ import com.example.api.GeminiClient
 import com.example.api.CloudOpsBackendClient
 import com.example.api.CloudOpsApiService
 import com.example.data.*
+import com.example.api.models.DashboardSummary
+import com.example.ui.models.DashboardUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -135,8 +137,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             try {
-                _dashboardSummary.value = apiService.getDashboardSummary(selectedRegion.value)
+                val dashboardData = apiService.getDashboardSummary(selectedRegion.value)
+                _dashboardSummary.value = dashboardData
+                _dashboardState.value = DashboardUiState(data = dashboardData)
             } catch (e: Exception) {
+                _dashboardState.value = DashboardUiState(error = e.message)
                 Log.e("CloudViewModel", "Failed to fetch dashboard summary: ${e.message}")
             }
 
@@ -242,8 +247,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _resourceSummary = MutableStateFlow<com.example.api.ResourceSummary?>(null)
     val resourceSummary = _resourceSummary.asStateFlow()
 
-    private val _dashboardSummary = MutableStateFlow<com.example.api.DashboardSummary?>(null)
+    private val _dashboardSummary = MutableStateFlow<com.example.api.models.DashboardSummary?>(null)
     val dashboardSummary = _dashboardSummary.asStateFlow()
+
+    private val _dashboardState = MutableStateFlow(DashboardUiState())
+    val dashboardState: StateFlow<DashboardUiState> = _dashboardState.asStateFlow()
 
     private val _graphTopology = MutableStateFlow<com.example.api.GraphResponse?>(null)
     val graphTopology = _graphTopology.asStateFlow()
@@ -488,8 +496,11 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 try {
-                    _dashboardSummary.value = apiService.getDashboardSummary(selectedRegion.value)
+                    val dashboardData = apiService.getDashboardSummary(selectedRegion.value)
+                    _dashboardSummary.value = dashboardData
+                    _dashboardState.value = DashboardUiState(data = dashboardData)
                 } catch (e: Exception) {
+                    _dashboardState.value = DashboardUiState(error = e.message)
                     Log.e("CloudViewModel", "Failed to fetch dashboard summary: ${e.message}")
                 }
 
@@ -591,6 +602,41 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 isLoadingEC2Extended.set(false)
             }
         }
+    }
+
+    fun loadDashboard(region: String? = null) {
+        viewModelScope.launch {
+            _dashboardState.value = DashboardUiState(isLoading = true)
+            try {
+                val dashboard = repository.getDashboardSummary(region)
+                _dashboardState.value = DashboardUiState(data = dashboard)
+                _dashboardSummary.value = dashboard
+            } catch (e: Exception) {
+                _dashboardState.value = DashboardUiState(error = e.message)
+                Log.e("CloudViewModel", "Failed to load dashboard from repository: ${e.message}")
+            }
+        }
+    }
+
+    fun refreshDashboard() {
+        loadDashboard(selectedRegion.value)
+    }
+
+    fun onRefreshClicked() {
+        refreshAllFeeds()
+        refreshDashboard()
+    }
+
+    fun getRunningServiceCount(): Int {
+        return dashboardState.value.data?.running_resources ?: 0
+    }
+
+    fun getTotalResources(): Int {
+        return dashboardState.value.data?.total_resources ?: 0
+    }
+
+    fun getServiceBreakdown(): Map<String, Int> {
+        return dashboardState.value.data?.service_breakdown ?: emptyMap()
     }
 
     fun refreshEC2CacheAndReload() {
