@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                     var currentScreen by remember { mutableStateOf(CloudScreen.DASHBOARD) }
                     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                     val scope = rememberCoroutineScope()
+                    val showEc2Resources by viewModel.showEc2Resources.collectAsState()
 
                     ModalNavigationDrawer(
                         drawerState = drawerState,
@@ -320,187 +321,189 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Scaffold(
                             topBar = {
-                                @OptIn(ExperimentalMaterial3Api::class)
-                                var regionExpanded by remember { mutableStateOf(false) }
-                                val selectedRegion by viewModel.selectedRegion.collectAsState()
-                                val regions by viewModel.regions.collectAsState()
+                                if (currentScreen != CloudScreen.DASHBOARD || !showEc2Resources) {
+                                    @OptIn(ExperimentalMaterial3Api::class)
+                                    var regionExpanded by remember { mutableStateOf(false) }
+                                    val selectedRegion by viewModel.selectedRegion.collectAsState()
+                                    val regions by viewModel.regions.collectAsState()
 
-                                TopAppBar(
-                                    title = {},
-                                    navigationIcon = {
-                                        IconButton(
-                                            onClick = { scope.launch { drawerState.open() } },
-                                            modifier = Modifier.testTag("menu_button")
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Menu,
-                                                contentDescription = "Open Drawer",
-                                                tint = if (isDarkTheme) Color.White else Color.Black
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        Box {
+                                    TopAppBar(
+                                        title = {},
+                                        navigationIcon = {
+                                            IconButton(
+                                                onClick = { scope.launch { drawerState.open() } },
+                                                modifier = Modifier.testTag("menu_button")
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Menu,
+                                                    contentDescription = "Open Drawer",
+                                                    tint = if (isDarkTheme) Color.White else Color.Black
+                                                )
+                                            }
+                                        },
+                                        actions = {
+                                            Box {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier
+                                                        .clickable { regionExpanded = true }
+                                                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                                                        .testTag("region_selector")
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Public,
+                                                        contentDescription = "Region Selector",
+                                                        tint = if (isDarkTheme) Color.White else Color.Black,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(5.dp))
+                                                    Text(
+                                                        text = selectedRegion,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 14.sp,
+                                                        color = if (isDarkTheme) Color.White else Color.Black,
+                                                        fontFamily = FontFamily.Monospace
+                                                    )
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                    Icon(
+                                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                                        contentDescription = "Select Region",
+                                                        tint = if (isDarkTheme) Color.White else Color.Black,
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+
+                                                LaunchedEffect(regions.size) {
+                                                    android.util.Log.e("REGION_UI", "Dropdown has ${regions.size} regions")
+                                                }
+
+                                                DropdownMenu(
+                                                    expanded = regionExpanded,
+                                                    onDismissRequest = { regionExpanded = false },
+                                                    modifier = Modifier.background(if (isDarkTheme) Color(0xFF151419) else Color.White)
+                                                ) {
+                                                    regions.forEach { region ->
+                                                        DropdownMenuItem(
+                                                            text = {
+                                                                Text(
+                                                                    text = regionLabel(region.name),
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = if (isDarkTheme) {
+                                                                        if (selectedRegion == region.name) CyberCyan else Color.White
+                                                                    } else {
+                                                                        if (selectedRegion == region.name) Color.Black else BentoTextDark
+                                                                    }
+                                                                )
+                                                            },
+                                                            onClick = {
+                                                                viewModel.updateSelectedRegion(region.name)
+                                                                regionExpanded = false
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.width(12.dp))
+
+                                            // Premium AI Badge Button designed look wise better
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier
-                                                    .clickable { regionExpanded = true }
-                                                    .padding(horizontal = 8.dp, vertical = 6.dp)
-                                                    .testTag("region_selector")
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Public,
-                                                    contentDescription = "Region Selector",
-                                                    tint = if (isDarkTheme) Color.White else Color.Black,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(5.dp))
-                                                Text(
-                                                    text = selectedRegion,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 14.sp,
-                                                    color = if (isDarkTheme) Color.White else Color.Black,
-                                                    fontFamily = FontFamily.Monospace
-                                                )
-                                                Spacer(modifier = Modifier.width(3.dp))
-                                                Icon(
-                                                    imageVector = Icons.Default.KeyboardArrowDown,
-                                                    contentDescription = "Select Region",
-                                                    tint = if (isDarkTheme) Color.White else Color.Black,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
-
-                                            LaunchedEffect(regions.size) {
-                                                android.util.Log.e("REGION_UI", "Dropdown has ${regions.size} regions")
-                                            }
-
-                                            DropdownMenu(
-                                                expanded = regionExpanded,
-                                                onDismissRequest = { regionExpanded = false },
-                                                modifier = Modifier.background(if (isDarkTheme) Color(0xFF151419) else Color.White)
-                                            ) {
-                                                regions.forEach { region ->
-                                                    DropdownMenuItem(
-                                                        text = {
-                                                            Text(
-                                                                text = regionLabel(region.name),
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = if (isDarkTheme) {
-                                                                    if (selectedRegion == region.name) CyberCyan else Color.White
-                                                                } else {
-                                                                    if (selectedRegion == region.name) Color.Black else BentoTextDark
-                                                                }
-                                                            )
-                                                        },
-                                                        onClick = {
-                                                            viewModel.updateSelectedRegion(region.name)
-                                                            regionExpanded = false
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                        }
-
-                                        Spacer(modifier = Modifier.width(12.dp))
-
-                                        // Premium AI Badge Button designed look wise better
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .clickable {
-                                                    currentScreen = CloudScreen.GEMINI
-                                                }
-                                                .background(
-                                                    if (isDarkTheme) Color(0xFF1E1C24) else Color(0xFFF3EFFF)
-                                                )
-                                                .border(
-                                                    width = 1.5.dp,
-                                                    color = if (isDarkTheme) Color(0xFFD500F9) else Color(0xFF6200EA),
-                                                    shape = RoundedCornerShape(12.dp)
-                                                )
-                                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                                                .testTag("hexagon_logo_ai"),
-                                            horizontalArrangement = Arrangement.Center
-                                        ) {
-                                            // Modern four-pointed vector sparkle
-                                            Box(
-                                                modifier = Modifier.size(12.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                                                    val w = size.width
-                                                    val h = size.height
-                                                    val path = androidx.compose.ui.graphics.Path().apply {
-                                                        moveTo(w / 2f, 0f)
-                                                        quadraticTo(w / 2f, h / 2f, w, h / 2f)
-                                                        quadraticTo(w / 2f, h / 2f, w / 2f, h)
-                                                        quadraticTo(w / 2f, h / 2f, 0f, h / 2f)
-                                                        quadraticTo(w / 2f, h / 2f, w / 2f, 0f)
-                                                        close()
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .clickable {
+                                                        currentScreen = CloudScreen.GEMINI
                                                     }
-                                                    drawPath(
-                                                        path = path,
-                                                        color = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF6200EA)
+                                                    .background(
+                                                        if (isDarkTheme) Color(0xFF1E1C24) else Color(0xFFF3EFFF)
                                                     )
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "AI",
-                                                fontWeight = FontWeight.ExtraBold,
-                                                fontSize = 12.sp,
-                                                color = if (isDarkTheme) Color.White else Color.Black,
-                                                fontFamily = FontFamily.SansSerif
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(12.dp))
-
-                                        // Command Line Terminal Outlined Box conforming to Image 2
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(end = 8.dp)
-                                                .size(31.dp)
-                                                .border(
-                                                    width = 2.dp,
-                                                    color = if (isDarkTheme) Color.White else Color.Black,
-                                                    shape = RoundedCornerShape(8.dp)
-                                                )
-                                                .clickable {
-                                                    currentScreen = CloudScreen.CLOUDSHELL
-                                                }
-                                                .testTag("terminal_refresh_button"),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
+                                                    .border(
+                                                        width = 1.5.dp,
+                                                        color = if (isDarkTheme) Color(0xFFD500F9) else Color(0xFF6200EA),
+                                                        shape = RoundedCornerShape(12.dp)
+                                                    )
+                                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                                    .testTag("hexagon_logo_ai"),
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Text(
-                                                    text = ">",
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    fontSize = 13.sp,
-                                                    color = if (isDarkTheme) Color.White else Color.Black,
-                                                    fontFamily = FontFamily.Monospace,
-                                                    modifier = Modifier.offset(y = (-1).dp)
-                                                )
+                                                // Modern four-pointed vector sparkle
                                                 Box(
-                                                    modifier = Modifier
-                                                        .width(6.dp)
-                                                        .height(2.dp)
-                                                        .background(if (isDarkTheme) Color.White else Color.Black)
-                                                        .offset(x = 1.dp, y = 4.dp)
+                                                    modifier = Modifier.size(12.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                                                        val w = size.width
+                                                        val h = size.height
+                                                        val path = androidx.compose.ui.graphics.Path().apply {
+                                                            moveTo(w / 2f, 0f)
+                                                            quadraticTo(w / 2f, h / 2f, w, h / 2f)
+                                                            quadraticTo(w / 2f, h / 2f, w / 2f, h)
+                                                            quadraticTo(w / 2f, h / 2f, 0f, h / 2f)
+                                                            quadraticTo(w / 2f, h / 2f, w / 2f, 0f)
+                                                            close()
+                                                        }
+                                                        drawPath(
+                                                            path = path,
+                                                            color = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF6200EA)
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "AI",
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontSize = 12.sp,
+                                                    color = if (isDarkTheme) Color.White else Color.Black,
+                                                    fontFamily = FontFamily.SansSerif
                                                 )
                                             }
-                                        }
-                                    },
-                                    colors = TopAppBarDefaults.topAppBarColors(
-                                        containerColor = if (isDarkTheme) Color(0xFF0F0E13) else Color.White,
-                                        titleContentColor = if (isDarkTheme) Color.White else BentoTextDark
+
+                                            Spacer(modifier = Modifier.width(12.dp))
+
+                                            // Command Line Terminal Outlined Box conforming to Image 2
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(end = 8.dp)
+                                                    .size(31.dp)
+                                                    .border(
+                                                        width = 2.dp,
+                                                        color = if (isDarkTheme) Color.White else Color.Black,
+                                                        shape = RoundedCornerShape(8.dp)
+                                                    )
+                                                    .clickable {
+                                                        currentScreen = CloudScreen.CLOUDSHELL
+                                                    }
+                                                    .testTag("terminal_refresh_button"),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Text(
+                                                        text = ">",
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        fontSize = 13.sp,
+                                                        color = if (isDarkTheme) Color.White else Color.Black,
+                                                        fontFamily = FontFamily.Monospace,
+                                                        modifier = Modifier.offset(y = (-1).dp)
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .width(6.dp)
+                                                            .height(2.dp)
+                                                            .background(if (isDarkTheme) Color.White else Color.Black)
+                                                            .offset(x = 1.dp, y = 4.dp)
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        colors = TopAppBarDefaults.topAppBarColors(
+                                            containerColor = if (isDarkTheme) Color(0xFF0F0E13) else Color.White,
+                                            titleContentColor = if (isDarkTheme) Color.White else BentoTextDark
+                                        )
                                     )
-                                )
+                                }
                             }
                         ) { innerPadding ->
                             Box(

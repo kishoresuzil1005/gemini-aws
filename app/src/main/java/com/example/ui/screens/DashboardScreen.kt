@@ -33,6 +33,8 @@ import com.example.data.DiscoveryResource
 import com.example.ui.CloudViewModel
 import com.example.ui.theme.*
 import java.util.Locale
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardScreen(
@@ -467,12 +469,31 @@ fun DashboardScreen(
                                 .border(1.dp, BentoBorderLight, RoundedCornerShape(16.dp))
                                 .padding(12.dp)
                         ) {
-                            Text(
-                                text = "Actual AWS Spend",
-                                color = BentoPurpleDark,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Actual AWS Spend",
+                                    color = BentoPurpleDark,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                IconButton(
+                                    onClick = {
+                                        viewModel.refreshCostSummary(forceRefresh = true)
+                                    },
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh Actual Spend",
+                                        tint = BentoPurpleDark,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
                             Spacer(modifier = Modifier.height(6.dp))
                             val actualBill = costSummary?.actualCost ?: 0.0
                             Text(
@@ -861,6 +882,21 @@ fun Ec2ResourcesView(
 ) {
     val selectedRegion by viewModel.selectedRegion.collectAsState()
     val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF121115)
+    val ec2SummaryState by viewModel.ec2Summary.collectAsState()
+    val ec2ExtendedState by viewModel.ec2Extended.collectAsState()
+
+    LaunchedEffect(selectedRegion) {
+        viewModel.loadEC2Summary()
+        viewModel.loadEC2Extended()
+    }
+
+    var viewMode by remember { mutableStateOf("grid") } // "grid" or "aws_console"
+    var selectedInstanceId by remember { mutableStateOf<String?>(null) }
+    var selectedTabInDetails by remember { mutableStateOf("Details") }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    var searchInput by remember { mutableStateOf("") }
+    var isStateDropdownExpanded by remember { mutableStateOf(false) }
 
     // Region full name mapping based on dynamic dropdown
     val regionFullName = when (selectedRegion) {
@@ -871,9 +907,17 @@ fun Ec2ResourcesView(
         else -> "US East (N. Virginia)"
     }
 
+    val regionCode = when (selectedRegion) {
+        "Mumbai" -> "ap-south-1"
+        "N. Virginia" -> "us-east-1"
+        "Singapore" -> "ap-southeast-1"
+        "Frankfurt" -> "eu-central-1"
+        else -> "us-east-1"
+    }
+
     // High fidelity dynamic counts mimicking Image 2 resources card under selected regions
-    val counts = remember(selectedRegion) {
-        when (selectedRegion) {
+    val counts = remember(selectedRegion, ec2SummaryState, ec2ExtendedState) {
+        val baseMap = when (selectedRegion) {
             "Mumbai" -> mapOf(
                 "instances_running" to 1, "instances" to 2, "instance_types" to 24, "launch_templates" to 4,
                 "spot_requests" to 1, "savings_plans" to 1, "reserved_instances" to 0, "dedicated_hosts" to 0,
@@ -907,316 +951,1293 @@ fun Ec2ResourcesView(
                 "load_balancers" to 0, "target_groups" to 2, "trust_stores" to 0, "auto_scaling" to 0
             )
         }
+
+        val updatedMap = baseMap.toMutableMap()
+        if (ec2SummaryState != null) {
+            updatedMap["instances_running"] = ec2SummaryState!!.running_instances
+            updatedMap["instances"] = ec2SummaryState!!.total_instances
+            updatedMap["instance_types"] = ec2SummaryState!!.instance_types
+            updatedMap["security_groups"] = ec2SummaryState!!.security_groups
+            updatedMap["elastic_ips"] = ec2SummaryState!!.elastic_ips
+            updatedMap["volumes"] = ec2SummaryState!!.volumes
+            updatedMap["snapshots"] = ec2SummaryState!!.snapshots
+        }
+        if (ec2ExtendedState != null) {
+            updatedMap["launch_templates"] = ec2ExtendedState!!.launch_templates
+            updatedMap["spot_requests"] = ec2ExtendedState!!.spot_requests
+            updatedMap["savings_plans"] = ec2ExtendedState!!.savings_plans
+            updatedMap["reserved_instances"] = ec2ExtendedState!!.reserved_instances
+            updatedMap["dedicated_hosts"] = ec2ExtendedState!!.dedicated_hosts
+            updatedMap["amis"] = ec2ExtendedState!!.amis
+            updatedMap["ami_catalog"] = ec2ExtendedState!!.ami_catalog
+        }
+        updatedMap
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(if (isDarkTheme) Color(0xFF0F0E13) else BentoBg)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // High fidelity control plane back navigation bar
-        item {
+    val instancesList = remember(selectedRegion, regionCode) {
+        val totalCount = counts["instances"] ?: 2
+        val runningCount = counts["instances_running"] ?: 1
+        val list = mutableListOf<AwsEc2Instance>()
+        for (i in 0 until totalCount) {
+            val isRunning = i < runningCount
+            val name = if (i == 0) "Aws_Mobile_App" else if (i == 1) "Aws_Prod_Database" else "Aws_Cache_Cluster"
+            val id = if (i == 0) "i-06d74665d9e16da17" else if (i == 1) "i-0f8a927a4d531a7bc" else "i-0a2b8cd9e8f471a2a"
+            val state = if (isRunning) "Running" else "Stopped"
+            val type = if (i == 0) "t2.medium" else if (i == 1) "t3.large" else "t3.medium"
+            val status = if (isRunning) "Passed" else "-"
+            val azSuffix = if (i == 0) "d" else if (i == 1) "a" else "b"
+            val publicIp = if (i == 0) "54.205.123.215" else if (i == 1) "34.210.44.12" else "52.90.11.168"
+            val privateIp = if (i == 0) "10.0.1.53" else if (i == 1) "10.0.2.14" else "10.0.3.9"
+            val elasticIp = if (i == 0) "54.205.123.215" else "-"
+            val monitoring = if (i == 1) "enabled" else "disabled"
+            val sg = if (i == 0) "launch-wizard-13" else if (i == 1) "db-secure-sg" else "redis-sg"
+            val key = if (i == 0) "aws-mobile-app" else if (i == 1) "aws-prod-key" else "aws-cache-key"
+            val launch = if (i == 0) "2026/06/16 12:49 GMT+5:30" else if (i == 1) "2026/06/15 08:30 GMT+5:30" else "2026/06/16 01:15 GMT+5:30"
+            
+            list.add(
+                AwsEc2Instance(
+                    id = id,
+                    name = name,
+                    state = state,
+                    type = type,
+                    statusCheck = status,
+                    az = "$regionCode$azSuffix",
+                    publicDns = "ec2-${publicIp.replace(".", "-")}.compute.amazonaws.com",
+                    publicIp = publicIp,
+                    privateIp = privateIp,
+                    elasticIp = elasticIp,
+                    ipv6 = "-",
+                    monitoring = monitoring,
+                    securityGroup = sg,
+                    keyPair = key,
+                    launchTime = launch,
+                    platform = "Linux/UNIX",
+                    iamRole = if (i == 1) "RDS-Service-Role" else "None",
+                    vpcId = "vpc-018274718cd992ab2",
+                    subnetId = "subnet-0a8163f92de22bc71"
+                )
+            )
+        }
+        list
+    }
+
+    val instanceStatesMap = remember(instancesList) {
+        mutableStateMapOf<String, String>().apply {
+            instancesList.forEach { put(it.id, it.state) }
+        }
+    }
+
+    val awsHeaderBg = if (isDarkTheme) Color(0xFF16191F) else Color(0xFF1C273A)
+    val awsWorkspaceBg = if (isDarkTheme) Color(0xFF0F1115) else Color(0xFFF2F3F3)
+    val awsSidebarBg = if (isDarkTheme) Color(0xFF1E222B) else Color(0xFFFAFAFA)
+    val awsRowBg = if (isDarkTheme) Color(0xFF1A1D24) else Color(0xFFFFFFFF)
+    val awsRowSelectedBg = if (isDarkTheme) Color(0xFF1D2D3A) else Color(0xFFEBF5FC)
+    val awsTableHeaderBg = if (isDarkTheme) Color(0xFF22262F) else Color(0xFFFAFAFA)
+    val awsBorderColor = if (isDarkTheme) Color(0xFF2D3340) else Color(0xFFEAEDED)
+    val awsTextPrimary = if (isDarkTheme) Color(0xFFF1F3F5) else Color(0xFF111111)
+    val awsTextSecondary = if (isDarkTheme) Color(0xFFA1B0CB) else Color(0xFF555555)
+    val awsBlueText = if (isDarkTheme) Color(0xFF4DA4FF) else Color(0xFF0066CC)
+    val awsOrange = Color(0xFFEC7211)
+
+    if (viewMode == "aws_console") {
+        var isSidebarExpanded by remember { mutableStateOf(false) }
+        val selectedInstance = instancesList.find { it.id == selectedInstanceId }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(awsWorkspaceBg)
+        ) {
+            // --- AWS HEADER BAR ---
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                    .height(48.dp)
+                    .background(awsHeaderBg)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // AWS Logo
+                Column(
+                    modifier = Modifier.clickable { viewMode = "grid" },
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "aws",
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(22.dp)
+                            .height(2.dp)
+                            .background(awsOrange)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Search field (mock)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(30.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (isDarkTheme) Color(0xFF2A2D35) else Color(0xFF2D3C53))
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search icon",
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Search (Alt+S)",
+                            color = Color.LightGray,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // User / Region indicators
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isDarkTheme) Color(0xFF2E333D) else Color(0xFF2B3A50))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = regionCode.uppercase(),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("K", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            // --- AWS SUB-HEADER (Breadcrumbs & Hamburger) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .background(if (isDarkTheme) Color(0xFF1E222B) else Color.White)
+                    .drawBehind {
+                        drawLine(
+                            color = awsBorderColor,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.size(36.dp)
-                        .testTag("ec2_back_button")
+                    onClick = { viewMode = "grid" },
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back to Dashboard",
-                        tint = if (isDarkTheme) Color.White else Color.Black
+                        contentDescription = "Exit AWS Console",
+                        tint = awsTextPrimary,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "EC2 Dashboard",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isDarkTheme) Color.White else BentoTextDark
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (isSidebarExpanded) awsRowSelectedBg else Color.Transparent)
+                        .clickable { isSidebarExpanded = !isSidebarExpanded }
+                        .padding(4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Toggle Navigation Menu",
+                        tint = if (isSidebarExpanded) awsBlueText else awsTextPrimary,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Text(
-                        text = "Amazon Elastic Compute Cloud virtualized cluster control plane",
-                        fontSize = 11.sp,
-                        color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
-                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "EC2",
+                    fontSize = 12.sp,
+                    color = awsBlueText,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = ">",
+                    tint = awsTextSecondary,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = "Instances",
+                    fontSize = 12.sp,
+                    color = awsTextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // --- SIDE NAVIGATION DRAWER (COLLAPSIBLE) ---
+                    AnimatedVisibility(
+                        visible = isSidebarExpanded,
+                        enter = slideInHorizontally() + fadeIn(),
+                        exit = slideOutHorizontally() + fadeOut()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .width(180.dp)
+                                .fillMaxHeight()
+                                .background(awsSidebarBg)
+                                .drawBehind {
+                                    drawLine(
+                                        color = awsBorderColor,
+                                        start = Offset(size.width, 0f),
+                                        end = Offset(size.width, size.height),
+                                        strokeWidth = 1.dp.toPx()
+                                    )
+                                }
+                                .verticalScroll(rememberScrollState())
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = "EC2 Dashboard",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { isSidebarExpanded = false }
+                                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                                fontSize = 11.sp,
+                                color = awsTextPrimary
+                            )
+                            Text(
+                                text = "Events",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                                fontSize = 11.sp,
+                                color = awsTextSecondary
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(awsRowSelectedBg)
+                                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = "Instances",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = awsBlueText
+                                )
+                            }
+                            listOf(
+                                "Instance Types", "Launch Templates", "Spot Requests",
+                                "Savings Plans", "Reserved Instances", "Dedicated Hosts",
+                                "Capacity Reservations", "Capacity Manager"
+                            ).forEach { item ->
+                                Text(
+                                    text = item,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                                    fontSize = 11.sp,
+                                    color = awsTextSecondary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Images",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = awsTextPrimary,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                            listOf("AMIs", "AMI Catalog").forEach { item ->
+                                Text(
+                                    text = item,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = awsTextSecondary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Elastic Block Store",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = awsTextPrimary,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                            listOf("Volumes", "Snapshots", "Lifecycle Manager").forEach { item ->
+                                Text(
+                                    text = item,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = awsTextSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // --- MAIN WORKSPACE VIEW ---
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Instances (${instancesList.size})",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = awsTextPrimary
+                            )
+
+                            Text(
+                                text = "Info",
+                                fontSize = 11.sp,
+                                color = awsBlueText,
+                                modifier = Modifier.clickable { }
+                            )
+                        }
+
+                        // --- ACTION BUTTONS ROW ---
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isDarkTheme) Color(0xFF2D3340) else Color.White,
+                                    contentColor = awsTextPrimary
+                                ),
+                                border = BorderStroke(1.dp, awsBorderColor),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Text("Connect", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+
+                            Box {
+                                Button(
+                                    onClick = { isStateDropdownExpanded = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isDarkTheme) Color(0xFF2D3340) else Color.White,
+                                        contentColor = awsTextPrimary
+                                    ),
+                                    border = BorderStroke(1.dp, awsBorderColor),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                    shape = RoundedCornerShape(4.dp),
+                                    modifier = Modifier.height(28.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Instance state", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = "Dropdown",
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+
+                                DropdownMenu(
+                                    expanded = isStateDropdownExpanded,
+                                    onDismissRequest = { isStateDropdownExpanded = false },
+                                    modifier = Modifier.background(awsRowBg).border(1.dp, awsBorderColor)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Start instance", fontSize = 12.sp, color = awsTextPrimary) },
+                                        onClick = {
+                                            isStateDropdownExpanded = false
+                                            selectedInstanceId?.let { id ->
+                                                coroutineScope.launch {
+                                                    instanceStatesMap[id] = "Pending"
+                                                    delay(1500)
+                                                    instanceStatesMap[id] = "Running"
+                                                }
+                                            }
+                                        },
+                                        enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Stopped"
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Stop instance", fontSize = 12.sp, color = awsTextPrimary) },
+                                        onClick = {
+                                            isStateDropdownExpanded = false
+                                            selectedInstanceId?.let { id ->
+                                                coroutineScope.launch {
+                                                    instanceStatesMap[id] = "Stopping"
+                                                    delay(1500)
+                                                    instanceStatesMap[id] = "Stopped"
+                                                }
+                                            }
+                                        },
+                                        enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Running"
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Terminate instance", fontSize = 12.sp, color = awsTextPrimary) },
+                                        onClick = {
+                                            isStateDropdownExpanded = false
+                                            selectedInstanceId?.let { id ->
+                                                instanceStatesMap[id] = "Terminated"
+                                            }
+                                        },
+                                        enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] != "Terminated"
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = { },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isDarkTheme) Color(0xFF2D3340) else Color.White,
+                                    contentColor = awsTextPrimary
+                                ),
+                                border = BorderStroke(1.dp, awsBorderColor),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Actions", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Button(
+                                onClick = { },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = awsOrange,
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier.height(28.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Launch instances", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(2.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown",
+                                        modifier = Modifier.size(14.dp),
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = searchInput,
+                            onValueChange = { searchInput = it },
+                            placeholder = { Text("Find Instance by attribute or tag (case-sensitive)", fontSize = 11.sp) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(38.dp),
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 11.sp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = awsBlueText,
+                                unfocusedBorderColor = awsBorderColor,
+                                focusedContainerColor = awsRowBg,
+                                unfocusedContainerColor = awsRowBg
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search input",
+                                    tint = awsTextSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            },
+                            singleLine = true
+                        )
+
+                        // --- THE HORIZONTALLY SCROLLABLE TABLE ---
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                .background(awsRowBg)
+                        ) {
+                            Column(
+                                modifier = Modifier.horizontalScroll(scrollState)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .background(awsTableHeaderBg)
+                                        .drawBehind {
+                                            drawLine(
+                                                color = awsBorderColor,
+                                                start = Offset(0f, size.height),
+                                                end = Offset(size.width, size.height),
+                                                strokeWidth = 1.dp.toPx()
+                                            )
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(modifier = Modifier.width(36.dp))
+                                    TableHeaderCell("Name", 120.dp)
+                                    TableHeaderCell("Instance ID", 150.dp)
+                                    TableHeaderCell("Instance state", 100.dp)
+                                    TableHeaderCell("Instance type", 100.dp)
+                                    TableHeaderCell("Status check", 100.dp)
+                                    TableHeaderCell("Availability Zone", 120.dp)
+                                    TableHeaderCell("Public IPv4 DNS", 250.dp)
+                                    TableHeaderCell("Public IPv4 address", 130.dp)
+                                    TableHeaderCell("Elastic IP", 120.dp)
+                                    TableHeaderCell("IPv6 IPs", 80.dp)
+                                    TableHeaderCell("Monitoring", 90.dp)
+                                    TableHeaderCell("Security group name", 150.dp)
+                                    TableHeaderCell("Key name", 130.dp)
+                                    TableHeaderCell("Launch time", 180.dp)
+                                    TableHeaderCell("Platform", 100.dp)
+                                }
+
+                                val filteredInstances = instancesList.filter {
+                                    searchInput.isEmpty() ||
+                                    it.name.contains(searchInput, ignoreCase = true) ||
+                                    it.id.contains(searchInput, ignoreCase = true) ||
+                                    it.type.contains(searchInput, ignoreCase = true)
+                                }
+
+                                if (filteredInstances.isEmpty()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(24.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text("No matching instances pool found in $regionFullName.", fontSize = 11.sp, color = awsTextSecondary)
+                                    }
+                                } else {
+                                    filteredInstances.forEach { instance ->
+                                        val isCurrentSelected = selectedInstanceId == instance.id
+                                        val currentState = instanceStatesMap[instance.id] ?: instance.state
+
+                                        Row(
+                                            modifier = Modifier
+                                                .background(if (isCurrentSelected) awsRowSelectedBg else awsRowBg)
+                                                .clickable {
+                                                    selectedInstanceId = if (isCurrentSelected) null else instance.id
+                                                }
+                                                .drawBehind {
+                                                    drawLine(
+                                                        color = awsBorderColor,
+                                                        start = Offset(0f, size.height),
+                                                        end = Offset(size.width, size.height),
+                                                        strokeWidth = 0.5.dp.toPx()
+                                                    )
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Checkbox(
+                                                    checked = isCurrentSelected,
+                                                    onCheckedChange = { checked ->
+                                                        selectedInstanceId = if (checked) instance.id else null
+                                                    },
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = awsBlueText,
+                                                        uncheckedColor = awsTextSecondary
+                                                    )
+                                                )
+                                            }
+
+                                            TableCell(instance.name, 120.dp, awsTextPrimary)
+
+                                            TableCellClickable(instance.id, 150.dp, awsBlueText) {
+                                                selectedInstanceId = if (isCurrentSelected) null else instance.id
+                                            }
+
+                                            Row(
+                                                modifier = Modifier.width(100.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                val stateDotColor = when (currentState) {
+                                                    "Running" -> BentoTermGreen
+                                                    "Stopped" -> Color.Gray
+                                                    "Terminated" -> BentoAccentRed
+                                                    "Pending", "Stopping" -> Color(0xFFEC7211)
+                                                    else -> Color.Gray
+                                                }
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(8.dp)
+                                                        .clip(CircleShape)
+                                                        .background(stateDotColor)
+                                                )
+                                                Text(
+                                                    text = currentState,
+                                                    fontSize = 11.sp,
+                                                    color = awsTextPrimary,
+                                                    fontFamily = FontFamily.Monospace
+                                                )
+                                            }
+
+                                            TableCell(instance.type, 100.dp, awsTextPrimary)
+                                            TableCell(instance.statusCheck, 100.dp, awsTextPrimary)
+                                            TableCell(instance.az, 120.dp, awsTextPrimary)
+                                            TableCell(instance.publicDns, 250.dp, awsTextPrimary)
+                                            TableCell(instance.publicIp, 130.dp, awsTextPrimary)
+                                            TableCell(instance.elasticIp, 120.dp, awsTextPrimary)
+                                            TableCell(instance.ipv6, 80.dp, awsTextPrimary)
+                                            TableCell(instance.monitoring, 90.dp, awsTextPrimary)
+                                            TableCell(instance.securityGroup, 150.dp, awsTextPrimary)
+                                            TableCell(instance.keyPair, 130.dp, awsTextPrimary)
+                                            TableCell(instance.launchTime, 180.dp, awsTextPrimary)
+                                            TableCell(instance.platform, 100.dp, awsTextPrimary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // --- BOTTOM DETAIL SECTION ---
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, awsBorderColor, RoundedCornerShape(4.dp)),
+                            colors = CardDefaults.cardColors(
+                                containerColor = awsRowBg
+                            ),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp)
+                            ) {
+                                if (selectedInstance == null) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Select an instance",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = awsTextPrimary
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.Settings,
+                                            contentDescription = "Config details",
+                                            tint = awsTextSecondary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = awsBorderColor)
+                                    Text(
+                                        text = "To view details of an instance, select its checkbox or click on its row.",
+                                        fontSize = 11.sp,
+                                        color = awsTextSecondary
+                                    )
+                                } else {
+                                    val currentState = instanceStatesMap[selectedInstance.id] ?: selectedInstance.state
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "Instance: ${selectedInstance.id} (${selectedInstance.name})",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = awsTextPrimary
+                                            )
+                                            Text(
+                                                text = "Public IP: ${selectedInstance.publicIp} | State: ${currentState}",
+                                                fontSize = 10.sp,
+                                                color = awsTextSecondary
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = { selectedInstanceId = null },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Close details",
+                                                tint = awsTextSecondary,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        listOf("Details", "Security", "Networking", "Storage", "Status checks", "Monitoring", "Tags").forEach { tab ->
+                                            val isTabSelected = selectedTabInDetails == tab
+                                            Column(
+                                                modifier = Modifier
+                                                    .clickable { selectedTabInDetails = tab }
+                                                    .padding(vertical = 4.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = tab,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = if (isTabSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                    color = if (isTabSelected) awsBlueText else awsTextSecondary
+                                                )
+                                                if (isTabSelected) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .width(28.dp)
+                                                            .height(2.dp)
+                                                            .background(awsBlueText)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = awsBorderColor)
+
+                                    when (selectedTabInDetails) {
+                                        "Details" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("Instance ID", selectedInstance.id, Modifier.weight(1f), awsTextPrimary, awsTextSecondary, awsBlueText)
+                                                    DetailItem("Instance state", currentState, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                }
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("Instance type", selectedInstance.type, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                    DetailItem("Private IPv4 Address", selectedInstance.privateIp, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                }
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("VPC ID", selectedInstance.vpcId, Modifier.weight(1f), awsTextPrimary, awsTextSecondary, awsBlueText)
+                                                    DetailItem("Subnet ID", selectedInstance.subnetId, Modifier.weight(1f), awsTextPrimary, awsTextSecondary, awsBlueText)
+                                                }
+                                                Row(modifier = Modifier.fillMaxWidth()) {
+                                                    DetailItem("Public IPv4 DNS", selectedInstance.publicDns, Modifier.fillMaxWidth(), awsTextPrimary, awsTextSecondary)
+                                                }
+                                            }
+                                        }
+                                        "Security" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("Security Groups: ${selectedInstance.securityGroup}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
+                                                Text("Inbound Active Firewall Security Rules:", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = awsTextSecondary)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .border(1.dp, awsBorderColor, RoundedCornerShape(3.dp))
+                                                        .background(awsTableHeaderBg)
+                                                        .padding(8.dp)
+                                                ) {
+                                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Text("• TCP Port 22 (SSH) - Source: 0.0.0.0/0 (Active)", fontSize = 10.sp, color = BentoTermGreen, fontFamily = FontFamily.Monospace)
+                                                        Text("• TCP Port 80 (HTTP) - Source: 0.0.0.0/0 (Active)", fontSize = 10.sp, color = BentoTermGreen, fontFamily = FontFamily.Monospace)
+                                                        Text("• TCP Port 443 (HTTPS) - Source: 0.0.0.0/0 (Active)", fontSize = 10.sp, color = BentoTermGreen, fontFamily = FontFamily.Monospace)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Networking" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("Network interface", "eth0", Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                    DetailItem("Public IPv4", selectedInstance.publicIp, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                }
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("Private IPv4", selectedInstance.privateIp, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                    DetailItem("Elastic IP", selectedInstance.elasticIp, Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                }
+                                            }
+                                        }
+                                        "Storage" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("Root Device: /dev/xvda", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
+                                                Text("Attached Block Device Volumes list:", fontSize = 10.sp, color = awsTextSecondary)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .border(1.dp, awsBorderColor, RoundedCornerShape(2.dp))
+                                                        .background(awsTableHeaderBg)
+                                                        .padding(8.dp)
+                                                ) {
+                                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                                        Text("vol-078a9c2b48 | gp3 | /dev/xvda | size: 8 GiB", fontSize = 11.sp, color = awsTextPrimary, fontFamily = FontFamily.Monospace)
+                                                        Text("Attached (100%)", fontSize = 11.sp, color = BentoTermGreen, fontFamily = FontFamily.Monospace)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Status checks" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("Status Check Status: ${if(currentState == "Running") "2/2 checks passed" else "Not Available"}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
+                                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                                    DetailItem("System status", if(currentState == "Running") "Passed" else "-", Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                    DetailItem("Instance status", if(currentState == "Running") "Passed" else "-", Modifier.weight(1f), awsTextPrimary, awsTextSecondary)
+                                                }
+                                            }
+                                        }
+                                        "Monitoring" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("CloudWatch Basic Monitoring: disabled", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
+                                                Text("Detailed monitoring can be enabled under Amazon CloudWatch configurations.", fontSize = 10.sp, color = awsTextSecondary)
+                                            }
+                                        }
+                                        "Tags" -> {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Text("Configured Metadata Tags (${if (selectedInstance.id == "i-06d74665d9e16da17") 3 else 2}):", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .border(1.dp, awsBorderColor, RoundedCornerShape(2.dp))
+                                                        .background(awsTableHeaderBg)
+                                                        .padding(8.dp)
+                                                ) {
+                                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                        Text("• Name = ${selectedInstance.name}", fontSize = 10.sp, color = awsTextPrimary, fontFamily = FontFamily.Monospace)
+                                                        Text("• Environment = Development", fontSize = 10.sp, color = awsTextPrimary, fontFamily = FontFamily.Monospace)
+                                                        if (selectedInstance.id == "i-06d74665d9e16da17") {
+                                                            Text("• Project = Gemini-AWS-Sync", fontSize = 10.sp, color = awsTextPrimary, fontFamily = FontFamily.Monospace)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        // Exact match of the "Resources" card in Image 2
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth()
-                    .testTag("ec2_resources_card"),
-                border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderMedium),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isDarkTheme) Color(0xFF151419) else Color.White
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(if (isDarkTheme) Color(0xFF0F0E13) else BentoBg)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // High fidelity control plane back navigation bar
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
                 ) {
-                    // Header Area of Card: Title and Circular Settings/Refresh actions
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(36.dp)
+                            .testTag("ec2_back_button")
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to Dashboard",
+                            tint = if (isDarkTheme) Color.White else Color.Black
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
                         Text(
-                            text = "Resources",
+                            text = "EC2 Dashboard",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             color = if (isDarkTheme) Color.White else BentoTextDark
                         )
+                        Text(
+                            text = "Amazon Elastic Compute Cloud virtualized cluster control plane",
+                            fontSize = 11.sp,
+                            color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                        )
+                    }
+                }
+            }
+
+            // Exact match of the "Resources" card in Image 2
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                        .testTag("ec2_resources_card"),
+                    border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderMedium),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDarkTheme) Color(0xFF151419) else Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        // Header Area of Card: Title and Circular Settings/Refresh actions
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Settings gear icon inside interactive circle
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
-                                    .clickable { /* action */ }
-                                    .padding(6.dp),
-                                contentAlignment = Alignment.Center
+                            Text(
+                                text = "Resources",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDarkTheme) Color.White else BentoTextDark
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                // Settings gear icon inside interactive circle
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
+                                        .clickable { /* action */ }
+                                        .padding(6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = "Settings",
+                                        tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                // Refresh arrow icon inside interactive circle
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
+                                        .clickable { viewModel.startCloudDiscovery() }
+                                        .padding(6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh",
+                                        tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
-                            // Refresh arrow icon inside interactive circle
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
-                                    .clickable { viewModel.startCloudDiscovery() }
-                                    .padding(6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = "Refresh",
-                                    tint = if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA),
-                                    modifier = Modifier.size(16.dp)
-                                )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = "You are using the following Amazon EC2 resources in the $regionFullName Region:",
+                            fontSize = 13.sp,
+                            color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                            lineHeight = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Group 1: Instances (Image 3 details in Image 2 content style)
+                        CategoryHeader("Instances", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Instances (running)", counts["instances_running"] ?: 1, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Instances", counts["instances"] ?: 2, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
                             }
                         }
-                    }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Instance Types", counts["instance_types"] ?: 15, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Launch Templates", counts["launch_templates"] ?: 3, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Spot Requests", counts["spot_requests"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Savings Plans", counts["savings_plans"] ?: 1, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Reserved Instances", counts["reserved_instances"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Dedicated Hosts", counts["dedicated_hosts"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Capacity Reservations", counts["capacity_reservations"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Capacity Manager", counts["capacity_manager"] ?: 1, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    Text(
-                        text = "You are using the following Amazon EC2 resources in the $regionFullName Region:",
-                        fontSize = 13.sp,
-                        color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
-                        lineHeight = 18.sp
-                    )
+                        // Group 2: Images (Image 3 details in Image 2 content style)
+                        CategoryHeader("Images", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("AMIs", counts["amis"] ?: 2, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("AMI Catalog", counts["ami_catalog"] ?: 12, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    // Group 1: Instances (Image 3 details in Image 2 content style)
-                    CategoryHeader("Instances", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Instances (running)", counts["instances_running"] ?: 1, isDarkTheme)
+                        // Group 3: Elastic Block Store (Image 3 details in Image 2 content style)
+                        CategoryHeader("Elastic Block Store", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Volumes", counts["volumes"] ?: 1, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Snapshots", counts["snapshots"] ?: 4, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
                         }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Instances", counts["instances"] ?: 2, isDarkTheme)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Lifecycle Manager", counts["lifecycle_manager"] ?: 1, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                            }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Instance Types", counts["instance_types"] ?: 15, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Launch Templates", counts["launch_templates"] ?: 3, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Spot Requests", counts["spot_requests"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Savings Plans", counts["savings_plans"] ?: 1, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Reserved Instances", counts["reserved_instances"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Dedicated Hosts", counts["dedicated_hosts"] ?: 0, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Capacity Reservations", counts["capacity_reservations"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Capacity Manager", counts["capacity_manager"] ?: 1, isDarkTheme)
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    // Group 2: Images (Image 3 details in Image 2 content style)
-                    CategoryHeader("Images", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("AMIs", counts["amis"] ?: 2, isDarkTheme)
+                        // Group 4: Network & Security (Image 3 details in Image 2 content style)
+                        CategoryHeader("Network & Security", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Security Groups", counts["security_groups"] ?: 18, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Elastic IPs", counts["elastic_ips"] ?: 4, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
                         }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("AMI Catalog", counts["ami_catalog"] ?: 12, isDarkTheme)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Placement Groups", counts["placement_groups"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Key Pairs", counts["key_pairs"] ?: 4, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
                         }
-                    }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Network Interfaces", counts["network_interfaces"] ?: 3, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    // Group 3: Elastic Block Store (Image 3 details in Image 2 content style)
-                    CategoryHeader("Elastic Block Store", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Volumes", counts["volumes"] ?: 1, isDarkTheme)
+                        // Group 5: Load Balancing (Image 3 details in Image 2 content style)
+                        CategoryHeader("Load Balancing", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Load Balancers", counts["load_balancers"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Target Groups", counts["target_groups"] ?: 2, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
                         }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Snapshots", counts["snapshots"] ?: 4, isDarkTheme)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Trust Stores", counts["trust_stores"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                            }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Lifecycle Manager", counts["lifecycle_manager"] ?: 1, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
-                        }
-                    }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                    // Group 4: Network & Security (Image 3 details in Image 2 content style)
-                    CategoryHeader("Network & Security", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Security Groups", counts["security_groups"] ?: 18, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Elastic IPs", counts["elastic_ips"] ?: 4, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Placement Groups", counts["placement_groups"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Key Pairs", counts["key_pairs"] ?: 4, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Network Interfaces", counts["network_interfaces"] ?: 3, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Group 5: Load Balancing (Image 3 details in Image 2 content style)
-                    CategoryHeader("Load Balancing", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Load Balancers", counts["load_balancers"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Target Groups", counts["target_groups"] ?: 2, isDarkTheme)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Trust Stores", counts["trust_stores"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Group 6: Auto Scaling (Image 3 details in Image 2 content style)
-                    CategoryHeader("Auto Scaling", isDarkTheme)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ResourceGridItem("Auto Scaling Groups", counts["auto_scaling"] ?: 0, isDarkTheme)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                        // Group 6: Auto Scaling (Image 3 details in Image 2 content style)
+                        CategoryHeader("Auto Scaling", isDarkTheme)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                ResourceGridItem("Auto Scaling Groups", counts["auto_scaling"] ?: 0, isDarkTheme) {
+                                    viewMode = "aws_console"
+                                }
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.fillMaxWidth()) // Blank balance filler
+                            }
                         }
                     }
                 }
@@ -1276,4 +2297,112 @@ fun ResourceGridItem(
         }
     }
 }
+
+@Composable
+fun TableHeaderCell(text: String, width: androidx.compose.ui.unit.Dp) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .padding(horizontal = 6.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Gray,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun TableCell(text: String, width: androidx.compose.ui.unit.Dp, color: Color) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .padding(horizontal = 6.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            color = color,
+            fontFamily = FontFamily.Monospace,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun TableCellClickable(text: String, width: androidx.compose.ui.unit.Dp, color: Color, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(width)
+            .clickable { onClick() }
+            .padding(horizontal = 6.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            color = color,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun DetailItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    textColor: Color,
+    labelColor: Color,
+    linkColor: Color? = null
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = labelColor
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = value,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                color = linkColor ?: textColor,
+                fontWeight = if (linkColor != null) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.clickable(enabled = linkColor != null) { }
+            )
+        }
+    }
+}
+
+data class AwsEc2Instance(
+    val id: String,
+    val name: String,
+    val state: String,
+    val type: String,
+    val statusCheck: String,
+    val az: String,
+    val publicDns: String,
+    val publicIp: String,
+    val privateIp: String,
+    val elasticIp: String,
+    val ipv6: String,
+    val monitoring: String,
+    val securityGroup: String,
+    val keyPair: String,
+    val launchTime: String,
+    val platform: String,
+    val iamRole: String,
+    val vpcId: String,
+    val subnetId: String
+)
 

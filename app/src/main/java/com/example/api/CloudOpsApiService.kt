@@ -280,6 +280,28 @@ data class AIChatResponse(
     val response: String
 )
 
+@JsonClass(generateAdapter = true)
+data class EC2SummaryResponse(
+    val running_instances: Int,
+    val total_instances: Int,
+    val instance_types: Int,
+    val security_groups: Int,
+    val elastic_ips: Int,
+    val volumes: Int,
+    val snapshots: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class EC2ExtendedResponse(
+    val launch_templates: Int,
+    val spot_requests: Int,
+    val reserved_instances: Int,
+    val dedicated_hosts: Int,
+    val amis: Int,
+    val ami_catalog: Int,
+    val savings_plans: Int
+)
+
 object TokenStorage {
     var jwtToken: String? = null
     var selectedRegion: String? = "ap-south-1"
@@ -333,6 +355,16 @@ interface CloudOpsApiService {
 
     @GET("api/resources/summary")
     suspend fun getResourcesSummary(): ResourceSummary
+
+    @GET("api/ec2/summary")
+    suspend fun getEC2Summary(
+        @Query("region") region: String
+    ): EC2SummaryResponse
+
+    @GET("api/ec2/extended")
+    suspend fun getEC2Extended(
+        @Query("region") region: String
+    ): EC2ExtendedResponse
 
     @GET("api/topology")
     suspend fun getTopologySummary(): List<TopologyCategory>

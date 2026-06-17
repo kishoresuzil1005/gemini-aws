@@ -170,6 +170,12 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _showEc2Resources = MutableStateFlow(false)
     val showEc2Resources = _showEc2Resources.asStateFlow()
 
+    private val _ec2Summary = MutableStateFlow<com.example.api.EC2SummaryResponse?>(null)
+    val ec2Summary = _ec2Summary.asStateFlow()
+
+    private val _ec2Extended = MutableStateFlow<com.example.api.EC2ExtendedResponse?>(null)
+    val ec2Extended = _ec2Extended.asStateFlow()
+
     fun setShowEc2Resources(show: Boolean) {
         _showEc2Resources.value = show
     }
@@ -468,6 +474,22 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 val remoteIncidents = apiService.getIncidents()
                 _incidents.value = remoteIncidents
 
+                // Fetch dynamic AWS EC2 summaries for the selected region
+                try {
+                    val summaryData = apiService.getEC2Summary(_selectedRegion.value)
+                    _ec2Summary.value = summaryData
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch EC2 summary: ${e.message}")
+                }
+
+                // Fetch dynamic AWS EC2 extended summaries for the selected region
+                try {
+                    val extendedData = apiService.getEC2Extended(_selectedRegion.value)
+                    _ec2Extended.value = extendedData
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Failed to fetch EC2 extended summary: ${e.message}")
+                }
+
                 // Successfully synced all feeds
                 val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
                 _lastRefresh.value = dateFormat.format(java.util.Date())
@@ -476,6 +498,32 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 Log.w("CloudViewModel", "Local FastAPI server not reachable. Running on high-performance Room fallback. Details: ${e.message}")
             } finally {
                 _isRefreshing.value = false
+            }
+        }
+    }
+
+    fun loadEC2Summary() {
+        viewModelScope.launch {
+            try {
+                if (_useBackend.value) {
+                    val data = com.example.api.CloudOpsBackendClient.service.getEC2Summary(_selectedRegion.value)
+                    _ec2Summary.value = data
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "EC2 Summary Failed", e)
+            }
+        }
+    }
+
+    fun loadEC2Extended() {
+        viewModelScope.launch {
+            try {
+                if (_useBackend.value) {
+                    val response = com.example.api.CloudOpsBackendClient.service.getEC2Extended(_selectedRegion.value)
+                    _ec2Extended.value = response
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "EC2 Extended Failed", e)
             }
         }
     }

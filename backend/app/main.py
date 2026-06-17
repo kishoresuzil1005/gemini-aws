@@ -1042,6 +1042,22 @@ app.include_router(
     optimization_router
 )
 
+from app.routes.ec2_summary import (
+    router as ec2_summary_router
+)
+
+app.include_router(
+    ec2_summary_router
+)
+
+from app.routes.ec2_extended import (
+    router as ec2_extended_router
+)
+
+app.include_router(
+    ec2_extended_router
+)
+
 
 # Commented out to prevent conflict with modern Ollama AI chat router:
 # from app.routes.ai import router as ai_router
