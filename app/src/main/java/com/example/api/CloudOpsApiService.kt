@@ -302,6 +302,12 @@ data class EC2ExtendedResponse(
     val savings_plans: Int
 )
 
+@JsonClass(generateAdapter = true)
+data class EC2RefreshResponse(
+    val success: Boolean,
+    val message: String
+)
+
 object TokenStorage {
     var jwtToken: String? = null
     var selectedRegion: String? = "ap-south-1"
@@ -365,6 +371,11 @@ interface CloudOpsApiService {
     suspend fun getEC2Extended(
         @Query("region") region: String
     ): EC2ExtendedResponse
+
+    @POST("api/ec2/refresh")
+    suspend fun refreshEC2(
+        @Query("region") region: String
+    ): EC2RefreshResponse
 
     @GET("api/topology")
     suspend fun getTopologySummary(): List<TopologyCategory>

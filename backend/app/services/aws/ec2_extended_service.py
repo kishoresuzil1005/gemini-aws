@@ -1,4 +1,6 @@
 import boto3
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 class EC2ExtendedService:
@@ -17,108 +19,100 @@ class EC2ExtendedService:
             region_name=region
         )
 
-    def get_extended_summary(self):
-
+    def get_launch_templates(self):
         try:
-
-            launch_templates = len(
+            return len(
                 self.ec2.describe_launch_templates()[
                     "LaunchTemplates"
                 ]
             )
-
         except Exception:
-            launch_templates = 0
+            return 0
 
+    def get_spot_requests(self):
         try:
-
-            spot_requests = len(
+            return len(
                 self.ec2
                 .describe_spot_instance_requests()[
                     "SpotInstanceRequests"
                 ]
             )
-
         except Exception:
-            spot_requests = 0
+            return 0
 
+    def get_reserved_instances(self):
         try:
-
-            reserved_instances = len(
+            return len(
                 self.ec2
                 .describe_reserved_instances()[
                     "ReservedInstances"
                 ]
             )
-
         except Exception:
-            reserved_instances = 0
+            return 0
 
+    def get_dedicated_hosts(self):
         try:
-
-            dedicated_hosts = len(
+            return len(
                 self.ec2.describe_hosts()[
                     "Hosts"
                 ]
             )
-
         except Exception:
-            dedicated_hosts = 0
+            return 0
 
+    def get_amis(self):
         try:
-
-            amis = len(
+            return len(
                 self.ec2.describe_images(
                     Owners=["self"]
                 )["Images"]
             )
-
         except Exception:
-            amis = 0
+            return 0
 
+    def get_ami_catalog(self):
         try:
-
-            ami_catalog = len(
+            return len(
                 self.ec2.describe_images(
                     Owners=["amazon"]
                 )["Images"]
             )
-
         except Exception:
-            ami_catalog = 0
+            return 0
 
+    def get_savings_plans(self):
         try:
-
-            savings_plans = len(
+            return len(
                 self.savingsplans
                 .describe_savings_plans()[
                     "savingsPlans"
                 ]
             )
-
         except Exception:
-            savings_plans = 0
+            return 0
 
-        return {
+    def get_extended_summary(self):
+        start = time.time()
 
-            "launch_templates":
-                launch_templates,
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            launch_templates_future = executor.submit(self.get_launch_templates)
+            spot_requests_future = executor.submit(self.get_spot_requests)
+            reserved_future = executor.submit(self.get_reserved_instances)
+            hosts_future = executor.submit(self.get_dedicated_hosts)
+            amis_future = executor.submit(self.get_amis)
+            ami_catalog_future = executor.submit(self.get_ami_catalog)
+            savings_future = executor.submit(self.get_savings_plans)
 
-            "spot_requests":
-                spot_requests,
+            res = {
+                "launch_templates": launch_templates_future.result(),
+                "spot_requests": spot_requests_future.result(),
+                "reserved_instances": reserved_future.result(),
+                "dedicated_hosts": hosts_future.result(),
+                "amis": amis_future.result(),
+                "ami_catalog": ami_catalog_future.result(),
+                "savings_plans": savings_future.result()
+            }
 
-            "reserved_instances":
-                reserved_instances,
-
-            "dedicated_hosts":
-                dedicated_hosts,
-
-            "amis":
-                amis,
-
-            "ami_catalog":
-                ami_catalog,
-
-            "savings_plans":
-                savings_plans
-        }
+        print(f"[EC2 EXTENDED] {round(time.time() - start, 2)}s")
+        return res

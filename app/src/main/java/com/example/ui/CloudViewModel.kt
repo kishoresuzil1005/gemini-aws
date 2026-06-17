@@ -100,11 +100,21 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
     private var lastCostRefresh = 0L
     private val COST_CACHE_MS = 300000L // 5 minutes
+    private var ec2Loaded = false
+    private var ec2ExtendedLoaded = false
+    private val isLoadingEC2Summary = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val isLoadingEC2Extended = java.util.concurrent.atomic.AtomicBoolean(false)
+    private var initialLoadCompleted = false
 
     fun updateSelectedRegion(region: String) {
+        if (region == _selectedRegion.value) {
+            return
+        }
         Log.d("REGION", "Changed to $region")
         _selectedRegion.value = region
         com.example.api.TokenStorage.selectedRegion = region
+        ec2Loaded = false
+        ec2ExtendedLoaded = false
         try {
             com.example.api.SecureStorage.saveSelectedRegion(getApplication(), region)
         } catch (e: Exception) {
@@ -342,11 +352,14 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         loadRegions()
 
         // Sync and refresh from local FastAPI SRE backend on launch (run once at start)
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                refreshAllFeeds()
-            } catch (e: Exception) {
-                Log.e("CloudViewModel", "Initial sync failed: ${e.message}")
+        if (!initialLoadCompleted) {
+            initialLoadCompleted = true
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    refreshAllFeeds()
+                } catch (e: Exception) {
+                    Log.e("CloudViewModel", "Initial sync failed: ${e.message}")
+                }
             }
         }
     }
@@ -474,21 +487,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 val remoteIncidents = apiService.getIncidents()
                 _incidents.value = remoteIncidents
 
-                // Fetch dynamic AWS EC2 summaries for the selected region
-                try {
-                    val summaryData = apiService.getEC2Summary(_selectedRegion.value)
-                    _ec2Summary.value = summaryData
-                } catch (e: Exception) {
-                    Log.e("CloudViewModel", "Failed to fetch EC2 summary: ${e.message}")
-                }
-
-                // Fetch dynamic AWS EC2 extended summaries for the selected region
-                try {
-                    val extendedData = apiService.getEC2Extended(_selectedRegion.value)
-                    _ec2Extended.value = extendedData
-                } catch (e: Exception) {
-                    Log.e("CloudViewModel", "Failed to fetch EC2 extended summary: ${e.message}")
-                }
+                // Fetch dynamic AWS EC2 summaries using deduped loader
+                loadEC2Summary(forceRefresh = true)
+                loadEC2Extended(forceRefresh = true)
 
                 // Successfully synced all feeds
                 val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
@@ -502,28 +503,80 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadEC2Summary() {
+    fun loadEC2Summary(forceRefresh: Boolean = false) {
+        if (ec2Loaded && !forceRefresh) {
+            return
+        }
+        if (isLoadingEC2Summary.getAndSet(true)) {
+            return
+        }
         viewModelScope.launch {
             try {
                 if (_useBackend.value) {
                     val data = com.example.api.CloudOpsBackendClient.service.getEC2Summary(_selectedRegion.value)
                     _ec2Summary.value = data
+                    ec2Loaded = true
                 }
             } catch (e: Exception) {
                 Log.e("CloudViewModel", "EC2 Summary Failed", e)
+            } finally {
+                isLoadingEC2Summary.set(false)
             }
         }
     }
 
-    fun loadEC2Extended() {
+    fun loadEC2Extended(forceRefresh: Boolean = false) {
+        if (ec2ExtendedLoaded && !forceRefresh) {
+            return
+        }
+        if (isLoadingEC2Extended.getAndSet(true)) {
+            return
+        }
         viewModelScope.launch {
             try {
                 if (_useBackend.value) {
                     val response = com.example.api.CloudOpsBackendClient.service.getEC2Extended(_selectedRegion.value)
                     _ec2Extended.value = response
+                    ec2ExtendedLoaded = true
                 }
             } catch (e: Exception) {
                 Log.e("CloudViewModel", "EC2 Extended Failed", e)
+            } finally {
+                isLoadingEC2Extended.set(false)
+            }
+        }
+    }
+
+    fun refreshEC2CacheAndReload() {
+        viewModelScope.launch {
+            try {
+                if (_useBackend.value) {
+                    com.example.api.CloudOpsBackendClient.service.refreshEC2(_selectedRegion.value)
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to clear EC2 cache on backend", e)
+            } finally {
+                ec2Loaded = false
+                ec2ExtendedLoaded = false
+                loadEC2Summary(forceRefresh = true)
+                loadEC2Extended(forceRefresh = true)
+            }
+        }
+    }
+
+    fun forceRefreshDashboard() {
+        viewModelScope.launch {
+            try {
+                if (_useBackend.value) {
+                    com.example.api.CloudOpsBackendClient.service.refreshEC2(_selectedRegion.value)
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "Failed to clear EC2 cache on backend force-refresh", e)
+            } finally {
+                ec2Loaded = false
+                ec2ExtendedLoaded = false
+                refreshAllFeeds()
+                refreshCostSummary(forceRefresh = true)
             }
         }
     }

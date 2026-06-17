@@ -151,8 +151,7 @@ fun DashboardScreen(
                         }
                         IconButton(
                             onClick = {
-                                viewModel.refreshAllFeeds()
-                                viewModel.refreshCostSummary(forceRefresh = true)
+                                viewModel.forceRefreshDashboard()
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
@@ -1977,7 +1976,7 @@ fun Ec2ResourcesView(
                                         .size(32.dp)
                                         .clip(CircleShape)
                                         .border(1.dp, if (isDarkTheme) Color(0xFF00E5FF) else Color(0xFF0091EA), CircleShape)
-                                        .clickable { viewModel.startCloudDiscovery() }
+                                        .clickable { viewModel.refreshEC2CacheAndReload() }
                                         .padding(6.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
