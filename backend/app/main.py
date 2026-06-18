@@ -981,26 +981,37 @@ def get_cost_estimate(db: Session = Depends(get_db)):
 @app.get("/cost/comparison", response_model=CostComparisonResponseSchema)
 @app.get("/api/cost/comparison", response_model=CostComparisonResponseSchema)
 def get_cost_comparison(db: Session = Depends(get_db)):
-    """
-    Compares real-time estimated vs actual monthly trailing costs to expose latency variance or drift (Phase 4).
-    """
-    totals = CostAggregator.calculate_account_monthly(db, 1)
-    estimated_val = totals.get("total", 0.0)
-    
-    aws_accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == "AWS").all()
+
+    totals = CostAggregator.calculate_account_monthly(
+        db,
+        1
+    )
+
+    estimated_val = totals.get(
+        "total",
+        0.0
+    )
+
+    from app.services.cost.cache import (
+        CostSummaryCache
+    )
+
+    cached = CostSummaryCache.get()
+
     actual_val = 0.0
-    if aws_accounts:
-        for account in aws_accounts:
-            try:
-                adapter = CostExplorerAdapter(account.id)
-                actual_val += adapter.get_current_month_cost()
-            except Exception:
-                pass
-            
-    if actual_val <= 0:
-        actual_val = 1340.22
-        
-    diff = round(estimated_val - actual_val, 2)
+
+    if cached:
+        actual_val = getattr(
+            cached,
+            "actualCost",
+            0.0
+        )
+
+    diff = round(
+        estimated_val - actual_val,
+        2
+    )
+
     return CostComparisonResponseSchema(
         estimated=estimated_val,
         actual=actual_val,
