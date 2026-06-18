@@ -1,33 +1,76 @@
 from fastapi import APIRouter
+from fastapi import HTTPException
+import logging
 
 from app.services.aws.ec2_summary_service import (
     EC2SummaryService
 )
-from app.services.cache.ec2_cache import EC2Cache
 
-router = APIRouter()
+from app.services.cache.ec2_cache import (
+    EC2Cache
+)
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(
+    tags=["EC2"]
+)
 
 
 @router.get("/api/ec2/summary")
 def ec2_summary(
-    region: str = "ap-south-1"
+    region: str
 ):
+    """
+    EC2 Summary API
 
-    cached = EC2Cache.get_summary(region)
+    Example:
 
-    if cached:
+    /api/ec2/summary?region=ap-south-1
+    """
 
-        print(f"[EC2 CACHE] Summary HIT for region: {region}")
+    try:
 
-        return cached
+        cached = EC2Cache.get_summary(
+            region
+        )
 
-    print(f"[EC2 CACHE] Summary MISS for region: {region}")
+        if cached:
 
-    service = EC2SummaryService(region)
+            logger.info(
+                f"[EC2 CACHE HIT] {region}"
+            )
 
-    data = service.get_summary()
+            return cached
 
-    EC2Cache.set_summary(region, data)
+        logger.info(
+            f"[EC2 CACHE MISS] {region}"
+        )
 
-    return data
+        service = EC2SummaryService(
+            region
+        )
 
+        data = service.get_summary()
+
+        EC2Cache.set_summary(
+            region,
+            data
+        )
+
+        return data
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.exception(
+            f"EC2 Summary Error ({region})"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
