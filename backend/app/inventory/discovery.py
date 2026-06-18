@@ -139,15 +139,37 @@ def discover_resources(
             f"Provider {account.provider} not supported"
         )
 
+    # --------------------------------------------------
+    # SAFETY CHECK
+    # --------------------------------------------------
+    if not discovered:
+        raise Exception(
+            "Discovery returned zero resources. "
+            "Aborting database update."
+        )
+
+    print(
+        f"[DISCOVERY] Validation passed. "
+        f"Resources found: {len(discovered)}"
+    )
+
+    # --------------------------------------------------
+    # DELETE OLD DATA ONLY AFTER
+    # SUCCESSFUL DISCOVERY
+    # --------------------------------------------------
     db.query(ResourceDB).filter(
         ResourceDB.cloud_account_id ==
         cloud_account_id
     ).delete()
-    
+
     # Also clear nodes, edges, and relationships
     db.query(ResourceNodeDB).delete()
     db.query(ResourceEdgeDB).delete()
     db.query(ResourceRelationshipDB).delete()
+
+    print(
+        "[DISCOVERY] Old inventory removed"
+    )
     
     # Reset/clear Neo4j database graph
     try:
@@ -241,4 +263,13 @@ def discover_resources(
     db.add_all(edges)
     db.add_all(relationships)
 
-    db.commit()
+    try:
+        db.commit()
+        print(
+            "[DISCOVERY] Database commit successful"
+        )
+    except Exception as e:
+        db.rollback()
+        raise Exception(
+            f"Database commit failed: {e}"
+        )
