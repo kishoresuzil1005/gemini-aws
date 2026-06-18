@@ -35,48 +35,90 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    risk: str
-    recommendation: str
-    saving: str
+    resource_id: str
+    resource_type: str
+    health: str
+    issues: list[str]
+    recommendations: list[str]
+    estimated_monthly_savings: float
+    summary: str
 
 
 @router.post(
     "/api/ai/analyze",
     response_model=AnalyzeResponse
 )
-def analyze_resource(payload: AnalyzeRequest, db: Session = Depends(get_db)):
-    """
-    SRE AI Doctor endpoint to analyze a specific resource.
-    """
-    res_id = payload.resource_id
-    resource = db.query(ResourceDB).filter(ResourceDB.resource_id == res_id).first()
-    
-    recs = RecommendationEngine.generate(db)
-    matching_rec = None
-    for r in recs:
-        if r.get("resource_id") == res_id:
-            matching_rec = r
+def analyze_resource(
+    payload: AnalyzeRequest,
+    db: Session = Depends(get_db)
+):
+    resource_id = payload.resource_id
+
+    resource = (
+        db.query(ResourceDB)
+        .filter(
+            ResourceDB.resource_id == resource_id
+        )
+        .first()
+    )
+
+    recommendations = RecommendationEngine.generate(db)
+
+    matching = None
+
+    for rec in recommendations:
+        if rec.get("resource_id") == resource_id:
+            matching = rec
             break
-            
-    if matching_rec:
-        risk_str = matching_rec.get("risk", "LOW_CPU")
-        rec_str = matching_rec.get("recommendation", "Downsize to t3.micro")
-        saving_amount = matching_rec.get("monthly_savings", 33.87)
-        saving_str = f"${saving_amount}/month"
-    else:
-        if resource and resource.resource_type == "EC2":
-            risk_str = "LOW_CPU"
-            rec_str = "Downsize to t3.micro"
-            saving_str = "$33.87/month"
-        else:
-            risk_str = "LOW_CPU"
-            rec_str = "Downsize to t3.micro"
-            saving_str = "$33.87/month"
+
+    issues = []
+    recommendations_list = []
+    savings = 0.0
+    health = "HEALTHY"
+
+    if matching:
+
+        health = "CRITICAL"
+
+        issues.append(
+            matching.get(
+                "issue",
+                "Optimization opportunity detected"
+            )
+        )
+
+        recommendations_list.append(
+            matching.get(
+                "recommendation",
+                "Review resource"
+            )
+        )
+
+        savings = float(
+            matching.get(
+                "monthly_savings",
+                0
+            )
+        )
+
+    summary = (
+        f"Resource {resource_id} "
+        f"can save approximately "
+        f"${savings:.2f}/month."
+    )
 
     return AnalyzeResponse(
-        risk=risk_str,
-        recommendation=rec_str,
-        saving=saving_str
+        resource_id=resource_id,
+        resource_type=(
+            resource.resource_type
+            if resource
+            else "UNKNOWN"
+        ),
+        health=health,
+        issues=issues,
+        recommendations=recommendations_list,
+        estimated_monthly_savings=savings,
+        summary=summary
     )
 
 
