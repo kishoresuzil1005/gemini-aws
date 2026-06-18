@@ -7,7 +7,8 @@ from app.services.graph.neo4j_service import Neo4jService
 
 def discover_resources(
     db: Session,
-    cloud_account_id: int
+    cloud_account_id: int,
+    region: str | None = None
 ):
     account = (
         db.query(CloudAccountDB)
@@ -26,7 +27,10 @@ def discover_resources(
 
         try:
 
-            regions_to_scan = get_all_regions()
+            if region and region.lower() != "all":
+                regions_to_scan = [region]
+            else:
+                regions_to_scan = get_all_regions()
 
             print(
                 f"[DISCOVERY] Regions discovered: "
