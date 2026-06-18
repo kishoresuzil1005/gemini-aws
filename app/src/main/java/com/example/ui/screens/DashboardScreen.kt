@@ -1526,6 +1526,16 @@ fun Ec2ResourcesView(
                                         enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Running"
                                     )
                                     DropdownMenuItem(
+                                        text = { Text("Reboot instance", fontSize = 12.sp, color = awsTextPrimary) },
+                                        onClick = {
+                                            isStateDropdownExpanded = false
+                                            selectedInstanceId?.let { id ->
+                                                viewModel.rebootInstance(id)
+                                            }
+                                        },
+                                        enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Running"
+                                    )
+                                    DropdownMenuItem(
                                         text = { Text("Terminate instance", fontSize = 12.sp, color = awsTextPrimary) },
                                         onClick = {
                                             isStateDropdownExpanded = false
