@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.providers.aws.cost_explorer import CostExplorerAdapter
-from app.database import CloudAccountDB
+from app.services.cost.cache import CostSummaryCache
 
 
 class BillingService:
@@ -11,24 +10,52 @@ class BillingService:
 
     def get_summary(self):
 
-        adapter = CostExplorerAdapter(1)
+        cached = CostSummaryCache.get()
+
+        if not cached:
+            return {
+                "actual_cost": 0.0,
+                "forecast": 0.0
+            }
 
         return {
-            "actual_cost": adapter.get_current_month_cost(),
-            "forecast": adapter.get_forecast_cost()
+            "actual_cost": getattr(
+                cached,
+                "actualCost",
+                0.0
+            ),
+            "forecast": getattr(
+                cached,
+                "forecastCost",
+                0.0
+            )
         }
 
     def get_cost_by_service(self):
 
-        adapter = CostExplorerAdapter(1)
+        cached = CostSummaryCache.get()
 
-        return adapter.get_cost_by_service()
+        if not cached:
+            return []
+
+        return getattr(
+            cached,
+            "byService",
+            []
+        )
 
     def get_forecast(self):
 
-        adapter = CostExplorerAdapter(1)
+        cached = CostSummaryCache.get()
+
+        if not cached:
+            return 0.0
 
         return round(
-            adapter.get_forecast_cost(),
+            getattr(
+                cached,
+                "forecastCost",
+                0.0
+            ),
             2
         )
