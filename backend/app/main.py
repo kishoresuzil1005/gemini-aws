@@ -185,6 +185,12 @@ class BackgroundJobSchema(BaseModel):
         from_attributes = True
 
 
+class DiscoveryRequest(BaseModel):
+    provider: str = "AWS"
+    region: str = "all"
+
+
+
 # --- Authentication & Multi-Cloud Connection Schemas ---
 class UserRegisterSchema(BaseModel):
     email: str
@@ -1282,7 +1288,7 @@ def reset_incidents(db: Session = Depends(get_db)):
 
 from app.inventory.discovery import discover_resources
 
-def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS"):
+def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS", region: str = "all"):
     db = db_session_factory()
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
     if not job:
@@ -1304,7 +1310,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS")
 
         for account in accounts:
             try:
-                discover_resources(db, account.id)
+                discover_resources(db, account.id, region=region)
             except Exception as e:
                 print(f"Failed discovering for account {account.id}: {e}")
 
@@ -1327,15 +1333,20 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS")
         db.close()
 
 
-@app.post("/api/discover", response_model=BackgroundJobSchema)
-def trigger_discovery(background_tasks: BackgroundTasks, provider: str = "AWS", db: Session = Depends(get_db)):
+@app.post(
+    "/api/discover",
+    response_model=BackgroundJobSchema
+)
+def trigger_discovery(
+    request: DiscoveryRequest,
+    db: Session = Depends(get_db)
+):
     job_id = f"job-{uuid.uuid4().hex[:6]}"
     timestr = time.strftime("%H:%M:%S")
     
-    # Store dynamic job structure
     db_job = BackgroundJobDB(
         id=job_id,
-        name=f"Multi-Cloud Assets Sweeper (Cluster: {provider})",
+        name=f"Discovery ({request.region})",
         progress=0.0,
         status="QUEUED",
         timestamp=timestr
@@ -1344,8 +1355,15 @@ def trigger_discovery(background_tasks: BackgroundTasks, provider: str = "AWS", 
     db.commit()
     db.refresh(db_job)
 
-    # Launch threaded daemon to scan AWS or simulate scanning without blocking FastAPI threads
-    threading.Thread(target=run_discovery_worker, args=(job_id, SessionLocal, provider)).start()
+    threading.Thread(
+        target=run_discovery_worker,
+        args=(
+            job_id,
+            SessionLocal,
+            request.provider,
+            request.region
+        )
+    ).start()
 
     return BackgroundJobSchema(
         id=db_job.id,
