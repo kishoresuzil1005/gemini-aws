@@ -6,6 +6,10 @@ from app.services.aws.ec2_summary_service import (
     EC2SummaryService
 )
 
+from app.services.aws.ec2_instances_service import (
+    EC2InstancesService
+)
+
 from app.services.cache.ec2_cache import (
     EC2Cache
 )
@@ -74,3 +78,33 @@ def ec2_summary(
             status_code=500,
             detail=str(e)
         )
+
+
+@router.get("/api/ec2/instances")
+def ec2_instances(
+    region: str
+):
+
+    try:
+
+        service = EC2InstancesService(
+            region
+        )
+
+        return service.get_instances()
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.exception(
+            f"EC2 Instances Error ({region})"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+

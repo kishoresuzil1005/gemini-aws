@@ -42,3 +42,28 @@ class EC2Discovery:
                 })
 
         return instances
+
+    @staticmethod
+    def get_instances(region):
+        client = boto3.client(
+            "ec2",
+            region_name=region
+        )
+
+        response = client.describe_instances()
+
+        instances = []
+
+        for reservation in response["Reservations"]:
+            for instance in reservation["Instances"]:
+
+                instances.append({
+                    "instance_id": instance["InstanceId"],
+                    "instance_type": instance["InstanceType"],
+                    "state": instance["State"]["Name"],
+                    "region": region,
+                    "public_ip": instance.get("PublicIpAddress"),
+                    "private_ip": instance.get("PrivateIpAddress")
+                })
+
+        return instances

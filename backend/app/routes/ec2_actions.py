@@ -2,8 +2,17 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.services.remediation.actions.ec2_actions import EC2Actions
+from app.providers.aws.ec2 import EC2Discovery
 
 router = APIRouter()
+
+
+@router.get("/api/ec2/instances")
+def get_ec2_instances(
+    region: str
+):
+    return EC2Discovery.get_instances(region)
+
 
 
 class EC2ActionRequest(BaseModel):

@@ -153,6 +153,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
             loadEC2Summary(forceRefresh = true)
             loadEC2Extended(forceRefresh = true)
+            loadEC2Instances()
         }
     }
 
@@ -224,6 +225,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _ec2Extended = MutableStateFlow<com.example.api.EC2ExtendedResponse?>(null)
     val ec2Extended = _ec2Extended.asStateFlow()
+
+    private val _ec2Instances = MutableStateFlow<List<com.example.api.EC2Instance>>(emptyList())
+    val ec2Instances = _ec2Instances.asStateFlow()
 
     fun setShowEc2Resources(show: Boolean) {
         _showEc2Resources.value = show
@@ -547,6 +551,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 // Fetch dynamic AWS EC2 summaries using deduped loader
                 loadEC2Summary(forceRefresh = true)
                 loadEC2Extended(forceRefresh = true)
+                loadEC2Instances()
 
                 // Successfully synced all feeds
                 val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
@@ -604,6 +609,19 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadEC2Instances() {
+        viewModelScope.launch {
+            try {
+                if (_useBackend.value) {
+                    val instances = com.example.api.CloudOpsBackendClient.service.getEC2Instances(_selectedRegion.value)
+                    _ec2Instances.value = instances
+                }
+            } catch (e: Exception) {
+                Log.e("CloudViewModel", "EC2 Instances Failed", e)
+            }
+        }
+    }
+
     fun loadDashboard(region: String? = null) {
         viewModelScope.launch {
             _dashboardState.value = DashboardUiState(isLoading = true)
@@ -652,6 +670,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 ec2ExtendedLoaded = false
                 loadEC2Summary(forceRefresh = true)
                 loadEC2Extended(forceRefresh = true)
+                loadEC2Instances()
             }
         }
     }

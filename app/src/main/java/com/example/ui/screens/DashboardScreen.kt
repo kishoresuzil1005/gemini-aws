@@ -953,6 +953,7 @@ fun Ec2ResourcesView(
     LaunchedEffect(selectedRegion) {
         viewModel.loadEC2Summary()
         viewModel.loadEC2Extended()
+        viewModel.loadEC2Instances()
     }
 
     var viewMode by remember { mutableStateOf("grid") } // "grid" or "aws_console"
@@ -1045,51 +1046,83 @@ fun Ec2ResourcesView(
         updatedMap
     }
 
-    val instancesList = remember(selectedRegion, regionCode) {
-        val totalCount = counts["instances"] ?: 2
-        val runningCount = counts["instances_running"] ?: 1
-        val list = mutableListOf<AwsEc2Instance>()
-        for (i in 0 until totalCount) {
-            val isRunning = i < runningCount
-            val name = if (i == 0) "Aws_Mobile_App" else if (i == 1) "Aws_Prod_Database" else "Aws_Cache_Cluster"
-            val id = if (i == 0) "i-06d74665d9e16da17" else if (i == 1) "i-0f8a927a4d531a7bc" else "i-0a2b8cd9e8f471a2a"
-            val state = if (isRunning) "Running" else "Stopped"
-            val type = if (i == 0) "t2.medium" else if (i == 1) "t3.large" else "t3.medium"
-            val status = if (isRunning) "Passed" else "-"
-            val azSuffix = if (i == 0) "d" else if (i == 1) "a" else "b"
-            val publicIp = if (i == 0) "54.205.123.215" else if (i == 1) "34.210.44.12" else "52.90.11.168"
-            val privateIp = if (i == 0) "10.0.1.53" else if (i == 1) "10.0.2.14" else "10.0.3.9"
-            val elasticIp = if (i == 0) "54.205.123.215" else "-"
-            val monitoring = if (i == 1) "enabled" else "disabled"
-            val sg = if (i == 0) "launch-wizard-13" else if (i == 1) "db-secure-sg" else "redis-sg"
-            val key = if (i == 0) "aws-mobile-app" else if (i == 1) "aws-prod-key" else "aws-cache-key"
-            val launch = if (i == 0) "2026/06/16 12:49 GMT+5:30" else if (i == 1) "2026/06/15 08:30 GMT+5:30" else "2026/06/16 01:15 GMT+5:30"
-            
-            list.add(
+    val backendInstances by viewModel.ec2Instances.collectAsState()
+
+    val instancesList = remember(backendInstances, selectedRegion, regionCode) {
+        if (backendInstances.isNotEmpty()) {
+            backendInstances.map { inst ->
+                val prettyName = if (inst.instanceId == "i-06d74665d9e16da17") "Aws_Mobile_App"
+                                else if (inst.instanceId == "i-0f8a927a4d531a7bc") "Aws_Prod_Database"
+                                else if (inst.instanceId == "i-0a2b8cd9e8f471a2a") "Aws_Cache_Cluster"
+                                else "Instance - " + inst.instanceId.takeLast(6)
                 AwsEc2Instance(
-                    id = id,
-                    name = name,
-                    state = state,
-                    type = type,
-                    statusCheck = status,
-                    az = "$regionCode$azSuffix",
-                    publicDns = "ec2-${publicIp.replace(".", "-")}.compute.amazonaws.com",
-                    publicIp = publicIp,
-                    privateIp = privateIp,
-                    elasticIp = elasticIp,
+                    id = inst.instanceId,
+                    name = prettyName,
+                    state = inst.state.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                    type = inst.instanceType,
+                    statusCheck = if (inst.state.equals("running", ignoreCase = true)) "Passed" else "-",
+                    az = "${inst.region}a",
+                    publicDns = if (!inst.publicIp.isNullOrBlank()) "ec2-${inst.publicIp.replace(".", "-")}.compute.amazonaws.com" else "-",
+                    publicIp = inst.publicIp ?: "-",
+                    privateIp = inst.privateIp ?: "-",
+                    elasticIp = "-",
                     ipv6 = "-",
-                    monitoring = monitoring,
-                    securityGroup = sg,
-                    keyPair = key,
-                    launchTime = launch,
+                    monitoring = "disabled",
+                    securityGroup = "default",
+                    keyPair = "None",
+                    launchTime = "Just scanned",
                     platform = "Linux/UNIX",
-                    iamRole = if (i == 1) "RDS-Service-Role" else "None",
-                    vpcId = "vpc-018274718cd992ab2",
-                    subnetId = "subnet-0a8163f92de22bc71"
+                    iamRole = "None",
+                    vpcId = "vpc-default",
+                    subnetId = "subnet-default"
                 )
-            )
+            }
+        } else {
+            val totalCount = counts["instances"] ?: 2
+            val runningCount = counts["instances_running"] ?: 1
+            val list = mutableListOf<AwsEc2Instance>()
+            for (i in 0 until totalCount) {
+                val isRunning = i < runningCount
+                val name = if (i == 0) "Aws_Mobile_App" else if (i == 1) "Aws_Prod_Database" else "Aws_Cache_Cluster"
+                val id = if (i == 0) "i-06d74665d9e16da17" else if (i == 1) "i-0f8a927a4d531a7bc" else "i-0a2b8cd9e8f471a2a"
+                val state = if (isRunning) "Running" else "Stopped"
+                val type = if (i == 0) "t2.medium" else if (i == 1) "t3.large" else "t3.medium"
+                val status = if (isRunning) "Passed" else "-"
+                val azSuffix = if (i == 0) "d" else if (i == 1) "a" else "b"
+                val publicIp = if (i == 0) "54.205.123.215" else if (i == 1) "34.210.44.12" else "52.90.11.168"
+                val privateIp = if (i == 0) "10.0.1.53" else if (i == 1) "10.0.2.14" else "10.0.3.9"
+                val elasticIp = if (i == 0) "54.205.123.215" else "-"
+                val monitoring = if (i == 1) "enabled" else "disabled"
+                val sg = if (i == 0) "launch-wizard-13" else if (i == 1) "db-secure-sg" else "redis-sg"
+                val key = if (i == 0) "aws-mobile-app" else if (i == 1) "aws-prod-key" else "aws-cache-key"
+                val launch = if (i == 0) "2026/06/16 12:49 GMT+5:30" else if (i == 1) "2026/06/15 08:30 GMT+5:30" else "2026/06/16 01:15 GMT+5:30"
+                
+                list.add(
+                    AwsEc2Instance(
+                        id = id,
+                        name = name,
+                        state = state,
+                        type = type,
+                        statusCheck = status,
+                        az = "$regionCode$azSuffix",
+                        publicDns = "ec2-${publicIp.replace(".", "-")}.compute.amazonaws.com",
+                        publicIp = publicIp,
+                        privateIp = privateIp,
+                        elasticIp = elasticIp,
+                        ipv6 = "-",
+                        monitoring = monitoring,
+                        securityGroup = sg,
+                        keyPair = key,
+                        launchTime = launch,
+                        platform = "Linux/UNIX",
+                        iamRole = if (i == 1) "RDS-Service-Role" else "None",
+                        vpcId = "vpc-018274718cd992ab2",
+                        subnetId = "subnet-0a8163f92de22bc71"
+                    )
+                )
+            }
+            list
         }
-        list
     }
 
     val instanceStatesMap = remember(instancesList) {

@@ -310,6 +310,16 @@ data class EC2RefreshResponse(
     val message: String
 )
 
+@JsonClass(generateAdapter = true)
+data class EC2Instance(
+    @Json(name = "instance_id") val instanceId: String,
+    @Json(name = "instance_type") val instanceType: String,
+    @Json(name = "state") val state: String,
+    @Json(name = "region") val region: String,
+    @Json(name = "public_ip") val publicIp: String?,
+    @Json(name = "private_ip") val privateIp: String?
+)
+
 object TokenStorage {
     var jwtToken: String? = null
     var selectedRegion: String? = "ap-south-1"
@@ -387,6 +397,11 @@ interface CloudOpsApiService {
     suspend fun refreshEC2(
         @Query("region") region: String
     ): EC2RefreshResponse
+
+    @GET("api/ec2/instances")
+    suspend fun getEC2Instances(
+        @Query("region") region: String
+    ): List<EC2Instance>
 
     @GET("api/topology")
     suspend fun getTopologySummary(): List<TopologyCategory>
