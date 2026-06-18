@@ -60,9 +60,36 @@ class RemediationExecutor:
 
         result = None
 
-        if request.action == "STOP_EC2":
+        if request.action in [
+            "STOP_EC2",
+            "STOP_INSTANCE"
+        ]:
             result = (
                 EC2Actions.stop_instance(
+                    resource.cloud_account_id,
+                    resource.resource_id
+                )
+            )
+
+        elif request.action in [
+            "START_EC2",
+            "START_INSTANCE"
+        ]:
+
+            result = (
+                EC2Actions.start_instance(
+                    resource.cloud_account_id,
+                    resource.resource_id
+                )
+            )
+
+        elif request.action in [
+            "REBOOT_EC2",
+            "REBOOT_INSTANCE"
+        ]:
+
+            result = (
+                EC2Actions.reboot_instance(
                     resource.cloud_account_id,
                     resource.resource_id
                 )

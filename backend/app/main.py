@@ -1151,6 +1151,12 @@ app.include_router(
     ec2_refresh_router
 )
 
+from app.routes.ec2_actions import router as ec2_actions_router
+
+app.include_router(
+    ec2_actions_router
+)
+
 
 # Commented out to prevent conflict with modern Ollama AI chat router:
 # from app.routes.ai import router as ai_router
