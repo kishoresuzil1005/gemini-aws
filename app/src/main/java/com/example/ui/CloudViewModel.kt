@@ -622,6 +622,44 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun startInstance(instanceId: String) {
+        viewModelScope.launch {
+            try {
+                com.example.api.CloudOpsBackendClient.service.startEC2(
+                    com.example.api.EC2ActionRequest(instanceId)
+                )
+                loadEC2Instances()
+            } catch (e: Exception) {
+                Log.e("CloudOps", "Failed to start instance", e)
+            }
+        }
+    }
+
+    fun stopInstance(instanceId: String) {
+        viewModelScope.launch {
+            try {
+                com.example.api.CloudOpsBackendClient.service.stopEC2(
+                    com.example.api.EC2ActionRequest(instanceId)
+                )
+                loadEC2Instances()
+            } catch (e: Exception) {
+                Log.e("CloudOps", "Failed to stop instance", e)
+            }
+        }
+    }
+
+    fun rebootInstance(instanceId: String) {
+        viewModelScope.launch {
+            try {
+                com.example.api.CloudOpsBackendClient.service.rebootEC2(
+                    com.example.api.EC2ActionRequest(instanceId)
+                )
+            } catch (e: Exception) {
+                Log.e("CloudOps", "Failed to reboot instance", e)
+            }
+        }
+    }
+
     fun loadDashboard(region: String? = null) {
         viewModelScope.launch {
             _dashboardState.value = DashboardUiState(isLoading = true)

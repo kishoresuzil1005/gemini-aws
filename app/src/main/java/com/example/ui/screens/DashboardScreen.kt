@@ -1508,11 +1508,8 @@ fun Ec2ResourcesView(
                                         onClick = {
                                             isStateDropdownExpanded = false
                                             selectedInstanceId?.let { id ->
-                                                coroutineScope.launch {
-                                                    instanceStatesMap[id] = "Pending"
-                                                    delay(1500)
-                                                    instanceStatesMap[id] = "Running"
-                                                }
+                                                viewModel.startInstance(id)
+                                                instanceStatesMap[id] = "Pending"
                                             }
                                         },
                                         enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Stopped"
@@ -1522,11 +1519,8 @@ fun Ec2ResourcesView(
                                         onClick = {
                                             isStateDropdownExpanded = false
                                             selectedInstanceId?.let { id ->
-                                                coroutineScope.launch {
-                                                    instanceStatesMap[id] = "Stopping"
-                                                    delay(1500)
-                                                    instanceStatesMap[id] = "Stopped"
-                                                }
+                                                viewModel.stopInstance(id)
+                                                instanceStatesMap[id] = "Stopping"
                                             }
                                         },
                                         enabled = selectedInstanceId != null && instanceStatesMap[selectedInstanceId] == "Running"

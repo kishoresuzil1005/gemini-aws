@@ -320,6 +320,16 @@ data class EC2Instance(
     @Json(name = "private_ip") val privateIp: String?
 )
 
+@JsonClass(generateAdapter = true)
+data class EC2ActionRequest(
+    @Json(name = "instance_id") val instance_id: String
+)
+
+@JsonClass(generateAdapter = true)
+data class EC2ActionResponse(
+    @Json(name = "status") val status: String
+)
+
 object TokenStorage {
     var jwtToken: String? = null
     var selectedRegion: String? = "ap-south-1"
@@ -402,6 +412,21 @@ interface CloudOpsApiService {
     suspend fun getEC2Instances(
         @Query("region") region: String
     ): List<EC2Instance>
+
+    @POST("api/ec2/start")
+    suspend fun startEC2(
+        @Body request: EC2ActionRequest
+    ): EC2ActionResponse
+
+    @POST("api/ec2/stop")
+    suspend fun stopEC2(
+        @Body request: EC2ActionRequest
+    ): EC2ActionResponse
+
+    @POST("api/ec2/reboot")
+    suspend fun rebootEC2(
+        @Body request: EC2ActionRequest
+    ): EC2ActionResponse
 
     @GET("api/topology")
     suspend fun getTopologySummary(): List<TopologyCategory>
