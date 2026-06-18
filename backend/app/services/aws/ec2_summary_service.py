@@ -1,15 +1,22 @@
 import boto3
 
+from app.core.region_validator import (
+    validate_region
+)
+
 
 class EC2SummaryService:
 
     def __init__(self, region: str):
 
-        self.region = region
+        self.region = validate_region(
+            "ec2",
+            region
+        )
 
         self.ec2 = boto3.client(
             "ec2",
-            region_name=region
+            region_name=self.region
         )
 
     def get_summary(self):
@@ -64,6 +71,8 @@ class EC2SummaryService:
         )
 
         return {
+
+            "region": self.region,
 
             "running_instances":
                 running_instances,
