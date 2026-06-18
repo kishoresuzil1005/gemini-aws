@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.database import ResourceDB, CloudAccountDB, ResourceNodeDB, ResourceEdgeDB, ResourceRelationshipDB
 from app.services.discovery.scanner import AWSDiscoveryScanner
+from app.providers.aws.regions import get_all_regions
 from app.services.graph.neo4j_service import Neo4jService
 
 
@@ -25,21 +26,43 @@ def discover_resources(
 
         try:
 
-            regions_to_scan = ["us-east-1", "ap-south-1", "us-west-2", "eu-west-1", "eu-central-1"]
+            regions_to_scan = get_all_regions()
+
+            print(
+                f"[DISCOVERY] Regions discovered: "
+                f"{len(regions_to_scan)}"
+            )
+
+            print(regions_to_scan)
+
             discovered = []
+
             seen_global_ids = set()
 
             for r_name in regions_to_scan:
-                scan_res = AWSDiscoveryScanner.scan_all(region=r_name)
+
+                scan_res = AWSDiscoveryScanner.scan_all(
+                    region=r_name
+                )
+
                 for item in scan_res:
+
                     if item.get("region") == "global":
+
                         if item.get("id") not in seen_global_ids:
-                            seen_global_ids.add(item.get("id"))
+
+                            seen_global_ids.add(
+                                item.get("id")
+                            )
+
                             discovered.append(item)
+
                     else:
+
                         discovered.append(item)
 
             if not discovered:
+
                 raise Exception(
                     "No AWS resources discovered"
                 )
