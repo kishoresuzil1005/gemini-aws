@@ -16,15 +16,21 @@ class CloudAssistant:
 
         q = question.lower()
 
+        print(f"[AI DEBUG] Question: {q}")
+
         from app.services.cost.cache import CostSummaryCache
 
         cached_cost = CostSummaryCache.get()
 
         if (
-            "current aws cost" in q
-            or "current cost" in q
-            or "aws spend" in q
+            "cost" in q
+            and (
+                "aws" in q
+                or "spend" in q
+                or "billing" in q
+            )
         ):
+            print("[AI DEBUG] AWS COST ROUTE HIT")
             if cached_cost:
                 act = float(cached_cost.get("actualCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "actualCost", 0.0))
                 fore = float(cached_cost.get("forecastCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "forecastCost", 0.0))
@@ -35,10 +41,15 @@ class CloudAssistant:
                 }
 
         if (
-            "which service costs the most" in q
-            or "highest cost service" in q
-            or "most expensive service" in q
+            "service" in q
+            and (
+                "most" in q
+                or "highest" in q
+                or "expensive" in q
+                or "cost" in q
+            )
         ):
+            print("[AI DEBUG] HIGHEST COST SERVICE ROUTE HIT")
             if cached_cost:
                 services = cached_cost.get("byService", []) if hasattr(cached_cost, "get") else getattr(cached_cost, "byService", [])
                 if services:
