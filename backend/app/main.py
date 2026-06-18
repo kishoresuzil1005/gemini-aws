@@ -910,10 +910,20 @@ from app.services.cost.forecast import CostForecastEngine
     "/api/cost/summary",
     response_model=CloudCostSummarySchema
 )
-def get_cost_summary(db=None):
+def get_cost_summary(
+    db: Session = Depends(get_db)
+):
 
     from app.services.cost.cache import (
         CostSummaryCache
+    )
+
+    from app.providers.aws.cost_explorer import (
+        CostExplorerAdapter
+    )
+
+    from app.database import (
+        CloudAccountDB
     )
 
     cached = CostSummaryCache.get()
@@ -927,17 +937,73 @@ def get_cost_summary(db=None):
         return cached
 
     print(
-        "[COST CACHE] No cached data found"
+        "[COST CACHE] Cache MISS"
     )
 
-    return CloudCostSummarySchema(
-        month="N/A",
-        actualCost=0.0,
-        forecastCost=0.0,
-        currency="USD",
-        byService=[],
-        dailyTrend=[]
+    aws_account = (
+        db.query(CloudAccountDB)
+        .filter(
+            CloudAccountDB.provider == "AWS"
+        )
+        .first()
     )
+
+    if not aws_account:
+
+        return CloudCostSummarySchema(
+            month="N/A",
+            actualCost=0.0,
+            forecastCost=0.0,
+            currency="USD",
+            byService=[],
+            dailyTrend=[]
+        )
+
+    adapter = CostExplorerAdapter(
+        aws_account.id
+    )
+
+    actual_cost = (
+        adapter.get_current_month_cost()
+    )
+
+    forecast_cost = (
+        adapter.get_forecast_cost()
+    )
+
+    service_costs = (
+        adapter.get_cost_by_service()
+    )
+
+    daily_trend = (
+        adapter.get_daily_cost_trend()
+    )
+
+    import datetime
+
+    response = CloudCostSummarySchema(
+        month=datetime.date.today().strftime(
+            "%B %Y"
+        ),
+        actualCost=actual_cost,
+        forecastCost=forecast_cost,
+        currency="USD",
+        byService=[
+            {
+                "service": k,
+                "amount": v
+            }
+            for k, v
+            in service_costs.items()
+        ],
+        dailyTrend=daily_trend
+    )
+
+    CostSummaryCache.set(
+        response
+    )
+
+    return response
 
 
 @app.post("/api/cost/refresh", response_model=CloudCostSummarySchema)
