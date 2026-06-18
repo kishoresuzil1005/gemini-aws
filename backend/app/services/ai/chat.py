@@ -22,6 +22,48 @@ class CloudAssistant:
 
         cached_cost = CostSummaryCache.get()
 
+        if not cached_cost:
+            from app.database import CloudAccountDB
+            from app.providers.aws.cost_explorer import CostExplorerAdapter
+            from app.main import CloudCostSummarySchema
+            import datetime
+
+            aws_account = (
+                db.query(CloudAccountDB)
+                .filter(CloudAccountDB.provider == "AWS")
+                .first()
+            )
+
+            if aws_account:
+                try:
+                    adapter = CostExplorerAdapter(aws_account.id)
+                    actual_cost = adapter.get_current_month_cost()
+                    forecast_cost = adapter.get_forecast_cost()
+                    service_costs = adapter.get_cost_by_service()
+                    daily_trend = adapter.get_daily_cost_trend()
+
+                    cached_cost = CloudCostSummarySchema(
+                        month=datetime.date.today().strftime("%B %Y"),
+                        actualCost=actual_cost,
+                        forecastCost=forecast_cost,
+                        currency="USD",
+                        byService=[
+                            {
+                                "service": k,
+                                "amount": v
+                            }
+                            for k, v
+                            in service_costs.items()
+                        ],
+                        dailyTrend=daily_trend
+                    )
+                    CostSummaryCache.set(cached_cost)
+                except Exception as e:
+                    print(f"[AI DEBUG] Failed to fetch cost data inline: {e}")
+
+        print(f"[AI DEBUG] Cache object = {cached_cost}")
+        print(f"[AI DEBUG] Cache type = {type(cached_cost)}")
+
         if (
             "cost" in q
             and (
@@ -31,9 +73,11 @@ class CloudAssistant:
             )
         ):
             print("[AI DEBUG] AWS COST ROUTE HIT")
+            print("[AI DEBUG] Entered AWS COST block")
             if cached_cost:
                 act = float(cached_cost.get("actualCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "actualCost", 0.0))
                 fore = float(cached_cost.get("forecastCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "forecastCost", 0.0))
+                print("[AI DEBUG] Returning AWS COST answer")
                 return {
                     "answer":
                         f"Current AWS spend is ${act:.2f}. "
@@ -50,6 +94,7 @@ class CloudAssistant:
             )
         ):
             print("[AI DEBUG] HIGHEST COST SERVICE ROUTE HIT")
+            print("[AI DEBUG] Entered HIGHEST COST block")
             if cached_cost:
                 services = cached_cost.get("byService", []) if hasattr(cached_cost, "get") else getattr(cached_cost, "byService", [])
                 if services:
@@ -71,6 +116,7 @@ class CloudAssistant:
                     act = float(cached_cost.get("actualCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "actualCost", 0.0))
                     fore = float(cached_cost.get("forecastCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "forecastCost", 0.0))
 
+                    print("[AI DEBUG] Returning HIGHEST COST answer")
                     return {
                         "answer":
                             f"{get_item_service(highest)} is currently the highest cost service "
