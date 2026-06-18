@@ -18,52 +18,55 @@ class CloudAssistant:
 
         from app.services.cost.cache import CostSummaryCache
 
+        cached_cost = CostSummaryCache.get()
+
         if (
             "current aws cost" in q
-            or "aws cost" in q
-            or "monthly cost" in q
             or "current cost" in q
+            or "aws spend" in q
         ):
-
-            cached = CostSummaryCache.get()
-
-            if cached:
-                if hasattr(cached, "get"):
-                    services = cached.get("byService", [])
-                    actual_cost = float(cached.get("actualCost", 0.0))
-                    forecast_cost = float(cached.get("forecastCost", 0.0))
-                else:
-                    services = getattr(cached, "byService", [])
-                    actual_cost = float(getattr(cached, "actualCost", 0.0))
-                    forecast_cost = float(getattr(cached, "forecastCost", 0.0))
-
-                top_service = "Unknown"
-                top_amount = 0.0
-
-                for svc in services:
-                    if hasattr(svc, "get"):
-                        svc_name = svc.get("service", "Unknown")
-                        svc_amount = float(svc.get("amount", svc.get("cost", 0.0)))
-                    else:
-                        svc_name = getattr(svc, "service", "Unknown")
-                        svc_amount = float(getattr(svc, "amount", getattr(svc, "cost", 0.0)))
-
-                    if svc_amount > top_amount:
-                        top_service = svc_name
-                        top_amount = svc_amount
-
+            if cached_cost:
+                act = float(cached_cost.get("actualCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "actualCost", 0.0))
+                fore = float(cached_cost.get("forecastCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "forecastCost", 0.0))
                 return {
                     "answer":
-                    (
-                        f"Current AWS spend is "
-                        f"${actual_cost:,.2f}. "
-                        f"Forecast month-end spend is "
-                        f"${forecast_cost:,.2f}. "
-                        f"Highest service spend is "
-                        f"{top_service} "
-                        f"(${top_amount:,.2f})."
-                    )
+                        f"Current AWS spend is ${act:.2f}. "
+                        f"Forecast month-end spend is ${fore:.2f}."
                 }
+
+        if (
+            "which service costs the most" in q
+            or "highest cost service" in q
+            or "most expensive service" in q
+        ):
+            if cached_cost:
+                services = cached_cost.get("byService", []) if hasattr(cached_cost, "get") else getattr(cached_cost, "byService", [])
+                if services:
+                    def get_item_amount(x):
+                        if hasattr(x, "get"):
+                            return float(x.get("amount", x.get("cost", 0.0)))
+                        return float(getattr(x, "amount", getattr(x, "cost", 0.0)))
+
+                    def get_item_service(x):
+                        if hasattr(x, "get"):
+                            return x.get("service", "Unknown")
+                        return getattr(x, "service", "Unknown")
+
+                    highest = max(
+                        services,
+                        key=get_item_amount
+                    )
+
+                    act = float(cached_cost.get("actualCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "actualCost", 0.0))
+                    fore = float(cached_cost.get("forecastCost", 0.0)) if hasattr(cached_cost, "get") else float(getattr(cached_cost, "forecastCost", 0.0))
+
+                    return {
+                        "answer":
+                            f"{get_item_service(highest)} is currently the highest cost service "
+                            f"at ${get_item_amount(highest):.2f}. "
+                            f"Current AWS spend is ${act:.2f}. "
+                            f"Forecast spend is ${fore:.2f}."
+                    }
 
         # 1. Fetch live Neo4j topology model
         from app.services.graph.neo4j_service import Neo4jService
