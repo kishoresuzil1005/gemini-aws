@@ -10,7 +10,7 @@ from app.services.optimization.recommendations import RecommendationEngine
 from app.services.optimization.savings import SavingsCalculator
 
 from app.services.budget.budget_engine import BudgetEngine
-from app.providers.aws.cost_explorer import CostExplorerAdapter
+from app.services.cost.cache import CostSummaryCache
 
 from app.database import (
     BudgetDB,
@@ -53,12 +53,16 @@ def idle_resources():
 @router.get("/forecast")
 def monthly_forecast():
 
-    adapter = CostExplorerAdapter(1)
+    cached = CostSummaryCache.get()
 
-    current = (
-        adapter
-        .get_current_month_cost()
-    )
+    current = 0.0
+
+    if cached:
+        current = getattr(
+            cached,
+            "actualCost",
+            0.0
+        )
 
     return (
         ForecastEngine
@@ -111,12 +115,16 @@ def budget_status():
         .first()
     )
 
-    adapter = CostExplorerAdapter(1)
+    cached = CostSummaryCache.get()
 
-    current = (
-        adapter
-        .get_current_month_cost()
-    )
+    current = 0.0
+
+    if cached:
+        current = getattr(
+            cached,
+            "actualCost",
+            0.0
+        )
 
     if not budget:
 
