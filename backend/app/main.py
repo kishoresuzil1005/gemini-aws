@@ -903,7 +903,6 @@ def get_inventory(db: Session = Depends(get_db)):
 
 
 # --- Cost Explorer Endpoints ---
-from app.providers.aws.cost_explorer import CostExplorerAdapter
 from app.services.cost.aggregator import CostAggregator
 from app.services.cost.forecast import CostForecastEngine
 
