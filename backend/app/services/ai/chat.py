@@ -36,11 +36,25 @@ class CloudAssistant:
             try:
                 # Compile comprehensive context for LLM
                 from app.services.ai.prompt_builder import PromptBuilder
-                from app.providers.aws.cost_explorer import CostExplorerAdapter
+                from app.services.cost.cache import CostSummaryCache
                 
-                adapter = CostExplorerAdapter(1)
-                actual_cost = adapter.get_current_month_cost()
-                forecast = adapter.get_forecast_cost()
+                cached = CostSummaryCache.get()
+
+                actual_cost = 0.0
+                forecast = 0.0
+
+                if cached:
+                    actual_cost = getattr(
+                        cached,
+                        "actualCost",
+                        0.0
+                    )
+
+                    forecast = getattr(
+                        cached,
+                        "forecastCost",
+                        0.0
+                    )
 
                 # Generate brief textual graph representation
                 graph_text_lines = []
