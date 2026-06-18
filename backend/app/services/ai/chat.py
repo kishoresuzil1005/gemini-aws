@@ -15,7 +15,56 @@ class CloudAssistant:
         data = AIInsightEngine.generate(db)
 
         q = question.lower()
-        
+
+        from app.services.cost.cache import CostSummaryCache
+
+        if (
+            "current aws cost" in q
+            or "aws cost" in q
+            or "monthly cost" in q
+            or "current cost" in q
+        ):
+
+            cached = CostSummaryCache.get()
+
+            if cached:
+                if hasattr(cached, "get"):
+                    services = cached.get("byService", [])
+                    actual_cost = float(cached.get("actualCost", 0.0))
+                    forecast_cost = float(cached.get("forecastCost", 0.0))
+                else:
+                    services = getattr(cached, "byService", [])
+                    actual_cost = float(getattr(cached, "actualCost", 0.0))
+                    forecast_cost = float(getattr(cached, "forecastCost", 0.0))
+
+                top_service = "Unknown"
+                top_amount = 0.0
+
+                for svc in services:
+                    if hasattr(svc, "get"):
+                        svc_name = svc.get("service", "Unknown")
+                        svc_amount = float(svc.get("amount", svc.get("cost", 0.0)))
+                    else:
+                        svc_name = getattr(svc, "service", "Unknown")
+                        svc_amount = float(getattr(svc, "amount", getattr(svc, "cost", 0.0)))
+
+                    if svc_amount > top_amount:
+                        top_service = svc_name
+                        top_amount = svc_amount
+
+                return {
+                    "answer":
+                    (
+                        f"Current AWS spend is "
+                        f"${actual_cost:,.2f}. "
+                        f"Forecast month-end spend is "
+                        f"${forecast_cost:,.2f}. "
+                        f"Highest service spend is "
+                        f"{top_service} "
+                        f"(${top_amount:,.2f})."
+                    )
+                }
+
         # 1. Fetch live Neo4j topology model
         from app.services.graph.neo4j_service import Neo4jService
         graph_data = Neo4jService.get_full_graph()
@@ -44,17 +93,12 @@ class CloudAssistant:
                 forecast = 0.0
 
                 if cached:
-                    actual_cost = getattr(
-                        cached,
-                        "actualCost",
-                        0.0
-                    )
-
-                    forecast = getattr(
-                        cached,
-                        "forecastCost",
-                        0.0
-                    )
+                    if isinstance(cached, dict):
+                        actual_cost = float(cached.get("actualCost", 0.0))
+                        forecast = float(cached.get("forecastCost", 0.0))
+                    else:
+                        actual_cost = float(getattr(cached, "actualCost", 0.0))
+                        forecast = float(getattr(cached, "forecastCost", 0.0))
 
                 # Generate brief textual graph representation
                 graph_text_lines = []
