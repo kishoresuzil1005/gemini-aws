@@ -907,76 +907,38 @@ from app.providers.aws.cost_explorer import CostExplorerAdapter
 from app.services.cost.aggregator import CostAggregator
 from app.services.cost.forecast import CostForecastEngine
 
-@app.get("/api/cost/summary", response_model=CloudCostSummarySchema)
-def get_cost_summary(db: Session = Depends(get_db)):
-    from app.services.cost.cache import CostSummaryCache
+@app.get(
+    "/api/cost/summary",
+    response_model=CloudCostSummarySchema
+)
+def get_cost_summary(db=None):
+
+    from app.services.cost.cache import (
+        CostSummaryCache
+    )
+
     cached = CostSummaryCache.get()
+
     if cached:
-        print("[COST CACHE] Returning cached data")
+
+        print(
+            "[COST CACHE] Returning cached data"
+        )
+
         return cached
 
-    print("[COST CACHE] Calling AWS Cost Explorer")
-    import datetime
-    today = datetime.date.today()
-    month_str = today.strftime("%Y-%m")
-    
-    aws_accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == "AWS").all()
-    total_actual = 0.0
-    total_forecast = 0.0
-    service_breakdown = {}
-    aggregated_trend = {}
-
-    if aws_accounts:
-        for account in aws_accounts:
-            try:
-                adapter = CostExplorerAdapter(account.id)
-                total_actual += adapter.get_current_month_cost()
-                
-                forecast_value = 0.0
-                try:
-                    forecast_value = adapter.get_forecast_cost()
-                    if abs(forecast_value) < 0.01:
-                        forecast_value = 0.0
-                except Exception:
-                    forecast_value = 0.0
-                
-                total_forecast += forecast_value
-                
-                by_service = adapter.get_cost_by_service()
-                for service, cost_val in by_service.items():
-                    service_breakdown[service] = service_breakdown.get(service, 0.0) + cost_val
-
-                daily_trend = adapter.get_daily_cost_trend(30)
-                for entry in daily_trend:
-                    date_key = entry["date"]
-                    aggregated_trend[date_key] = aggregated_trend.get(date_key, 0.0) + entry["amount"]
-            except Exception as e:
-                print(f"Cost summary error for account {account.id}: {e}")
-    else:
-        total_actual = 0.0
-        total_forecast = 0.0
-    
-    by_service_list = [
-        DirectCostServiceSchema(service=srv, amount=round(amt, 2))
-        for srv, amt in service_breakdown.items()
-    ]
-    
-    sorted_trend = sorted(aggregated_trend.items())
-    daily_trend_list = [
-        DirectCostDailySchema(date=dt, amount=round(amt, 2))
-        for dt, amt in sorted_trend
-    ]
-    
-    result = CloudCostSummarySchema(
-        month=month_str,
-        actualCost=round(total_actual, 2),
-        forecastCost=round(total_forecast, 2),
-        currency="USD",
-        byService=by_service_list,
-        dailyTrend=daily_trend_list
+    print(
+        "[COST CACHE] No cached data found"
     )
-    CostSummaryCache.set(result)
-    return result
+
+    return CloudCostSummarySchema(
+        month="N/A",
+        actualCost=0.0,
+        forecastCost=0.0,
+        currency="USD",
+        byService=[],
+        dailyTrend=[]
+    )
 
 
 @app.post("/api/cost/refresh", response_model=CloudCostSummarySchema)
