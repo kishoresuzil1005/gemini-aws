@@ -36,13 +36,42 @@ class BillingService:
         cached = CostSummaryCache.get()
 
         if not cached:
-            return []
+            return {}
 
-        return getattr(
+        services = getattr(
             cached,
             "byService",
             []
         )
+
+        if isinstance(services, dict):
+            return services
+
+        result = {}
+
+        for item in services:
+
+            if isinstance(item, dict):
+
+                service_name = item.get(
+                    "service",
+                    "Unknown"
+                )
+
+                amount = float(
+                    item.get(
+                        "amount",
+                        item.get("cost", 0.0)
+                    )
+                )
+
+                result[service_name] = amount
+            else:
+                service_name = getattr(item, "service", "Unknown")
+                amount = float(getattr(item, "amount", getattr(item, "cost", 0.0)))
+                result[service_name] = amount
+
+        return result
 
     def get_forecast(self):
 
