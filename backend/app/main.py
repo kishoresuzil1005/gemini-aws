@@ -1225,6 +1225,15 @@ app.include_router(
 )
 
 
+from app.routes.regions_dashboard import (
+    router as regions_dashboard_router
+)
+
+app.include_router(
+    regions_dashboard_router
+)
+
+
 from app.routes.dashboard import (
     router as dashboard_router
 )
