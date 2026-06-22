@@ -77,6 +77,22 @@ class IntentRouter:
             return Intent.RDS
 
 
+        # PUBLIC EXPOSURE
+
+        if any(
+            x in msg
+            for x in [
+                "public instance",
+                "public ip",
+                "internet facing",
+                "publicly exposed",
+                "exposed workload",
+                "internet accessible"
+            ]
+        ):
+            return Intent.PUBLIC_EXPOSURE
+
+
         # EC2
 
         if (

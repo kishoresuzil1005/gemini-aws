@@ -14,6 +14,7 @@ from app.services.ai.vpc_service import VPCService
 from app.services.ai.subnet_service import SubnetService
 from app.services.aws.security_group_service import SecurityGroupService
 from app.services.aws.security_audit_service import SecurityAuditService
+from app.services.exposure_service import ExposureService
 
 router = APIRouter()
 
@@ -56,6 +57,13 @@ async def chat(
         res = SecurityGroupService.handle(msg)
     elif intent == Intent.SECURITY_AUDIT:
         res = SecurityAuditService.handle(msg)
+    elif intent == Intent.PUBLIC_EXPOSURE:
+        instances = ExposureService.get_public_instances()
+        res = {
+            "success": True,
+            "total": len(instances),
+            "instances": instances
+        }
 
     if res is not None:
         return res

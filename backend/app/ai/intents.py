@@ -16,6 +16,8 @@ class Intent(str, Enum):
 
     SECURITY_AUDIT = "security_audit"
 
+    PUBLIC_EXPOSURE = "public_exposure"
+
     COST = "cost"
 
     MONITORING = "monitoring"
