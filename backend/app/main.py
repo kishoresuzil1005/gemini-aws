@@ -1122,9 +1122,14 @@ def get_billing_forecast(db: Session = Depends(get_db)):
 
 
 from app.routes.optimization import router as optimization_router
+from app.api.topology import router as topology_router
 
 app.include_router(
     optimization_router
+)
+
+app.include_router(
+    topology_router
 )
 
 from app.routes.ec2_summary import (
