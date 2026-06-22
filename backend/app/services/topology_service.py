@@ -7,91 +7,76 @@ class TopologyService:
         self.architecture_service = ArchitectureService()
 
     def _get_graph(self):
+        try:
+            graph = self.architecture_service.build_graph()
 
-        graph = self.architecture_service.build_graph()
+            if not graph:
+                return {"nodes": [], "edges": []}
 
-        if not graph:
+            return {
+                "nodes": graph.get("nodes", []),
+                "edges": graph.get("edges", [])
+            }
+
+        except Exception as e:
+            print(f"[TOPOLOGY ERROR] {e}")
             return {
                 "nodes": [],
                 "edges": []
             }
 
-        if isinstance(graph, list):
-            return {
-                "nodes": graph,
-                "edges": []
-            }
-
-        return graph
-
     def get_graph(self):
-
         graph = self._get_graph()
 
         return {
             "success": True,
-            "node_count": len(graph.get("nodes", [])),
-            "edge_count": len(graph.get("edges", [])),
-            "nodes": graph.get("nodes", []),
-            "edges": graph.get("edges", [])
+            "node_count": len(graph["nodes"]),
+            "edge_count": len(graph["edges"]),
+            "nodes": graph["nodes"],
+            "edges": graph["edges"]
         }
 
     def get_nodes(self):
-
         graph = self._get_graph()
-
-        return {
-            "success": True,
-            "count": len(graph.get("nodes", [])),
-            "nodes": graph.get("nodes", [])
-        }
+        return graph["nodes"]
 
     def get_edges(self):
-
         graph = self._get_graph()
+        return graph["edges"]
+
+    def get_resource(self, resource_id):
+        graph = self._get_graph()
+
+        node = next(
+            (n for n in graph["nodes"] if n["id"] == resource_id),
+            None
+        )
+
+        if not node:
+            return {
+                "success": False,
+                "message": "Resource not found"
+            }
+
+        dependencies = [
+            e for e in graph["edges"]
+            if e["source"] == resource_id
+        ]
 
         return {
             "success": True,
-            "count": len(graph.get("edges", [])),
-            "edges": graph.get("edges", [])
-        }
-
-    def get_resource(self, resource_id):
-
-        graph = self._get_graph()
-
-        for node in graph.get("nodes", []):
-
-            if node.get("id") == resource_id:
-
-                dependencies = []
-
-                for edge in graph.get("edges", []):
-
-                    if edge.get("source") == resource_id:
-                        dependencies.append(edge.get("target"))
-
-                return {
-                    "success": True,
-                    "resource": node,
-                    "dependencies": dependencies
-                }
-
-        return {
-            "success": False,
-            "message": "Resource not found"
+            "resource": node,
+            "dependencies": dependencies
         }
 
     def blast_radius(self, resource_id):
-
         graph = self._get_graph()
 
-        affected = []
-
-        for edge in graph.get("edges", []):
-
-            if edge.get("target") == resource_id:
-                affected.append(edge.get("source"))
+        affected = [
+            e["source"]
+            for e in graph["edges"]
+            if e["target"] == resource_id
+        ]
 
         return {
             "success": True,
