@@ -15,6 +15,7 @@ from app.services.ai.subnet_service import SubnetService
 from app.services.aws.security_group_service import SecurityGroupService
 from app.services.aws.security_audit_service import SecurityAuditService
 from app.services.exposure_service import ExposureService
+from app.services.ai.ec2_vpc_service import EC2VPCService
 
 router = APIRouter()
 
@@ -39,6 +40,39 @@ async def chat(
 
     message = request.message
     msg = message.lower()
+
+    if (
+        "which vpc contains instance" in msg
+        or "show vpc for" in msg
+    ):
+        import re
+
+        match = re.search(
+            r"(i-[a-z0-9]+)",
+            msg
+        )
+
+        if not match:
+            return {
+                "success": False,
+                "message": "Instance ID not found"
+            }
+
+        instance_id = match.group(1)
+
+        service = EC2VPCService()
+        result = service.get_instance_vpc(instance_id)
+
+        if not result:
+            return {
+                "success": False,
+                "message": "Instance not found"
+            }
+
+        return {
+            "success": True,
+            "relationship": result
+        }
 
     intent = IntentRouter.classify(msg)
 
