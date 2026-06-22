@@ -50,6 +50,7 @@ async def chat(
     """
 
     message = request.message.lower()
+    msg = message
 
     if "ec2" in message and (
         "how many" in message
@@ -148,6 +149,67 @@ async def chat(
         return {
             "success": True,
             "instances": instances
+        }
+
+    # ----------------------------------
+    # SECURITY AUDIT FINDINGS
+    # ----------------------------------
+
+    if any(
+        keyword in msg
+        for keyword in [
+            "risky security group",
+            "dangerous security group",
+            "internet exposed",
+            "security groups expose",
+            "expose ssh",
+            "expose mysql",
+            "expose postgresql",
+            "open ssh",
+            "open mysql",
+            "open postgresql",
+            "public security groups",
+            "security findings",
+            "0.0.0.0/0"
+        ]
+    ):
+
+        findings = (
+            SecurityAuditService
+            .find_risky_security_groups()
+        )
+
+        if "ssh" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "SSH"
+            ]
+
+        elif "mysql" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "MySQL"
+            ]
+
+        elif (
+            "postgres" in msg
+            or "postgresql" in msg
+        ):
+            findings = [
+                f for f in findings
+                if f["risk"] == "PostgreSQL"
+            ]
+
+        elif "grafana" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "Grafana"
+            ]
+
+        return {
+            "success": True,
+            "total_findings": len(findings),
+            "findings": findings
         }
 
     if (
@@ -585,67 +647,6 @@ async def chat(
                     "success": True,
                     "instance": result
                 }
-
-    # ----------------------------------
-    # SECURITY AUDIT FINDINGS
-    # ----------------------------------
-
-    if any(
-        keyword in msg
-        for keyword in [
-            "risky security group",
-            "dangerous security group",
-            "internet exposed",
-            "security groups expose",
-            "expose ssh",
-            "expose mysql",
-            "expose postgresql",
-            "open ssh",
-            "open mysql",
-            "open postgresql",
-            "public security groups",
-            "security findings",
-            "0.0.0.0/0"
-        ]
-    ):
-
-        findings = (
-            SecurityAuditService
-            .find_risky_security_groups()
-        )
-
-        if "ssh" in msg:
-            findings = [
-                f for f in findings
-                if f["risk"] == "SSH"
-            ]
-
-        elif "mysql" in msg:
-            findings = [
-                f for f in findings
-                if f["risk"] == "MySQL"
-            ]
-
-        elif (
-            "postgres" in msg
-            or "postgresql" in msg
-        ):
-            findings = [
-                f for f in findings
-                if f["risk"] == "PostgreSQL"
-            ]
-
-        elif "grafana" in msg:
-            findings = [
-                f for f in findings
-                if f["risk"] == "Grafana"
-            ]
-
-        return {
-            "success": True,
-            "total_findings": len(findings),
-            "findings": findings
-        }
 
     try:
 
