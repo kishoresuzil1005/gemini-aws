@@ -9,6 +9,33 @@ class IntentRouter:
         msg = message.lower()
 
 
+        # PUBLIC EXPOSURE
+
+        if any(
+            x in msg
+            for x in [
+                "public instance",
+                "public instances",
+                "public ip",
+                "internet facing",
+                "publicly exposed instance",
+                "publicly exposed instances",
+                "internet facing server",
+                "internet facing servers",
+                "exposed workloads",
+                "public workloads"
+            ]
+        ) or (
+            "instance" in msg
+            and (
+                "public" in msg
+                or "internet facing" in msg
+                or "exposed" in msg
+            )
+        ):
+            return Intent.PUBLIC_EXPOSURE
+
+
         # SECURITY AUDIT
 
         if any(
@@ -75,22 +102,6 @@ class IntentRouter:
             or "database" in msg
         ):
             return Intent.RDS
-
-
-        # PUBLIC EXPOSURE
-
-        if any(
-            x in msg
-            for x in [
-                "public instance",
-                "public ip",
-                "internet facing",
-                "publicly exposed",
-                "exposed workload",
-                "internet accessible"
-            ]
-        ):
-            return Intent.PUBLIC_EXPOSURE
 
 
         # EC2
