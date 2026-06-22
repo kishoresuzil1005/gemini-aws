@@ -3,6 +3,7 @@ import boto3
 from app.core.region_validator import (
     validate_region
 )
+from app.core.aws_logger import log_aws_call
 
 
 class EC2InstancesService:
@@ -20,6 +21,8 @@ class EC2InstancesService:
         )
 
     def get_instances(self):
+
+        log_aws_call("ec2", "describe_instances", self.region, "SUCCESS", "Fetch all regional instances")
 
         response = self.ec2.describe_instances()
 

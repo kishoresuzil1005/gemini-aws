@@ -1234,6 +1234,13 @@ app.include_router(
 )
 
 
+from app.routes.aws_logs import router as aws_logs_router
+
+app.include_router(
+    aws_logs_router
+)
+
+
 from app.routes.dashboard import (
     router as dashboard_router
 )

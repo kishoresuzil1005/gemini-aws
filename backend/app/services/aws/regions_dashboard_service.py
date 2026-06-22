@@ -28,10 +28,13 @@ REGION_NAMES = {
 }
 
 
+from app.core.aws_logger import log_aws_call
+
 class RegionsDashboardService:
 
     @staticmethod
     def get_regions():
+        log_aws_call("ec2", "describe_regions", "us-east-1", "SUCCESS", "Fetch all available AWS regions")
 
         ec2 = boto3.client(
             "ec2",
@@ -45,6 +48,7 @@ class RegionsDashboardService:
         for region in regions["Regions"]:
 
             region_code = region["RegionName"]
+            log_aws_call("ec2", "describe_instances", region_code, "SUCCESS", f"Describe instances in regional cluster")
 
             regional_ec2 = boto3.client(
                 "ec2",

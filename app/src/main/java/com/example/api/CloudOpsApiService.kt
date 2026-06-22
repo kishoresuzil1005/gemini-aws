@@ -487,6 +487,9 @@ interface CloudOpsApiService {
 
     @POST("api/ai/chat")
     suspend fun getAICopilotResponse(@Body payload: AIChatPayload): AIChatResponse
+
+    @GET("api/aws/logs")
+    suspend fun getAwsLogs(): List<String>
 }
 
 object CloudOpsBackendClient {

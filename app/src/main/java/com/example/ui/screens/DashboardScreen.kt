@@ -957,6 +957,7 @@ fun Ec2ResourcesView(
     }
 
     var viewMode by remember { mutableStateOf("grid") } // "grid" or "aws_console"
+    var activeConsoleTab by remember { mutableStateOf("Instances") } // e.g. "Instances", "Instance Types"
     var selectedInstanceId by remember { mutableStateOf<String?>(null) }
     var selectedTabInDetails by remember { mutableStateOf("Details") }
     val scrollState = rememberScrollState()
@@ -1308,7 +1309,7 @@ fun Ec2ResourcesView(
                     modifier = Modifier.size(12.dp)
                 )
                 Text(
-                    text = "Instances",
+                    text = activeConsoleTab,
                     fontSize = 12.sp,
                     color = awsTextPrimary,
                     fontWeight = FontWeight.Bold
@@ -1360,32 +1361,28 @@ fun Ec2ResourcesView(
                                 fontSize = 11.sp,
                                 color = awsTextSecondary
                             )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(awsRowSelectedBg)
-                                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "Instances",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = awsBlueText
-                                )
-                            }
-                            listOf(
-                                "Instance Types", "Launch Templates", "Spot Requests",
-                                "Savings Plans", "Reserved Instances", "Dedicated Hosts",
-                                "Capacity Reservations", "Capacity Manager"
-                            ).forEach { item ->
-                                Text(
-                                    text = item,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                                    fontSize = 11.sp,
-                                    color = awsTextSecondary
-                                )
+                            val drawerItems = listOf(
+                                "Instances" to listOf("Instances", "Instance Types", "Launch Templates", "Spot Requests", "Savings Plans", "Reserved Instances", "Dedicated Hosts", "Capacity Reservations", "Capacity Manager")
+                            )
+                            drawerItems.forEach { (category, items) ->
+                                items.forEach { item ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(if (activeConsoleTab == item) awsRowSelectedBg else Color.Transparent)
+                                            .clickable {
+                                                activeConsoleTab = item
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = item,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (activeConsoleTab == item) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (activeConsoleTab == item) awsBlueText else awsTextSecondary
+                                        )
+                                    }
+                                }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -1435,6 +1432,7 @@ fun Ec2ResourcesView(
                             .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        if (activeConsoleTab == "Instances") {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1984,6 +1982,224 @@ fun Ec2ResourcesView(
                                 }
                             }
                         }
+                        } else if (activeConsoleTab == "Instance Types") {
+                            Text(
+                                text = "Instance Types",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = awsTextPrimary
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            
+                            // Mock Instance Types table
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                    .background(awsRowBg)
+                            ) {
+                                Column(
+                                    modifier = Modifier.horizontalScroll(scrollState)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .background(awsTableHeaderBg)
+                                            .drawBehind {
+                                                drawLine(
+                                                    color = awsBorderColor,
+                                                    start = Offset(0f, size.height),
+                                                    end = Offset(size.width, size.height),
+                                                    strokeWidth = 1.dp.toPx()
+                                                )
+                                            }
+                                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(modifier = Modifier.width(36.dp))
+                                        TableHeaderCell("Instance Type", 150.dp)
+                                        TableHeaderCell("vCPUs", 80.dp)
+                                        TableHeaderCell("Memory (GiB)", 100.dp)
+                                        TableHeaderCell("Instance Storage (GB)", 150.dp)
+                                        TableHeaderCell("Network Performance", 150.dp)
+                                    }
+                                    
+                                    val dummyInstanceTypes = listOf(
+                                        listOf("t2.micro", "1", "1", "EBS only", "Low to Moderate"),
+                                        listOf("t3.micro", "2", "1", "EBS only", "Up to 5 Gigabit"),
+                                        listOf("m5.large", "2", "8", "EBS only", "Up to 10 Gigabit"),
+                                        listOf("c5.xlarge", "4", "8", "EBS only", "Up to 10 Gigabit")
+                                    )
+                                    
+                                    dummyInstanceTypes.forEach { typeData ->
+                                        Row(
+                                            modifier = Modifier
+                                                .background(awsRowBg)
+                                                .drawBehind {
+                                                    drawLine(
+                                                        color = awsBorderColor,
+                                                        start = Offset(0f, size.height),
+                                                        end = Offset(size.width, size.height),
+                                                        strokeWidth = 0.5.dp.toPx()
+                                                    )
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Checkbox(
+                                                    checked = false,
+                                                    onCheckedChange = {},
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = awsBlueText,
+                                                        uncheckedColor = awsTextSecondary
+                                                    )
+                                                )
+                                            }
+                                            
+                                            TableCell(typeData[0], 150.dp, awsBlueText)
+                                            TableCell(typeData[1], 80.dp, awsTextPrimary)
+                                            TableCell(typeData[2], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[3], 150.dp, awsTextPrimary)
+                                            TableCell(typeData[4], 150.dp, awsTextPrimary)
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (activeConsoleTab == "Launch Templates") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Launch Templates (1)",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = awsTextPrimary
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    IconButton(
+                                        onClick = {},
+                                        modifier = Modifier.size(32.dp).border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                    ) {
+                                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = awsBlueText, modifier = Modifier.size(16.dp))
+                                    }
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .border(1.dp, awsBorderColor, RoundedCornerShape(16.dp))
+                                            .background(if (isDarkTheme) Color(0xFF1E1E1E) else Color.White, RoundedCornerShape(16.dp))
+                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("Actions", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = awsBlueText)
+                                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = awsBlueText)
+                                        }
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .background(awsOrange, RoundedCornerShape(16.dp))
+                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                            .clickable { }
+                                    ) {
+                                        Text("Create launch template", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.White else Color.Black)
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            
+                            // Mock Launch Templates table
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                    .background(awsRowBg)
+                            ) {
+                                Column(
+                                    modifier = Modifier.horizontalScroll(scrollState)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .background(awsTableHeaderBg)
+                                            .drawBehind {
+                                                drawLine(
+                                                    color = awsBorderColor,
+                                                    start = Offset(0f, size.height),
+                                                    end = Offset(size.width, size.height),
+                                                    strokeWidth = 1.dp.toPx()
+                                                )
+                                            }
+                                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(modifier = Modifier.width(36.dp))
+                                        TableHeaderCell("Launch Template ID", 180.dp)
+                                        TableHeaderCell("Launch Template Name", 180.dp)
+                                        TableHeaderCell("Default Version", 100.dp)
+                                        TableHeaderCell("Latest Version", 100.dp)
+                                        TableHeaderCell("Create Time", 180.dp)
+                                        TableHeaderCell("Created By", 250.dp)
+                                        TableHeaderCell("Managed", 80.dp)
+                                        TableHeaderCell("Operator", 80.dp)
+                                    }
+                                    
+                                    val dummyLaunchTemplates = listOf(
+                                        listOf("lt-067898a12b6e2d329", "demo-app-template", "1", "1", "2026-06-10T10:26:09.000Z", "arn:aws:iam::077660206700:root", "false", "-")
+                                    )
+                                    
+                                    dummyLaunchTemplates.forEach { typeData ->
+                                        Row(
+                                            modifier = Modifier
+                                                .background(awsRowBg)
+                                                .drawBehind {
+                                                    drawLine(
+                                                        color = awsBorderColor,
+                                                        start = Offset(0f, size.height),
+                                                        end = Offset(size.width, size.height),
+                                                        strokeWidth = 0.5.dp.toPx()
+                                                    )
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Checkbox(
+                                                    checked = false,
+                                                    onCheckedChange = {},
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = awsBlueText,
+                                                        uncheckedColor = awsTextSecondary
+                                                    )
+                                                )
+                                            }
+                                            
+                                            TableCell(typeData[0], 180.dp, awsBlueText)
+                                            TableCell(typeData[1], 180.dp, awsTextPrimary)
+                                            TableCell(typeData[2], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[3], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[4], 180.dp, awsTextPrimary)
+                                            TableCell(typeData[5], 250.dp, awsTextPrimary)
+                                            TableCell(typeData[6], 80.dp, awsTextPrimary)
+                                            TableCell(typeData[7], 80.dp, awsTextPrimary)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "Content for $activeConsoleTab is not currently available in this preview.",
+                                color = awsTextSecondary,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -2028,6 +2244,100 @@ fun Ec2ResourcesView(
                             fontSize = 11.sp,
                             color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
                         )
+                    }
+                }
+            }
+
+            // Launch Instance Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderMedium),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDarkTheme) Color(0xFF151419) else Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Launch instance",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkTheme) Color.White else BentoTextDark
+                        )
+                        Text(
+                            text = "To get started with EC2, you can launch an instance, which is a virtual server in the cloud.",
+                            fontSize = 13.sp,
+                            color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                            lineHeight = 18.sp
+                        )
+                        Button(
+                            onClick = { viewMode = "aws_console" },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEC7211),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                text = "Launch instance",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Service Health Card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderMedium),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDarkTheme) Color(0xFF151419) else Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Service health",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDarkTheme) Color.White else BentoTextDark
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Healthy",
+                                tint = BentoTermGreen,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Service is operating normally",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDarkTheme) BentoTermGreen else BentoTextDark
+                                )
+                                Text(
+                                    text = "$regionFullName",
+                                    fontSize = 12.sp,
+                                    color = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -2134,11 +2444,13 @@ fun Ec2ResourcesView(
                         ) {
                             Box(modifier = Modifier.weight(1f)) {
                                 ResourceGridItem("Instance Types", counts["instance_types"] ?: 15, isDarkTheme) {
+                                    activeConsoleTab = "Instance Types"
                                     viewMode = "aws_console"
                                 }
                             }
                             Box(modifier = Modifier.weight(1f)) {
                                 ResourceGridItem("Launch Templates", counts["launch_templates"] ?: 3, isDarkTheme) {
+                                    activeConsoleTab = "Launch Templates"
                                     viewMode = "aws_console"
                                 }
                             }

@@ -40,7 +40,9 @@ enum class CloudScreen(val title: String, val icon: ImageVector) {
     HCL("HCL Migrate", Icons.Default.Code),
     GEMINI("AI", Icons.Default.Chat),
     CLOUD("Cloud Connectors", Icons.Default.Cloud),
-    CLOUDSHELL("CloudShell", Icons.Default.Terminal)
+    CLOUDSHELL("CloudShell", Icons.Default.Terminal),
+    SERVICES_LIST("Services", Icons.Default.Apps),
+    COST_EXPLORER("Cost Explorer", Icons.Default.AttachMoney)
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -208,7 +210,7 @@ class MainActivity : ComponentActivity() {
                                     Divider(color = if (isDarkTheme) Color(0xFF2C2A35) else BentoBorderLight, modifier = Modifier.padding(bottom = 12.dp))
 
                                     // Navigation List
-                                    CloudScreen.values().filter { it != CloudScreen.AI }.forEach { screen ->
+                                    CloudScreen.values().filter { it != CloudScreen.AI && it != CloudScreen.SERVICES_LIST }.forEach { screen ->
                                         val isSelected = currentScreen == screen
                                         NavigationDrawerItem(
                                             label = {
@@ -320,6 +322,134 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         Scaffold(
+                            bottomBar = {
+                                val selectedBottomTab = when {
+                                    currentScreen == CloudScreen.DASHBOARD && !showEc2Resources -> "home"
+                                    currentScreen == CloudScreen.AI -> "notifications"
+                                    currentScreen == CloudScreen.DASHBOARD && showEc2Resources -> "resources"
+                                    else -> "services"
+                                }
+
+                                NavigationBar(
+                                    containerColor = if (isDarkTheme) Color(0xFF151419) else Color(0xFFF6F3FB),
+                                    tonalElevation = 8.dp,
+                                    modifier = Modifier.testTag("app_bottom_bar")
+                                ) {
+                                    NavigationBarItem(
+                                        selected = selectedBottomTab == "home",
+                                        onClick = {
+                                            currentScreen = CloudScreen.DASHBOARD
+                                            viewModel.setShowEc2Resources(false)
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Home,
+                                                contentDescription = "Home"
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = "Home",
+                                                fontWeight = if (selectedBottomTab == "home") FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 11.sp
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = if (isDarkTheme) CyberCyan else BentoPurpleDark,
+                                            selectedTextColor = if (isDarkTheme) Color.White else BentoTextDark,
+                                            indicatorColor = if (isDarkTheme) Color(0xFF25232E) else BentoContainerActive,
+                                            unselectedIconColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                                            unselectedTextColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                                        ),
+                                        modifier = Modifier.testTag("bottom_tab_home")
+                                    )
+
+                                    NavigationBarItem(
+                                        selected = selectedBottomTab == "notifications",
+                                        onClick = {
+                                            currentScreen = CloudScreen.AI
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Notifications"
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = "Notifications",
+                                                fontWeight = if (selectedBottomTab == "notifications") FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 11.sp
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = if (isDarkTheme) CyberCyan else BentoPurpleDark,
+                                            selectedTextColor = if (isDarkTheme) Color.White else BentoTextDark,
+                                            indicatorColor = if (isDarkTheme) Color(0xFF25232E) else BentoContainerActive,
+                                            unselectedIconColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                                            unselectedTextColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                                        ),
+                                        modifier = Modifier.testTag("bottom_tab_notifications")
+                                    )
+
+                                    NavigationBarItem(
+                                        selected = selectedBottomTab == "services",
+                                        onClick = {
+                                            currentScreen = CloudScreen.SERVICES_LIST
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Apps,
+                                                contentDescription = "Services"
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = "Services",
+                                                fontWeight = if (selectedBottomTab == "services") FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 11.sp
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = if (isDarkTheme) CyberCyan else BentoPurpleDark,
+                                            selectedTextColor = if (isDarkTheme) Color.White else BentoTextDark,
+                                            indicatorColor = if (isDarkTheme) Color(0xFF25232E) else BentoContainerActive,
+                                            unselectedIconColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                                            unselectedTextColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                                        ),
+                                        modifier = Modifier.testTag("bottom_tab_services")
+                                    )
+
+                                    NavigationBarItem(
+                                        selected = selectedBottomTab == "resources",
+                                        onClick = {
+                                            currentScreen = CloudScreen.DASHBOARD
+                                            viewModel.setShowEc2Resources(true)
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Layers,
+                                                contentDescription = "Resources"
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = "Resources",
+                                                fontWeight = if (selectedBottomTab == "resources") FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 11.sp
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = if (isDarkTheme) CyberCyan else BentoPurpleDark,
+                                            selectedTextColor = if (isDarkTheme) Color.White else BentoTextDark,
+                                            indicatorColor = if (isDarkTheme) Color(0xFF25232E) else BentoContainerActive,
+                                            unselectedIconColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle,
+                                            unselectedTextColor = if (isDarkTheme) Color(0xFF9E9BA8) else BentoTextSubtitle
+                                        ),
+                                        modifier = Modifier.testTag("bottom_tab_resources")
+                                    )
+                                }
+                            },
                             topBar = {
                                 if (currentScreen != CloudScreen.DASHBOARD || !showEc2Resources) {
                                     @OptIn(ExperimentalMaterial3Api::class)
@@ -527,6 +657,17 @@ class MainActivity : ComponentActivity() {
                                     CloudScreen.GEMINI -> AiConsultantScreen(viewModel = viewModel)
                                     CloudScreen.CLOUD -> CloudConnectorsScreen(viewModel = viewModel)
                                     CloudScreen.CLOUDSHELL -> CloudShellScreen()
+                                    CloudScreen.SERVICES_LIST -> ServicesListScreen(viewModel = viewModel,
+                                        isDarkTheme = isDarkTheme,
+                                        onNavigateToScreen = { targetScreen ->
+                                            currentScreen = targetScreen
+                                        }
+                                    )
+                                    CloudScreen.COST_EXPLORER -> CostExplorerScreen(
+                                        viewModel = viewModel,
+                                        isDarkTheme = isDarkTheme,
+                                        onBack = { currentScreen = CloudScreen.DASHBOARD }
+                                    )
                                 }
                             }
                         }

@@ -332,6 +332,9 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _isGeneratingTerraform = MutableStateFlow(false)
     val isGeneratingTerraform = _isGeneratingTerraform.asStateFlow()
 
+    private val _awsLogs = MutableStateFlow<List<String>>(emptyList())
+    val awsLogs = _awsLogs.asStateFlow()
+
     init {
         val database = CloudDatabase.getDatabase(application)
         repository = CloudRepository(database.dao)
@@ -656,6 +659,17 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 )
             } catch (e: Exception) {
                 Log.e("CloudOps", "Failed to reboot instance", e)
+            }
+        }
+    }
+
+    fun fetchAwsLogs() {
+        viewModelScope.launch {
+            try {
+                val logs = com.example.api.CloudOpsBackendClient.service.getAwsLogs()
+                _awsLogs.value = logs
+            } catch (e: Exception) {
+                Log.e("CloudOps", "Failed to fetch AWS logs", e)
             }
         }
     }
@@ -1217,7 +1231,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun fallbackToLocalGemini(text: String) {
         val systemInstruction = "You are an intelligent, senior multi-cloud migration and dependency analysis architect. Your goal is to guide developers on Cloudamize-grade topology diagrams, cost models, IAM vulnerabilities, and target deployments. Provide rich, highly structured, technical feedback utilizing Markdown schemas."
-        val apiResponse = GeminiClient.generateMigrationFeedback(
+        val apiResponse = GeminiClient.generateChatResponse(
             prompt = text,
             systemInstruction = systemInstruction
         )
