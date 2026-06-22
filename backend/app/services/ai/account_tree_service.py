@@ -67,7 +67,8 @@ class AccountTreeService:
                                 "state": inst["State"]["Name"],
                                 "instance_type": inst["InstanceType"],
                                 "vpc_id": inst.get("VpcId"),
-                                "subnet_id": inst.get("SubnetId")
+                                "subnet_id": inst.get("SubnetId"),
+                                "security_groups": inst.get("SecurityGroups", [])
                             })
                 except Exception:
                     instances = []
@@ -148,7 +149,7 @@ class AccountTreeService:
             igws = reg_data["igws"]
             nat_gws = reg_data["nat_gws"]
 
-            # Add region node & link to account
+            # Add region node & link to account with relationship type
             nodes.append({
                 "id": region_name,
                 "type": "region",
@@ -156,7 +157,8 @@ class AccountTreeService:
             })
             edges.append({
                 "source": region_name,
-                "target": "aws_account"
+                "target": "aws_account",
+                "relationship": "PART_OF_ACCOUNT"
             })
 
             # VPCs Section
@@ -181,7 +183,8 @@ class AccountTreeService:
                     })
                     edges.append({
                         "source": vpc_id,
-                        "target": region_name
+                        "target": region_name,
+                        "relationship": "IN_REGION"
                     })
 
                     tree.append(f"{sub_prefix}│   ├── {vpc_id} ({vpc_name})")
@@ -203,7 +206,8 @@ class AccountTreeService:
                             })
                             edges.append({
                                 "source": sub_id,
-                                "target": vpc_id
+                                "target": vpc_id,
+                                "relationship": "IN_VPC"
                             })
                             tree.append(f"{sub_prefix}│   │   │   ├── {sub_id} ({cidr})")
 
@@ -224,7 +228,8 @@ class AccountTreeService:
                             })
                             edges.append({
                                 "source": sg_id,
-                                "target": vpc_id
+                                "target": vpc_id,
+                                "relationship": "IN_VPC"
                             })
                             tree.append(f"{sub_prefix}│   │   │   ├── {sg_id} ({sg_name})")
 
@@ -245,9 +250,17 @@ class AccountTreeService:
                             target_node = inst.get("subnet_id") if inst.get("subnet_id") else vpc_id
                             edges.append({
                                 "source": inst_id,
-                                "target": target_node
+                                "target": target_node,
+                                "relationship": "IN_SUBNET" if inst.get("subnet_id") else "IN_VPC"
                             })
-                            tree.append(f"{sub_prefix}│   │   │   ├── EC2: {inst['name']} ({inst_id}) [{inst['state']}]")
+                            # EC2 -> Security Groups relationship
+                            for sg in inst.get("security_groups", []):
+                                edges.append({
+                                    "source": inst_id,
+                                    "target": sg["GroupId"],
+                                    "relationship": "USES_SECURITY_GROUP"
+                                })
+                            tree.append(f"{sub_prefix}│   │   │   ├── {inst['name']} ({inst_id}) [{inst['state']}]")
 
                     # RDS inside this VPC
                     vpc_dbs = []
@@ -257,6 +270,8 @@ class AccountTreeService:
                             vpc_dbs.append(db)
 
                     if vpc_dbs:
+                        tree.append("")
+                        tree.append(f"{sub_prefix}│   │   ├── RDS Instances ({len(vpc_dbs)})")
                         for db in vpc_dbs:
                             db_id = db["DBInstanceIdentifier"]
                             # Node for RDS
@@ -269,9 +284,17 @@ class AccountTreeService:
                             })
                             edges.append({
                                 "source": db_id,
-                                "target": vpc_id
+                                "target": vpc_id,
+                                "relationship": "IN_VPC"
                             })
-                            tree.append(f"{sub_prefix}│   │   │   ├── RDS: {db_id}")
+                            # RDS -> Security Groups relationship
+                            for sg in db.get("VpcSecurityGroups", []):
+                                edges.append({
+                                    "source": db_id,
+                                    "target": sg["VpcSecurityGroupId"],
+                                    "relationship": "USES_SECURITY_GROUP"
+                                })
+                            tree.append(f"{sub_prefix}│   │   │   ├── {db_id}")
 
                     # Internet Gateways
                     vpc_igws = []
@@ -293,7 +316,8 @@ class AccountTreeService:
                             })
                             edges.append({
                                 "source": igw_id,
-                                "target": vpc_id
+                                "target": vpc_id,
+                                "relationship": "ATTACHED_TO"
                             })
                             tree.append(f"{sub_prefix}│   │   │   ├── Internet Gateways ({len(vpc_igws)}) [{igw_id}]")
 
@@ -312,7 +336,8 @@ class AccountTreeService:
                             })
                             edges.append({
                                 "source": nat_id,
-                                "target": vpc_id
+                                "target": vpc_id,
+                                "relationship": "ATTACHED_TO"
                             })
                             tree.append(f"{sub_prefix}│   │   │   ├── NAT Gateways ({len(vpc_nat_gws)}) [{nat_id}]")
 
@@ -333,9 +358,11 @@ class AccountTreeService:
                         "vpc_id": lb_vpc_id
                     })
                     target_parent = lb_vpc_id if lb_vpc_id else region_name
+                    lb_rel = "IN_VPC" if lb_vpc_id else "IN_REGION"
                     edges.append({
                         "source": lb_arn,
-                        "target": target_parent
+                        "target": target_parent,
+                        "relationship": lb_rel
                     })
                     tree.append(f"{sub_prefix}│   ├── LB: {lb_name}")
 
@@ -364,7 +391,8 @@ class AccountTreeService:
                     })
                     edges.append({
                         "source": f"s3_{bucket_name}",
-                        "target": "aws_account"
+                        "target": "aws_account",
+                        "relationship": "PART_OF_ACCOUNT"
                     })
 
         except Exception:
