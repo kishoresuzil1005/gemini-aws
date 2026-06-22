@@ -30,8 +30,8 @@ class TopologyService:
                         sgs = []
                         for sg in instance.get("SecurityGroups", []):
                             sgs.append({
-                                "GroupId": sg["GroupId"],
-                                "GroupName": sg["GroupName"]
+                                "group_id": sg["GroupId"],
+                                "group_name": sg["GroupName"]
                             })
 
                         self.ec2_resources.append({
