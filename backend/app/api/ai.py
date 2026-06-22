@@ -598,14 +598,14 @@ async def chat(
             "internet exposed",
             "security groups expose",
             "expose ssh",
-            "open ssh",
             "expose mysql",
-            "open mysql",
             "expose postgresql",
+            "open ssh",
+            "open mysql",
             "open postgresql",
-            "0.0.0.0/0",
+            "public security groups",
             "security findings",
-            "public security groups"
+            "0.0.0.0/0"
         ]
     ):
 
@@ -626,7 +626,10 @@ async def chat(
                 if f["risk"] == "MySQL"
             ]
 
-        elif "postgres" in msg:
+        elif (
+            "postgres" in msg
+            or "postgresql" in msg
+        ):
             findings = [
                 f for f in findings
                 if f["risk"] == "PostgreSQL"
