@@ -20,6 +20,7 @@ from app.services.ai.vpc_inventory import (
 from app.services.ai.subnet_inventory import (
     SubnetInventoryService
 )
+from app.services.aws.security_group_service import SecurityGroupService
 
 router = APIRouter()
 
@@ -399,6 +400,46 @@ async def chat(
 
             "subnets":
                 subnets
+        }
+
+    # ----------------------------------
+    # SECURITY GROUP COUNT
+    # ----------------------------------
+
+    if (
+        "security group" in message
+        and "how many" in message
+    ):
+
+        groups = (
+            SecurityGroupService
+            .get_all_security_groups()
+        )
+
+        return {
+            "success": True,
+            "response":
+                f"You have {len(groups)} security groups."
+        }
+
+    # ----------------------------------
+    # LIST SECURITY GROUPS
+    # ----------------------------------
+
+    if (
+        "list" in message
+        and "security group" in message
+    ):
+
+        groups = (
+            SecurityGroupService
+            .get_all_security_groups()
+        )
+
+        return {
+            "success": True,
+            "total": len(groups),
+            "security_groups": groups
         }
 
     try:
