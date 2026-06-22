@@ -746,7 +746,7 @@ def get_topology_summary(db: Session = Depends(get_db)):
         for c in categories
     ]
 
-@app.get("/api/topology/resource/{resource_id}", response_model=TopologyLevel3Response)
+@app.get("/api/dependencies/resource/{resource_id}", response_model=TopologyLevel3Response)
 def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
     data = DependencyService(db).get_resource_dependencies(resource_id)
     if not data:
@@ -789,7 +789,7 @@ def get_resource_graph(resource_id: str, db: Session = Depends(get_db)):
         ]
     )
 
-@app.get("/api/topology/{category}", response_model=List[TopologyResource])
+@app.get("/api/topology/category/{category}", response_model=List[TopologyResource])
 def get_topology_level_2(category: str, db: Session = Depends(get_db)):
     resources = TopologyService(db).get_resources_by_category(category)
     return [
