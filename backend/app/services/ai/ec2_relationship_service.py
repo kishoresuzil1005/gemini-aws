@@ -161,3 +161,49 @@ class EC2RelationshipService:
                 region
         }
 
+    def get_instance_security_groups(
+        self,
+        search_value: str
+    ):
+
+        result = self.find_instance(
+            search_value
+        )
+
+        if not result:
+            return None
+
+        instance, region, name = result
+
+        security_groups = []
+
+        for sg in instance.get(
+            "SecurityGroups",
+            []
+        ):
+
+            security_groups.append({
+
+                "group_id":
+                    sg["GroupId"],
+
+                "group_name":
+                    sg["GroupName"]
+            })
+
+        return {
+
+            "instance_id":
+                instance["InstanceId"],
+
+            "instance_name":
+                name,
+
+            "region":
+                region,
+
+            "security_groups":
+                security_groups
+        }
+
+

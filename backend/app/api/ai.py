@@ -125,6 +125,57 @@ async def chat(
             "relationship": result
         }
 
+    if (
+        "show security groups for" in msg
+        or
+        "what security groups are attached" in msg
+        or
+        "describe security groups for" in msg
+        or
+        "which firewall protects" in msg
+    ):
+        search_value = (
+            msg
+                .replace(
+                    "show security groups for",
+                    ""
+                )
+                .replace(
+                    "what security groups are attached to",
+                    ""
+                )
+                .replace(
+                    "what security groups are attached",
+                    ""
+                )
+                .replace(
+                    "describe security groups for",
+                    ""
+                )
+                .replace(
+                    "which firewall protects",
+                    ""
+                )
+                .strip()
+        )
+
+        service = EC2RelationshipService()
+        result = service.get_instance_security_groups(
+            search_value
+        )
+
+        if not result:
+            return {
+                "success": False,
+                "message": "Instance not found"
+            }
+
+        return {
+            "success": True,
+            "relationship": result
+        }
+
+
 
     intent = IntentRouter.classify(msg)
 
