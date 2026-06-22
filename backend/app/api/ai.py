@@ -81,6 +81,51 @@ async def chat(
             "relationship": result
         }
 
+    if (
+        "show subnet for" in msg
+        or
+        "which subnet contains" in msg
+        or
+        "which subnet is" in msg
+    ):
+        search_value = (
+            msg
+                .replace(
+                    "show subnet for",
+                    ""
+                )
+                .replace(
+                    "which subnet contains",
+                    ""
+                )
+                .replace(
+                    "which subnet is",
+                    ""
+                )
+                .replace(
+                    "using",
+                    ""
+                )
+                .strip()
+        )
+
+        service = EC2RelationshipService()
+        result = service.get_instance_subnet(
+            search_value
+        )
+
+        if not result:
+            return {
+                "success": False,
+                "message": "Instance not found"
+            }
+
+        return {
+            "success": True,
+            "relationship": result
+        }
+
+
     intent = IntentRouter.classify(msg)
 
     res = None

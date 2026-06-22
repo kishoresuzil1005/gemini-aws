@@ -116,3 +116,48 @@ class EC2RelationshipService:
             "region":
                 region
         }
+
+    def get_instance_subnet(
+        self,
+        search_value: str
+    ):
+
+        result = self.find_instance(
+            search_value
+        )
+
+        if not result:
+            return None
+
+        instance, region, name = result
+
+        return {
+
+            "instance_id":
+                instance["InstanceId"],
+
+            "instance_name":
+                name,
+
+            "vpc_id":
+                instance.get(
+                    "VpcId"
+                ),
+
+            "subnet_id":
+                instance.get(
+                    "SubnetId"
+                ),
+
+            "availability_zone":
+                instance.get(
+                    "Placement",
+                    {}
+                ).get(
+                    "AvailabilityZone"
+                ),
+
+            "region":
+                region
+        }
+
