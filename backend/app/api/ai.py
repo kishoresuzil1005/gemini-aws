@@ -61,35 +61,6 @@ async def chat(
         }
 
     if (
-        "list" in message
-        and "ec2" in message
-    ):
-        instances = (
-            InventoryAIService
-            .get_all_ec2_instances()
-        )
-
-        return {
-            "success": True,
-            "total": len(instances),
-            "instances": instances
-        }
-
-    if (
-        "show" in message
-        and "instance" in message
-    ):
-        instances = (
-            InventoryAIService
-            .get_all_ec2_instances()
-        )
-
-        return {
-            "success": True,
-            "instances": instances
-        }
-
-    if (
         "running" in message
         and "instance" in message
     ):
@@ -129,6 +100,35 @@ async def chat(
             "success": True,
             "total": len(stopped),
             "instances": stopped
+        }
+
+    if (
+        "list" in message
+        and "ec2" in message
+    ):
+        instances = (
+            InventoryAIService
+            .get_all_ec2_instances()
+        )
+
+        return {
+            "success": True,
+            "total": len(instances),
+            "instances": instances
+        }
+
+    if (
+        "show" in message
+        and "instance" in message
+    ):
+        instances = (
+            InventoryAIService
+            .get_all_ec2_instances()
+        )
+
+        return {
+            "success": True,
+            "instances": instances
         }
 
     try:
