@@ -19,6 +19,7 @@ from app.services.ai.ec2_relationship_service import EC2RelationshipService
 from app.services.ai.vpc_graph_service import VPCGraphService
 from app.services.ai.account_topology_service import AccountTopologyService
 from app.services.ai.account_tree_service import AccountTreeService
+from app.services.ai.topology_service import TopologyService
 
 router = APIRouter()
 
@@ -285,6 +286,53 @@ async def chat(
             "success": True,
             **result
         }
+
+    # ==================================================
+    # Resource Dependency Analysis
+    # ==================================================
+    if (
+        "dependency" in msg
+        or
+        "dependencies" in msg
+    ):
+        resource_name = None
+
+        words = msg.split()
+
+        for word in words:
+
+            if (
+                word.startswith("i-")
+                or
+                word.startswith("vpc-")
+                or
+                word.startswith("subnet-")
+            ):
+                resource_name = word
+                break
+
+        if not resource_name:
+
+            resource_name = msg
+            for prefix in [
+                "show dependencies of",
+                "show dependencies for",
+                "show dependency of",
+                "show dependency for",
+                "dependencies of",
+                "dependency of",
+                "dependencies for",
+                "dependency for",
+                "show dependencies",
+                "show dependency"
+            ]:
+                if prefix in resource_name:
+                    resource_name = resource_name.replace(prefix, "")
+            resource_name = resource_name.strip()
+
+        service = TopologyService()
+        result = service.find_dependencies(resource_name)
+        return result
 
 
     intent = IntentRouter.classify(msg)
