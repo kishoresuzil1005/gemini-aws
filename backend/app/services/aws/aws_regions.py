@@ -1,0 +1,1 @@
+from app.providers.aws.regions import get_all_regions

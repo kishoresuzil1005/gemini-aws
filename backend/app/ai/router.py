@@ -9,6 +9,23 @@ class IntentRouter:
         msg = message.lower()
 
 
+        # ACCOUNT TOPOLOGY
+
+        if any(
+            x in msg
+            for x in [
+                "show my aws topology",
+                "show account architecture",
+                "show cloud inventory map",
+                "summarize my aws account",
+                "aws topology",
+                "account architecture",
+                "cloud inventory map"
+            ]
+        ):
+            return Intent.ACCOUNT_TOPOLOGY
+
+
         # PUBLIC EXPOSURE
 
         if any(

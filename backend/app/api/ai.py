@@ -16,6 +16,8 @@ from app.services.aws.security_group_service import SecurityGroupService
 from app.services.aws.security_audit_service import SecurityAuditService
 from app.services.exposure_service import ExposureService
 from app.services.ai.ec2_relationship_service import EC2RelationshipService
+from app.services.ai.vpc_graph_service import VPCGraphService
+from app.services.ai.account_topology_service import AccountTopologyService
 
 router = APIRouter()
 
@@ -40,6 +42,40 @@ async def chat(
 
     message = request.message
     msg = message.lower()
+
+    if (
+        "show resources inside vpc" in msg
+        or
+        "what is deployed in vpc" in msg
+        or
+        "list resources connected to vpc" in msg
+        or
+        "show topology for vpc" in msg
+    ):
+        import re
+
+        match = re.search(
+            r"(vpc-[a-z0-9]+)",
+            msg
+        )
+
+        if not match:
+            return {
+                "success": False,
+                "message": "VPC ID not found"
+            }
+
+        vpc_id = match.group(1)
+
+        service = VPCGraphService()
+        result = service.get_vpc_graph(
+            vpc_id
+        )
+
+        return {
+            "success": True,
+            **result
+        }
 
     if (
         "show vpc for" in msg
@@ -215,6 +251,18 @@ async def chat(
             "network_path": result
         }
 
+    if (
+        "show my aws topology" in msg
+        or
+        "show account architecture" in msg
+        or
+        "show cloud inventory map" in msg
+        or
+        "summarize my aws account" in msg
+    ):
+        result = AccountTopologyService.get_account_topology()
+        return result
+
 
     intent = IntentRouter.classify(msg)
 
@@ -233,6 +281,8 @@ async def chat(
         res = SecurityGroupService.handle(msg)
     elif intent == Intent.SECURITY_AUDIT:
         res = SecurityAuditService.handle(msg)
+    elif intent == Intent.ACCOUNT_TOPOLOGY:
+        res = AccountTopologyService.get_account_topology()
     elif intent == Intent.PUBLIC_EXPOSURE:
         instances = ExposureService.get_public_instances()
         res = {
