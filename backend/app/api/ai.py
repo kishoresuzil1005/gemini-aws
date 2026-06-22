@@ -18,6 +18,7 @@ from app.services.exposure_service import ExposureService
 from app.services.ai.ec2_relationship_service import EC2RelationshipService
 from app.services.ai.vpc_graph_service import VPCGraphService
 from app.services.ai.account_topology_service import AccountTopologyService
+from app.services.ai.account_tree_service import AccountTreeService
 
 router = APIRouter()
 
@@ -267,6 +268,21 @@ async def chat(
         return {
             "success": True,
             **result
+        }
+
+    if (
+        "draw my aws architecture" in msg
+        or
+        "show cloud map" in msg
+        or
+        "show infrastructure diagram" in msg
+        or
+        "visualize my aws account" in msg
+    ):
+        service = AccountTreeService()
+        return {
+            "success": True,
+            "architecture": service.generate_tree()
         }
 
 
