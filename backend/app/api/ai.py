@@ -24,6 +24,9 @@ from app.services.aws.security_group_service import SecurityGroupService
 from app.services.aws.ec2_security_mapping_service import (
     EC2SecurityMappingService
 )
+from app.services.aws.security_audit_service import (
+    SecurityAuditService
+)
 
 router = APIRouter()
 
@@ -582,6 +585,29 @@ async def chat(
                     "success": True,
                     "instance": result
                 }
+
+    # ----------------------------------
+    # SECURITY AUDIT FINDINGS
+    # ----------------------------------
+
+    if (
+        "risky security group" in message
+        or "dangerous security group" in message
+        or "internet exposed" in message
+        or "ssh open" in message
+        or "0.0.0.0/0" in message
+    ):
+
+        findings = (
+            SecurityAuditService
+            .find_risky_security_groups()
+        )
+
+        return {
+            "success": True,
+            "total_findings": len(findings),
+            "findings": findings
+        }
 
     try:
 
