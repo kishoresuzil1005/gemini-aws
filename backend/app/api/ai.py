@@ -69,15 +69,66 @@ async def chat(
             .get_all_ec2_instances()
         )
 
-        formatted_list = "\n".join([
-            f"- {inst['instance_id']} ({inst['name']}) [{inst['state']}]"
-            for inst in instances
-        ]) if instances else "No EC2 instances found."
+        return {
+            "success": True,
+            "total": len(instances),
+            "instances": instances
+        }
+
+    if (
+        "show" in message
+        and "instance" in message
+    ):
+        instances = (
+            InventoryAIService
+            .get_all_ec2_instances()
+        )
 
         return {
             "success": True,
-            "instances": instances,
-            "response": f"EC2 Instances:\n\n{formatted_list}"
+            "instances": instances
+        }
+
+    if (
+        "running" in message
+        and "instance" in message
+    ):
+        instances = (
+            InventoryAIService
+            .get_all_ec2_instances()
+        )
+
+        running = [
+            i
+            for i in instances
+            if i["state"] == "running"
+        ]
+
+        return {
+            "success": True,
+            "total": len(running),
+            "instances": running
+        }
+
+    if (
+        "stopped" in message
+        and "instance" in message
+    ):
+        instances = (
+            InventoryAIService
+            .get_all_ec2_instances()
+        )
+
+        stopped = [
+            i
+            for i in instances
+            if i["state"] == "stopped"
+        ]
+
+        return {
+            "success": True,
+            "total": len(stopped),
+            "instances": stopped
         }
 
     try:

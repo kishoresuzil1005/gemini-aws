@@ -55,22 +55,31 @@ class InventoryAIService:
                         results.append({
                             "instance_id":
                                 instance["InstanceId"],
-
+                            "name":
+                                InventoryAIService.get_name_tag(
+                                    instance
+                                ),
                             "instance_type":
                                 instance.get(
                                     "InstanceType"
                                 ),
-
                             "state":
                                 instance["State"]["Name"],
-
                             "region":
                                 region,
-
-                            "name":
-                                InventoryAIService
-                                .get_name_tag(
-                                    instance
+                            "private_ip":
+                                instance.get(
+                                    "PrivateIpAddress"
+                                ),
+                            "public_ip":
+                                instance.get(
+                                    "PublicIpAddress"
+                                ),
+                            "launch_time":
+                                str(
+                                    instance.get(
+                                        "LaunchTime"
+                                    )
                                 )
                         })
 
