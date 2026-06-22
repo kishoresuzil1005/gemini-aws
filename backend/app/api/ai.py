@@ -14,6 +14,12 @@ from app.services.ai.rds_inventory import (
 from app.services.ai.s3_inventory import (
     S3InventoryService
 )
+from app.services.ai.vpc_inventory import (
+    VPCInventoryService
+)
+from app.services.ai.subnet_inventory import (
+    SubnetInventoryService
+)
 
 router = APIRouter()
 
@@ -273,6 +279,126 @@ async def chat(
 
             "buckets":
                 buckets
+        }
+
+    if (
+        "how many" in message
+        and "vpc" in message
+    ):
+
+        vpcs = (
+            VPCInventoryService
+            .get_all_vpcs()
+        )
+
+        return {
+
+            "success": True,
+
+            "response":
+                f"You currently have "
+                f"{len(vpcs)} VPCs."
+        }
+
+    if (
+        "list" in message
+        and "vpc" in message
+    ):
+
+        vpcs = (
+            VPCInventoryService
+            .get_all_vpcs()
+        )
+
+        return {
+
+            "success": True,
+
+            "total":
+                len(vpcs),
+
+            "vpcs":
+                vpcs
+        }
+
+    # ----------------------------------
+    # SUBNET COUNT
+    # ----------------------------------
+
+    if (
+        "how many" in message
+        and "subnet" in message
+    ):
+
+        subnets = (
+            SubnetInventoryService
+            .get_all_subnets()
+        )
+
+        return {
+
+            "success": True,
+
+            "response":
+                f"You currently have "
+                f"{len(subnets)} "
+                f"subnets."
+        }
+
+    # ----------------------------------
+    # SUBNETS BY REGION
+    # ----------------------------------
+
+    if (
+        "subnet" in message
+        and "us-east-1" in message
+    ):
+
+        subnets = [
+
+            s for s in
+            SubnetInventoryService.get_all_subnets()
+
+            if s["region"] == "us-east-1"
+        ]
+
+        return {
+
+            "success": True,
+
+            "region":
+                "us-east-1",
+
+            "total":
+                len(subnets),
+
+            "subnets":
+                subnets
+        }
+
+    # ----------------------------------
+    # LIST SUBNETS
+    # ----------------------------------
+
+    if (
+        "list" in message
+        and "subnet" in message
+    ):
+
+        subnets = (
+            SubnetInventoryService
+            .get_all_subnets()
+        )
+
+        return {
+
+            "success": True,
+
+            "total":
+                len(subnets),
+
+            "subnets":
+                subnets
         }
 
     try:
