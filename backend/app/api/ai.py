@@ -442,6 +442,46 @@ async def chat(
             "security_groups": groups
         }
 
+    # ----------------------------------
+    # SECURITY GROUP DETAILS
+    # ----------------------------------
+
+    if (
+        "security group" in message
+        and "sg-" in message
+    ):
+        import re
+
+        match = re.search(
+            r"(sg-[a-zA-Z0-9]+)",
+            request.message,
+            re.IGNORECASE
+        )
+
+        if match:
+
+            group_id = match.group(1)
+
+            details = (
+                SecurityGroupService
+                .get_security_group_details(
+                    group_id
+                )
+            )
+
+            if details:
+
+                return {
+                    "success": True,
+                    "security_group": details
+                }
+
+            return {
+                "success": False,
+                "message":
+                    "Security group not found"
+            }
+
     try:
 
         result = CloudAssistant.ask(
