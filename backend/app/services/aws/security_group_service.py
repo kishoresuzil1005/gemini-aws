@@ -179,3 +179,158 @@ class SecurityGroupService:
 
         return None
 
+    @classmethod
+    def handle(cls, msg: str):
+        message = msg.lower()
+
+        # ----------------------------------
+        # SECURITY GROUP COUNT
+        # ----------------------------------
+
+        if (
+            "security group" in message
+            and "how many" in message
+        ):
+            groups = cls.get_all_security_groups()
+            return {
+                "success": True,
+                "response": f"You have {len(groups)} security groups."
+            }
+
+        # ----------------------------------
+        # LIST SECURITY GROUPS
+        # ----------------------------------
+
+        if (
+            "list" in message
+            and "security group" in message
+        ):
+            groups = cls.get_all_security_groups()
+            return {
+                "success": True,
+                "total": len(groups),
+                "security_groups": groups
+            }
+
+        # ----------------------------------
+        # SECURITY GROUP DETAILS
+        # ----------------------------------
+
+        if (
+            "security group" in message
+            and "sg-" in message
+        ):
+            import re
+
+            match = re.search(
+                r"(sg-[a-zA-Z0-9]+)",
+                msg,
+                re.IGNORECASE
+            )
+
+            if match:
+                group_id = match.group(1)
+                details = cls.get_security_group_details(group_id)
+
+                if details:
+                    return {
+                        "success": True,
+                        "security_group": details
+                    }
+
+                return {
+                    "success": False,
+                    "message": "Security group not found"
+                }
+
+        # ----------------------------------
+        # EC2 SECURITY GROUP MAPPING BY ID
+        # ----------------------------------
+
+        if (
+            "security group" in message
+            and "i-" in message
+        ):
+            import re
+            from app.services.aws.ec2_security_mapping_service import (
+                EC2SecurityMappingService
+            )
+
+            match = re.search(
+                r"(i-[a-zA-Z0-9]+)",
+                msg,
+                re.IGNORECASE
+            )
+
+            if match:
+                instance_id = match.group(1)
+                result = (
+                    EC2SecurityMappingService
+                    .get_instance_security_groups(instance_id)
+                )
+
+                if result:
+                    return {
+                        "success": True,
+                        "instance": result
+                    }
+
+                return {
+                    "success": False,
+                    "message": "Instance not found"
+                }
+
+        # ----------------------------------
+        # EC2 SECURITY GROUP MAPPING BY NAME
+        # ----------------------------------
+
+        if (
+            "security group" in message
+            or "network security" in message
+        ):
+            from app.services.aws.ec2_security_mapping_service import (
+                EC2SecurityMappingService
+            )
+
+            skip_words = [
+                "show",
+                "security",
+                "groups",
+                "group",
+                "for",
+                "describe",
+                "network",
+                "attached",
+                "instance",
+                "to"
+            ]
+
+            words = msg.split()
+            filtered = []
+
+            for word in words:
+                clean = (
+                    word
+                    .replace("?", "")
+                    .replace(",", "")
+                )
+
+                if clean.lower() not in skip_words:
+                    filtered.append(clean)
+
+            if filtered:
+                instance_name = filtered[-1]
+                result = (
+                    EC2SecurityMappingService
+                    .get_instance_by_name(instance_name)
+                )
+
+                if result:
+                    return {
+                        "success": True,
+                        "instance": result
+                    }
+
+        return None
+
+

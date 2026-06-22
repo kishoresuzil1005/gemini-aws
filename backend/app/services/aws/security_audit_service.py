@@ -117,3 +117,43 @@ class SecurityAuditService:
                 continue
 
         return findings
+
+    @classmethod
+    def handle(cls, msg: str):
+        message = msg.lower()
+
+        findings = cls.find_risky_security_groups()
+
+        if "ssh" in message:
+            findings = [
+                f for f in findings
+                if f["risk"] == "SSH"
+            ]
+
+        elif "mysql" in message:
+            findings = [
+                f for f in findings
+                if f["risk"] == "MySQL"
+            ]
+
+        elif (
+            "postgres" in message
+            or "postgresql" in message
+        ):
+            findings = [
+                f for f in findings
+                if f["risk"] == "PostgreSQL"
+            ]
+
+        elif "grafana" in message:
+            findings = [
+                f for f in findings
+                if f["risk"] == "Grafana"
+            ]
+
+        return {
+            "success": True,
+            "total_findings": len(findings),
+            "findings": findings
+        }
+
