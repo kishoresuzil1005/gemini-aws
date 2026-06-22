@@ -590,18 +590,53 @@ async def chat(
     # SECURITY AUDIT FINDINGS
     # ----------------------------------
 
-    if (
-        "risky security group" in message
-        or "dangerous security group" in message
-        or "internet exposed" in message
-        or "ssh open" in message
-        or "0.0.0.0/0" in message
+    if any(
+        keyword in msg
+        for keyword in [
+            "risky security group",
+            "dangerous security group",
+            "internet exposed",
+            "security groups expose",
+            "expose ssh",
+            "open ssh",
+            "expose mysql",
+            "open mysql",
+            "expose postgresql",
+            "open postgresql",
+            "0.0.0.0/0",
+            "security findings",
+            "public security groups"
+        ]
     ):
 
         findings = (
             SecurityAuditService
             .find_risky_security_groups()
         )
+
+        if "ssh" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "SSH"
+            ]
+
+        elif "mysql" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "MySQL"
+            ]
+
+        elif "postgres" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "PostgreSQL"
+            ]
+
+        elif "grafana" in msg:
+            findings = [
+                f for f in findings
+                if f["risk"] == "Grafana"
+            ]
 
         return {
             "success": True,
