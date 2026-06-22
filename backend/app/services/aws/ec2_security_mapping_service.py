@@ -99,3 +99,89 @@ class EC2SecurityMappingService:
                 continue
 
         return None
+
+    @classmethod
+    def get_instance_by_name(
+        cls,
+        instance_name
+    ):
+
+        for region in cls.get_all_regions():
+
+            try:
+
+                ec2 = boto3.client(
+                    "ec2",
+                    region_name=region
+                )
+
+                reservations = (
+                    ec2.describe_instances()
+                    ["Reservations"]
+                )
+
+                for reservation in reservations:
+
+                    for instance in reservation["Instances"]:
+
+                        tags = instance.get(
+                            "Tags",
+                            []
+                        )
+
+                        name = ""
+
+                        for tag in tags:
+
+                            if tag["Key"] == "Name":
+                                name = tag["Value"]
+
+                        if (
+                            name.lower()
+                            ==
+                            instance_name.lower()
+                        ):
+
+                            return {
+
+                                "instance_id":
+                                    instance["InstanceId"],
+
+                                "instance_name":
+                                    name,
+
+                                "instance_type":
+                                    instance.get(
+                                        "InstanceType"
+                                    ),
+
+                                "state":
+                                    instance["State"][
+                                        "Name"
+                                    ],
+
+                                "region":
+                                    region,
+
+                                "security_groups": [
+
+                                    {
+                                        "group_id":
+                                            sg["GroupId"],
+
+                                        "group_name":
+                                            sg["GroupName"]
+                                    }
+
+                                    for sg in instance.get(
+                                        "SecurityGroups",
+                                        []
+                                    )
+                                ]
+                            }
+
+            except Exception:
+                continue
+
+        return None
+

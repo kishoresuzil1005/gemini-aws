@@ -525,6 +525,64 @@ async def chat(
                     "Instance not found"
             }
 
+    # ----------------------------------
+    # EC2 SECURITY GROUP MAPPING BY NAME
+    # ----------------------------------
+
+    msg = message
+
+    if (
+        "security group" in msg
+        or "network security" in msg
+    ):
+
+        skip_words = [
+            "show",
+            "security",
+            "groups",
+            "group",
+            "for",
+            "describe",
+            "network",
+            "attached",
+            "instance",
+            "to"
+        ]
+
+        words = request.message.split()
+
+        filtered = []
+
+        for word in words:
+
+            clean = (
+                word
+                .replace("?", "")
+                .replace(",", "")
+            )
+
+            if clean.lower() not in skip_words:
+
+                filtered.append(clean)
+
+        if filtered:
+
+            instance_name = filtered[-1]
+
+            result = (
+                EC2SecurityMappingService
+                .get_instance_by_name(
+                    instance_name
+                )
+            )
+
+            if result:
+
+                return {
+                    "success": True,
+                    "instance": result
+                }
+
     try:
 
         result = CloudAssistant.ask(
