@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
-import com.example.api.GeminiClient
 import com.example.ui.ChatMessage
 import com.example.ui.CloudViewModel
 import com.example.ui.theme.*
@@ -34,6 +33,7 @@ fun AiConsultantScreen(
 ) {
     val messages by viewModel.chatMessages.collectAsState()
     val isGenerating by viewModel.isGeneratingAi.collectAsState()
+    val backendConnected by viewModel.isBackendConnected.collectAsState()
     var inputQuery by remember { mutableStateOf("") }
 
     val lazyListState = rememberLazyListState()
@@ -93,19 +93,20 @@ fun AiConsultantScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Alert API Key usage status
+            val badgeColor = if (backendConnected) TerminalGreen else WarningAmber
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
-                    .background(if (GeminiClient.isApiKeyConfigured()) TerminalGreen.copy(alpha = 0.15f) else WarningAmber.copy(alpha = 0.15f))
-                    .border(1.dp, if (GeminiClient.isApiKeyConfigured()) TerminalGreen else WarningAmber, RoundedCornerShape(4.dp))
+                    .background(badgeColor.copy(alpha = 0.15f))
+                    .border(1.dp, badgeColor, RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = if (GeminiClient.isApiKeyConfigured()) "LIVE Amazon Q" else "Simulated",
+                    text = if (backendConnected) "LIVE CloudOps AI" else "Backend Offline",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
-                    color = if (GeminiClient.isApiKeyConfigured()) TerminalGreen else WarningAmber
+                    color = badgeColor
                 )
             }
         }

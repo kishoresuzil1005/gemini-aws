@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.api.GeminiClient
 import com.example.api.CloudOpsBackendClient
 import com.example.api.CloudOpsApiService
 import com.example.data.*
@@ -1223,20 +1222,25 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             } else {
-                fallbackToLocalGemini(text)
+                _chatMessages.update {
+                    it + ChatMessage(
+                        text = """
+                        Backend AI is not connected.
+
+                        Connect CloudOps Backend:
+
+                        Settings
+                        → Backend URL
+
+                        Expected Endpoint:
+
+                        /api/ai/chat
+                        """.trimIndent(),
+                        isUser = false
+                    )
+                }
             }
             _isGeneratingAi.value = false
-        }
-    }
-
-    private suspend fun fallbackToLocalGemini(text: String) {
-        val systemInstruction = "You are an intelligent, senior multi-cloud migration and dependency analysis architect. Your goal is to guide developers on Cloudamize-grade topology diagrams, cost models, IAM vulnerabilities, and target deployments. Provide rich, highly structured, technical feedback utilizing Markdown schemas."
-        val apiResponse = GeminiClient.generateChatResponse(
-            prompt = text,
-            systemInstruction = systemInstruction
-        )
-        _chatMessages.update {
-            it + ChatMessage(text = apiResponse, isUser = false)
         }
     }
 
@@ -1437,14 +1441,32 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            // Let's call Gemini if key is set or generate rich formatted template
             val prompt = """
                 Generate complete, valid, structured and secure Terraform code for migrating an enterprise environment from ${_sourceCloud.value} to ${_targetCloud.value}.
                 Migrate the following active modules: ${_selectedServices.value.joinToString(", ")}.
                 Specify standard multi-cloud resource conversions, variables, and provider specifications.
             """.trimIndent()
 
-            val response = GeminiClient.generateMigrationFeedback(prompt)
+            // Route to live CloudOps backend AI if connected, otherwise request backend connection
+            val response = if (_useBackend.value && _isBackendConnected.value) {
+                try {
+                    com.example.api.CloudOpsBackendClient.service.getAICopilotResponse(
+                        com.example.api.AIChatPayload(prompt)
+                    ).response
+                } catch (e: Exception) {
+                    "Error calling CloudOps Backend AI: ${e.localizedMessage}"
+                }
+            } else {
+                """
+                # Backend AI is not connected.
+                Please connect the CloudOps Backend under Settings -> Backend URL to generate custom Terraform blueprints.
+
+                Requested service mapping:
+                - Source Cloud: ${_sourceCloud.value}
+                - Target Cloud: ${_targetCloud.value}
+                - Selected Migratable Services: ${_selectedServices.value.joinToString(", ")}
+                """.trimIndent()
+            }
             _generatedTerraform.value = response
 
             _activeJobs.update { jobs ->
@@ -1515,7 +1537,24 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 Provide a risk metric between 1 and 10, and additional post-remediation billing optimizations.
             """.trimIndent()
 
-            val response = GeminiClient.generateMigrationFeedback(customPrompt, systemInstruction)
+            val response = if (_useBackend.value && _isBackendConnected.value) {
+                try {
+                    com.example.api.CloudOpsBackendClient.service.getAICopilotResponse(
+                        com.example.api.AIChatPayload("Diagnosis System Instruction: $systemInstruction\n\nPrompt: $customPrompt")
+                    ).response
+                } catch (e: Exception) {
+                    "Error executing Backend AI incident diagnosis: ${e.localizedMessage}"
+                }
+            } else {
+                """
+                ### DevSecOps Threat Diagnosis [Backend Offline]
+                Root cause: Diagnostics are offline. Please connect your live backend to run active microservice audits.
+
+                ### Self-Healing Autonomic Suggestion
+                1. Check the target system logs for `IncidentID: ${incident.id}`.
+                2. Configure the CloudOps Backend under settings to activate SRE healing operations.
+                """.trimIndent()
+            }
             
             _chatMessages.update {
                 it + ChatMessage(text = response, isUser = false)
