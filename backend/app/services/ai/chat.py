@@ -273,6 +273,118 @@ Provide a concise, direct, professional response under 3 short paragraphs. Expli
                 "answer": f"Potential monthly savings from idle instances and orphan volumes is **${data['savings']['monthly_savings']:.2f}**."
             }
 
+        # --------------------------------------------------
+        # REAL EC2 INVENTORY QUERIES
+        # --------------------------------------------------
+
+        if (
+            "how many" in q
+            and "ec2" in q
+        ):
+
+            from app.database import ResourceDB
+
+            instances = (
+                db.query(ResourceDB)
+                .filter(
+                    ResourceDB.resource_type == "EC2"
+                )
+                .all()
+            )
+
+            running = 0
+            stopped = 0
+
+            for instance in instances:
+
+                status = (
+                    getattr(instance, "status", "")
+                    or ""
+                ).lower()
+
+                if status == "running":
+                    running += 1
+
+                elif status == "stopped":
+                    stopped += 1
+
+            return {
+                "answer":
+                    f"You currently have {len(instances)} EC2 instances. "
+                    f"{running} are running and "
+                    f"{stopped} are stopped."
+            }
+
+        if (
+            "list" in q
+            and "ec2" in q
+        ):
+            from app.database import ResourceDB
+
+            instances = (
+                db.query(ResourceDB)
+                .filter(
+                    ResourceDB.resource_type == "EC2"
+                )
+                .all()
+            )
+
+            if not instances:
+                return {
+                    "answer":
+                    "No EC2 instances found."
+                }
+
+            rows = []
+
+            for instance in instances:
+
+                rows.append(
+                    f"{instance.resource_id}"
+                )
+
+            return {
+                "answer":
+                "EC2 Instances:\n\n"
+                + "\n".join(rows)
+            }
+
+        if (
+            "running" in q
+            and "instance" in q
+        ):
+
+            from app.database import ResourceDB
+
+            instances = (
+                db.query(ResourceDB)
+                .filter(
+                    ResourceDB.resource_type == "EC2"
+                )
+                .all()
+            )
+
+            running = []
+
+            for i in instances:
+
+                status = (
+                    getattr(i, "status", "")
+                    or ""
+                ).lower()
+
+                if status == "running":
+
+                    running.append(
+                        i.resource_id
+                    )
+
+            return {
+                "answer":
+                "Running Instances:\n\n"
+                + "\n".join(running)
+            }
+
         if "ec2" in q:
             ec2 = [r for r in data["raw_recommendations"] if r["resource_type"] == "EC2"]
             return {
