@@ -206,4 +206,70 @@ class EC2RelationshipService:
                 security_groups
         }
 
+    def get_network_path(
+        self,
+        search_value: str
+    ):
+
+        result = self.find_instance(
+            search_value
+        )
+
+        if not result:
+            return None
+
+        instance, region, name = result
+
+        security_groups = []
+
+        for sg in instance.get(
+            "SecurityGroups",
+            []
+        ):
+
+            security_groups.append({
+
+                "group_id":
+                    sg["GroupId"],
+
+                "group_name":
+                    sg["GroupName"]
+            })
+
+        return {
+
+            "instance_id":
+                instance["InstanceId"],
+
+            "instance_name":
+                name,
+
+            "region":
+                region,
+
+            "vpc_id":
+                instance.get(
+                    "VpcId"
+                ),
+
+            "subnet_id":
+                instance.get(
+                    "SubnetId"
+                ),
+
+            "private_ip":
+                instance.get(
+                    "PrivateIpAddress"
+                ),
+
+            "public_ip":
+                instance.get(
+                    "PublicIpAddress"
+                ),
+
+            "security_groups":
+                security_groups
+        }
+
+
 

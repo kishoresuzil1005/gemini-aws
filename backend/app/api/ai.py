@@ -175,6 +175,45 @@ async def chat(
             "relationship": result
         }
 
+    if (
+        "explain network path for" in msg
+        or
+        "show network details for" in msg
+        or
+        "network path for" in msg
+    ):
+        search_value = (
+            msg
+                .replace(
+                    "explain network path for",
+                    ""
+                )
+                .replace(
+                    "show network details for",
+                    ""
+                )
+                .replace(
+                    "network path for",
+                    ""
+                )
+                .strip()
+        )
+
+        service = EC2RelationshipService()
+        result = service.get_network_path(
+            search_value
+        )
+
+        if not result:
+            return {
+                "success": False,
+                "message": "Instance not found"
+            }
+
+        return {
+            "success": True,
+            "network_path": result
+        }
 
 
     intent = IntentRouter.classify(msg)
