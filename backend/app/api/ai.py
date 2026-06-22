@@ -21,6 +21,9 @@ from app.services.ai.subnet_inventory import (
     SubnetInventoryService
 )
 from app.services.aws.security_group_service import SecurityGroupService
+from app.services.aws.ec2_security_mapping_service import (
+    EC2SecurityMappingService
+)
 
 router = APIRouter()
 
@@ -480,6 +483,46 @@ async def chat(
                 "success": False,
                 "message":
                     "Security group not found"
+            }
+
+    # ----------------------------------
+    # EC2 SECURITY GROUP MAPPING
+    # ----------------------------------
+
+    if (
+        "security group" in message
+        and "i-" in message
+    ):
+        import re
+
+        match = re.search(
+            r"(i-[a-zA-Z0-9]+)",
+            request.message,
+            re.IGNORECASE
+        )
+
+        if match:
+
+            instance_id = match.group(1)
+
+            result = (
+                EC2SecurityMappingService
+                .get_instance_security_groups(
+                    instance_id
+                )
+            )
+
+            if result:
+
+                return {
+                    "success": True,
+                    "instance": result
+                }
+
+            return {
+                "success": False,
+                "message":
+                    "Instance not found"
             }
 
     try:
