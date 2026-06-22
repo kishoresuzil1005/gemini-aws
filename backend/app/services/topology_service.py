@@ -1,3 +1,4 @@
+import time
 from app.services.architecture_service import ArchitectureService
 
 
@@ -5,18 +6,32 @@ class TopologyService:
 
     def __init__(self):
         self.architecture_service = ArchitectureService()
+        self._graph_cache = None
+        self._last_refresh = 0
 
     def _get_graph(self):
+        now = time.time()
+
+        if (
+            self._graph_cache
+            is not None
+            and now - self._last_refresh < 300
+        ):
+            return self._graph_cache
+
         try:
             graph = self.architecture_service.build_graph()
 
             if not graph:
-                return {"nodes": [], "edges": []}
+                self._graph_cache = {"nodes": [], "edges": []}
+            else:
+                self._graph_cache = {
+                    "nodes": graph.get("nodes", []),
+                    "edges": graph.get("edges", [])
+                }
 
-            return {
-                "nodes": graph.get("nodes", []),
-                "edges": graph.get("edges", [])
-            }
+            self._last_refresh = now
+            return self._graph_cache
 
         except Exception as e:
             print(f"[TOPOLOGY ERROR] {e}")

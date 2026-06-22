@@ -41,3 +41,15 @@ async def debug_graph():
         "sample_nodes": graph.get("nodes", [])[:5],
         "sample_edges": graph.get("edges", [])[:5]
     }
+
+
+@router.post("/refresh")
+async def refresh_topology():
+    topology_service._graph_cache = None
+    graph = topology_service._get_graph()
+    return {
+        "success": True,
+        "nodes": len(graph["nodes"]),
+        "edges": len(graph["edges"])
+    }
+
