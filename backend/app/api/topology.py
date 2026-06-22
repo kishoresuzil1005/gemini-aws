@@ -29,3 +29,15 @@ async def get_resource(resource_id: str):
 @router.get("/blast-radius/{resource_id}")
 async def blast_radius(resource_id: str):
     return topology_service.blast_radius(resource_id)
+
+
+@router.get("/debug")
+async def debug_graph():
+    graph = topology_service._get_graph()
+    return {
+        "success": True,
+        "node_count": len(graph.get("nodes", [])),
+        "edge_count": len(graph.get("edges", [])),
+        "sample_nodes": graph.get("nodes", [])[:5],
+        "sample_edges": graph.get("edges", [])[:5]
+    }
