@@ -1,123 +1,148 @@
-from app.services.ai.inventory_ai import InventoryAIService
-from app.services.ai.rds_inventory import RDSInventoryService
-from app.services.ai.s3_inventory import S3InventoryService
-from app.services.ai.vpc_inventory import VPCInventoryService
-from app.services.ai.subnet_inventory import SubnetInventoryService
-from app.services.aws.security_group_service import SecurityGroupService
+import boto3
+
+from app.services.aws.aws_regions import (
+    get_all_regions
+)
 
 
 class AccountTopologyService:
 
-    @classmethod
-    def get_account_topology(cls):
-        # 1. EC2 Count
-        try:
-            instances = InventoryAIService.get_all_ec2_instances()
-        except Exception:
-            instances = []
-        
-        total_ec2 = len(instances)
-        running_ec2 = len([i for i in instances if i.get("state") == "running"])
-        stopped_ec2 = len([i for i in instances if i.get("state") == "stopped"])
+    def get_topology(self):
 
-        # 2. RDS Count
-        try:
-            databases = RDSInventoryService.get_all_rds()
-        except Exception:
-            databases = []
-        
-        # 3. VPC Count
-        try:
-            vpcs = VPCInventoryService.get_all_vpcs()
-        except Exception:
-            vpcs = []
-        
-        # 4. Security Groups
-        try:
-            security_groups = SecurityGroupService.get_all_security_groups()
-        except Exception:
-            security_groups = []
+        regions = get_all_regions()
 
-        # 5. Subnets
-        try:
-            subnets = SubnetInventoryService.get_all_subnets()
-        except Exception:
-            subnets = []
+        total_ec2 = 0
+        total_rds = 0
+        total_vpcs = 0
+        total_subnets = 0
+        total_security_groups = 0
 
-        # 6. S3 Buckets
+        regional_breakdown = {}
+
+        for region in regions:
+
+            try:
+
+                ec2 = boto3.client(
+                    "ec2",
+                    region_name=region
+                )
+
+                rds = boto3.client(
+                    "rds",
+                    region_name=region
+                )
+
+                reservations = ec2.describe_instances()[
+                    "Reservations"
+                ]
+
+                ec2_count = sum(
+                    len(r["Instances"])
+                    for r in reservations
+                )
+
+                vpc_count = len(
+                    ec2.describe_vpcs()[
+                        "Vpcs"
+                    ]
+                )
+
+                subnet_count = len(
+                    ec2.describe_subnets()[
+                        "Subnets"
+                    ]
+                )
+
+                sg_count = len(
+                    ec2.describe_security_groups()[
+                        "SecurityGroups"
+                    ]
+                )
+
+                rds_count = len(
+                    rds.describe_db_instances()[
+                        "DBInstances"
+                    ]
+                )
+
+                total_ec2 += ec2_count
+                total_vpcs += vpc_count
+                total_subnets += subnet_count
+                total_security_groups += sg_count
+                total_rds += rds_count
+
+                regional_breakdown[
+                    region
+                ] = {
+
+                    "ec2":
+                        ec2_count,
+
+                    "rds":
+                        rds_count,
+
+                    "vpcs":
+                        vpc_count,
+
+                    "subnets":
+                        subnet_count,
+
+                    "security_groups":
+                        sg_count
+                }
+
+            except Exception:
+                continue
+
+        # -------------------
+        # S3
+        # -------------------
+
         try:
-            buckets = S3InventoryService.get_all_buckets()
+
+            s3 = boto3.client(
+                "s3"
+            )
+
+            total_s3 = len(
+                s3.list_buckets()[
+                    "Buckets"
+                ]
+            )
+
         except Exception:
-            buckets = []
+
+            total_s3 = 0
 
         return {
-            "success": True,
-            "topology": {
-                "ec2": {
-                    "total": total_ec2,
-                    "running": running_ec2,
-                    "stopped": stopped_ec2,
-                    "instances_list": [
-                        {
-                            "instance_id": i.get("instance_id"),
-                            "name": i.get("name"),
-                            "state": i.get("state"),
-                            "region": i.get("region")
-                        } for i in instances
-                    ]
-                },
-                "rds": {
-                    "total": len(databases),
-                    "databases_list": [
-                        {
-                            "db_identifier": d.get("db_identifier"),
-                            "engine": d.get("engine"),
-                            "status": d.get("status"),
-                            "region": d.get("region")
-                        } for d in databases
-                    ]
-                },
-                "vpc": {
-                    "total": len(vpcs),
-                    "vpcs_list": [
-                        {
-                            "vpc_id": v.get("vpc_id"),
-                            "cidr": v.get("cidr"),
-                            "state": v.get("state"),
-                            "region": v.get("region")
-                        } for v in vpcs
-                    ]
-                },
-                "security_groups": {
-                    "total": len(security_groups),
-                    "groups_list": [
-                        {
-                            "group_id": s.get("group_id"),
-                            "group_name": s.get("group_name"),
-                            "vpc_id": s.get("vpc_id"),
-                            "region": s.get("region")
-                        } for s in security_groups
-                    ]
-                },
-                "subnets": {
-                    "total": len(subnets),
-                    "subnets_list": [
-                        {
-                            "subnet_id": s.get("subnet_id"),
-                            "vpc_id": s.get("vpc_id"),
-                            "cidr": s.get("cidr") or s.get("cidr_block"),
-                            "region": s.get("region")
-                        } for s in subnets
-                    ]
-                },
-                "s3": {
-                    "total": len(buckets),
-                    "buckets_list": [
-                        {
-                            "bucket_name": b.get("bucket_name"),
-                            "region": b.get("region")
-                        } for b in buckets
-                    ]
-                }
-            }
+
+            "regions":
+                len(
+                    regional_breakdown
+                ),
+
+            "resources": {
+
+                "ec2":
+                    total_ec2,
+
+                "rds":
+                    total_rds,
+
+                "s3":
+                    total_s3,
+
+                "vpcs":
+                    total_vpcs,
+
+                "subnets":
+                    total_subnets,
+
+                "security_groups":
+                    total_security_groups
+            },
+
+            "regional_breakdown":
+                regional_breakdown
         }

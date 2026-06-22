@@ -256,12 +256,18 @@ async def chat(
         or
         "show account architecture" in msg
         or
-        "show cloud inventory map" in msg
-        or
         "summarize my aws account" in msg
+        or
+        "what resources do i have" in msg
+        or
+        "cloud inventory summary" in msg
     ):
-        result = AccountTopologyService.get_account_topology()
-        return result
+        service = AccountTopologyService()
+        result = service.get_topology()
+        return {
+            "success": True,
+            **result
+        }
 
 
     intent = IntentRouter.classify(msg)
@@ -282,7 +288,12 @@ async def chat(
     elif intent == Intent.SECURITY_AUDIT:
         res = SecurityAuditService.handle(msg)
     elif intent == Intent.ACCOUNT_TOPOLOGY:
-        res = AccountTopologyService.get_account_topology()
+        service = AccountTopologyService()
+        result = service.get_topology()
+        res = {
+            "success": True,
+            **result
+        }
     elif intent == Intent.PUBLIC_EXPOSURE:
         instances = ExposureService.get_public_instances()
         res = {
