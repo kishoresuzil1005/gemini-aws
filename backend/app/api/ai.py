@@ -280,9 +280,10 @@ async def chat(
         "visualize my aws account" in msg
     ):
         service = AccountTreeService()
+        result = service.generate_tree()
         return {
             "success": True,
-            "architecture": service.generate_tree()
+            **result
         }
 
 
