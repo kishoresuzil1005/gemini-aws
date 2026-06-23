@@ -5,7 +5,7 @@ class QdrantService:
     def __init__(self, collection_name: str = "cloud_docs"):
         self.collection_name = collection_name
         self.client = None
-        self.dimension = 384
+        self.dimension = 768
         
         try:
             from qdrant_client import QdrantClient
