@@ -4,3 +4,4 @@ numpy
 python-dotenv
 beautifulsoup4
 lxml
+pymupdf

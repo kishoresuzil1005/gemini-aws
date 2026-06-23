@@ -1,7 +1,8 @@
 import requests
 from app.services.cost.cache import CostSummaryCache
 
-OLLAMA_URL = "http://ollama:11434/api/generate"
+import os
+OLLAMA_URL = f'{os.getenv("OLLAMA_URL", "http://localhost:11434")}/api/generate'
 
 
 class OllamaService:

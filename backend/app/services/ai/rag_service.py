@@ -77,7 +77,7 @@ class RAGService:
             print(f"[RAG INDEX DIRECTORY ERROR] {e}")
             return 0
 
-    def query_rag(self, query: str, limit: int = 2) -> Dict[str, Any]:
+    def query_rag(self, query: str, limit: int = 8) -> Dict[str, Any]:
         """
         Retrieves matching chunks and runs Ollama with the augmented context.
         """
@@ -109,14 +109,14 @@ class RAGService:
             
             # Construct Prompt
             augmented_prompt = (
-                "You are an expert Cloud Operations and AWS Systems Architecture Assistant.\n"
-                "Use the following pieces of context to answer the user's question. If you do not know the answer, "
-                "say that you do not know or lack the information from the contexts - do not make up arbitrary information.\n\n"
-                "=== RETRIEVED INFRASTRUCTURE CONTEXT ===\n"
+                "You are an Elite AWS Solutions Architect and Cloud Security Expert with deep knowledge in FinOps and Cloud Operations.\n"
+                "Your goal is to provide production-grade, highly secure, cost-optimized, and well-architected solutions based on the context provided below.\n"
+                "Rely strictly on the provided context. If the answer is not contained within the context, clearly state that the context lacks the necessary information.\n\n"
+                "=== AWS KNOWLEDGE BASE CONTEXT ===\n"
                 f"{context_str}\n"
-                "========================================\n\n"
+                "==================================\n\n"
                 f"User Question: {query}\n\n"
-                "Formulate a precise, operational, professional, and clear answer:"
+                "Please formulate a precise, highly technical, and actionable response that covers best practices, security recommendations, and cost optimization where applicable:"
             )
             
             # Request completion from Ollama

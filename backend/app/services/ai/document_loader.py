@@ -1,15 +1,19 @@
 import os
+import fitz  # PyMuPDF
 from typing import List, Dict, Any
 
-def chunk_text(text: str, size: int = 500) -> List[str]:
-    return [
-        text[i:i+size]
-        for i in range(
-            0,
-            len(text),
-            size
-        )
-    ]
+def chunk_text(text: str, size: int = 500, overlap: int = 100) -> List[str]:
+    chunks = []
+    if not text:
+        return chunks
+    if len(text) <= size:
+        return [text]
+        
+    start = 0
+    while start < len(text):
+        chunks.append(text[start:start+size])
+        start += (size - overlap)
+    return chunks
 
 class DocumentLoader:
     def __init__(self, chunk_size: int = 500, chunk_overlap: int = 100):
@@ -24,15 +28,21 @@ class DocumentLoader:
 
         for root, _, files in os.walk(directory_path):
             for file in files:
-                if file.endswith((".txt", ".md", ".json")):
+                if file.endswith((".txt", ".md", ".json", ".pdf")):
                     file_path = os.path.join(root, file)
                     chunks.extend(self.load_and_split_file(file_path))
         return chunks
 
     def load_and_split_file(self, file_path: str) -> List[Dict[str, Any]]:
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
+            content = ""
+            if file_path.endswith(".pdf"):
+                with fitz.open(file_path) as doc:
+                    for page in doc:
+                        content += page.get_text() + "\n"
+            else:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
             
             filename = os.path.basename(file_path)
             return self.split_text(content, source=filename)
@@ -48,7 +58,7 @@ class DocumentLoader:
         metadata = extra_metadata or {}
         metadata["source"] = source
 
-        text_chunks = chunk_text(text, size=self.chunk_size)
+        text_chunks = chunk_text(text, size=self.chunk_size, overlap=self.chunk_overlap)
         
         for chunk_idx, chunk_text_content in enumerate(text_chunks):
             chunk_metadata = metadata.copy()

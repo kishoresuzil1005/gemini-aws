@@ -1,3 +1,4 @@
+import os
 import requests
 
 class EmbeddingService:
@@ -5,11 +6,12 @@ class EmbeddingService:
     def __init__(self):
         self.model_name = "nomic-embed-text"
         self.dimension = 768
+        self.ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
     def get_embedding(self, text: str):
 
         response = requests.post(
-            "http://ollama:11434/api/embeddings",
+            f"{self.ollama_url}/api/embeddings",
             json={
                 "model": self.model_name,
                 "prompt": text
