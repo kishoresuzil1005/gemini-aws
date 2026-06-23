@@ -1,0 +1,31 @@
+# Amazon CloudWatch - Operational Monitoring & DevSecOps Log Analysis
+
+Amazon CloudWatch provides monitoring and management services for AWS resources and applications. It collects and tracks metrics, collects and monitors log files, and sets alarms.
+
+## Core Concepts
+
+### Metrics and Alarms
+Metrics represent numerical measurements about resource performance (such as CPU Utilization, Disk I/O, Network, or custom application latencies). In CloudWatch, you can define Metric Filters and create Alarms that execute notification actions (via SNS) or auto-scaling triggers when thresholds are exceeded.
+
+### Logs and Log Groups
+System, audit, and application logs are streamed to CloudWatch Logs.
+*   **Log Event:** A record of activity with a timestamp.
+*   **Log Stream:** A sequence of log events originating from the same source (for example, a specific virtual machine or a web container instance).
+*   **Log Group:** A collection of log streams that share the same access control, retention, and encryption settings.
+
+### Dashboards and Insights
+CloudWatch Logs Insights is an interactive query language that allows security engineers to scan, filter, and parse log streams rapidly to detect malicious request sequences or extract statistics.
+
+## DevSecOps and Security Operations Best Practices
+
+### 1. Alerting on Critical API Activity
+Set up CloudWatch Alarms for key security-related EventBridge actions or CloudTrail API events, including:
+*   Unauthorized API call failures.
+*   Modification of security groups (e.g., admitting `0.0.0.0/0` ingress rules).
+*   IAM policy edits or root account accesses.
+
+### 2. Secure KMS Log Encryption
+By default, CloudWatch Logs encrypts streams with server-side keys. For high-compliance settings, attach a KMS customer-managed key (CMK) to your Log Groups to manage key access policies, limiting which users and roles are permitted to search or view application console output.
+
+### 3. Clear Retention Policies
+Avoid maintaining logs indefinitely for dev/test groups to prevent storage costs. Specify reasonable log group retention settings and build export rules to store long-term compliance logs inside encrypted, locked Glacier S3 bins.

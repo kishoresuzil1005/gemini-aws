@@ -1,0 +1,29 @@
+# Amazon EKS (Elastic Kubernetes Service) - Managed Kubernetes Architecture
+
+Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service that makes it easy to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes.
+
+## Core Concepts
+
+### Managed Control Plane
+AWS fully manages, replicates, and scales the Kubernetes control plane (etcd, API Server, scheduler) across three Availability Zones to guarantee 99.95% uptime. It automatically runs cluster upgrades and backs up etcd data pools.
+
+### Kubernetes Node Types
+*   **Managed Node Groups:** EC2 instances spawned and managed by EKS to serve as compute capacity.
+*   **AWS Fargate for EKS:** Run serverless Kubernetes pods without provisioning or managing node capacity.
+*   **Self-Managed Nodes:** Custom EC2 nodes configured manually when complex kernel modifications or configurations are required.
+
+### IAM and Kubernetes RBAC Integration
+EKS integrates IAM credentials with native Kubernetes RBAC using the AWS IAM Authenticator or the EKS Access Entries system, enabling unified IAM-driven cluster access.
+
+## DevSecOps EKS Security Guidelines
+
+### 1. IAM Roles for Service Accounts (IRSA)
+Do not assign broad IAM privileges to compute Node Roles. Instead, associate specific IAM Roles directly with Kubernetes Service Accounts (IRSA). This ensures that each Kubernetes Pod has a strictly isolated, temporary IAM policy access profile instead of inheriting broad host permissions.
+
+### 2. Restrict Cluster Endpoint Settings
+By default, the Kubernetes API server public endpoint is exposed to the internet. To secure EKS clusters:
+*   Set endpoint access to `Private` to fully disable public internet routing, forcing developer and pipeline queries through a VPN or secure bastion host inside the VPC.
+*   At a minimum, restrict the public IP whitelist (CIDR blocks) allowed to connect to the cluster API interface.
+
+### 3. Implement Network Security Policies
+Kubernetes allows all Pods to talk to one another by default. Install a policy engine such as Calico or use the Amazon VPC CNI security groups for pods capability to declare and enforce strict Network Policies, preventing horizontal movement if a single microservice node becomes compromised.

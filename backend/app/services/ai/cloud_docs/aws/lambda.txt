@@ -1,0 +1,30 @@
+# AWS Lambda - Serverless Compute Concepts and Security Hardening
+
+AWS Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, and code monitoring and logging.
+
+## Core Concepts
+
+### Function and Handlers
+A Lambda function contains your compiled code, deployment package, runtime configurations, and custom triggers. The handler is the entry point within your code that AWS Lambda calls when the function is executed.
+
+### Triggers and Event Sources
+Event sources trigger your Lambda functions. Examples include:
+*   **Synchronous:** Amazon API Gateway, Application Load Balancer.
+*   **Asynchronous:** Amazon S3, Amazon SNS, EventBridge.
+*   **Polling/Stream-based:** Amazon Kinesis, Amazon DynamoDB Streams, Amazon SQS.
+
+### Execution Context and Cold Starts
+When a Lambda function is invoked, the service provisions an execution environment (microVM) and loads your code. 
+*   **Cold Start:** The latency overhead that occurs when Lambda boots up a new microVM container instance for the first time or after idle scale-down.
+*   **Warm Start:** Invoking a pre-booted execution environment. You can reuse DB connections and static helpers placed outside the handler function block to optimize cold start performance.
+
+## DevSecOps and Security Best Practices for Lambda
+
+### 1. Function Execution Roles (Least Privilege)
+Every Lambda function must be associated with an IAM execution role. Create dedicated execution roles for *every single function* instead of sharing one blanket role. Never grant wildcard permissions (`"Resource": "*"`) for write operations.
+
+### 2. VPC Placement & Security Groups
+Configure Lambda functions inside private VPC subnets when they need to reach internal resources such as Aurora/RDS databases or elastic cache clusters. Ensure security groups attached to Lambda are strictly restricted to outbound connections only (stateful return handles response traffic).
+
+### 3. Encrypted Environment Variables
+Never hardcode secrets (database passwords, OAuth keys, or third-party service tokens) in raw text. Use Lambda environment variables encrypted at rest with custom AWS Key Management Service (AWS KMS) customer-managed keys (CMK), or retrieve them at runtime using AWS Secrets Manager or Parameter Store.

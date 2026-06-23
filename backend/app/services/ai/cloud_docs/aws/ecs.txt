@@ -1,0 +1,29 @@
+# Amazon ECS (Elastic Container Service) - Container Orchestration & Security
+
+Amazon Elastic Container Service (Amazon ECS) is a highly scalable, fast container management service that makes it easy to run, stop, and manage Docker containers on a cluster.
+
+## Core Concepts
+
+### Launch Types: EC2 vs. AWS Fargate
+*   **AWS Fargate:** Serverless container execution. AWS manages the underlying EC2 instances, provisioning clusters, and scaling hosts automatically. Fargate is highly recommended for DevSecOps as it removes host OS patching and management requirements from the client.
+*   **Amazon EC2 Launch Type:** Gives server access and fine-grained control to physical instances, allowing custom kernel modules and pricing configurations, but introduces host patch/vulnerability management overhead.
+
+### Task Definition
+A blueprint/JSON file that defines one or more containers (up to 10) in an ECS Task. It specifies container images, CPU/memory allocations, port mappings, environment variables, storage mounts, and logging targets.
+
+### Tasks and Services
+*   **Task:** The active running instance of a Task Definition on a cluster (similar to a Pod in Kubernetes).
+*   **Service:** An ECS construct that maintains a specified number of running task instances concurrently, handling scaling policies, integration with Load Balancers, and rolling update deployments.
+
+## Security Controls and Configuration Best Practices
+
+### 1. Task Execution Role vs. Task Role
+Verify and segregate active roles:
+*   **ECS Task Execution Role:** Used by the ECS agent to pull container images from Amazon ECR, stream logs to CloudWatch logs, and fetch secrets from AWS Secrets Manager/KMS.
+*   **ECS Task Role:** Used by the application inside the container to make AWS API calls (e.g. read from an S3 bucket or publish to SQS).
+
+### 2. Network Mode Selection: awsvpc
+Use the `awsvpc` network mode for your task definitions. It assigns a dedicated Elastic Network Interface (ENI) and real private IP address to each ECS task. This enables security groups to control traffic at the *container task level* directly, rather than sharing the EC2 host networking rules.
+
+### 3. Read-Only Root Filesystems
+Harden container runtimes by configuring tasks to use a read-only root directory filesystem. Use specific emptyDirs or ephemeral scratch spaces for temp folders if necessary, limiting attackers from fetching tools or injecting scripts into system binaries during payload executions.

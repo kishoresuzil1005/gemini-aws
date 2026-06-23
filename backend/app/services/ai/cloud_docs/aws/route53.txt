@@ -1,0 +1,31 @@
+# Amazon Route 53 - Cloud Domain Name System (DNS) & Network Security
+
+Amazon Route 53 is a highly available and scalable Cloud Domain Name System (DNS) web service. It is designed to give developers and businesses an extremely reliable and cost-effective way to route end users to internet applications.
+
+## Core Concepts
+
+### Hosted Zones
+A container for records that define how you want to route traffic for a domain and its subdomains.
+*   **Public Hosted Zones:** Accessible from the internet, used to route traffic for public domain names.
+*   **Private Hosted Zones:** Accessible only from within specific VPC networks, allowing custom internal namespaces (e.g., `api.internal.corp`).
+
+### Dynamic Routing Policies
+Route 53 offers advanced traffic management capabilities via customizable routing policies:
+*   **Simple Routing:** Resolves requests to standard static resources (e.g., an IP address).
+*   **Weighted Routing:** Spreads traffic among multiple resources in proportion to specified weights (great for blue-green deployments).
+*   **Latency Routing:** Routes connections to the AWS region that yields the lowest network round-trip latency for the user.
+*   **Failover (Active-Passive):** Routes traffic to a primary host, and automatically fails over to a secondary recovery site if the primary fails Route 53 health checks.
+*   **Geolocation/Geoproximity:** Routes endpoints based on the physical location of the incoming DNS query origin.
+
+## DevSecOps Route 53 Security Guidelines
+
+### 1. Enable DNSSEC Validation and Signing
+Domain Name System Security Extensions (DNSSEC) adds cryptographic signatures to your DNS records to protect your users from DNS spoofing and man-in-the-middle attacks (cache poisoning). Turn on Route 53 DNSSEC signing to guarantee that resolving clients are receiving real target IP mappings.
+
+### 2. Implement Route 53 Resolver DNS Firewall
+To protect VPC workloads from data exfiltration or phishing communication campaigns:
+*   Deploy Route 53 Resolver DNS Firewall rules.
+*   Filter outbound DNS queries made by EC2 instances against known malicious domain lists and block unauthorized traffic.
+
+### 3. Lock DNS Record Editing with IAM policies
+Restrict standard developer IAM profiles from editing Route 53 hosted zones. Require structured pull requests (Infrastructure as Code - IaC) and authorization flows before updating core namespace DNS records to prevent malicious redirections.

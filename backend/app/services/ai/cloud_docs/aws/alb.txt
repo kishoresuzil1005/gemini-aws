@@ -1,0 +1,27 @@
+# Application Load Balancer (ALB) - Elastic Load Balancing & Application Ingress
+
+Elastic Load Balancing (ELB) automatically distributes incoming application traffic across multiple targets, such as Amazon EC2 instances, containers, IP addresses, and Lambda functions. An Application Load Balancer (ALB) functions at the application layer (Layer 7) of the Open Systems Interconnection (OSI) model.
+
+## Core Concepts
+
+### Listeners and Rules
+*   **Listener:** A process that checks for connection requests, using the protocol and port that you configure.
+*   **Routing Rules:** Determine how the load balancer routes requests to one or more registered target groups. Rules consist of conditions (such as URL path patterns, host headers, query parameters, or HTTP methods) and actions (Forward, Redirect, Fixed Response).
+
+### Target Groups
+A target group routes requests to one or more registered targets. You must configure Health Checks at the Target Group level, specifying the endpoint path, success codes (e.g., 200-299), check intervals, and healthy/unhealthy failure counts. ALB will automatically redirect traffic away from failing nodes to ensure high availability.
+
+### SSL/TLS Offloading
+ALB can handle SSL/TLS traffic encryption and decryption, offloading cryptographic CPU overhead from the backend servers. You configure the ALB with certificates from AWS Certificate Manager (ACM).
+
+## DevSecOps and Network Security Best Practices
+
+### 1. Enforce HTTPS Redirection
+Configure HTTP listeners (port 80) with a default redirect action to route all queries securely over HTTPS (port 443). Always utilize modern TLS security policies (e.g., `ELBSecurityPolicy-TLS13-1-2`) and disable legacy, insecure versions (SSLv3, TLS 1.0, and TLS 1.1).
+
+### 2. Restrict Target Group Ingress Security Groups
+Ensure EC2 backend instances do not accept traffic directly from the public internet. Restrict application server Security Group inbound rules to *only* permit traffic originating from the security group of your Application Load Balancer on the specific host ports, creating a secure multi-tier boundary.
+
+### 3. Enable Access Logs and AWS WAF
+*   **WAF Integration:** Attach AWS Web Application Firewall to the ALB to inspect HTTP payloads for exploits.
+*   **Access Logs:** Enable ALB access logs, storing requests in S3 for forensic investigation of routing activities, client HTTP statuses, and latencies.
