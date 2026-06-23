@@ -1171,14 +1171,14 @@ app.include_router(
 # )
 
 
-from app.api.ai import router as ollama_ai_router
+# from app.api.ai import router as ollama_ai_router
 from app.api.doctor import router as doctor_router
 
-app.include_router(
-    ollama_ai_router,
-    prefix="/api/ai",
-    tags=["AI"]
-)
+# app.include_router(
+#     ollama_ai_router,
+#     prefix="/api/ai",
+#     tags=["AI"]
+# )
 
 app.include_router(
     doctor_router,

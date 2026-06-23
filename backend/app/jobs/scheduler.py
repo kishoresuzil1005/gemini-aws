@@ -18,9 +18,9 @@ from app.jobs.anomaly_job import (
     run_anomaly_job
 )
 
-from app.jobs.ai_job import (
-    run_ai_job
-)
+# from app.jobs.ai_job import (
+#     run_ai_job
+# )
 
 scheduler = (
     BackgroundScheduler()
@@ -53,11 +53,11 @@ def start_scheduler():
         minutes=15
     )
 
-    scheduler.add_job(
-        run_ai_job,
-        "interval",
-        hours=1
-    )
+#     scheduler.add_job(
+#         run_ai_job,
+#         "interval",
+#         hours=1
+#     )
 
     scheduler.start()
 
