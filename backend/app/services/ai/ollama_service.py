@@ -1,5 +1,4 @@
 import requests
-
 from app.services.cost.cache import CostSummaryCache
 
 OLLAMA_URL = "http://ollama:11434/api/generate"
@@ -90,4 +89,3 @@ class OllamaService:
         response.raise_for_status()
 
         return response.json()["response"]
-
