@@ -1,0 +1,27 @@
+# Amazon FSx - Managed Third-Party File Systems and Network Hardening
+
+Amazon FSx makes it easy and cost-effective to launch and run popular high-performance file systems. It offers fully managed file engines integrated with recognized commercial systems.
+
+## Core Concepts
+
+### Supported File Engines
+*   **FSx for Windows File Server:** Built on Microsoft NTFS and SMB protocols, featuring integrated Active Directory (AD) support and shadow copies.
+*   **FSx for Lustre:** Optimized for high-throughput computational workloads such as high-performance computing (HPC), machine learning, and media processing.
+*   **FSx for NetApp ONTAP:** Fully managed ONTAP storage engines supporting multi-protocol access (NFS, SMB, iSCSI).
+*   **FSx for OpenZFS:** High-performance, low-latency shared storage built on the open-source OpenZFS engine.
+
+### Deployment Topologies
+*   **Single-AZ:** Deploys a single cluster or file server inside one availability zone, balancing costs for dev and non-critical builds.
+*   **Multi-AZ:** Syncs replications synchronously across dual availability zones, establishing seamless automatic failovers to guarantee enterprise-level high availability.
+
+## DevSecOps and FSx Security Best Practices
+
+### 1. Enforce Encrypted Storage Operations
+*   **At Rest:** Mandate storage volume encryption using Customer Managed Keys (CMKs) inside AWS KMS.
+*   **In Transit:** Require protocol-level encryption (SMB encryption for Windows/ONTAP and transit-tls helpers for NetApp/OpenZFS file systems).
+
+### 2. Isolate Endpoints inside Private Workload Subnets
+Configure FSx elastic network interfaces exclusively inside private subnets. Prevent direct internet paths, leveraging Security Groups to filter TCP/UDP connection requests exclusively to authorized app servers or Active Directory connectors.
+
+### 3. Manage Granular File Permissions (ACLs)
+Do not establish wide-open file directories. Use Windows Access Control Lists (ACLs) or Linux POSIX permissions to restrict directories to authorized directory security groups, upholding least-privilege on the data structure itself.

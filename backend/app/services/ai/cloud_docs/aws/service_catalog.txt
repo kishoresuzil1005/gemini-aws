@@ -1,0 +1,25 @@
+# AWS Service Catalog - Asset Governance and Compliance Workflows
+
+AWS Service Catalog allows organizations to create and manage catalogs of IT services that are approved for use on AWS. These IT services can include everything from virtual machine images, servers, software, and databases to complete multi-tier application architectures.
+
+## Core Concepts
+
+### Portfolios and Products
+*   **Product:** An IT service that you want to make available for deployment on AWS, modeled as a CloudFormation template.
+*   **Portfolio:** A collection of products with configuration details, access permissions, and constraints managed by system administrators.
+
+### Constraints
+Policies mapped to control how products can be deployed:
+*   **Launch Constraints:** Specifies the IAM Role that Service Catalog assumes to deploy the resource. Users do not need individual AWS administrative permissions to create resources; Service Catalog deploys it on their behalf.
+*   **Template Constraints:** Restricts parameters users can enter during setup (e.g. restricting EC2 size inputs to `t3.micro` or `t3.small` only).
+
+## DevSecOps Security and Portfolios Best Practices
+
+### 1. Enforce Launch Constraints (Privilege Separation)
+Configure strict **Launch Constraints** on all portfolios. This ensures that users deploy products using a dedicated, audited IAM execution role. This prevents you from needing to grant raw administrative or provisioning permissions to individual developer accounts.
+
+### 2. Guard Deployments using Template Constraints
+Define template boundaries (e.g. using specific schema parameters) inside your products. Restrict developers from changing critical security configurations, preventing them from turning off database encryption or opening unrestricted public ports.
+
+### 3. Enforce Tagging Options and Version Control
+Set up standard **Tagging Options** on portfolios. Service Catalog automatically appends tags (e.g., `Department=Finance`, `Owner=TeamA`) to all deployed products, enabling clean cost allocation, reporting auditing, and overall resource management.

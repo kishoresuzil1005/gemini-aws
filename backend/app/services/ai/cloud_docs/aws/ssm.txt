@@ -1,0 +1,25 @@
+# AWS Systems Manager (SSM) - Cloud Operations and Operational Hardening
+
+AWS Systems Manager (SSM) is a secure, unified hub for cloud operations that provides a collection of capabilities to view and control your AWS infrastructure dynamically at scale.
+
+## Core Concepts
+
+### Systems Manager Agent (SSM Agent)
+The underlying software agent running inside your EC2 instances, containers, or on-premises servers that communicates with the Systems Manager service, executing remote actions securely.
+
+### Enterprise Capabilities
+*   **Session Manager:** Facilitates secure, shell-interactive access to target instances over standard web browsers without provisioning bastions, open inbound ports, or managing SSH keys.
+*   **Parameter Store:** Hierarchical store for configuration data management and secrets storage, supporting encrypted values.
+*   **Run Command:** Executes scripts or shell utilities at scale across groups of managed servers concurrently.
+*   **Patch Manager:** Automates rolling out operating system patches across massive server nodes securely.
+
+## DevSecOps Security Configuration Best Practices
+
+### 1. Replace SSH Access with Session Manager
+Enforce secure administration: completely close port 22 (SSH) and port 3389 (RDP) inside all EC2 Security Groups. Mandate usage of **SSM Session Manager** for developer and admin connections. Session Manager authenticates sessions through IAM, records raw command histories, and streams terminal logs securely to CloudWatch or S3 for auditing.
+
+### 2. Encrypt Parameters with KMS Customer-Managed Keys
+When storing database credentials, JWT keys, or API tokens inside the Parameter Store, always select the `SecureString` data type and map encryption paths to a custom AWS KMS CMK. This logs parameter decryption access logs accurately inside CloudTrail.
+
+### 3. Restrict Run Command Execution via IAM and Resource Tags
+Insecure SSM setups can allow junior developers or compromised IAM roles to execute remote command strings globally. Write strict IAM policies that restrict `ssm:SendCommand` actions to targets with specific server resource tags (such as `Environment=Sandbox`), preventing unauthorized access to production hosts.

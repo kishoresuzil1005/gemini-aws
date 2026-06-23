@@ -1,0 +1,26 @@
+# AWS Batch - High-Performance Batch Compute Services
+
+AWS Batch enables developers, scientists, and engineers to easily and efficiently run hundreds of thousands of batch computing jobs on AWS. AWS Batch dynamically provisions the optimal quantity and type of compute resources (e.g., CPU or memory optimized instances) based on the volume and specific resource requirements of the submitted batch jobs.
+
+## Core Concepts
+
+### Jobs, Job Definitions, and Queues
+These logical blocks manage batch scheduling:
+*   **Job:** A unit of computational work (e.g., a shell script, Linux executable, or container image) submitted to AWS Batch.
+*   **Job Definition:** A blueprint schema specifying container image parameters, CPU/memory allocations, IAM roles, storage mounts, and execution behaviors.
+*   **Job Queue:** Evaluates prioritized jobs submitted to run, dispatching elements down to active Compute Environments when capacity becomes available.
+
+### Compute Environments
+*   **Managed Compute Environments:** AWS manages EC2 or Fargate instances, launching and terminating machines to scale capacity.
+*   **Unmanaged Compute Environments:** You manually configure and maintain the underlying EC2 instances, giving complete control over custom network properties or kernel models.
+
+## DevSecOps and Compute Security Standards
+
+### 1. Isolate Batch Compute Environments inside Private Subnets
+Never allow Batch spin-up configurations to deploy compute worker nodes into public subnets. Keep your active computing engines entirely inside private subnets, routing outbound package grabs through a secure NAT Gateway or Private VPC endpoints.
+
+### 2. Maintain Granular Job-Level IAM Roles
+Do not assign broad credentials to your broad Batch Compute Instance Roles. Instead, associate specific, limited IAM Roles directly inside each **Job Definition** parameter block. This guarantees that each containerized job owns an isolated, restricted identity scope during operational runs.
+
+### 3. Enforce ECR Container Image Scans
+Ensure container images retrieved by AWS Batch definitions are pulled from Amazon ECR repositories that have automatic "scan on push" enabled. This prevents running workloads using container bases that contain Severe CVEs or unpatched libraries.

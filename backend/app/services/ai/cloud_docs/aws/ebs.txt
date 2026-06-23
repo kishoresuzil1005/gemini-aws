@@ -1,0 +1,30 @@
+# Amazon EBS (Elastic Block Store) - Persistent Block Storage and Volume Security
+
+Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted physical hard drives that can be attached as secondary storage spaces to your compute virtual networks.
+
+## Core Concepts
+
+### Volume Types
+*   **General Purpose SSD (gp2, gp3):** Balances cost and performance for a wide range of transactional workloads. gp3 allows customizing IOPS and throughput independently from storage size configuration.
+*   **Provisioned IOPS SSD (io1, io2 Block Express):** Designed for extreme low-latency database backends and input/output intensive applications.
+
+### Encryption at Rest and Key Management
+EBS uses AWS KMS Customer Managed Keys (CMK) or AWS managed keys to secure volume contents. When encryption is enabled on an EBS volume:
+*   Data at rest inside the volume is encrypted.
+*   All data in-transit between the physical host and the volume is encrypted.
+*   Any snapshot backups created from the volume are encrypted.
+
+### Snapshots and Elastic Volumes
+*   **Snapshots:** Incremental, point-of-time backups stored securely in Amazon S3. Only modified data blocks are saved, optimizing storage costs.
+*   **Elastic Volumes:** Allows changing volume types, scaling storage capacities, or adjusting IOPS dynamically on-the-fly without downing computational activities.
+
+## DevSecOps and EBS Volume Hardening Guidelines
+
+### 1. Enable Account-Level EBS Encryption by Default
+Configure your AWS Region parameters to enforce EBS encryption by default under your account configurations. This ensures any new EBS volumes launched by developers or auto-scaling groups are cryptographically secured at initialization without needing manual policy validation.
+
+### 2. Restrict Snapshot Policy Permissions and Public Sharing
+Never share EBS snapshots publicly or across unapproved master organizations. Rogue snapshots containing raw database tables or operating system image builds can lead to severe credential exposure leakages. Restrict sharing parameters exclusively to specific authorized account IDs.
+
+### 3. Enforce Life Cycle Automation (DLM/AWS Backup)
+Deploy AWS Data Lifecycle Manager (DLM) or centralized AWS Backup policies to automatically manage EBS snapshot retention intervals, rotating out obsolete blocks and syncing critical snapshots to cold storage vaults or disaster recovery regions.

@@ -1,0 +1,23 @@
+# Amazon NAT Gateway - Managed Elastic Network Address Translation
+
+Amazon NAT Gateway is a fully managed Network Address Translation (NAT) service designed to allow instances in private subnets to establish outbound connections to the internet or other AWS services safely, while blocking the public internet from initiating inbound connection loops with those private instances.
+
+## Core Concepts
+
+### Public vs. Private NAT Gateways
+*   **Public NAT Gateway:** Deployed inside a public subnet. Requires an **Elastic IP Address (EIP)** to mask private IP ranges in outbound routing paths, making traffic appear to originate from the gateway's public IP.
+*   **Private NAT Gateway:** Deployed inside a private subnet. Translates outbound traffic using private IP ranges. This is useful for forwarding connection packets across different private clouds or on-premises networks without utilizing internet routing or risking IP address overlaps.
+
+### Route Table Configurations
+Instances in your private subnets must have a default route (e.g. `0.0.0.0/0`) pointing to the active elastic network interface ID of your NAT Gateway. The NAT Gateway then processes and routes the packets to your internet gateway destination.
+
+## Network Security and Performance Hardening Best Practices
+
+### 1. Mitigate AZ Outages via Multi-AZ NAT Redundancy
+A NAT Gateway is a regional service, but it physically resides inside a specific Availability Zone (AZ). To build a highly resilient architecture, deploy a dedicated NAT Gateway *per Availability Zone* (and assign specific local private subnets to route traffic only to their local AZ's NAT). This prevents a single AZ outage from disabling egress connectivity across your entire network.
+
+### 2. Inspect Ingress and Egress using VPC Flow Logs
+NAT Gateways process high volumes of application traffic. Enable **VPC Flow Logs** on your NAT Gateway interfaces to map which internal private servers are requesting external packages, identifying malicious endpoint pings or unapproved bulk database transfers.
+
+### 3. Scale NAT Bandwidth Limits and Port Pools Carefully
+NAT Gateways support up to 45 Gbps of bandwidth, scaling automatically. If traffic exceeds this threshold, design split-network targets. If a private subnet runs out of connection ports (TCP source ports) during massive API spikes, allocate up to eight custom Elastic IPs to expand the active NAT translation port pool.
