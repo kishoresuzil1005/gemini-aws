@@ -9,7 +9,7 @@ class EmbeddingService:
     def get_embedding(self, text: str):
 
         response = requests.post(
-            "http://localhost:11434/api/embeddings",
+            "http://ollama:11434/api/embeddings",
             json={
                 "model": self.model_name,
                 "prompt": text
