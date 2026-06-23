@@ -1,0 +1,25 @@
+# Amazon OpenSearch Service - Search, Analytics, & Logging Security
+
+Amazon OpenSearch Service (successor to Amazon Elasticsearch Service) is a managed service that makes it easy to deploy, operate, and scale OpenSearch clusters in the AWS Cloud.
+
+## Core Concepts
+
+### OpenSearch Domains and Clusters
+An OpenSearch Domain is an isolated cluster containing compute nodes, search instances, memory pools, and indexes. It supports full-text search, API querying, and real-time visualization dashboards (OpenSearch Dashboards).
+
+### Indexing and Shards
+*   **Index:** A collection of JSON documents that are logically grouped together.
+*   **Shards:** Sub-divisions of indexes distributed across physical cluster nodes to enable high-speed parallel searches.
+
+## DevSecOps Security Best Practices for OpenSearch
+
+### 1. Enforce VPC Access Only
+Never configure OpenSearch with public endpoint access. Run your domains entirely inside private VPC subnets to isolate the search engine, forcing traffic through a secure API gateway or reverse proxy if external access is needed.
+
+### 2. Fine-Grained Access Control (FGAC)
+Implement fine-grained access control using OpenSearch Security. Match authenticated IAM users or Cognito groups to specific index and field mappings, restricting developers or support teams from reading sensitive user attributes.
+
+### 3. Encrypt All Data Actions (In-Transit & At-Rest)
+*   **Node-to-Node Encryption:** Protect internal cluster scaling traffic over TLS 1.3.
+*   **Encryption at Rest:** Secure physical indexes with AWS KMS keys.
+*   **Enforce HTTPS:** Require SSL/TLS for all external REST API calls.

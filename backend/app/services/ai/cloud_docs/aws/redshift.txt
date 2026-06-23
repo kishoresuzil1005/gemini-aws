@@ -1,0 +1,24 @@
+# Amazon Redshift - Cloud Data Warehousing & Security Management
+
+Amazon Redshift is a fast, fully managed, petabyte-scale data warehouse service that makes it simple and cost-effective to analyze all your data using your existing business intelligence tools.
+
+## Core Concepts
+
+### Columnar Storage and Nodes
+*   **Columnar Storage:** Organizes data by columns instead of rows, drastically reducing disk I/O requirements for analytic query executions.
+*   **Leader Node:** Receives queries from client applications, parses them, compiles execution plans, and coordinates parallel query executions across the Compute Nodes.
+*   **Compute Nodes:** Execute compile instructions and return intermediate results to the leader node for aggregation.
+
+### Redshift Serverless
+Allows analytics without provisioning compute clusters, scaling database performance automatically while charging only for the processing seconds consumed.
+
+## DevSecOps and Data Warehouse Security Best Practices
+
+### 1. Database User Activity Auditing
+Always enable **Connection Logging**, **User Logging**, and **User Activity Logging**. Route these logs continuously to secure S3 buckets to maintain compliance tracks of data queries.
+
+### 2. Isolate Clusters with Cluster Security Groups
+Do not expose database endpoints openly. Create a specialized security group to permit only white-listed Business Intelligence tools, VPC subnets, or secure bastion servers to establish JDBC/ODBC sessions.
+
+### 3. Server-Side Encryption (SSE) via KMS
+Enforce database volume encryption using AWS KMS Customer Managed Keys (CMKs). Enable encryption during cluster initialization to ensure schemas and temporary storage write footprints are fully protected.

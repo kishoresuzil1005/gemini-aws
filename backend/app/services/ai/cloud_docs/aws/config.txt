@@ -1,0 +1,27 @@
+# AWS Config - Resource Configuration Tracking and Governance
+
+AWS Config is a service that enables you to assess, audit, and evaluate the configurations of your AWS resources.
+
+## Core Concepts
+
+### Configuration Items (CI)
+A point-in-time record of the properties of an AWS resource (e.g. security group rules, S3 bucket settings, IAM role policies). AWS Config logs these CIs whenever changes occur, building a continuous historical timeline.
+
+### AWS Config Rules
+Constructs that define perfect or compliant resource properties.
+*   **Managed Rules:** Pre-packaged rules developed by AWS (e.g., `s3-bucket-public-read-prohibited`, `iam-password-policy-enforced`).
+*   **Custom Rules:** Developed using custom Lambda functions to assess complex corporate parameters.
+
+## Governance and DevSecOps Best Practices
+
+### 1. Continuous Compliance Real-Time Checking
+Turn on key AWS Config managed rules to track essential infrastructure compliance parameters:
+*   Ensure all active EBS volumes are encrypted.
+*   Verify that S3 bucket versioning is globally active.
+*   Confirm that root account access has multi-factor authentication (MFA) enabled.
+
+### 2. Maintain a Configuration History Audit Trail
+AWS Config maintains history paths indefinitely if configured. Store these configuration histories inside locked, WORM-compliant S3 logging buckets in designated security sub-accounts, ensuring compliance evidence is untampered.
+
+### 3. Automated Remediation (SSM Runbooks)
+Utilize AWS Config's "Remediation action" triggers. Link rules to Systems Manager (SSM) Automation documents so that if a developer launches an insecure resource (e.g., a public S3 bucket), Config automatically executes a function to turn off public access within seconds of detection.

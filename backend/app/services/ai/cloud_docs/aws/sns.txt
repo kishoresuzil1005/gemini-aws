@@ -1,0 +1,33 @@
+# Amazon SNS (Simple Notification Service) - Pub/Sub Messaging & Security
+
+Amazon Simple Notification Service (Amazon SNS) is a fully managed pub/sub messaging service for both microservices and serverless applications.
+
+## Core Concepts
+
+### Topics
+A logical access point and communication channel. Publishers send messages to a specific SNS Topic. Subscribers receive all messages published to that topic.
+
+### Publishers and Subscribers
+*   **Publishers:** Clients or services that send messages to SNS Topics (e.g. CloudWatch Alerts, S3 bucket event notifications).
+*   **Subscribers:** Clients, systems, or endpoints that subscribe to the topic to receive notifications.
+
+### Supported Protocols (Endpoints)
+SNS can relay messages via multiple protocols:
+*   Standard HTTP/HTTPS webhooks.
+*   Email and Email-JSON.
+*   SMS (Short Message Service).
+*   Amazon SQS queues.
+*   AWS Lambda functions.
+*   Mobile push notifications.
+
+## DevSecOps and Security Best Practices
+
+### 1. Topic Access Policies (Least Privilege)
+Always restrict who can publish or subscribe to an SNS Topic. SNS uses Access Policies (JSON documents) to control access. Avoid using blanket wildcards (`"Principal": "*"`) for publishing or subscribing.
+
+### 2. Enable Server-Side Encryption (SSE)
+Always encrypt messages at rest inside SNS using AWS Key Management Service (KMS) Customer Managed Keys (CMK) or the AWS managed key (`aws/sns`). This protects sensitive payloads stored in the queue buffers from internal access.
+
+### 3. Implement Message Filtering and Delivery Retries
+*   **Message Filtering:** Offload filtering logic from backend workers. Subscribers can define a JSON filter policy so they only receive events matching specific attributes.
+*   **Dead Letter Queues (DLQ):** Configure Amazon SQS queues as Dead Letter Queues for SNS subscriptions to securely capture and analyze failed deliveries.

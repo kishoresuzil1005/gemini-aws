@@ -1,0 +1,26 @@
+# Amazon SQS (Simple Queue Service) - Message Queue Sync & Storage Security
+
+Amazon Simple Queue Service (Amazon SQS) is a fully managed message queuing service that enables you to decouple and scale microservices, distributed systems, and serverless applications.
+
+## Core Concepts
+
+### Queue Types
+*   **Standard Queues:** Offer maximum throughput, best-effort ordering, and at-least-once delivery (meaning duplicates can occasionally occur).
+*   **FIFO (First-In-First-Out) Queues:** Guarantee that messages are processed exactly once, in the exact order that they are sent, with limited transactions per second.
+
+### Visibility Timeout
+The period of time during which SQS prevents other consumers from receiving and processing a message that has already been pulled from the queue by a worker.
+
+### Dead-Letter Queues (DLQ)
+A queue dedicated to holding messages that could not be successfully processed. After a message exceeds the specified maxReceiveCount without being successfully deleted, it is automatically routed to a DLQ for diagnostic review.
+
+## DevSecOps and Security Best Practices
+
+### 1. Secure Access via IAM Resource-Based Policies
+Use SQS Queue Policies to restrict ingress/egress. Only allow authorized services (like specific AWS Lambda functions or ECS tasks) to execute `SendMessage` or `ReceiveMessage`. Do not permit wildcard access.
+
+### 2. Server-Side Encryption (SSE) with AWS KMS
+Protect message payloads at rest by enabling Server-Side Encryption (SSE) on SQS queues. Use a custom KMS key to control and audit which services are reading and parsing active queue payloads.
+
+### 3. Optimize Visibility Timeout and Processing Security
+Ensure the visibility timeout is longer than the maximum execution time of your consumer application. If a process takes 5 minutes to run, set the SQS Visibility Timeout to at least 6 minutes to prevent duplicate processing loops on other nodes.

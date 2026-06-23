@@ -1,0 +1,26 @@
+# Amazon ElastiCache - In-Memory Caching (Redis/Memcached) and Security
+
+Amazon ElastiCache is a fully managed, in-memory caching and data store service. It makes it easy to set up, operate, and scale popular open-source compatible in-memory data stores in the cloud.
+
+## Core Concepts
+
+### Supported Engines
+*   **ElastiCache for Redis Serverless / Replication Group:** Stateful in-memory database supporting clusters, persistence, replication, transactions, and failovers.
+*   **ElastiCache for Memcached:** Simple, multi-threaded caching layer. Stateless, ideal for offloading generic database read operations.
+
+### Cache Strategies
+*   **Lazy Loading (Read-Through):** Only inputs data to cache when a read failure occurs on the database.
+*   **Write-Through:** Automatically updates the cache whenever data is written to the primary database.
+
+## DevSecOps and Cache Security Standards
+
+### 1. Enforce Redis AUTH / Role-Based Access Control (RBAC)
+Always set password restrictions (`Redis AUTH`) or leverage native Redis User Group Access Lists (RBAC) to restrict connection requests. Ensure no anonymous access can execute commands against the memory grid.
+
+### 2. Encrypt In-Transit and At-Rest
+Always enable:
+*   **Encryption in transit:** Enforces SSL/TLS connections for all application client threads.
+*   **Encryption at rest:** Uses AWS KMS keys to secure transient database snap files and engine memory pools.
+
+### 3. Restrict DB Placement and Network Ports
+Never expose port 6379 (Redis) or 11211 (Memcached) to the public internet or broad VPC CIDRs. Limit inbound rules exclusively to the authorized application security group, keeping the cache layer entirely isolated.

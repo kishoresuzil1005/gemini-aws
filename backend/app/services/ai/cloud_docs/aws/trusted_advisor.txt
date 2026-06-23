@@ -1,0 +1,29 @@
+# AWS Trusted Advisor - Operational Performance & Security Optimization
+
+AWS Trusted Advisor is an online tool that provides real-time recommendations to help you structure AWS infrastructure according to AWS best practices.
+
+## Core Concepts
+
+### Five Best Practice Categories
+Trusted Advisor continuously evaluates active resources against five key architectural pillars:
+1.  **Cost Optimization:** Identifies idle resources (e.g. unassociated Elastic IPs, underutilized EC2 instances) to reduce monthly bills.
+2.  **Performance:** Analyzes database connection pools, read/write limits, and compute usage to optimize application performance.
+3.  **Security:** Scans for standard security settings (e.g., exposed SSH ports, public S3 buckets, missing multi-factor authentication).
+4.  **Fault Tolerance:** Examines backup settings, multi-AZ deployment configurations, and auto-scaling setups to improve reliability.
+5.  **Service Limits:** Tracks resource usage against AWS service limits, alerting you before you hit hard caps that block scaling.
+
+### Clear Red/Yellow Warning States
+*   **Green Check:** Resource complies with best practices.
+*   **Yellow Triangle:** Recommendation for optimization (review required).
+*   **Red Circle:** Critical action required (e.g., insecure ports open to `0.0.0.0/0`).
+
+## DevSecOps and Optimization Best Practices
+
+### 1. Automate Priority Security Alerts
+Configure CloudWatch Alarms and EventBridge rules to listen for Trusted Advisor status changes. Prioritize instant notifications if critical Security checks change from Green to Red (e.g., if a security group introduces an insecure wide-open public ingress rule).
+
+### 2. Conduct Regular Optimization Sweeps
+Establish regular audits (e.g. monthly or quarterly) of Trusted Advisor's cost and service limit parameters to clean up idle resources, saving cloud budget and protecting infrastructure from orphan subdomain takeovers.
+
+### 3. Enable AWS Systems Manager Quick Setup
+Utilize Systems Manager to automatically patch EC2 and container servers that Trusted Advisor flags as missing critical security updates.

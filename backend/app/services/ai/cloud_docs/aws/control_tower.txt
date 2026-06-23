@@ -1,0 +1,30 @@
+# AWS Control Tower - Managed Landing Zones & Compliance Guardrails
+
+AWS Control Tower provides the easiest way to set up and govern a secure, multi-account AWS environment, based on AWS best practices.
+
+## Core Concepts
+
+### Landing Zone
+A well-architected, highly secure multi-account environment that AWS Control Tower automatically provisions for your enterprise. It configures single sign-on (IAM Identity Center), centralized logging, and security account structures out of the box.
+
+### Guardrails (Controls)
+Pre-configured rules for governance, security, and compliance.
+*   **Preventative Controls:** Prevent actions before they occur (built using SCPs).
+*   **Detective Controls:** Identify and alert on non-compliant configurations after they occur (built using AWS Config Rules and EventBridge notifications).
+
+### Account Factory
+An automated wizard template inside Control Tower used to spin up perfectly configured member accounts with standard VPC networks, IAM alignments, and logging paths built automatically.
+
+## Governance and Landing Zone Best Practices
+
+### 1. Actively Apply Mandatory Guardrails
+Enable core Control Tower preventive guardrails to maintain solid security boundaries:
+*   Disallow public S3 buckets.
+*   Disallow creation of unencrypted database instances.
+*   Ensure users cannot edit or delete AWS log-delivery resources.
+
+### 2. Centralize Identity with IAM Identity Center
+Govern enterprise employee authentication via AWS IAM Identity Center (formerly AWS SSO). Map users to corporate Active Directories, granting temporary, role-based STS permissions to specific AWS member accounts based on job function (least-privilege).
+
+### 3. Monitor Control Tower Control Compliance
+Review Control Tower's landing zone compliance dashboard regularly to ensure all member accounts maintain compliance, taking immediate action on detective findings.

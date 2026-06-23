@@ -1,0 +1,32 @@
+# AWS Organizations - Multi-Account Architecture & Control Policies
+
+AWS Organizations is an account management service that enables you to consolidate multiple AWS accounts into an organization that you create and centrally manage.
+
+## Core Concepts
+
+### Management Account vs. Member Accounts
+*   **Management Account:** The primary account used to establish the organization, configure consolidated billing, and set up landing zones. It must be highly guarded, and raw application resources should never be deployed there.
+*   **Member Accounts:** Standard AWS accounts hosting individual dev/stage/prod workloads.
+
+### Organizational Units (OUs)
+Logical root groupings used to cluster AWS accounts with similar security and billing objectives, such as `Infrastructure-OU`, `Security-OU`, or `Sandbox-OU`.
+
+### Service Control Policies (SCPs)
+JSON policies that establish maximum permissible permissions for all accounts within an OU or Organization. SCPs act as guardrails; even a root database administrator inside a member account cannot perform an action if blocked by an SCP in AWS Organizations.
+
+## DevSecOps Governance and Architecture Best Practices
+
+### 1. Enforce SCP Guardrails Globally
+Deploy critical SCPs to enforce standard enterprise compliance:
+*   Prevent member accounts from leaving the AWS Organization.
+*   Prevent members from turning off cloud logging (such as disabling CloudTrail or deleting S3 log storage bins).
+*   Restrict active AWS regions to authorized geographic locations only.
+
+### 2. Design a Separated OU Taxonomy
+Create isolated Organizational Units representing distinct environments:
+*   An `Isolated Management OU` for master accounting.
+*   A `Core Security OU` for centralized logging, GuardDuty monitoring engines, and active forensic containment.
+*   A `Workloads OU` partitioned into development, staging, and production sub-accounts to isolate vulnerability blasts.
+
+### 3. Consolidated Billing Security Controls
+Utilize consolidated billing to track cloud spend across all business branches from a single workspace, configuring alerts (such as AWS Budgets) to detect rogue infrastructure spend.
