@@ -6,6 +6,7 @@ class QdrantService:
         self.collection_name = collection_name
         self.client = None
         self.dimension = 768
+        self._local_storage = {}
         
         try:
             from qdrant_client import QdrantClient
@@ -88,28 +89,29 @@ class QdrantService:
     def search_similar(self, query_vector: List[float], limit: int = 5) -> List[Dict[str, Any]]:
         if self.client is not None:
             try:
-                results = self.client.search(
+                response = self.client.query_points(
                     collection_name=self.collection_name,
-                    query_vector=query_vector,
+                    query=query_vector,
                     limit=limit
                 )
+                results = response.points
                 return [
                     {
-                        "id": res.id,
-                        "score": res.score,
-                        "payload": res.payload
+                        "id": point.id,
+                        "score": point.score,
+                        "payload": point.payload
                     }
-                    for res in results
+                    for point in results
                 ]
             except Exception as e:
                 print(f"[QDRANT SEARCH ERROR] {e}. Searching fallback dictionary.")
 
-        # Fallback local search (Cosine similarity)
+        # Fallback local search
         import numpy as np
         results = []
         qv = np.array(query_vector)
         qv_norm = np.linalg.norm(qv)
-        
+
         for k, item in self._local_storage.items():
             v = np.array(item["vector"])
             v_norm = np.linalg.norm(v)
@@ -122,6 +124,6 @@ class QdrantService:
                 "score": score,
                 "payload": item["payload"]
             })
-            
+
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
