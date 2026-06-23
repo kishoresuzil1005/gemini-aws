@@ -81,7 +81,11 @@ class OllamaService:
             json={
                 "model": "qwen2.5:1.5b",
                 "prompt": prompt,
-                "stream": False
+                "stream": False,
+                "options": {
+                    "num_predict": 256,
+                    "temperature": 0.2
+                }
             },
             timeout=120
         )

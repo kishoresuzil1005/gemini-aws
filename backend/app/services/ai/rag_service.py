@@ -77,7 +77,7 @@ class RAGService:
             print(f"[RAG INDEX DIRECTORY ERROR] {e}")
             return 0
 
-    def query_rag(self, query: str, limit: int = 3) -> Dict[str, Any]:
+    def query_rag(self, query: str, limit: int = 2) -> Dict[str, Any]:
         """
         Retrieves matching chunks and runs Ollama with the augmented context.
         """

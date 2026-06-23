@@ -1,7 +1,7 @@
 import os
 from typing import List, Dict, Any
 
-def chunk_text(text: str, size: int = 1000) -> List[str]:
+def chunk_text(text: str, size: int = 500) -> List[str]:
     return [
         text[i:i+size]
         for i in range(
@@ -12,7 +12,7 @@ def chunk_text(text: str, size: int = 1000) -> List[str]:
     ]
 
 class DocumentLoader:
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 100):
+    def __init__(self, chunk_size: int = 500, chunk_overlap: int = 50):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
