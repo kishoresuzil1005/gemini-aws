@@ -1,0 +1,33 @@
+# Amazon Elastic Compute Cloud (Amazon EC2) - Design and Core Concepts
+
+Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Amazon Web Services (AWS) cloud. Using Amazon EC2 eliminates your need to invest in hardware up front, so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage.
+
+## Core Concepts
+
+### Virtual Computing Environments (Instances)
+Instances are virtual computing environments. You can launch different types of instances from a single AMI. An instance type essentially determines the hardware of the host computer used for your instance. Each instance type offers different compute, memory, and storage capabilities. Select an instance type based on the amount of memory and CPU power you need for the application or software that you plan to run on the instance.
+
+### Amazon Machine Images (AMIs)
+An Amazon Machine Image (AMI) is a template that contains a software configuration (for example, an operating system, an application server, and applications). From an AMI, you launch an instance, which is a copy of the AMI running as a virtual server in the cloud. You can launch multiple instances of an AMI.
+
+### Instance Store and Amazon Elastic Block Store (Amazon EBS)
+*   **Amazon EBS:** Provides persistent block-level storage volumes for use with Amazon EC2 instances. EBS volumes are network-attached and persist independently from the running life of an instance.
+*   **Instance Store:** Provides temporary block-level storage for your instance. This storage is located on disks that are physically attached to the host computer. The data on an instance store volume persists only during the life of the associated instance.
+
+### Key Pairs and Security
+*   **Key Pairs:** AWS uses public-key cryptography to secure the login information for your instance. A key pair consists of a public key that AWS stores, and a private key file that you store.
+*   **Security Groups:** A security group acts as a virtual firewall for your instance to control inbound and outbound traffic. You can specify rules that allow traffic to or from specific IP ranges, CIDR blocks, or other security groups. Security groups are stateful.
+
+## DevSecOps and Security Best Practices for EC2
+
+### 1. Avoid Public Exposure of Administrative Ports
+Never allow unrestricted inbound access (0.0.0.0/0) to administrative ports such as:
+*   Port 22 (SSH) for Linux instances.
+*   Port 3389 (RDP) for Windows instances.
+Instead, restrict access to specific trusted CIDRs, bastion hosts, or leverage AWS Systems Manager Session Manager (SSM) to log in securely without keeping open inbound ports.
+
+### 2. Practice Least Privilege with Instance Profiles
+Avoid hardcoding AWS Credentials (access key and secret access key) inside code stored on EC2 instances. Always attach an IAM Role to your EC2 instance via an Instance Profile. The instance automatically retrieves temporary security credentials from the Instance Metadata Service (IMDS).
+
+### 3. Move to IMDSv2
+Ensure all EC2 instances require the use of Instance Metadata Service Version 2 (IMDSv2), which is session-oriented and protects against SSRF (Server-Side Request Forgery) vulnerabilities.

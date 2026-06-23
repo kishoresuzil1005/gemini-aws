@@ -1,8 +1,18 @@
 import os
 from typing import List, Dict, Any
 
+def chunk_text(text: str, size: int = 1000) -> List[str]:
+    return [
+        text[i:i+size]
+        for i in range(
+            0,
+            len(text),
+            size
+        )
+    ]
+
 class DocumentLoader:
-    def __init__(self, chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 100):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
@@ -38,30 +48,16 @@ class DocumentLoader:
         metadata = extra_metadata or {}
         metadata["source"] = source
 
-        words = text.split()
-        total_words = len(words)
+        text_chunks = chunk_text(text, size=self.chunk_size)
         
-        i = 0
-        chunk_idx = 0
-        while i < total_words:
-            # Take a slice of words
-            end = min(i + self.chunk_size, total_words)
-            chunk_words = words[i:end]
-            chunk_text = " ".join(chunk_words)
-            
+        for chunk_idx, chunk_text_content in enumerate(text_chunks):
             chunk_metadata = metadata.copy()
             chunk_metadata["chunk_index"] = chunk_idx
             
             chunks.append({
                 "id": f"{source}_chunk_{chunk_idx}",
-                "content": chunk_text,
+                "content": chunk_text_content,
                 "metadata": chunk_metadata
             })
-            
-            chunk_idx += 1
-            # Step forward with overlap
-            i += (self.chunk_size - self.chunk_overlap)
-            if i >= total_words or (end == total_words):
-                break
                 
         return chunks
