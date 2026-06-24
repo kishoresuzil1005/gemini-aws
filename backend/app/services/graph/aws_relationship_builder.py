@@ -90,7 +90,7 @@ class AWSRelationshipBuilder:
                         relations.append({
                             "from": instance_id,
                             "to": volume_id,
-                            "type": "ATTACHED_VOLUME"   # renamed from ATTACHED_TO
+                            "type": "ATTACHED_VOLUME"
                         })
         except Exception as e:
             logger.error(f"Error querying ec2_to_ebs in boto3: {e}")
@@ -211,8 +211,6 @@ class AWSRelationshipBuilder:
                     profile = instance.get("IamInstanceProfile")
                     if not profile:
                         continue
-                    # Extract role name from profile ARN
-                    # ARN format: arn:aws:iam::123456789:instance-profile/MyRole
                     profile_arn = profile.get("Arn", "")
                     role_name = profile_arn.split("/")[-1] if profile_arn else profile.get("Id", "")
                     if not role_name:
@@ -263,7 +261,7 @@ class AWSRelationshipBuilder:
                     relations.append({
                         "from": instance["InstanceId"],
                         "to": instance["VpcId"],
-                        "type": "INSIDE"
+                        "type": "IN_VPC"
                     })
         except Exception as e:
             logger.error(f"Error querying ec2_to_vpc in boto3: {e}")
@@ -283,7 +281,7 @@ class AWSRelationshipBuilder:
                         relations.append({
                             "from": instance_id,
                             "to": sg["GroupId"],
-                            "type": "USES"
+                            "type": "USES_SECURITY_GROUP"
                         })
         except Exception as e:
             logger.error(f"Error querying ec2_to_sg in boto3: {e}")
@@ -303,7 +301,7 @@ class AWSRelationshipBuilder:
                 relations.append({
                     "from": db["DBInstanceIdentifier"],
                     "to": vpc_id,
-                    "type": "INSIDE"
+                    "type": "IN_VPC"
                 })
         except Exception as e:
             logger.error(f"Error querying rds_to_vpc in boto3: {e}")
@@ -377,19 +375,19 @@ class AWSRelationshipBuilder:
             for i in range(10):
                 relations.append({"from": ec2_ids[i % len(ec2_ids)],
                                   "to":   vpc_ids[i % len(vpc_ids)],
-                                  "type": "INSIDE"})
+                                  "type": "IN_VPC"})
 
         elif category == "ec2_to_sg":
             for i in range(15):
                 relations.append({"from": ec2_ids[i % len(ec2_ids)],
                                   "to":   sg_ids[i % len(sg_ids)],
-                                  "type": "USES"})
+                                  "type": "USES_SECURITY_GROUP"})
 
         elif category == "rds_to_vpc":
             for i in range(2):
                 relations.append({"from": rds_ids[i % len(rds_ids)],
                                   "to":   vpc_ids[i % len(vpc_ids)],
-                                  "type": "INSIDE"})
+                                  "type": "IN_VPC"})
 
         elif category == "alb_to_ec2":
             for i in range(4):
