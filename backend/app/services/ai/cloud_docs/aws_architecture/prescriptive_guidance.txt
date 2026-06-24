@@ -1,0 +1,410 @@
+Title: AWS Prescriptive Guidance
+
+Description: Resources from Amazon Web Services (AWS) and AWS Partners to help accelerate cloud adoption and modernization
+
+Source: https://aws.amazon.com/prescriptive-guidance/
+
+---
+
+[Skip to main content](https://aws.amazon.com/prescriptive-guidance/#aws-page-content-main)
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              Filter: All
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- 
+
+
+
+
+- 
+
+
+- 
+
+
+
+
+                  English 
+
+
+
+
+
+- [Contact us](https://aws.amazon.com/contact-us/?nc2=h_ut_cu)
+- [AWS Marketplace](https://aws.amazon.com/marketplace?nc2=h_utmp)
+- 
+                Support   
+
+
+
+
+
+- 
+                My account   
+
+
+
+
+
+- 
+
+
+[Contact us](https://aws.amazon.com/contact-us/?nc2=h_ut_cu)
+[AWS Marketplace](https://aws.amazon.com/marketplace?nc2=h_utmp)
+- 
+
+
+
+
+
+
+                  Search
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              Filter: All
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [Sign in to console](https://console.aws.amazon.com/console/home/?nc2=h_si&src=header-signin)
+- [Create account](https://signin.aws.amazon.com/signup?request_type=register)
+Search
+[Sign in to console](https://console.aws.amazon.com/console/home/?nc2=h_si&src=header-signin)
+[Create account](https://signin.aws.amazon.com/signup?request_type=register)
+AWS Prescriptive Guidance
+- [Home](https://aws.amazon.com/prescriptive-guidance/)
+- Content collections
+
+
+
+
+
+
+
+[Home](https://aws.amazon.com/prescriptive-guidance/)
+- [AWS](https://aws.amazon.com/) 
+
+
+
+
+- Prescriptive Guidance
+[AWS](https://aws.amazon.com/)
+
+Resources from AWS technology experts to help accelerate cloud adoption and modernization
+
+## Guides
+Planning and implementation guidance, with a focus on best practices and tools, for architects, managers, technical leads, and executives
+
+## Patterns
+Steps, architectures, tools, and code for implementing common migration, optimization, and modernization scenarios, for builders and other hands-on users
+
+## Content collections
+[security-identity-compliance
+
+
+
+
+
+                              AWS Security Reference Architecture
+
+
+
+
+                              Learn more](https://aws.amazon.com/prescriptive-guidance/security-reference-architecture/)
+
+## AWS Security Reference Architecture
+[ai-ml
+
+
+
+
+
+                              Agentic AI
+
+
+
+
+                              Learn more](https://aws.amazon.com/prescriptive-guidance/agentic-ai/)
+
+## Agentic AI
+[migration
+
+
+
+
+
+                              Large migrations to the AWS Cloud
+
+
+
+
+                              Learn more](https://aws.amazon.com/prescriptive-guidance/large-migrations/)
+
+## Large migrations to the AWS Cloud
+[migration
+
+
+
+
+
+                              Migration tools
+
+
+
+
+                              Learn more](https://aws.amazon.com/prescriptive-guidance/migration-tools/)
+
+## Migration tools
+[business-productivity
+
+
+
+
+
+                              Accelerating cloud transformation
+
+
+
+
+                              Learn more](https://aws.amazon.com/prescriptive-guidance/accelerating-cloud-transformation/)
+
+## More information
+Services, tools, and resources to help with your large migration journey
+
+### Additional resources
+- [Migrate and modernize with AWS](https://aws.amazon.com/migrate-modernize-build/cloud-migration/)
+- [AWS Architecture Center](https://aws.amazon.com/architecture/)
+- [AWS Documentation](https://docs.aws.amazon.com/)
+- [AWS Professional Services](https://aws.amazon.com/professional-services/)
+- [AWS Partner Network](https://aws.amazon.com/partners/)
+[Migrate and modernize with AWS](https://aws.amazon.com/migrate-modernize-build/cloud-migration/)
+[AWS Architecture Center](https://aws.amazon.com/architecture/)
+[AWS Documentation](https://docs.aws.amazon.com/)
+[AWS Professional Services](https://aws.amazon.com/professional-services/)
+[AWS Partner Network](https://aws.amazon.com/partners/)
+
+### Feedback and support
+- [Send us your feedback](https://docs.aws.amazon.com/forms/aws-doc-feedback?hidden_service_name=ProServe%20Enterprise%20GPS&topic_url=http://aws.amazon.com/prescriptive-guidance/)
+- [Contact AWS Support](https://aws.amazon.com/premiumsupport/)
+[Send us your feedback](https://docs.aws.amazon.com/forms/aws-doc-feedback?hidden_service_name=ProServe%20Enterprise%20GPS&topic_url=http://aws.amazon.com/prescriptive-guidance/)
+[Contact AWS Support](https://aws.amazon.com/premiumsupport/)
+[Create an AWS account](https://signin.aws.amazon.com/signup?request_type=register)
+
+## Learn
+- [What Is AWS?](https://aws.amazon.com/what-is-aws/?nc1=f_cc)
+- [What Is Cloud Computing?](https://aws.amazon.com/what-is-cloud-computing/?nc1=f_cc)
+- [What Is Agentic AI?](https://aws.amazon.com/what-is/agentic-ai/?nc1=f_cc)
+- [Cloud Computing Concepts Hub](https://aws.amazon.com/what-is/?nc1=f_cc)
+- [AWS Cloud Security](https://aws.amazon.com/security/?nc1=f_cc)
+- [What's New](https://aws.amazon.com/new/?nc1=f_cc)
+- [Blogs](https://aws.amazon.com/blogs/?nc1=f_cc)
+- [Press Releases](https://press.aboutamazon.com/press-releases/aws)
+[What Is AWS?](https://aws.amazon.com/what-is-aws/?nc1=f_cc)
+[What Is Cloud Computing?](https://aws.amazon.com/what-is-cloud-computing/?nc1=f_cc)
+[What Is Agentic AI?](https://aws.amazon.com/what-is/agentic-ai/?nc1=f_cc)
+[Cloud Computing Concepts Hub](https://aws.amazon.com/what-is/?nc1=f_cc)
+[AWS Cloud Security](https://aws.amazon.com/security/?nc1=f_cc)
+[What's New](https://aws.amazon.com/new/?nc1=f_cc)
+[Blogs](https://aws.amazon.com/blogs/?nc1=f_cc)
+[Press Releases](https://press.aboutamazon.com/press-releases/aws)
+
+## Resources
+- [Getting Started](https://aws.amazon.com/getting-started/?nc1=f_cc)
+- [Training](https://aws.amazon.com/training/?nc1=f_cc)
+- [AWS Trust Center](https://aws.amazon.com/trust-center/?nc1=f_cc)
+- [AWS Solutions Library](https://aws.amazon.com/solutions/?nc1=f_cc)
+- [Architecture Center](https://aws.amazon.com/architecture/?nc1=f_cc)
+- [Product and Technical FAQs](https://aws.amazon.com/faqs/?nc1=f_dr)
+- [Analyst Reports](https://aws.amazon.com/resources/analyst-reports/?nc1=f_cc)
+- [AWS Partners](https://aws.amazon.com/partners/work-with-partners/?nc1=f_dr)
+[Getting Started](https://aws.amazon.com/getting-started/?nc1=f_cc)
+[Training](https://aws.amazon.com/training/?nc1=f_cc)
+[AWS Trust Center](https://aws.amazon.com/trust-center/?nc1=f_cc)
+[AWS Solutions Library](https://aws.amazon.com/solutions/?nc1=f_cc)
+[Architecture Center](https://aws.amazon.com/architecture/?nc1=f_cc)
+[Product and Technical FAQs](https://aws.amazon.com/faqs/?nc1=f_dr)
+[Analyst Reports](https://aws.amazon.com/resources/analyst-reports/?nc1=f_cc)
+[AWS Partners](https://aws.amazon.com/partners/work-with-partners/?nc1=f_dr)
+
+## Developers
+- [Builder Center](https://builder.aws.com/?nc1=f_dr)
+- [SDKs & Tools](https://builder.aws.com/build/tools?nc1=f_dr)
+- [.NET on AWS](https://builder.aws.com/build/tools?nc1=f_dr)
+- [Python on AWS](https://aws.amazon.com/developer/language/python/?nc1=f_dr)
+- [Java on AWS](https://aws.amazon.com/developer/language/java/?nc1=f_dr)
+- [PHP on AWS](https://aws.amazon.com/developer/language/php/?nc1=f_cc)
+- [JavaScript on AWS](https://aws.amazon.com/developer/language/javascript/?nc1=f_dr)
+[Builder Center](https://builder.aws.com/?nc1=f_dr)
+[SDKs & Tools](https://builder.aws.com/build/tools?nc1=f_dr)
+[.NET on AWS](https://builder.aws.com/build/tools?nc1=f_dr)
+[Python on AWS](https://aws.amazon.com/developer/language/python/?nc1=f_dr)
+[Java on AWS](https://aws.amazon.com/developer/language/java/?nc1=f_dr)
+[PHP on AWS](https://aws.amazon.com/developer/language/php/?nc1=f_cc)
+[JavaScript on AWS](https://aws.amazon.com/developer/language/javascript/?nc1=f_dr)
+
+- [Contact Us](https://aws.amazon.com/contact-us/?nc1=f_m)
+- [File a Support Ticket](https://console.aws.amazon.com/support/home/?nc1=f_dr)
+- [AWS re:Post](https://repost.aws/?nc1=f_dr)
+- [Knowledge Center](https://repost.aws/knowledge-center/?nc1=f_dr)
+- [AWS Support Overview](https://aws.amazon.com/premiumsupport/?nc1=f_dr)
+- [AWS Accessibility](https://aws.amazon.com/accessibility/?nc1=f_cc)
+- [Legal](https://aws.amazon.com/legal/?nc1=f_cc)
+- [Event Code of Conduct](https://aws.amazon.com/codeofconduct/?nc1=f_cc)
+- [Event Terms & Conditions](https://aws.amazon.com/events/terms/?nc1=f_cc)
+[Contact Us](https://aws.amazon.com/contact-us/?nc1=f_m)
+[File a Support Ticket](https://console.aws.amazon.com/support/home/?nc1=f_dr)
+[AWS re:Post](https://repost.aws/?nc1=f_dr)
+[Knowledge Center](https://repost.aws/knowledge-center/?nc1=f_dr)
+[AWS Support Overview](https://aws.amazon.com/premiumsupport/?nc1=f_dr)
+[AWS Accessibility](https://aws.amazon.com/accessibility/?nc1=f_cc)
+[Legal](https://aws.amazon.com/legal/?nc1=f_cc)
+[Event Code of Conduct](https://aws.amazon.com/codeofconduct/?nc1=f_cc)
+[Event Terms & Conditions](https://aws.amazon.com/events/terms/?nc1=f_cc)
+[x](https://twitter.com/awscloud)
+[facebook](https://www.facebook.com/amazonwebservices)
+[linkedin](https://www.linkedin.com/company/amazon-web-services/)
+[instagram](https://www.instagram.com/amazonwebservices/)
+[twitch](https://www.twitch.tv/aws)
+[youtube](https://www.youtube.com/user/AmazonWebServices/Cloud/)
+[podcasts](https://aws.amazon.com/podcasts/?nc1=f_cc)
+[email](https://pages.awscloud.com/communication-preferences?trk=homepage)
+- [Privacy](https://aws.amazon.com/privacy/?nc1=f_pr)
+- [Site terms](https://aws.amazon.com/terms/?nc1=f_pr)
+- [Your Privacy Choices 
+
+                       California Consumer Privacy Act (CCPA) Opt-Out Icon .st0{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#0066FF;}.st2{fill:#FFFFFF;}.st3{fill:#0066FF;}](https://aws.amazon.com/prescriptive-guidance/)
+- [Cookie Preferences](https://aws.amazon.com/prescriptive-guidance/)
+[Privacy](https://aws.amazon.com/privacy/?nc1=f_pr)
+[Site terms](https://aws.amazon.com/terms/?nc1=f_pr)
+[Your Privacy Choices 
+
+                       California Consumer Privacy Act (CCPA) Opt-Out Icon .st0{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#0066FF;}.st2{fill:#FFFFFF;}.st3{fill:#0066FF;}](https://aws.amazon.com/prescriptive-guidance/)
+[Cookie Preferences](https://aws.amazon.com/prescriptive-guidance/)
+

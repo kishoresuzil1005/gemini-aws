@@ -1,0 +1,21 @@
+Title: Disaster Recovery of Workloads on AWS: Recovery in the Cloud - Disaster Recovery of Workloads on AWS: Recovery in the Cloud
+
+Source: https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-workloads-on-aws.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-workloads-on-aws.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Whitepapers](https://aws.amazon.com/whitepapers/)
+[AWS Well-Architected Framework](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-workloads-on-aws.html)
+
+# Disaster Recovery of Workloads on AWS: Recovery in the Cloud
+Publication date: February 12, 2021 ([Document history](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/document-revisions.html))
+Disaster recovery is the process of preparing for and recovering from a disaster. An event that prevents a workload or system from fulfilling its business objectives in its primary deployed location is considered a disaster. This paper outlines the best practices for planning and testing disaster recovery for any workload deployed to AWS, and offers different approaches to mitigate risks and meet the Recovery Time Objective (RTO) and Recovery Point Objective (RPO) for that workload.
+This whitepaper covers how to implement disaster recovery for workloads on AWS. Refer to [Disaster Recovery of On-Premises Applications to AWS](https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-of-on-premises-applications-to-aws/abstract-and-introduction.html) for information about using AWS as a disaster recovery site for on-premises workloads.
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

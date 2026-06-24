@@ -9,7 +9,19 @@ CLOUD_DOCS_PATH = os.path.join(os.path.dirname(__file__), "app", "services", "ai
 def main():
     rag = RAGService()
     
-    directories_to_index = ["aws", "architecture", "security", "finops"]
+    directories_to_index = [
+        "aws",
+        "architecture",
+        "security",
+        "finops",
+        "aws_architecture",
+        "aws_security",
+        "aws_finops",
+        "aws_operations",
+        "aws_governance",
+        "kubernetes",
+        "terraform",
+    ]
     total_indexed = 0
     
     for dir_name in directories_to_index:
