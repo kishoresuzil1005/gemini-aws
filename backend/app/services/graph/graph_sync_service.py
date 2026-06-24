@@ -53,32 +53,18 @@ class GraphSyncService:
                 2
             )
 
-        # Build and sync relationships (Phase 1.6)
+        # Build and sync relationships (Phase 2)
         try:
             from app.services.graph.aws_relationship_builder import AWSRelationshipBuilder
             builder = AWSRelationshipBuilder()
             relationships = builder.build()
 
             for rel in relationships:
-                # Pre-create standard nodes to ensure MATCH does not fail in sandbox
-                try:
-                    self.graph.create_node(
-                        node_type="Resource",
-                        resource_id=rel["from"],
-                        name=rel["from"]
-                    )
-                    self.graph.create_node(
-                        node_type="Resource",
-                        resource_id=rel["to"],
-                        name=rel["to"]
-                    )
-                except Exception:
-                    pass
-
-                # Store fallback edges (this is where in-memory counts are collected)
+                # Store in in-memory graph
                 from app.services.graph.neo4j_service import MemoryGraphStore
                 MemoryGraphStore.merge_edge(rel["from"], rel["to"], rel["type"])
 
+                # Sync to Neo4j if driver is available
                 if self.graph.driver:
                     try:
                         query = """
