@@ -1,6 +1,7 @@
 import requests
 import os
 
+
 class OllamaService:
 
     def __init__(self):
@@ -8,9 +9,11 @@ class OllamaService:
             "OLLAMA_URL",
             "http://ollama:11434"
         )
-        self.model = "qwen2.5:3b"
 
-    def generate(self, prompt: str):
+        self.model = "qwen2.5:1.5b"
+
+    def generate(self, prompt):
+
         response = requests.post(
             f"{self.url}/api/generate",
             json={
@@ -20,8 +23,7 @@ class OllamaService:
             },
             timeout=120
         )
-        data = response.json()
-        return data.get(
-            "response",
-            ""
-        )
+
+        response.raise_for_status()
+
+        return response.json()["response"]

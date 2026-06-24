@@ -5,14 +5,24 @@ class PromptBuilder:
         resource_id,
         resource_type,
         criticality,
-        downstream,
-        upstream
+        blast_radius,
+        graph_context
     ):
+
+        context = ""
+
+        for row in graph_context:
+
+            context += (
+                f"{row['relationship']} -> "
+                f"{row['target']} "
+                f"({row['target_type']})\n"
+            )
 
         return f"""
 You are a Senior AWS Cloud Architect.
 
-Analyze this resource.
+Analyze the following AWS resource.
 
 Resource:
 {resource_id}
@@ -23,19 +33,19 @@ Type:
 Criticality Score:
 {criticality}
 
-Downstream Dependencies:
-{downstream}
+Blast Radius:
+{blast_radius}
 
-Upstream Dependencies:
-{upstream}
+Dependencies:
+{context}
 
 Provide:
 
 1. Findings
 2. Risks
 3. Recommendations
-4. Cost Optimizations
+4. Cost Optimization
 5. Security Improvements
 
-Return concise bullet points.
+Keep answer concise.
 """

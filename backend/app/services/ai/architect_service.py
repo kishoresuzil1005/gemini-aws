@@ -2,6 +2,7 @@ from app.services.graph.criticality_service import CriticalityService
 from app.services.graph.graph_analysis_service import GraphAnalysisService
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.ai.ollama_service import OllamaService
+from app.services.ai.graph_context import GraphContextBuilder
 from app.services.ai.prompt_builder import PromptBuilder
 
 
@@ -12,21 +13,26 @@ class ArchitectService:
         self.analysis = GraphAnalysisService()
         self.neo4j = Neo4jService()
         self.ollama = OllamaService()
+        self.graph_context = GraphContextBuilder()
 
     def analyze(self, resource_id: str):
 
         criticality = self.criticality.calculate(resource_id)
         resource_type = self._get_resource_type(resource_id)
 
-        prompt = PromptBuilder.build(
-            resource_id,
-            resource_type,
-            criticality["score"],
-            criticality["downstream"],
-            criticality["upstream"]
+        graph_context = self.graph_context.get_context(
+            resource_id
         )
 
-        ai_analysis = self.ollama.generate(
+        prompt = PromptBuilder.build(
+            resource_id=resource_id,
+            resource_type=resource_type,
+            criticality=criticality["score"],
+            blast_radius=criticality["blast_radius"],
+            graph_context=graph_context
+        )
+
+        ai_response = self.ollama.generate(
             prompt
         )
 
@@ -36,7 +42,8 @@ class ArchitectService:
             "risk": criticality["criticality"],
             "criticality_score": criticality["score"],
             "blast_radius": criticality["blast_radius"],
-            "analysis": ai_analysis
+            "graph_dependencies": graph_context,
+            "ai_analysis": ai_response
         }
 
     def _get_resource_type(self, resource_id):
