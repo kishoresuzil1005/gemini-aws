@@ -1132,6 +1132,13 @@ app.include_router(
     topology_router
 )
 
+from app.api.graph_criticality import router as graph_criticality_router
+app.include_router(
+    graph_criticality_router,
+    prefix="/api/graph",
+    tags=["Graph Criticality"]
+)
+
 from app.routes.ec2_summary import (
     router as ec2_summary_router
 )
