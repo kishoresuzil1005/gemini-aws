@@ -1,0 +1,25 @@
+Title: Introduction to AWS Security
+
+Source: https://docs.aws.amazon.com/whitepapers/latest/introduction-aws-security/introduction-aws-security.html
+
+---
+
+<!DOCTYPE html>
+        <!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Introduction to AWS Security</title><meta xmlns="" name="subtitle" content="AWS Whitepaper"><meta xmlns="" name="abstract" content="Amazon Web Services (AWS) delivers a scalable cloud computing platform designed for high availability and dependability, providing the tools that enable you to run a wide range of applications. Helping to protect the confidentiality, integrity, and availability of your systems and data is of the utmost importance to AWS, as is maintaining your trust and confidence. This document is intended to provide an introduction to AWS’s approach to security, including the controls in the AWS environment and some of the products and features that AWS makes available to customers to meet your security objectives."><meta http-equiv="refresh" content="0;URL=welcome.html"><script type="text/javascript"><!--
+        var myDefaultPage = "welcome.html";
+           	var myPage = document.location.search.substr(1);
+           	var myHash = document.location.hash;
+        
+              if (myPage == null || myPage.length == 0) {
+                 myPage = myDefaultPage;
+              } else {
+                 var docfile = myPage.match(/[^=\;\/?:\s]+\.html/);
+                 if (docfile == null) {
+       				myPage = myDefaultPage;
+    	     		 } else {
+                    myPage = docfile + myHash;
+                 }
+              }
+              self.location.replace(myPage);
+    --></script></head><body></body></html>
+

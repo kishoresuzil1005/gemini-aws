@@ -1,0 +1,25 @@
+Title: AWS Key Management Service
+
+Source: https://docs.aws.amazon.com/kms/latest/developerguide/best-practices.html
+
+---
+
+<!DOCTYPE html>
+        <!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>AWS Key Management Service</title><meta xmlns="" name="subtitle" content="Developer Guide"><meta xmlns="" name="abstract" content="Learn how to use AWS Key Management Service (AWS KMS) to securely store and manage encryption keys and perform encryption and decryption of user data."><meta http-equiv="refresh" content="0;URL=overview.html"><script type="text/javascript"><!--
+        var myDefaultPage = "overview.html";
+           	var myPage = document.location.search.substr(1);
+           	var myHash = document.location.hash;
+        
+              if (myPage == null || myPage.length == 0) {
+                 myPage = myDefaultPage;
+              } else {
+                 var docfile = myPage.match(/[^=\;\/?:\s]+\.html/);
+                 if (docfile == null) {
+       				myPage = myDefaultPage;
+    	     		 } else {
+                    myPage = docfile + myHash;
+                 }
+              }
+              self.location.replace(myPage);
+    --></script></head><body></body></html>
+

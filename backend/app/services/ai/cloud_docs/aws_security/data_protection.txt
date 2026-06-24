@@ -1,0 +1,28 @@
+Title: Data protection - Security Pillar
+
+Source: https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/data-protection.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/data-protection.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Well-Architected](https://aws.amazon.com/architecture/well-architected/)
+[AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html)
+
+# Data protection
+Before architecting any workload, foundational practices that influence security should be in place. For example, data classification provides a way to categorize data based on levels of sensitivity, and encryption protects data by way of rendering it unintelligible to unauthorized access. These methods are important because they support objectives such as preventing mishandling or complying with regulatory obligations.
+In AWS, there are a number of different approaches you can use when addressing data protection. The following section describes how to use these approaches.
+
+###### Topics
+- [Data classification](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/data-classification.html)
+- [Protecting data at rest](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-data-at-rest.html)
+- [Protecting data in transit](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-data-in-transit.html)
+[Data classification](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/data-classification.html)
+[Protecting data at rest](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-data-at-rest.html)
+[Protecting data in transit](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-data-in-transit.html)
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

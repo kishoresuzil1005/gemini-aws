@@ -1,0 +1,184 @@
+# Terraform Best Practices on AWS
+Source: HashiCorp Official Documentation + AWS Provider Best Practices
+
+## Introduction to Terraform
+Terraform by HashiCorp is the industry-standard Infrastructure as Code (IaC) tool for provisioning and managing AWS resources declaratively. It uses HCL (HashiCorp Configuration Language) to define infrastructure.
+
+## Core Principles
+
+### 1. Use Remote State
+Always store Terraform state in a remote backend such as Amazon S3 with DynamoDB locking:
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "prod/us-east-1/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-locks"
+  }
+}
+```
+
+### 2. State Locking
+Use DynamoDB for state locking to prevent concurrent modifications that could corrupt state:
+```hcl
+resource "aws_dynamodb_table" "terraform_locks" {
+  name           = "terraform-locks"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "LockID"
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+```
+
+### 3. Use Workspaces for Environments
+Terraform workspaces separate state between environments (dev, staging, prod):
+```bash
+terraform workspace new dev
+terraform workspace new staging
+terraform workspace new prod
+terraform workspace select prod
+```
+
+### 4. Pin Provider Versions
+Always pin provider versions to prevent unexpected breaking changes:
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  required_version = ">= 1.5.0"
+}
+```
+
+### 5. Use Variables and Locals
+Parameterize configurations using variables for reusability:
+```hcl
+variable "environment" {
+  type        = string
+  description = "Deployment environment"
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
+  }
+}
+
+locals {
+  name_prefix = "${var.project}-${var.environment}"
+  common_tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+  }
+}
+```
+
+## File Structure Best Practices
+
+### Standard Module Structure
+```
+my-module/
+├── main.tf          # Primary resources
+├── variables.tf     # Input variables
+├── outputs.tf       # Output values
+├── versions.tf      # Provider/version constraints
+├── data.tf          # Data sources
+└── README.md        # Documentation
+```
+
+### Multi-Environment Repository Structure
+```
+environments/
+├── dev/
+│   ├── main.tf
+│   ├── terraform.tfvars
+│   └── backend.tf
+├── staging/
+│   ├── main.tf
+│   ├── terraform.tfvars
+│   └── backend.tf
+└── prod/
+    ├── main.tf
+    ├── terraform.tfvars
+    └── backend.tf
+modules/
+├── vpc/
+├── ec2/
+├── rds/
+└── eks/
+```
+
+## Security Best Practices
+
+### Never Hardcode Credentials
+Use IAM instance profiles, environment variables, or AWS Vault instead of hardcoded credentials.
+
+### Use aws_secretsmanager_secret for Sensitive Data
+```hcl
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = "prod/db/password"
+}
+```
+
+### Sensitive Variables
+Mark sensitive outputs to prevent exposure in logs:
+```hcl
+output "db_password" {
+  value     = aws_db_instance.main.password
+  sensitive = true
+}
+```
+
+### Use Least-Privilege IAM for Terraform
+Create a dedicated IAM role for Terraform with only required permissions. Avoid AdministratorAccess.
+
+## Workflow Best Practices
+
+### Plan Before Apply
+Always run `terraform plan` and review changes before `terraform apply`.
+
+### Use -target Sparingly
+Only use `terraform apply -target` for emergency fixes, not regular workflow.
+
+### Import Existing Resources
+Use `terraform import` to bring existing AWS resources under Terraform management.
+
+### Drift Detection
+Run `terraform plan` regularly in CI to detect configuration drift.
+
+## Advanced Patterns
+
+### Dynamic Blocks
+Use dynamic blocks to avoid repetitive configuration:
+```hcl
+resource "aws_security_group" "main" {
+  dynamic "ingress" {
+    for_each = var.ingress_rules
+    content {
+      from_port   = ingress.value.port
+      to_port     = ingress.value.port
+      protocol    = "tcp"
+      cidr_blocks = ingress.value.cidr_blocks
+    }
+  }
+}
+```
+
+### For_Each over Count
+Prefer `for_each` over `count` for resources that may be added/removed independently to avoid index shifting issues.
+
+### Data Sources
+Use data sources to reference existing resources without managing them:
+```hcl
+data "aws_vpc" "existing" {
+  tags = {
+    Name = "production"
+  }
+}
+```
