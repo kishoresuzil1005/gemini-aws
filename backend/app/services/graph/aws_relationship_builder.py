@@ -55,19 +55,20 @@ class AWSRelationshipBuilder:
     def build(self):
         relationships = []
 
-        # -- Existing relationships --
+        # ── Existing relationships ──────────────────────────────────────────
         relationships.extend(self.ec2_to_ebs())
         relationships.extend(self.ec2_to_vpc())
         relationships.extend(self.ec2_to_sg())
         relationships.extend(self.rds_to_vpc())
         relationships.extend(self.alb_to_ec2())
 
-        # -- Phase 2: new relationship types --
+        # ── Phase 2: new relationship types ────────────────────────────────
         relationships.extend(self.subnet_to_vpc())
         relationships.extend(self.sg_to_vpc())
         relationships.extend(self.igw_to_vpc())
         relationships.extend(self.ec2_to_subnet())   # MOST IMPORTANT for blast radius
         relationships.extend(self.rds_to_sg())
+        relationships.extend(self.rds_to_subnet())
         relationships.extend(self.ec2_to_iam())
         relationships.extend(self.lambda_to_iam())
 
@@ -90,14 +91,14 @@ class AWSRelationshipBuilder:
                         relations.append({
                             "from": instance_id,
                             "to": volume_id,
-                            "type": "ATTACHED_VOLUME"
+                            "type": "ATTACHED_VOLUME"   # renamed from ATTACHED_TO
                         })
         except Exception as e:
             logger.error(f"Error querying ec2_to_ebs in boto3: {e}")
             return self._get_fallback_relations("ec2_to_ebs")
         return relations
 
-    # -- Phase 2: new methods --
+    # ── Phase 2: new methods ────────────────────────────────────────────────
 
     def subnet_to_vpc(self):
         """Subnet -[IN_VPC]-> VPC"""
@@ -199,6 +200,29 @@ class AWSRelationshipBuilder:
             return self._get_fallback_relations("rds_to_sg")
         return relations
 
+    def rds_to_subnet(self):
+        """RDS -[IN_SUBNET]-> Subnet"""
+        relations = []
+        if not self.rds:
+            return self._get_fallback_relations("rds_to_subnet")
+        try:
+            dbs = self.rds.describe_db_instances()
+            for db in dbs["DBInstances"]:
+                rds_id = db["DBInstanceIdentifier"]
+                subnet_group = db.get("DBSubnetGroup", {})
+                for subnet in subnet_group.get("Subnets", []):
+                    subnet_id = subnet.get("SubnetIdentifier")
+                    if subnet_id:
+                        relations.append({
+                            "from": rds_id,
+                            "to": subnet_id,
+                            "type": "IN_SUBNET"
+                        })
+        except Exception as e:
+            logger.error(f"Error querying rds_to_subnet: {e}")
+            return self._get_fallback_relations("rds_to_subnet")
+        return relations
+
     def ec2_to_iam(self):
         """EC2 -[ASSUMES_ROLE]-> IAM Role"""
         relations = []
@@ -212,12 +236,11 @@ class AWSRelationshipBuilder:
                     if not profile:
                         continue
                     profile_arn = profile.get("Arn", "")
-                    role_name = profile_arn.split("/")[-1] if profile_arn else profile.get("Id", "")
-                    if not role_name:
+                    if not profile_arn:
                         continue
                     relations.append({
                         "from": instance["InstanceId"],
-                        "to": role_name,
+                        "to": profile_arn,
                         "type": "ASSUMES_ROLE"
                     })
         except Exception as e:
@@ -235,12 +258,11 @@ class AWSRelationshipBuilder:
             for page in paginator.paginate():
                 for fn in page["Functions"]:
                     role_arn = fn.get("Role", "")
-                    role_name = role_arn.split("/")[-1] if role_arn else ""
-                    if not role_name:
+                    if not role_arn:
                         continue
                     relations.append({
                         "from": fn["FunctionName"],
-                        "to": role_name,
+                        "to": role_arn,
                         "type": "USES_ROLE"
                     })
         except Exception as e:
@@ -395,7 +417,7 @@ class AWSRelationshipBuilder:
                                   "to":   ec2_ids[i % len(ec2_ids)],
                                   "type": "TARGETS"})
 
-        # -- Phase 2 fallbacks --
+        # ── Phase 2 fallbacks ────────────────────────────────────────────────
 
         elif category == "subnet_to_vpc":
             for i in range(len(sub_ids)):
@@ -426,6 +448,12 @@ class AWSRelationshipBuilder:
                 relations.append({"from": rds_ids[i % len(rds_ids)],
                                   "to":   sg_ids[i % len(sg_ids)],
                                   "type": "USES_SECURITY_GROUP"})
+
+        elif category == "rds_to_subnet":
+            for i in range(len(rds_ids)):
+                relations.append({"from": rds_ids[i % len(rds_ids)],
+                                  "to":   sub_ids[i % len(sub_ids)],
+                                  "type": "IN_SUBNET"})
 
         elif category == "ec2_to_iam":
             for i in range(min(len(ec2_ids), len(role_ids))):
