@@ -267,6 +267,24 @@ def discover_resources(
     db.add_all(edges)
     db.add_all(relationships)
 
+    # Priority 1 Direct IGW Discovery fallback
+    import boto3
+    try:
+        ec2 = boto3.client("ec2", region_name=region if region and region.lower() != "all" else "us-east-1")
+        response = ec2.describe_internet_gateways()
+        for igw in response.get("InternetGateways", []):
+            igw_id = igw.get("InternetGatewayId")
+            if igw_id and igw_id not in unique_nodes:
+                resource = ResourceNodeDB(
+                    resource_id=igw_id,
+                    resource_type="InternetGateway",
+                    name=igw_id,
+                    provider="AWS"
+                )
+                db.add(resource)
+    except Exception as e:
+        print(f"Failed direct IGW fallback discovery: {e}")
+
     try:
         db.commit()
         print(
