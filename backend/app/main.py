@@ -1200,6 +1200,12 @@ app.include_router(
     tags=["AI Chat"]
 )
 
+from app.api.ai_architect import router as ai_architect_router
+app.include_router(
+    ai_architect_router,
+    tags=["AI Architect"]
+)
+
 from app.api.routes import terminal
 
 app.include_router(
