@@ -12,6 +12,7 @@ from app.providers.aws.ebs import EBSDiscovery
 from app.providers.aws.ecs import ECSDiscovery
 from app.providers.aws.eks import EKSDiscovery
 from app.providers.aws.iam import IAMDiscovery
+from app.providers.aws.igw import IGWDiscovery
 from app.providers.aws.regions import get_all_regions
 
 logger = logging.getLogger("AWS_Discovery_Scanner")
@@ -167,6 +168,22 @@ class AWSDiscoveryScanner:
             except Exception as e:
                 logger.warning(
                     f"VPC Discovery failed in region {reg}: {e}"
+                )
+
+            # IGW
+            try:
+                for igw in IGWDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": igw["resource_id"],
+                        "type": "InternetGateway",
+                        "name": igw["resource_id"],
+                        "status": igw["state"],
+                        "region": reg
+                    })
+            except Exception as e:
+                logger.warning(
+                    f"IGW Discovery failed in region {reg}: {e}"
                 )
 
             # ALB
