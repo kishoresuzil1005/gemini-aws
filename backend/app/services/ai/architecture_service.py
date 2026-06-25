@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from app.services.ai.architecture_patterns import ArchitecturePatterns
 from app.services.ai.architecture_review import ArchitectureReview
 from app.services.ai.failure_analysis import FailureAnalysis
+from app.services.ai.production_best_practices import ProductionBestPractices
 
 class ArchitectureService:
     def __init__(self):
@@ -61,6 +62,7 @@ class ArchitectureService:
         self.pattern_library = ArchitecturePatterns()
         self.architecture_review = ArchitectureReview()
         self.failure_analysis = FailureAnalysis()
+        self.production_reviewer = ProductionBestPractices()
 
     def analyze(self, query: str) -> Dict[str, Any]:
         query_lower = query.lower()
@@ -162,6 +164,25 @@ class ArchitectureService:
                 resource_name = "cloudops-db"
                 
             failure_context = self.failure_analysis.analyze(resource_name)
+            
+        # 8. Production Readiness Trigger
+        production_context = {}
+        if "production" in query_lower or "best practice" in query_lower:
+            # We need review findings and score data for production eval.
+            # If review wasn't triggered explicitly, we run a background review now.
+            if not review_context:
+                review_context = self.architecture_review.review()
+            
+            # The architecture_review.review() returns 'scoring' within its dictionary.
+            score_data = review_context.get("scoring", {})
+            findings_dict = {
+                "security_findings": review_context.get("security_findings", []),
+                "network_findings": review_context.get("network_findings", []),
+                "reliability_findings": review_context.get("reliability_findings", []),
+                "cost_findings": review_context.get("cost_findings", []),
+                "monitoring_findings": review_context.get("monitoring_findings", [])
+            }
+            production_context = self.production_reviewer.evaluate(inventory_context, findings_dict, score_data)
 
         return {
             "mode": "architecture",
@@ -174,5 +195,6 @@ class ArchitectureService:
             "graph_context": graph_context,
             "cost_findings": review_context.get("cost_findings", []), # Keeping backward compatibility in context structure
             "review_context": review_context,
-            "failure_context": failure_context
+            "failure_context": failure_context,
+            "production_context": production_context
         }

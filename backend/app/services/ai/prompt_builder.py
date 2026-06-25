@@ -250,6 +250,30 @@ Recovery Plan & Recommendations:
 -------------------------------
 """
 
+            prod_context = architecture_context.get("production_context")
+            if prod_context:
+                prod_checklist = ""
+                for k, v in prod_context.get("production_checklist", {}).items():
+                    status_icon = "✓" if v.get("status") == "Pass" else "✗"
+                    items_str = ", ".join(v.get("items", []))
+                    prod_checklist += f"[{status_icon}] {k}: {items_str}\n"
+
+                review_text += f"""
+--- PRODUCTION READINESS REPORT ---
+Production Ready: {"YES" if prod_context.get('production_ready') else "NO"}
+Environment Type: {prod_context.get('environment_type', 'Unknown')}
+Readiness Score: {prod_context.get('readiness_score', 0)}% (Grade: {prod_context.get('grade', 'N/A')})
+
+Checklist Validation:
+{prod_checklist}
+Critical Findings:
+  - {'\n  - '.join(prod_context.get('critical_findings', [])) if prod_context.get('critical_findings') else 'None'}
+
+Recommendations for Production:
+  - {'\n  - '.join(prod_context.get('recommendations', [])) if prod_context.get('recommendations') else 'None'}
+-----------------------------------
+"""
+
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}

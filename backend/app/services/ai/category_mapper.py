@@ -5,6 +5,7 @@ class CategoryMapper:
         self.CATEGORY_MAP = {
             "architecture": ["architecture", "aws_architecture", "well_architected_framework", "operational_excellence", "reliability", "performance_efficiency", "cost_optimization", "sustainability"],
             "failure": ["disaster_recovery", "reliability", "troubleshooting", "architecture"],
+            "production": ["well_architected_framework", "security", "architecture", "operational_excellence"],
             "security": ["security", "aws_security"],
             "terraform": ["terraform"],
             "kubernetes": ["kubernetes"],
@@ -27,6 +28,9 @@ class CategoryMapper:
             categories.update(self.CATEGORY_MAP["terraform"])
         if "fail" in query_lower or "blast radius" in query_lower or "outage" in query_lower:
             categories.update(self.CATEGORY_MAP["failure"])
+            
+        if "production" in query_lower or "best practice" in query_lower:
+            categories.update(self.CATEGORY_MAP["production"])
             
         if "terraform" in query_lower or "tf" in query_lower:
             categories.update(self.CATEGORY_MAP["terraform"])
