@@ -112,7 +112,38 @@ Always provide:
         if architecture_context:
             import json
             arch_json = json.dumps(architecture_context, indent=2)
-            architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n============================\n"
+            
+            pattern_text = ""
+            pattern = architecture_context.get("architecture_pattern")
+            if pattern:
+                pattern_text = f"""
+--- PRODUCTION ARCHITECTURE PATTERN ---
+Name: {pattern.get('name', '')}
+Description: {pattern.get('description', '')}
+
+Flow:
+{' -> '.join(pattern.get('flow', []))}
+
+Recommended Services:
+{', '.join(pattern.get('services', []))}
+
+High Availability:
+{', '.join(pattern.get('high_availability', []))}
+
+Security:
+{', '.join(pattern.get('security', []))}
+
+Monitoring:
+{', '.join(pattern.get('monitoring', []))}
+
+Cost Optimization:
+{', '.join(pattern.get('cost', []))}
+
+Best Practices:
+- {'\n- '.join(pattern.get('best_practices', []))}
+---------------------------------------
+"""
+            architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}
 {self.SHARED_INSTRUCTIONS}{architecture_block}

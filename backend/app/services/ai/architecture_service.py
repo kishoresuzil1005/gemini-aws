@@ -1,5 +1,6 @@
 import json
 from typing import Dict, Any, List
+from app.services.ai.architecture_patterns import ArchitecturePatterns
 
 class ArchitectureService:
     def __init__(self):
@@ -54,6 +55,8 @@ class ArchitectureService:
             self.has_graph_services = True
         except ImportError:
             self.has_graph_services = False
+            
+        self.pattern_library = ArchitecturePatterns()
 
     def analyze(self, query: str) -> Dict[str, Any]:
         query_lower = query.lower()
@@ -135,6 +138,7 @@ class ArchitectureService:
             "mode": "architecture",
             "workload": detected_workload,
             "pattern": detected_pattern,
+            "architecture_pattern": self.pattern_library.get_pattern(detected_workload),
             "deployment": "ec2" if "ec2" in detected_services else "managed",
             "services": list(detected_services),
             "requirements": detected_requirements,
