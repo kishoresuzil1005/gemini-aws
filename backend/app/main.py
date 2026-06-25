@@ -1180,7 +1180,7 @@ app.include_router(
 
 # from app.api.ai import router as ollama_ai_router
 from app.api.doctor import router as doctor_router
-from app.api.ai import router as ai_router
+from app.api.ai_chat import router as ai_router
 
 # app.include_router(
 #     ollama_ai_router,
