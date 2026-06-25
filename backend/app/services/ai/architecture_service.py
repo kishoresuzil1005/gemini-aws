@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Any, List
 from app.services.ai.architecture_patterns import ArchitecturePatterns
+from app.services.ai.architecture_review import ArchitectureReview
 
 class ArchitectureService:
     def __init__(self):
@@ -57,6 +58,7 @@ class ArchitectureService:
             self.has_graph_services = False
             
         self.pattern_library = ArchitecturePatterns()
+        self.architecture_review = ArchitectureReview()
 
     def analyze(self, query: str) -> Dict[str, Any]:
         query_lower = query.lower()
@@ -133,6 +135,11 @@ class ArchitectureService:
             # Simple mock inventory signal for "review my architecture"
             if "review" in query_lower and "architecture" in query_lower:
                 inventory_context["signal"] = "fetch_full_inventory"
+                
+        # 6. Architecture Review Trigger
+        review_context = {}
+        if "review" in query_lower or "analyze" in query_lower:
+            review_context = self.architecture_review.review()
 
         return {
             "mode": "architecture",
@@ -144,5 +151,6 @@ class ArchitectureService:
             "requirements": detected_requirements,
             "graph_context": graph_context,
             "inventory_context": inventory_context,
-            "criticality_context": criticality_context
+            "criticality_context": criticality_context,
+            "review_context": review_context
         }

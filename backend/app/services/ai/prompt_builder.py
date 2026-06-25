@@ -143,7 +143,38 @@ Best Practices:
 - {'\n- '.join(pattern.get('best_practices', []))}
 ---------------------------------------
 """
-            architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}============================\n"
+            review_text = ""
+            review_context = architecture_context.get("review_context")
+            if review_context:
+                inventory_str = "\n".join([f"{k}: {v}" for k, v in review_context.get("inventory", {}).items()])
+                findings_str = "\n".join(
+                    review_context.get("spofs", []) +
+                    review_context.get("security_findings", []) +
+                    review_context.get("cost_findings", []) +
+                    review_context.get("reliability_findings", []) +
+                    review_context.get("network_findings", []) +
+                    review_context.get("monitoring_findings", [])
+                )
+                
+                review_text = f"""
+--- ARCHITECTURE REVIEW FINDINGS ---
+Current Environment Inventory:
+{inventory_str}
+
+Graph Context:
+Nodes Analyzed: {review_context.get('graph', {}).get('nodes_analyzed', 0)}
+Relationships Found: {review_context.get('graph', {}).get('relationships_found', 0)}
+Orphan Resources: {review_context.get('graph', {}).get('orphan_resources', 0)}
+
+Criticality Context:
+High Risk Assets: {review_context.get('criticality', {}).get('high_risk_assets', 0)}
+Average Blast Radius: {review_context.get('criticality', {}).get('average_blast_radius', 0.0)}
+
+Detected Findings & Risks:
+{findings_str if findings_str else 'No findings detected.'}
+------------------------------------
+"""
+            architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}
 {self.SHARED_INSTRUCTIONS}{architecture_block}
