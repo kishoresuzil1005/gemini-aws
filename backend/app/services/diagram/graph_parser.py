@@ -1,4 +1,5 @@
 from app.services.graph.neo4j_service import Neo4jService
+from app.services.diagram.node_deduplicator import NodeDeduplicator
 
 
 class GraphParser:
@@ -22,6 +23,9 @@ class GraphParser:
                     "type": n["type"]
 
                 })
+
+            # Deduplicate nodes at the source — before LayerBuilder sees them
+            nodes = NodeDeduplicator.deduplicate(nodes)
 
             edges = []
 
@@ -48,3 +52,4 @@ class GraphParser:
         finally:
 
             service.close()
+
