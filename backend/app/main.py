@@ -1221,6 +1221,9 @@ app.include_router(failure_analysis_router)
 from app.routes.production_review import router as production_review_router
 app.include_router(production_review_router)
 
+from app.routes.production_checklist import router as production_checklist_router
+app.include_router(production_checklist_router)
+
 from app.api.routes import terminal
 
 app.include_router(
