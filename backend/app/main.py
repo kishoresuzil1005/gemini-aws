@@ -1227,6 +1227,9 @@ app.include_router(production_checklist_router)
 from app.routes.well_architected_review import router as well_architected_router
 app.include_router(well_architected_router)
 
+from app.routes.graph_parser import router as graph_parser_router
+app.include_router(graph_parser_router)
+
 from app.api.routes import terminal
 
 app.include_router(
