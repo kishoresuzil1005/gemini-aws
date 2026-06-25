@@ -104,13 +104,18 @@ Always provide:
     def is_architecture_question(self, query: str) -> bool:
         return self.detect_intent(query) == "architecture"
 
-    def build(self, query: str, context: str) -> str:
+    def build(self, query: str, context: str, architecture_context: dict = None) -> str:
         intent = self.detect_intent(query)
         role_prompt = self.ROLE_PROMPTS.get(intent, self.ROLE_PROMPTS["default"])
+        
+        architecture_block = ""
+        if architecture_context:
+            import json
+            arch_json = json.dumps(architecture_context, indent=2)
+            architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n============================\n"
 
         augmented_prompt = f"""{role_prompt}
-{self.SHARED_INSTRUCTIONS}
-
+{self.SHARED_INSTRUCTIONS}{architecture_block}
 === AWS KNOWLEDGE BASE CONTEXT ===
 {context}
 ==================================

@@ -7,6 +7,7 @@ from app.services.ai.ollama_service import OllamaService
 from app.services.ai.prompt_builder import PromptBuilder
 from app.services.ai.retrieval_optimizer import RetrievalOptimizer
 from app.services.ai.category_mapper import CategoryMapper
+from app.services.ai.architecture_service import ArchitectureService
 
 
 class RAGService:
@@ -18,6 +19,7 @@ class RAGService:
         self.prompt_builder = PromptBuilder()
         self.retrieval_optimizer = RetrievalOptimizer(min_score=0.65)
         self.category_mapper = CategoryMapper()
+        self.architecture_service = ArchitectureService()
 
     def index_document(self, title: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -180,8 +182,17 @@ class RAGService:
             confidence = total_score / num_chunks
             context_str = "\n".join(context_blocks)
             
+            # Generate Architecture Context if applicable
+            architecture_context = None
+            if architecture_mode:
+                architecture_context = self.architecture_service.analyze(query)
+                
             # Construct Prompt
-            augmented_prompt = self.prompt_builder.build(query=query, context=context_str)
+            augmented_prompt = self.prompt_builder.build(
+                query=query, 
+                context=context_str, 
+                architecture_context=architecture_context
+            )
             
             # Request completion from Ollama
             answer = self.ollama_service.generate(augmented_prompt)
