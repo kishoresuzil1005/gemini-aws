@@ -224,8 +224,32 @@ Implementation Steps:
   - {'\n  - '.join(rec.get('implementation_steps', []))}
 AWS Services: {', '.join(rec.get('aws_services', []))}
 """
-
                 review_text += "------------------------------------\n"
+                
+            failure_context = architecture_context.get("failure_context")
+            if failure_context:
+                review_text += f"""
+--- FAILURE ANALYSIS REPORT ---
+Failed Resource: {failure_context.get('resource', 'Unknown')}
+Severity: {failure_context.get('severity', 'UNKNOWN')}
+Criticality Score: {failure_context.get('criticality_score', 0)}/10
+Blast Radius (Affected Nodes): {failure_context.get('blast_radius', 0)}
+Estimated Recovery Time: {failure_context.get('estimated_recovery', 'Unknown')}
+
+Business Impact:
+  - {'\n  - '.join(failure_context.get('business_impact', []))}
+
+Affected Services (Downstream):
+  - {', '.join(failure_context.get('affected_services', []))}
+
+Likely Root Causes:
+  - {', '.join(failure_context.get('likely_root_causes', []))}
+
+Recovery Plan & Recommendations:
+  - {'\n  - '.join(failure_context.get('recommendations', []))}
+-------------------------------
+"""
+
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}

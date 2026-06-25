@@ -2,6 +2,7 @@ import json
 from typing import Dict, Any, List
 from app.services.ai.architecture_patterns import ArchitecturePatterns
 from app.services.ai.architecture_review import ArchitectureReview
+from app.services.ai.failure_analysis import FailureAnalysis
 
 class ArchitectureService:
     def __init__(self):
@@ -59,6 +60,7 @@ class ArchitectureService:
             
         self.pattern_library = ArchitecturePatterns()
         self.architecture_review = ArchitectureReview()
+        self.failure_analysis = FailureAnalysis()
 
     def analyze(self, query: str) -> Dict[str, Any]:
         query_lower = query.lower()
@@ -138,8 +140,28 @@ class ArchitectureService:
                 
         # 6. Architecture Review Trigger
         review_context = {}
-        if "review" in query_lower or "analyze" in query_lower:
+        if "review" in query_lower or "analyze" in query_lower and "fail" not in query_lower:
             review_context = self.architecture_review.review()
+            
+        # 7. Failure Analysis Trigger
+        failure_context = {}
+        if "fail" in query_lower or "blast radius" in query_lower:
+            # Simple heuristic to grab the resource name from "what happens if X fails"
+            words = query_lower.split()
+            resource_name = "unknown-resource"
+            for i, word in enumerate(words):
+                if word in ["if", "of", "radius", "for"]:
+                    if i + 1 < len(words) and words[i+1] not in ["the", "my", "a"]:
+                        resource_name = words[i+1]
+                        break
+                    elif i + 2 < len(words):
+                        resource_name = words[i+2]
+                        break
+            # Fallback if the user specifically asked about cloudops-db
+            if "cloudops-db" in query_lower:
+                resource_name = "cloudops-db"
+                
+            failure_context = self.failure_analysis.analyze(resource_name)
 
         return {
             "mode": "architecture",
@@ -150,7 +172,7 @@ class ArchitectureService:
             "services": list(detected_services),
             "requirements": detected_requirements,
             "graph_context": graph_context,
-            "inventory_context": inventory_context,
-            "criticality_context": criticality_context,
-            "review_context": review_context
+            "cost_findings": review_context.get("cost_findings", []), # Keeping backward compatibility in context structure
+            "review_context": review_context,
+            "failure_context": failure_context
         }

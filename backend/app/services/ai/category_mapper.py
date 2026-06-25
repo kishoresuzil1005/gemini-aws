@@ -4,6 +4,7 @@ class CategoryMapper:
     def __init__(self):
         self.CATEGORY_MAP = {
             "architecture": ["architecture", "aws_architecture", "well_architected_framework", "operational_excellence", "reliability", "performance_efficiency", "cost_optimization", "sustainability"],
+            "failure": ["disaster_recovery", "reliability", "troubleshooting", "architecture"],
             "security": ["security", "aws_security"],
             "terraform": ["terraform"],
             "kubernetes": ["kubernetes"],
@@ -23,6 +24,11 @@ class CategoryMapper:
         # Additional keyword matching for multi-category queries
         query_lower = query.lower()
         if "terraform" in query_lower:
+            categories.update(self.CATEGORY_MAP["terraform"])
+        if "fail" in query_lower or "blast radius" in query_lower or "outage" in query_lower:
+            categories.update(self.CATEGORY_MAP["failure"])
+            
+        if "terraform" in query_lower or "tf" in query_lower:
             categories.update(self.CATEGORY_MAP["terraform"])
         if "kubernetes" in query_lower or "eks" in query_lower:
             categories.update(self.CATEGORY_MAP["kubernetes"])
