@@ -1,0 +1,24 @@
+# AWS Certificate Manager (ACM) - SSL/TLS Certificate Administration
+
+AWS Certificate Manager (ACM) handles the complexity of provisioning, managing, and deploying public and private Secure Sockets Layer/Transport Layer Security (SSL/TLS) certificates for use with your AWS services.
+
+## Core Concepts
+
+### Public Certificates and Domain Validation
+To obtain a public SSL/TLS certificate from ACM, you must prove ownership of the domain names specified. ACM offers two validation methods:
+*   **DNS Validation:** You add specific CNAME records to your domain's DNS configuration (e.g. inside Route 53). This is the highly recommended validation method as it allows ACM to automatically renew certificates before they expire without any operational manual steps.
+*   **Email Validation:** ACM sends validation emails to the domain's administrative addresses, requiring a manual click confirmation.
+
+### ACM Private Certificate Authority (Private CA)
+Enables enterprises to build their own private CA hierarchical systems, issuing private SSL certificates to secure internal microservices, container networks, VPN connections, or on-premises servers.
+
+## Security Controls and Deployment Best Practices
+
+### 1. Mandate DNS Validation over Email Validation
+Always use DNS Validation to configure certificate verification. DNS Validation lets ACM monitor Route 53 parameters and handle automated domain renewals behind the scenes, eliminating the risk of certificates expiring unexpectedly (which can cause severe application outages and secure tunnel failures).
+
+### 2. Standardize Ingress Security using ACM Certificates
+Attach ACM SSL certificates directly to your frontdoors (such as CloudFront distributions, Application Load Balancers, or API Gateway endpoints). Do not allow backend application instances to handle manual certificate storage; optimize security and performance via SSL/TLS offloading at the boundary layer.
+
+### 3. Enforce Strong Cipher Suites and TLS Policies
+Ensure services linked with ACM certificates (like an ALB) are configured with modern TLS security policies (such as `ELBSecurityPolicy-TLS13-1-2-2021-06`). Disable vulnerable older protocols such as SSLv3, TLS 1.0, and TLS 1.1 to conform to high-security compliance benchmarks.

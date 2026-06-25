@@ -1,0 +1,29 @@
+# Amazon DynamoDB - Fully Managed NoSQL Database and Security Standards
+
+Amazon DynamoDB is a fully managed, serverless, NoSQL database service that provides fast, predictable performance with seamless scalability.
+
+## Core Concepts
+
+### Tables, Items, and Attributes
+*   **Table:** A collection of data items.
+*   **Item:** A group of attributes that is uniquely identifiable among all other items (similar to a row in other systems).
+*   **Attributes:** Fundamental data elements, which do not need to be symmetric across all items (similar to columns).
+
+### Primary Keys
+*   **Partition Key (Simple PRIMARY KEY):** SQS hash index used to determine partition storage.
+*   **Composite Primary Key:** Partition Key paired with a **Sort Key** to support rich querying patterns.
+
+### Global and Local Secondary Indexes (GSI & LSI)
+*   **GSI:** An index with a partition key and a sort key that can be different from those on the table.
+*   **LSI:** An index that has the same partition key as the table, but a different sort key.
+
+## DevSecOps Security Configuration Best Practices
+
+### 1. Disable Public Access / No Internet Paths
+Use interface VPC Endpoints (AWS PrivateLink) to communicate with DynamoDB. This allows server tasks in private subnets to query the database using AWS internal network channels instead of routing traffic over the public internet.
+
+### 2. Enable Point-In-Time Recovery (PITR)
+Always enable Point-In-Time Recovery (PITR) for production tables. This offers continuous backups for up to 35 days, allowing recovery from accidental write deletes or database updates in minutes.
+
+### 3. Fine-Grained Access Control (FGAC)
+Use IAM policy conditions (such as `dynamodb:LeadingKeys`) to restrict users or client apps so they can only read or write to items with a partition key matching their active AWS Cognito User ID.

@@ -1,0 +1,208 @@
+# Terraform Modules on AWS
+Source: HashiCorp Official Documentation + AWS Terraform Module Registry
+
+## What Are Terraform Modules?
+Modules are reusable, self-contained packages of Terraform configurations that represent a logical grouping of resources. They are the primary mechanism for code reuse in Terraform.
+
+## Types of Modules
+
+### Root Module
+Every Terraform configuration has a root module consisting of resources in the main working directory.
+
+### Child Modules
+Called by the root module or other modules using module blocks.
+
+### Published Modules
+Available from the Terraform Registry at registry.terraform.io.
+
+## Creating a Module
+
+### Basic Module Structure
+```
+modules/vpc/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── versions.tf
+```
+
+### Example VPC Module
+```hcl
+# modules/vpc/main.tf
+resource "aws_vpc" "main" {
+  cidr_block           = var.cidr_block
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  tags = merge(var.tags, { Name = var.name })
+}
+
+resource "aws_subnet" "public" {
+  count             = length(var.public_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.public_subnets[count.index]
+  availability_zone = var.availability_zones[count.index]
+  map_public_ip_on_launch = true
+  tags = merge(var.tags, { Name = "${var.name}-public-${count.index + 1}" })
+}
+
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnets[count.index]
+  availability_zone = var.availability_zones[count.index]
+  tags = merge(var.tags, { Name = "${var.name}-private-${count.index + 1}" })
+}
+```
+
+### Module Variables
+```hcl
+# modules/vpc/variables.tf
+variable "name" {
+  type        = string
+  description = "Name prefix for all resources"
+}
+
+variable "cidr_block" {
+  type        = string
+  description = "CIDR block for the VPC"
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnets" {
+  type        = list(string)
+  description = "List of public subnet CIDR blocks"
+}
+
+variable "private_subnets" {
+  type        = list(string)
+  description = "List of private subnet CIDR blocks"
+}
+
+variable "availability_zones" {
+  type        = list(string)
+  description = "List of availability zones"
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Common tags to apply to all resources"
+  default     = {}
+}
+```
+
+### Module Outputs
+```hcl
+# modules/vpc/outputs.tf
+output "vpc_id" {
+  value       = aws_vpc.main.id
+  description = "ID of the created VPC"
+}
+
+output "public_subnet_ids" {
+  value       = aws_subnet.public[*].id
+  description = "IDs of the public subnets"
+}
+
+output "private_subnet_ids" {
+  value       = aws_subnet.private[*].id
+  description = "IDs of the private subnets"
+}
+```
+
+## Calling a Module
+```hcl
+module "vpc" {
+  source = "./modules/vpc"
+
+  name               = "production"
+  cidr_block         = "10.0.0.0/16"
+  public_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets    = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
+  availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+  tags = {
+    Environment = "production"
+    ManagedBy   = "Terraform"
+  }
+}
+```
+
+## Using Published Modules from Registry
+```hcl
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+
+  cluster_name    = "my-cluster"
+  cluster_version = "1.29"
+  vpc_id          = module.vpc.vpc_id
+  subnet_ids      = module.vpc.private_subnet_ids
+}
+```
+
+## Module Versioning
+When publishing modules, follow semantic versioning:
+- v1.0.0 — Major releases with breaking changes
+- v1.1.0 — Minor releases with new features
+- v1.0.1 — Patch releases for bug fixes
+
+## Best Practices for Modules
+1. One module per logical component (VPC, EKS, RDS)
+2. Accept tags as a variable and pass them to all resources
+3. Expose outputs for all resource IDs and ARNs
+4. Document all variables with descriptions
+5. Version your modules using Git tags
+6. Use validation blocks for variable constraints
+7. Keep modules small and focused
+8. Test modules with Terratest or terraform validate
+
+## AWS-Specific Module Patterns
+
+### EKS Module Pattern
+```hcl
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+
+  cluster_name                   = local.cluster_name
+  cluster_version                = "1.29"
+  cluster_endpoint_public_access = true
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
+
+  eks_managed_node_groups = {
+    main = {
+      min_size     = 2
+      max_size     = 10
+      desired_size = 3
+      instance_types = ["m5.large"]
+      capacity_type  = "ON_DEMAND"
+    }
+  }
+}
+```
+
+### RDS Module Pattern
+```hcl
+module "rds" {
+  source  = "terraform-aws-modules/rds/aws"
+  version = "~> 6.0"
+
+  identifier = "prod-db"
+  engine     = "postgres"
+  engine_version = "15.4"
+  instance_class = "db.t3.medium"
+
+  allocated_storage = 20
+  storage_encrypted = true
+  kms_key_id        = module.kms.key_arn
+
+  db_subnet_group_name   = module.vpc.database_subnet_group
+  vpc_security_group_ids = [module.security_group.security_group_id]
+
+  backup_retention_period = 7
+  skip_final_snapshot     = false
+  deletion_protection     = true
+}
+```

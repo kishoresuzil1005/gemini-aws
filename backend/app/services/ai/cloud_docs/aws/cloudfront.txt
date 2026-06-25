@@ -1,0 +1,26 @@
+# Amazon CloudFront - Global Content Delivery Network & Edge Security
+
+Amazon CloudFront is a web service that speeds up distribution of your static and dynamic web content, such as .html, .css, .js, and image files, to your users. CloudFront delivers your content through a worldwide network of data centers called edge locations.
+
+## Core Concepts
+
+### Edge Locations, Regional Edge Caches, and Origins
+*   **Edge Locations:** Worldwide physical points of presence that cache copy architectures of your content closest to your users, reducing network round-trip latencies.
+*   **Regional Edge Caches:** Larger cloud caches strategically positioned between edge locations and your origin servers to help absorb high volume traffic spikes.
+*   **Origin:** The authoritative storage source hosting your website or API resources (such as an Amazon S3 bucket, an Elastic Load Balancer, or an EC2 instance).
+
+### Distributions and Cache Behaviors
+*   **Distribution:** A CloudFront deployment with a unique domain endpoint name (e.g., `https://d111111abcdef8.cloudfront.net`).
+*   **Cache Behaviors:** Operational routing rules assigned to URL path patterns (e.g., `/images/*` or `/api/*`) configuring headers forward policies, query string behaviors, compression states, and TTLs (Time to Live).
+
+## DevSecOps and Edge Security Best Practices
+
+### 1. Restrict Direct Origin Access (S3 OAI/OAC)
+Never allow public access directly to S3 buckets that serve static assets. Always use CloudFront **Origin Access Control (OAC)** or Origin Access Identity (OAI) to restrict traffic, forcing all users to route through CloudFront exclusively. Set up custom secret header handshakes between CloudFront and Application Load Balancers (ALB) to drop direct IP scanning attempts.
+
+### 2. Enforce Secure SSL/TLS Protocols and Domain Policies
+*   **Redirect HTTP to HTTPS:** Configure Cache Behaviors to automatically redirect port 80 traffic to port 443.
+*   **Modern TLS Cipher Suites:** Disable insecure legacy transport protocols globally. Only permit connections using HTTPS with TLS 1.2 or TLS 1.3.
+
+### 3. Deploy Edge Web Application Firewalls (AWS WAF)
+Attach an AWS WAF Web ACL to your CloudFront distribution to inspect and filter requests *before* they reach your origins. Outsource rate limiting, geo-blocking, and core threat protections (SQLi, XSS) to the global edge network, saving valuable compute resources at the backend.

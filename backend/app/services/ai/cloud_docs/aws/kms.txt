@@ -1,0 +1,28 @@
+# AWS KMS (Key Management Service) - Cryptographic Keys and Envelope Encryption
+
+AWS Key Management Service (KMS) makes it easy for you to create and manage cryptographic keys and control their use across a wide range of AWS services and in your applications.
+
+## Core Concepts
+
+### Customer Master Keys (CMKs)
+*   **AWS Managed Keys:** Automatically created and managed by AWS services on your behalf. Rotated every 3 years.
+*   **Customer Managed Keys (CMKs):** Created and customized by you, allowing fine-grained access policies, key rotation intervals (annual or customized), and tag definitions.
+
+### Symmetric vs. Asymmetric Keys
+*   **Symmetric Keys:** Single 256-bit key used for encryption and decryption. Ideal for most storage/data plane operations.
+*   **Asymmetric Keys:** Public and private key pair. Used for signing, verification, and encryption.
+
+### Envelope Encryption
+For high performance, large files (S3, EBS) are encrypted with a unique data key. That data key is then encrypted using your KMS CMK, allowing fast local CPU cryptoprocessing without raw data leaving local memory.
+
+## DevSecOps Security and Key Management Best Practices
+
+### 1. Define Strict Key Policies (Explicit Separation of Duties)
+Never rely entirely on IAM policies to control KMS access. KMS keys MUST have a Key Policy. Explicitly separate **Key Administrators** (can rotate or change access) from **Key Users** (can encrypt/decrypt data) within key configuration boundaries.
+
+### 2. Enable Annual Automatic Rotation
+Always toggle automatic annual key rotation to `Enabled` for Customer Managed Keys to limit the exposure window of any single cryptographic session.
+
+### 3. Auditing with CloudTrail and Encryption Context
+*   **CloudTrail Integration:** Every decrypt action is logged step-by-step in CloudTrail, allowing instant forensics if unauthorized entities request key resolutions.
+*   **Encryption Context:** Provide a non-cryptographic key-value pair as additional authenticated data. To decrypt, the client must supply the exact matching context (e.g. `{"bucket": "corp-finance"}`), preventing rogue decryptions of swapped volumes.

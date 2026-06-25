@@ -1,0 +1,25 @@
+Title: AWS Prescriptive Guidance
+
+Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html
+
+---
+
+<!DOCTYPE html>
+        <!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>AWS Prescriptive Guidance</title><meta xmlns="" name="subtitle" content="AWS Security Reference Architecture (AWS SRA) – core architecture"><meta xmlns="" name="abstract" content="Comprehensive architecture, example code, and best practices for deploying AWS security services in a multi-account environment. Discusses the foundational architecture, which is the starting point for all organizations, regardless of their industry or application type."><meta http-equiv="refresh" content="0;URL=introduction.html"><script type="text/javascript"><!--
+        var myDefaultPage = "introduction.html";
+           	var myPage = document.location.search.substr(1);
+           	var myHash = document.location.hash;
+        
+              if (myPage == null || myPage.length == 0) {
+                 myPage = myDefaultPage;
+              } else {
+                 var docfile = myPage.match(/[^=\;\/?:\s]+\.html/);
+                 if (docfile == null) {
+       				myPage = myDefaultPage;
+    	     		 } else {
+                    myPage = docfile + myHash;
+                 }
+              }
+              self.location.replace(myPage);
+    --></script></head><body></body></html>
+

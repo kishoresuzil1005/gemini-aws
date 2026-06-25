@@ -1,0 +1,33 @@
+# AWS Auto Scaling - High Availability Capacity and Dynamic Elastic Scaling
+
+AWS Auto Scaling monitors your applications and automatically adjusts capacity to maintain steady, predictable performance at the lowest possible cost. Using Amazon EC2 Auto Scaling, you can set up Auto Scaling groups (ASG) to dynamically maintain, increase, or decrease count configurations of EC2 instances.
+
+## Core Concepts
+
+### Auto Scaling Group (ASG)
+A collection of EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. You define:
+*   **Minimum Size (Min):** The lower bound of active instances allowed inside the group.
+*   **Maximum Size (Max):** The upper limit of instances during peak transaction events.
+*   **Desired Capacity:** The active run count target.
+
+### Configuration: Launch Templates
+A Launch Template specifies the configuration parameters for spawned instances. This includes the AMI ID, instance type, key pair, security groups, block storage volumes, IAM instance profiles, and user data bootstrap script sequences. **Always prefer Launch Templates** over deprecated Launch Configurations to enjoy modern features like Spot Instance allocation, multiple instance-types mixtures, and version control.
+
+### Scaling Policies
+*   **Target Tracking Scaling:** Adjusts the group size to keep a specific metric at or close to a target value (e.g., keep average CPU utilization at 60%).
+*   **Step/Simple Scaling:** Scales the group based on specific CloudWatch alarm thresholds (e.g., add 2 instances if memory use rises above 80%).
+*   **Scheduled Scaling:** Scales up capacity based on anticipated calendar events.
+
+## DevSecOps and High Availability Security Best Practices
+
+### 1. Multi-AZ Subnet Distribution
+Always configure your Auto Scaling Group to spin up instances across multiple Availability Zones (AZs) by declaring multiple private subnets in distinct AZ zones. This prevents application downtime if an entire AWS server building experiences utility power or networking failures.
+
+### 2. Harden User Data Bootstrap Scripts
+User Data scripts run with elevated root privileges during instance startup. Ensure scripts:
+*   Do not contain hardcoded administrative credentials or database passwords.
+*   Clean up temporary setup files.
+*   Sanitize any dynamic metadata inputs to prevent execution injections.
+
+### 3. Leverage Dynamic Instance Refresh
+Use E2 Auto Scaling's Instance Refresh feature to automate host rollouts. Regularly trigger rolling instance updates when releasing new security-hardened golden AMIs or operating system patch updates, replacing running machines safely without application downtime.

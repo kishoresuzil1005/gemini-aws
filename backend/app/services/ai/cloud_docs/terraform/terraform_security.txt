@@ -1,0 +1,173 @@
+# Terraform Security on AWS
+Source: HashiCorp Security Documentation + AWS Security Best Practices
+
+## Terraform Security Principles
+Infrastructure as Code introduces new security risks. Secure Terraform practices prevent credential exposure, unauthorized access, and configuration drift.
+
+## 1. Never Store Credentials in Code
+
+### BAD (Never do this):
+```hcl
+provider "aws" {
+  access_key = "AKIAIOSFODNN7EXAMPLE"
+  secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+  region     = "us-east-1"
+}
+```
+
+### GOOD — Use Environment Variables:
+```bash
+export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI..."
+export AWS_DEFAULT_REGION="us-east-1"
+terraform plan
+```
+
+### BEST — Use IAM Instance Profiles or OIDC:
+When running on EC2 or EKS, Terraform automatically assumes the instance/pod IAM role. No credentials needed.
+
+For CI/CD, use GitHub Actions OIDC:
+```hcl
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+resource "aws_iam_role" "github_actions" {
+  name = "github-actions-terraform"
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = aws_iam_openid_connect_provider.github.arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" = "repo:myorg/myrepo:*"
+        }
+      }
+    }]
+  })
+}
+```
+
+## 2. Encrypt State Files
+Always use KMS-encrypted S3 state backend. Never use local state in production.
+
+## 3. Sensitive Variables
+```hcl
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+output "db_endpoint" {
+  value     = aws_db_instance.main.endpoint
+  sensitive = false  # OK to expose
+}
+
+output "db_password" {
+  value     = aws_db_instance.main.password
+  sensitive = true   # Hidden in output
+}
+```
+
+## 4. Secrets Management
+Use AWS Secrets Manager or SSM Parameter Store — never vars files:
+```hcl
+data "aws_secretsmanager_secret_version" "db_creds" {
+  secret_id = "prod/myapp/db"
+}
+
+locals {
+  db_creds = jsondecode(data.aws_secretsmanager_secret_version.db_creds.secret_string)
+}
+
+resource "aws_db_instance" "main" {
+  username = local.db_creds["username"]
+  password = local.db_creds["password"]
+}
+```
+
+## 5. Least-Privilege Terraform IAM Role
+Create a scoped IAM role for Terraform, not AdministratorAccess:
+```hcl
+resource "aws_iam_role_policy" "terraform" {
+  name = "terraform-permissions"
+  role = aws_iam_role.terraform.id
+  policy = jsonencode({
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ec2:*", "eks:*", "rds:*", "s3:*"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["iam:PassRole", "iam:CreateRole", "iam:AttachRolePolicy"]
+        Resource = "arn:aws:iam::*:role/app-*"
+        Condition = {
+          StringEquals = { "iam:PermissionsBoundary" = aws_iam_policy.boundary.arn }
+        }
+      }
+    ]
+  })
+}
+```
+
+## 6. Use Permission Boundaries
+Prevent privilege escalation by using permission boundaries when Terraform creates IAM roles:
+```hcl
+resource "aws_iam_role" "app_role" {
+  name                 = "app-service-role"
+  permissions_boundary = aws_iam_policy.boundary.arn
+  assume_role_policy   = data.aws_iam_policy_document.assume.json
+}
+```
+
+## 7. .gitignore for Terraform
+```gitignore
+# .gitignore
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars          # May contain secrets
+override.tf
+crash.log
+```
+
+## 8. Policy Scanning with Checkov
+Run Checkov to scan Terraform code for security misconfigurations before applying:
+```bash
+pip install checkov
+checkov -d . --framework terraform
+```
+
+Common issues Checkov catches:
+- S3 buckets without encryption
+- Security groups with 0.0.0.0/0 ingress
+- RDS without encryption
+- CloudTrail not enabled
+- EKS public API endpoint
+
+## 9. Enforce Security via Sentinel (Terraform Enterprise)
+Use Sentinel policies to enforce security rules:
+```python
+# Enforce all S3 buckets are encrypted
+import "tfplan/v2" as tfplan
+
+s3_buckets = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_s3_bucket" and rc.change.actions contains "create"
+}
+
+main = rule {
+  all s3_buckets as _, bucket {
+    bucket.change.after.server_side_encryption_configuration is not null
+  }
+}
+```
+
+## 10. Audit Terraform Activity with CloudTrail
+Enable CloudTrail to log all API calls made by Terraform:
+- Track who ran `terraform apply` and what changed
+- Alert on high-risk IAM changes
+- Detect unexpected resource creation/deletion

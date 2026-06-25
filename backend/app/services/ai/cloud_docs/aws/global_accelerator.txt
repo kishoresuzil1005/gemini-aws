@@ -1,0 +1,24 @@
+# AWS Global Accelerator - Managed Anycast Routing and Traffic Delivery
+
+AWS Global Accelerator is a high-performance networking service that improves your application's availability and speed by leveraging the global, high-speed backbone architecture of AWS.
+
+## Core Concepts
+
+### Static Anycast IP Addresses
+Global Accelerator provides two static **Anycast IP Addresses** that are announced globally from the AWS edge locations. When end users enter queries, they connect to these IPs, routing their sessions onto the AWS global private fiber grid at the nearest edge entry point, bypassing public internet congestion.
+
+### Accelerators, Listeners, and Endpoint Groups
+*   **Accelerator:** The core logical resource routing traffic.
+*   **Listeners:** Check for connections on specific protocols and ports (TCP/UDP).
+*   **Endpoint Groups:** Physical targets distributed across various AWS Regions where traffic is sent. Target options include Application Load Balancers (ALBs), Network Load Balancers (NLBs), EC2 instances, or Elastic IPs.
+
+## Security Posture and Traffic Steering Best Practices
+
+### 1. Obscure Infrastructure Origins on the Internet
+By funneling public traffic through your static Anycast IP addresses, you can completely obscure your application's underlying regional ALBs, NLBs, or EC2 host IPs from the internet. This prevents attackers from direct network scanning or conducting targeted port exploits against your core server addresses.
+
+### 2. Dynamic DDoS Mitigation with AWS Shield Advanced
+AWS Global Accelerator is natively integrated with AWS Shield. Volumetric packet waves are instantly detected, absorbed, and filtered at AWS Edge points before they can reach your application layers, ensuring extremely high uptime during massive network crises.
+
+### 3. Implement Seamless Multi-Region Failovers
+Use the accelerator's traffic dial and endpoint health check metrics to control exactly where traffic is processed. If a regional data center becomes unresponsive or experiences high latencies, Global Accelerator instantly and silently steers sessions to healthy hosts in an alternative geographic region.

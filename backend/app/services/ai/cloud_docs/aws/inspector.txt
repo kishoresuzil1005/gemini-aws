@@ -1,0 +1,25 @@
+# Amazon Inspector - Automated Vulnerability and Package Assessment
+
+Amazon Inspector is an automated vulnerability management service that continually scans AWS workloads for software vulnerabilities and unintended network exposure.
+
+## Core Concepts
+
+### Continuous Workload Scans
+Unlike historical periodic scanners, Amazon Inspector operates dynamically across your ecosystem:
+*   **Amazon EC2 Instances:** Scans running operating systems for missing patches or active CVEs using the systems manager agent or agentless systems.
+*   **Amazon ECR Images:** Evaluates software packages inside container layers upon image push or continuously as new vulnerabilities are registered in databases.
+*   **AWS Lambda Functions:** Scans lambda application dependencies or custom python/javascript scripts for known flaws.
+
+### Network Reachability Assessments
+Analyzes physical routing paths, VPC endpoints, and security group setups to detect if instances or functions are exposed to the public internet unintentionally.
+
+## DevSecOps Deployment Guidelines
+
+### 1. Integrate Scanner into AWS CI/CD Pipelines
+Configure Jenkins or GitHub Action pipelines to query Amazon Inspector's ECR vulnerability assessments automatically, failing software builds if a critical or high-risk vulnerability is detected before a production rollout.
+
+### 2. Configure AWS Systems Manager (SSM) Agent
+Ensure SSM agents are running correctly on all EC2 instances to allow Inspector to inspect system libraries and patch parameters deeply without administrative overhead.
+
+### 3. Review Network Security Reports
+Continuously evaluate Inspector network reachability reports, resolving open, unencrypted ports (such as SSH port 22 or RDP port 3389) immediately using security group configurations.

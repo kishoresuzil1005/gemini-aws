@@ -1,0 +1,28 @@
+# AWS WAF (Web Application Firewall) - Application-Layer Traffic Protection
+
+AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits and bots that may affect availability, compromise security, or consume excessive resources.
+
+## Core Concepts
+
+### Web ACL (Access Control Lists)
+A container that associates with your cloud front door resource (e.g. CloudFront distribution, Application Load Balancer, API Gateway stage, or AppSync GraphQL engine). Inside a Web ACL, you define Rules.
+
+### Rule Actions
+*   **Allow:** Passes the matching HTTP request down to backend application threads.
+*   **Block:** Terminates the session, returning an HTTP 403 Forbidden state response.
+*   **Count:** Tracks the transaction without blocking, ideal for monitoring and testing new rules before production locks.
+*   **CAPTCHA / Challenge:** Intercepts sessions to execute verification checks against spam bot crawlers.
+
+### Managed Rule Groups
+Pre-built groupings of rules designed and maintained by AWS or third parties to block core threats like SQL Injection, Cross-Site Scripting (XSS), or the OWASP Top 10 vulnerabilities.
+
+## DevSecOps and Traffic Security Practices
+
+### 1. Enforce Strict Rate Limiting Rules
+Configure WAF Rate Limiting rules to block IP addresses that issue unusual quantities of client requests within continuous five-minute intervals. This protects backend servers from malicious brute force attempts or scraping networks.
+
+### 2. Implement Geo-Blocking & Token Verification
+If your applications are regional, configure WAF rules to drop traffic originating from unapproved countries, reducing active attack surface vectors.
+
+### 3. Test Rules in COUNT Mode First
+When deploying new WAF rules, always set the Action to `Count` for 24-48 hours. Inspect Access logs to verify that innocent users are not blocked under false-positive triggers before transitioning rules to `Block` mode.

@@ -1,0 +1,42 @@
+Title: Understanding and generating Amazon GuardDuty findings - Amazon GuardDuty
+
+Source: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[Amazon GuardDuty](https://docs.aws.amazon.com/guardduty/index.html)
+[Amazon GuardDuty User Guide](https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html)
+
+# Understanding and generating Amazon GuardDuty findings
+A GuardDuty finding represents a potential security issue detected within AWS accounts, workloads, and data. GuardDuty generates a finding whenever it detects unexpected and potentially malicious activity in your AWS environment.
+You can view and manage your GuardDuty findings on the Findings page in the GuardDuty console, or by using the AWS CLI or API operations. For information on how you can manage GuardDuty findings, see [Managing Amazon GuardDuty findings](https://docs.aws.amazon.com/guardduty/latest/ug/findings_management.html).
+Topics:
+[GuardDuty finding format](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-format.html)
+Understand the format of GuardDuty finding types and different threat purposes that GuardDuty tracks.
+[Sample findings](https://docs.aws.amazon.com/guardduty/latest/ug/sample_findings.html)
+Generate sample findings in the GuardDuty console, or by using GuardDuty API or AWS CLI commands. The generated sample findings include fictitious details to help you understand the finding details associated with each GuardDuty finding. These findings are marked with a prefix [SAMPLE].
+[Test GuardDuty findings in dedicated accounts](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings-scripts.html)
+You can test specific GuardDuty findings in your environment. Run guardduty-tester script in a dedicated non-production AWS account. For GuardDuty to detect and simulate findings, it will deploy certain resources in your environment. This experience is different than generating sample findings.
+
+```
+guardduty-tester
+```
+
+[Viewing generated findings in GuardDuty console](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_working-with-findings.html)
+Learn how to review the generated findings in the GuardDuty console.
+[Severity levels of GuardDuty findings](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings-severity.html)
+Each GuardDuty finding has an associated severity level that reflects the potential risk in your AWS environment. This section explains what each severity level signify.
+[Finding details](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings-summary.html)
+Learn about the details associated with GuardDuty findings that get generated in your account. This topic includes the details associated with foundational threat detection, Extended Threat Detection, and dedicated protection plans in GuardDuty.
+[GuardDuty finding aggregation](https://docs.aws.amazon.com/guardduty/latest/ug/finding-aggregation.html)
+Learn how GuardDuty handles multiple occurrences of the same finding type. By aggregating detected same finding types, GuardDuty updates the original finding type with the latest details.
+[GuardDuty finding types](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-active.html)
+This section enlists GuardDuty finding types by the associated [Foundational data sources](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_data-sources.html) or [Mapped GuardDuty feature](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html#guardduty-feature-enablement-datasource-relation). To learn about each finding type, select that finding for further details, such as its description and potential steps to remediate the finding.
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

@@ -1,0 +1,71 @@
+Title: An Overview of the AWS Cloud Adoption Framework - An Overview of the AWS Cloud Adoption Framework
+
+Source: https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Whitepapers](https://aws.amazon.com/whitepapers/)
+[AWS Whitepaper](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.html)
+[Localized PDF documents](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.html#localized-pdfs)
+[Are you Well-Architected?](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.html#are-you-well-architected)
+Also available on [Audible](https://www.audible.com/pd/Cloud-Adoption-Framework-CAF-Audiobook/B0B48D8ZXL?action_code=ASSGB149080119000H&share_location=pdp&shareTest=TestShare), [Kindle](https://www.amazon.com/dp/B09X9DBL4V/ref=cm_sw_em_r_mt_dp_44NEN2KA1F5VN2AQCMCT), and as an [eBook](https://d1.awsstatic.com/whitepapers/aws-caf-ebook.pdf).
+
+Publication date: November 22, 2021 ([Document revisions](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/document-revisions.html))
+As the proliferation of digital technologies continues to disrupt market segments and industries, adopting Amazon Web Services (AWS) can help you transform your organization to meet the changing business conditions and evolving customer needs. As the world’s most comprehensive and broadly adopted cloud platform, AWS can help you lower costs, reduce business risks, improve operational efficiency, become more agile, innovate faster, create new revenue streams, and reinvent customer and employee experience.
+The AWS Cloud Adoption Framework (AWS CAF) leverages AWS experience and best practices to help you digitally transform and accelerate your business outcomes through innovative use of AWS. Use the AWS CAF to identify and prioritize transformation opportunities, evaluate and improve your cloud readiness, and iteratively evolve your transformation roadmap.
+
+The PDF version of this whitepaper is available in the following languages:
+- [Arabic (عربي)](https://d1.awsstatic.com/whitepapers/International/ar/aws-cloud-adoption-framework.pdf)
+- [Brazilian Portuguese (Português)](https://d1.awsstatic.com/whitepapers/pt_BR/aws-cloud-adoption-framework_pt-BR.pdf)
+- [Simplified Chinese (中文 (简体))](https://d1.awsstatic.com/whitepapers/zh_CN/aws-cloud-adoption-framework_zh-CN.pdf)
+- [Traditional Chinese (中文 (繁體))](https://d1.awsstatic.com/whitepapers/zh_TW/aws-cloud-adoption-framework-zh-TW.pdf)
+- [English](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/overview-aws-cloud-adoption-framework.pdf)
+- [Finnish (Suomalainen)](https://d1.awsstatic.com/whitepapers/International/fi/aws-cloud-adoption-framework_fi-FI.pdf)
+- [French Canadian (Français Canadien)](https://d1.awsstatic.com/whitepapers/International/fr-ca/aws-cloud-adoption-framework-fr-ca.pdf)
+- [French (Français)](https://d1.awsstatic.com/whitepapers/fr_FR/aws-cloud-adoption-framework_fr-FR.pdf)
+- [German (Deutsch)](https://d1.awsstatic.com/whitepapers/International/de/aws-cloud-adoption-framework-de.pdf)
+- [Hebrew (עברית)](https://d1.awsstatic.com/whitepapers/International/he/aws-cloud-adoption-framework_he-IL.pdf)
+- [Indonesian (Bahasa Indonesia)](https://d1.awsstatic.com/whitepapers/International/id/aws-cloud-adoption-framework.pdf)
+- [Italian (Italiano)](https://d1.awsstatic.com/whitepapers/it_IT/aws-cloud-adoption-framework_IT.pdf)
+- [Japanese (日本語)](https://d1.awsstatic.com/whitepapers/ja_JP/aws-cloud-adoption-frameworkja-JP.pdf)
+- [Korean (한국어)](https://d1.awsstatic.com/whitepapers/ko_KR/aws-cloud-adoption-framework_ko-KR.pdf)
+- [Russian (Ρусский)](https://d1.awsstatic.com/whitepapers/ru_RU/aws-cloud-adoption-framework.pdf)
+- [Spanish (Español)](https://d1.awsstatic.com/whitepapers/es_ES/aws-cloud-adoption-framework_XL.pdf)
+- [Swedish (Svenska)](https://d1.awsstatic.com/whitepapers/International/nordics/aws-cloud-adoption-framework_sv-SE.pdf)
+- [Thai (ไทย)](https://d1.awsstatic.com/whitepapers/International/th/aws-cloud-adoption-framework_TH.pdf)
+- [Turkish (Türkçe)](https://d1.awsstatic.com/whitepapers/International/tr/aws-cloud-adoption-framework-tr.pdf)
+- [Vietnamese (Tiếng Việt)](https://d1.awsstatic.com/whitepapers/International/vi/aws-cloud-adoption-framework-vi.pdf)
+[Arabic (عربي)](https://d1.awsstatic.com/whitepapers/International/ar/aws-cloud-adoption-framework.pdf)
+[Brazilian Portuguese (Português)](https://d1.awsstatic.com/whitepapers/pt_BR/aws-cloud-adoption-framework_pt-BR.pdf)
+[Simplified Chinese (中文 (简体))](https://d1.awsstatic.com/whitepapers/zh_CN/aws-cloud-adoption-framework_zh-CN.pdf)
+[Traditional Chinese (中文 (繁體))](https://d1.awsstatic.com/whitepapers/zh_TW/aws-cloud-adoption-framework-zh-TW.pdf)
+[English](https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/overview-aws-cloud-adoption-framework.pdf)
+[Finnish (Suomalainen)](https://d1.awsstatic.com/whitepapers/International/fi/aws-cloud-adoption-framework_fi-FI.pdf)
+[French Canadian (Français Canadien)](https://d1.awsstatic.com/whitepapers/International/fr-ca/aws-cloud-adoption-framework-fr-ca.pdf)
+[French (Français)](https://d1.awsstatic.com/whitepapers/fr_FR/aws-cloud-adoption-framework_fr-FR.pdf)
+[German (Deutsch)](https://d1.awsstatic.com/whitepapers/International/de/aws-cloud-adoption-framework-de.pdf)
+[Hebrew (עברית)](https://d1.awsstatic.com/whitepapers/International/he/aws-cloud-adoption-framework_he-IL.pdf)
+[Indonesian (Bahasa Indonesia)](https://d1.awsstatic.com/whitepapers/International/id/aws-cloud-adoption-framework.pdf)
+[Italian (Italiano)](https://d1.awsstatic.com/whitepapers/it_IT/aws-cloud-adoption-framework_IT.pdf)
+[Japanese (日本語)](https://d1.awsstatic.com/whitepapers/ja_JP/aws-cloud-adoption-frameworkja-JP.pdf)
+[Korean (한국어)](https://d1.awsstatic.com/whitepapers/ko_KR/aws-cloud-adoption-framework_ko-KR.pdf)
+[Russian (Ρусский)](https://d1.awsstatic.com/whitepapers/ru_RU/aws-cloud-adoption-framework.pdf)
+[Spanish (Español)](https://d1.awsstatic.com/whitepapers/es_ES/aws-cloud-adoption-framework_XL.pdf)
+[Swedish (Svenska)](https://d1.awsstatic.com/whitepapers/International/nordics/aws-cloud-adoption-framework_sv-SE.pdf)
+[Thai (ไทย)](https://d1.awsstatic.com/whitepapers/International/th/aws-cloud-adoption-framework_TH.pdf)
+
+## Localized PDF documents
+[Turkish (Türkçe)](https://d1.awsstatic.com/whitepapers/International/tr/aws-cloud-adoption-framework-tr.pdf)
+[Vietnamese (Tiếng Việt)](https://d1.awsstatic.com/whitepapers/International/vi/aws-cloud-adoption-framework-vi.pdf)
+
+## Are you Well-Architected?
+The [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) helps you understand the pros and cons of the decisions you make when building systems in the cloud. The six pillars of the Framework allow you to learn architectural best practices for designing and operating reliable, secure, efficient, cost-effective, and sustainable systems. Using the [AWS Well-Architected Tool](https://aws.amazon.com/well-architected-tool/), available at no charge in the [AWS Management Console](https://console.aws.amazon.com/wellarchitected), you can review your workloads against these best practices by answering a set of questions for each pillar.
+For more expert guidance and best practices for your cloud architecture—reference architecture deployments, diagrams, and whitepapers—refer to the [AWS Architecture Center](https://aws.amazon.com/architecture/).
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

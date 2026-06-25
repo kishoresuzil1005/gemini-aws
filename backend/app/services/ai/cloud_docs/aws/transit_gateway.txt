@@ -1,0 +1,23 @@
+# AWS Transit Gateway - Centralized Network Hub and Secure Routing
+
+AWS Transit Gateway is a highly available and scalable cloud router service that provides a central data highway to interconnect your virtual private clouds (VPCs) and your on-premises networks.
+
+## Core Concepts
+
+### Attachments and Route Tables
+*   **Attachments:** Virtual linkages configured to route traffic into the Transit Gateway. Supported targets include VPC networks, VPN tunnels, and AWS Direct Connect gateways.
+*   **TGW Route Tables:** Dynamic or static routing tables that determine how incoming packets are forwarded. Attachments can associate with a single TGW route table and propagate route prefixes into others.
+
+### Peering Associations
+Allows secure, cross-account and inter-region connections between distinct Transit Gateways over the AWS Global Backbone network, allowing scalable multi-region architectures.
+
+## Network Architecture and Security Hardening Best Practices
+
+### 1. Implement Hub-and-Spoke Traffic Inspection (Inspection VPC)
+Avoid allowing unstructured VPC-to-VPC lateral communication. Deploy a centralized "Inspection VPC" containing high-performance Next-Generation Firewalls (NGFW) or AWS Network Firewalls. Configure Transit Gateway route tables to force all inter-VPC and internet-egress traffic through this central inspection point for deep packet analysis.
+
+### 2. Disable Route Propagation Defaults (Segmented Boundaries)
+Always turn off `Default Route Table Association` and `Default Route Table Propagation` inside Transit Gateway configurations. This prevents newly created developer VPCs from automatically peer-registering with your core corporate production subnets, forcing network engineers to explicitly authorize routing configurations.
+
+### 3. Enforce Inter-Region Encryption
+All Transit Gateway traffic traversing regional boundaries is automatically encrypted at the physical hardware layer by the AWS Global Grid. For extra security on hybrid on-premises trails, wrap Transit Gateway connections inside IPSec VPN tunnels running robust AES-256 cipher configurations.

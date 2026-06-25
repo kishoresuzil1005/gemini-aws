@@ -1,0 +1,1728 @@
+Title: Introduction - EKS Best Practices Guides
+
+Source: https://aws.github.io/aws-eks-best-practices/
+
+---
+
+[Skip to content](https://aws.github.io/aws-eks-best-practices/#introduction)
+
+[AWS Documentation](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html)
+- 
+            [English](https://aws.github.io/aws-eks-best-practices/)
+
+- 
+            [한국어](https://aws.github.io/aws-eks-best-practices/ko/)
+
+[English](https://aws.github.io/aws-eks-best-practices/)
+[한국어](https://aws.github.io/aws-eks-best-practices/ko/)
+[aws/aws-eks-best-practices](https://github.com/aws/aws-eks-best-practices)
+[aws/aws-eks-best-practices](https://github.com/aws/aws-eks-best-practices)
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Guides
+
+
+
+
+
+
+
+
+
+
+            Guides
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    Introduction
+
+
+
+
+
+
+
+      [Introduction](https://aws.github.io/aws-eks-best-practices/)
+
+
+
+
+
+
+
+
+
+
+
+
+      Table of contents
+
+
+
+
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+
+
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+    Introduction
+
+
+
+
+
+
+
+      [Introduction](https://aws.github.io/aws-eks-best-practices/)
+
+
+
+
+
+
+
+
+
+
+
+
+      Table of contents
+
+
+
+
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+
+
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+
+
+
+
+
+
+- 
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+- 
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Security
+
+
+
+
+
+
+
+
+
+
+            Security
+
+
+
+
+
+
+
+
+
+
+      [Home](https://aws.github.io/aws-eks-best-practices/security/docs/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Identity and Access Management](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Pod Security](https://aws.github.io/aws-eks-best-practices/security/docs/pods/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Multi-tenancy](https://aws.github.io/aws-eks-best-practices/security/docs/multitenancy/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Detective Controls](https://aws.github.io/aws-eks-best-practices/security/docs/detective/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Network Security](https://aws.github.io/aws-eks-best-practices/security/docs/network/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Data Encryption and Secrets Management](https://aws.github.io/aws-eks-best-practices/security/docs/data/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Runtime Security](https://aws.github.io/aws-eks-best-practices/security/docs/runtime/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Infrastructure Security](https://aws.github.io/aws-eks-best-practices/security/docs/hosts/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Regulatory Compliance](https://aws.github.io/aws-eks-best-practices/security/docs/compliance/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Incident Response and Forensics](https://aws.github.io/aws-eks-best-practices/security/docs/incidents/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Image Security](https://aws.github.io/aws-eks-best-practices/security/docs/image/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Multi Account Strategy](https://aws.github.io/aws-eks-best-practices/security/docs/multiaccount/)
+
+
+
+
+
+
+
+
+
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/security/docs/)
+
+- 
+      [Identity and Access Management](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+
+- 
+      [Pod Security](https://aws.github.io/aws-eks-best-practices/security/docs/pods/)
+
+- 
+      [Multi-tenancy](https://aws.github.io/aws-eks-best-practices/security/docs/multitenancy/)
+
+- 
+      [Detective Controls](https://aws.github.io/aws-eks-best-practices/security/docs/detective/)
+
+- 
+      [Network Security](https://aws.github.io/aws-eks-best-practices/security/docs/network/)
+
+- 
+      [Data Encryption and Secrets Management](https://aws.github.io/aws-eks-best-practices/security/docs/data/)
+
+- 
+      [Runtime Security](https://aws.github.io/aws-eks-best-practices/security/docs/runtime/)
+
+- 
+      [Infrastructure Security](https://aws.github.io/aws-eks-best-practices/security/docs/hosts/)
+
+- 
+      [Regulatory Compliance](https://aws.github.io/aws-eks-best-practices/security/docs/compliance/)
+
+- 
+      [Incident Response and Forensics](https://aws.github.io/aws-eks-best-practices/security/docs/incidents/)
+
+- 
+      [Image Security](https://aws.github.io/aws-eks-best-practices/security/docs/image/)
+
+- 
+      [Multi Account Strategy](https://aws.github.io/aws-eks-best-practices/security/docs/multiaccount/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Cluster Autoscaling
+
+
+
+
+
+
+
+
+
+
+            Cluster Autoscaling
+
+
+
+
+
+
+
+
+
+
+      [Karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Cluster-Autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/)
+
+
+
+
+
+
+
+
+
+-
+
+[Karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/)
+
+- 
+      [Cluster-Autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Reliability
+
+
+
+
+
+
+
+
+
+
+            Reliability
+
+
+
+
+
+
+
+
+
+
+      [Home](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Applications](https://aws.github.io/aws-eks-best-practices/reliability/docs/application/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/controlplane/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/dataplane/)
+
+
+
+
+
+
+
+
+
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+
+- 
+      [Applications](https://aws.github.io/aws-eks-best-practices/reliability/docs/application/)
+
+- 
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/controlplane/)
+
+- 
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/dataplane/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Networking
+
+
+
+
+
+
+
+
+
+
+            Networking
+
+
+
+
+
+
+
+
+
+
+      [Home](https://aws.github.io/aws-eks-best-practices/networking/index/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [VPC and Subnet Considerations](https://aws.github.io/aws-eks-best-practices/networking/subnets/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Amazon VPC CNI](https://aws.github.io/aws-eks-best-practices/networking/vpc-cni/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Optimizing IP Address Utilization](https://aws.github.io/aws-eks-best-practices/networking/ip-optimization-strategies/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Running IPv6 Clusters](https://aws.github.io/aws-eks-best-practices/networking/ipv6/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Custom Networking](https://aws.github.io/aws-eks-best-practices/networking/custom-networking/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Prefix Mode for Linux](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_linux/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Prefix Mode for Windows](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_windows/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Security Groups per Pod](https://aws.github.io/aws-eks-best-practices/networking/sgpp/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Load Balancing](https://aws.github.io/aws-eks-best-practices/networking/loadbalancing/loadbalancing/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Monitoring for Network performance issues](https://aws.github.io/aws-eks-best-practices/networking/monitoring/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Running kube-proxy in IPVS Mode](https://aws.github.io/aws-eks-best-practices/networking/ipvs/)
+
+
+
+
+
+
+
+
+
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/networking/index/)
+
+- 
+      [VPC and Subnet Considerations](https://aws.github.io/aws-eks-best-practices/networking/subnets/)
+
+- 
+      [Amazon VPC CNI](https://aws.github.io/aws-eks-best-practices/networking/vpc-cni/)
+
+- 
+      [Optimizing IP Address Utilization](https://aws.github.io/aws-eks-best-practices/networking/ip-optimization-strategies/)
+
+- 
+      [Running IPv6 Clusters](https://aws.github.io/aws-eks-best-practices/networking/ipv6/)
+
+- 
+      [Custom Networking](https://aws.github.io/aws-eks-best-practices/networking/custom-networking/)
+
+- 
+      [Prefix Mode for Linux](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_linux/)
+
+- 
+      [Prefix Mode for Windows](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_windows/)
+
+- 
+      [Security Groups per Pod](https://aws.github.io/aws-eks-best-practices/networking/sgpp/)
+
+- 
+      [Load Balancing](https://aws.github.io/aws-eks-best-practices/networking/loadbalancing/loadbalancing/)
+
+- 
+      [Monitoring for Network performance issues](https://aws.github.io/aws-eks-best-practices/networking/monitoring/)
+
+- 
+      [Running kube-proxy in IPVS Mode](https://aws.github.io/aws-eks-best-practices/networking/ipvs/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Scalability
+
+
+
+
+
+
+
+
+
+
+            Scalability
+
+
+
+
+
+
+
+
+
+
+      [Home](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/control-plane/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/data-plane/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Cluster Services](https://aws.github.io/aws-eks-best-practices/scalability/docs/cluster-services/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Workloads](https://aws.github.io/aws-eks-best-practices/scalability/docs/workloads/)
+
+[The theory behind scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/scaling_theory/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Control plane monitoring](https://aws.github.io/aws-eks-best-practices/scalability/docs/kcp_monitoring/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Node efficiency and scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/node_efficiency/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Kubernetes SLOs](https://aws.github.io/aws-eks-best-practices/scalability/docs/kubernetes_slos/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Known limits and service quotas](https://aws.github.io/aws-eks-best-practices/scalability/docs/quotas/)
+
+
+
+
+
+
+
+
+
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+
+- 
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/control-plane/)
+
+- 
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/data-plane/)
+
+- 
+      [Cluster Services](https://aws.github.io/aws-eks-best-practices/scalability/docs/cluster-services/)
+
+- 
+      [Workloads](https://aws.github.io/aws-eks-best-practices/scalability/docs/workloads/)
+
+- 
+      [The theory behind scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/scaling_theory/)
+
+- 
+      [Control plane monitoring](https://aws.github.io/aws-eks-best-practices/scalability/docs/kcp_monitoring/)
+
+- 
+      [Node efficiency and scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/node_efficiency/)
+
+- 
+      [Kubernetes SLOs](https://aws.github.io/aws-eks-best-practices/scalability/docs/kubernetes_slos/)
+
+- 
+      [Known limits and service quotas](https://aws.github.io/aws-eks-best-practices/scalability/docs/quotas/)
+
+- 
+      [Cluster Upgrades](https://aws.github.io/aws-eks-best-practices/upgrades/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Cost Optimization
+
+
+
+
+
+
+
+
+
+
+            Cost Optimization
+
+
+
+
+
+
+
+
+
+
+      [Home](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_optimization_index/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Cloud Financial Management Framework](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Awareness](https://aws.github.io/aws-eks-best-practices/cost_optimization/awareness/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Compute](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_compute/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Network](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_networking/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Storage](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_storage/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Observability](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_observability/)
+
+
+
+
+
+
+
+
+
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_optimization_index/)
+
+- 
+      [Cloud Financial Management Framework](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+
+- 
+      [Awareness](https://aws.github.io/aws-eks-best-practices/cost_optimization/awareness/)
+
+- 
+      [Compute](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_compute/)
+
+- 
+      [Network](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_networking/)
+
+- 
+      [Storage](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_storage/)
+
+- 
+      [Observability](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_observability/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+    Windows Containers
+
+
+
+
+
+
+
+
+
+
+            Windows Containers
+
+
+
+
+
+
+
+
+
+
+      [AMI Management](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [gMSA for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/gmsa/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Windows Server Hardening](https://aws.github.io/aws-eks-best-practices/windows/docs/hardening/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Scanning Windows Images](https://aws.github.io/aws-eks-best-practices/windows/docs/images/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Windows Versions and Licensing](https://aws.github.io/aws-eks-best-practices/windows/docs/licensing/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Logging](https://aws.github.io/aws-eks-best-practices/windows/docs/logging/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Monitoring Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/monitoring/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Windows Networking](https://aws.github.io/aws-eks-best-practices/windows/docs/networking/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Memory and Systems Management](https://aws.github.io/aws-eks-best-practices/windows/docs/oom/)
+
+[Infrastructure Management](https://aws.github.io/aws-eks-best-practices/windows/docs/patching/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Scheduling](https://aws.github.io/aws-eks-best-practices/windows/docs/scheduling/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Pod Security for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/security/)
+
+
+
+
+
+
+
+
+
+
+
+
+      [Storage Options](https://aws.github.io/aws-eks-best-practices/windows/docs/storage/)
+
+
+
+
+
+
+
+
+
+- 
+      [AMI Management](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+
+- 
+      [gMSA for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/gmsa/)
+
+- 
+      [Windows Server Hardening](https://aws.github.io/aws-eks-best-practices/windows/docs/hardening/)
+
+- 
+      [Scanning Windows Images](https://aws.github.io/aws-eks-best-practices/windows/docs/images/)
+
+- 
+      [Windows Versions and Licensing](https://aws.github.io/aws-eks-best-practices/windows/docs/licensing/)
+
+- 
+      [Logging](https://aws.github.io/aws-eks-best-practices/windows/docs/logging/)
+
+- 
+      [Monitoring Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/monitoring/)
+
+- 
+      [Windows Networking](https://aws.github.io/aws-eks-best-practices/windows/docs/networking/)
+
+- 
+      [Memory and Systems Management](https://aws.github.io/aws-eks-best-practices/windows/docs/oom/)
+
+- 
+      [Infrastructure Management](https://aws.github.io/aws-eks-best-practices/windows/docs/patching/)
+
+- 
+      [Scheduling](https://aws.github.io/aws-eks-best-practices/windows/docs/scheduling/)
+
+- 
+      [Pod Security for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/security/)
+
+- 
+      [Storage Options](https://aws.github.io/aws-eks-best-practices/windows/docs/storage/)
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+    Introduction
+
+
+
+
+
+
+
+      [Introduction](https://aws.github.io/aws-eks-best-practices/)
+
+
+
+
+
+
+
+
+
+
+
+
+      Table of contents
+
+
+
+
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+
+
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+
+
+
+
+
+
+- 
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+- 
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+[Introduction](https://aws.github.io/aws-eks-best-practices/)
+- 
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+- 
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+[Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+[Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/security/docs/)
+
+- 
+      [Identity and Access Management](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+
+- 
+      [Pod Security](https://aws.github.io/aws-eks-best-practices/security/docs/pods/)
+
+- 
+      [Multi-tenancy](https://aws.github.io/aws-eks-best-practices/security/docs/multitenancy/)
+
+- 
+      [Detective Controls](https://aws.github.io/aws-eks-best-practices/security/docs/detective/)
+
+- 
+      [Network Security](https://aws.github.io/aws-eks-best-practices/security/docs/network/)
+
+- 
+      [Data Encryption and Secrets Management](https://aws.github.io/aws-eks-best-practices/security/docs/data/)
+
+- 
+      [Runtime Security](https://aws.github.io/aws-eks-best-practices/security/docs/runtime/)
+
+- 
+      [Infrastructure Security](https://aws.github.io/aws-eks-best-practices/security/docs/hosts/)
+
+- 
+      [Regulatory Compliance](https://aws.github.io/aws-eks-best-practices/security/docs/compliance/)
+
+- 
+      [Incident Response and Forensics](https://aws.github.io/aws-eks-best-practices/security/docs/incidents/)
+
+- 
+      [Image Security](https://aws.github.io/aws-eks-best-practices/security/docs/image/)
+
+- 
+      [Multi Account Strategy](https://aws.github.io/aws-eks-best-practices/security/docs/multiaccount/)
+
+[Home](https://aws.github.io/aws-eks-best-practices/security/docs/)
+[Identity and Access Management](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+[Pod Security](https://aws.github.io/aws-eks-best-practices/security/docs/pods/)
+[Multi-tenancy](https://aws.github.io/aws-eks-best-practices/security/docs/multitenancy/)
+[Detective Controls](https://aws.github.io/aws-eks-best-practices/security/docs/detective/)
+[Network Security](https://aws.github.io/aws-eks-best-practices/security/docs/network/)
+
+[Data Encryption and Secrets Management](https://aws.github.io/aws-eks-best-practices/security/docs/data/)
+[Runtime Security](https://aws.github.io/aws-eks-best-practices/security/docs/runtime/)
+[Infrastructure Security](https://aws.github.io/aws-eks-best-practices/security/docs/hosts/)
+[Regulatory Compliance](https://aws.github.io/aws-eks-best-practices/security/docs/compliance/)
+[Incident Response and Forensics](https://aws.github.io/aws-eks-best-practices/security/docs/incidents/)
+[Image Security](https://aws.github.io/aws-eks-best-practices/security/docs/image/)
+[Multi Account Strategy](https://aws.github.io/aws-eks-best-practices/security/docs/multiaccount/)
+- 
+      [Karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/)
+
+- 
+      [Cluster-Autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/)
+
+[Karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/)
+[Cluster-Autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/)
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+
+- 
+      [Applications](https://aws.github.io/aws-eks-best-practices/reliability/docs/application/)
+
+- 
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/controlplane/)
+
+- 
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/dataplane/)
+
+[Home](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+[Applications](https://aws.github.io/aws-eks-best-practices/reliability/docs/application/)
+[Control Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/controlplane/)
+[Data Plane](https://aws.github.io/aws-eks-best-practices/reliability/docs/dataplane/)
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/networking/index/)
+
+- 
+      [VPC and Subnet Considerations](https://aws.github.io/aws-eks-best-practices/networking/subnets/)
+
+- 
+      [Amazon VPC CNI](https://aws.github.io/aws-eks-best-practices/networking/vpc-cni/)
+
+- 
+      [Optimizing IP Address Utilization](https://aws.github.io/aws-eks-best-practices/networking/ip-optimization-strategies/)
+
+- 
+      [Running IPv6 Clusters](https://aws.github.io/aws-eks-best-practices/networking/ipv6/)
+
+- 
+      [Custom Networking](https://aws.github.io/aws-eks-best-practices/networking/custom-networking/)
+
+- 
+      [Prefix Mode for Linux](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_linux/)
+
+- 
+      [Prefix Mode for Windows](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_windows/)
+
+- 
+      [Security Groups per Pod](https://aws.github.io/aws-eks-best-practices/networking/sgpp/)
+
+- 
+      [Load Balancing](https://aws.github.io/aws-eks-best-practices/networking/loadbalancing/loadbalancing/)
+
+- 
+      [Monitoring for Network performance issues](https://aws.github.io/aws-eks-best-practices/networking/monitoring/)
+
+- 
+      [Running kube-proxy in IPVS Mode](https://aws.github.io/aws-eks-best-practices/networking/ipvs/)
+
+[Home](https://aws.github.io/aws-eks-best-practices/networking/index/)
+[VPC and Subnet Considerations](https://aws.github.io/aws-eks-best-practices/networking/subnets/)
+[Amazon VPC CNI](https://aws.github.io/aws-eks-best-practices/networking/vpc-cni/)
+[Optimizing IP Address Utilization](https://aws.github.io/aws-eks-best-practices/networking/ip-optimization-strategies/)
+[Running IPv6 Clusters](https://aws.github.io/aws-eks-best-practices/networking/ipv6/)
+[Custom Networking](https://aws.github.io/aws-eks-best-practices/networking/custom-networking/)
+[Prefix Mode for Linux](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_linux/)
+[Prefix Mode for Windows](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/index_windows/)
+[Security Groups per Pod](https://aws.github.io/aws-eks-best-practices/networking/sgpp/)
+[Load Balancing](https://aws.github.io/aws-eks-best-practices/networking/loadbalancing/loadbalancing/)
+[Monitoring for Network performance issues](https://aws.github.io/aws-eks-best-practices/networking/monitoring/)
+[Running kube-proxy in IPVS Mode](https://aws.github.io/aws-eks-best-practices/networking/ipvs/)
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+
+- 
+      [Control Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/control-plane/)
+
+- 
+      [Data Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/data-plane/)
+
+-
+
+[Cluster Services](https://aws.github.io/aws-eks-best-practices/scalability/docs/cluster-services/)
+
+- 
+      [Workloads](https://aws.github.io/aws-eks-best-practices/scalability/docs/workloads/)
+
+- 
+      [The theory behind scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/scaling_theory/)
+
+- 
+      [Control plane monitoring](https://aws.github.io/aws-eks-best-practices/scalability/docs/kcp_monitoring/)
+
+- 
+      [Node efficiency and scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/node_efficiency/)
+
+- 
+      [Kubernetes SLOs](https://aws.github.io/aws-eks-best-practices/scalability/docs/kubernetes_slos/)
+
+- 
+      [Known limits and service quotas](https://aws.github.io/aws-eks-best-practices/scalability/docs/quotas/)
+
+[Home](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+[Control Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/control-plane/)
+[Data Plane](https://aws.github.io/aws-eks-best-practices/scalability/docs/data-plane/)
+[Cluster Services](https://aws.github.io/aws-eks-best-practices/scalability/docs/cluster-services/)
+[Workloads](https://aws.github.io/aws-eks-best-practices/scalability/docs/workloads/)
+[The theory behind scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/scaling_theory/)
+[Control plane monitoring](https://aws.github.io/aws-eks-best-practices/scalability/docs/kcp_monitoring/)
+[Node efficiency and scaling](https://aws.github.io/aws-eks-best-practices/scalability/docs/node_efficiency/)
+[Kubernetes SLOs](https://aws.github.io/aws-eks-best-practices/scalability/docs/kubernetes_slos/)
+[Known limits and service quotas](https://aws.github.io/aws-eks-best-practices/scalability/docs/quotas/)
+[Cluster Upgrades](https://aws.github.io/aws-eks-best-practices/upgrades/)
+- 
+      [Home](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_optimization_index/)
+
+- 
+      [Cloud Financial Management Framework](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+
+- 
+      [Awareness](https://aws.github.io/aws-eks-best-practices/cost_optimization/awareness/)
+
+- 
+      [Compute](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_compute/)
+
+- 
+      [Network](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_networking/)
+
+- 
+      [Storage](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_storage/)
+
+- 
+      [Observability](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_observability/)
+
+[Home](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_optimization_index/)
+[Cloud Financial Management Framework](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+[Awareness](https://aws.github.io/aws-eks-best-practices/cost_optimization/awareness/)
+[Compute](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_compute/)
+[Network](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_networking/)
+[Storage](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_storage/)
+[Observability](https://aws.github.io/aws-eks-best-practices/cost_optimization/cost_opt_observability/)
+- 
+      [AMI Management](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+
+- 
+      [gMSA for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/gmsa/)
+
+- 
+      [Windows Server Hardening](https://aws.github.io/aws-eks-best-practices/windows/docs/hardening/)
+
+- 
+      [Scanning Windows Images](https://aws.github.io/aws-eks-best-practices/windows/docs/images/)
+
+- 
+      [Windows Versions and Licensing](https://aws.github.io/aws-eks-best-practices/windows/docs/licensing/)
+
+- 
+      [Logging](https://aws.github.io/aws-eks-best-practices/windows/docs/logging/)
+
+- 
+      [Monitoring Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/monitoring/)
+
+- 
+      [Windows Networking](https://aws.github.io/aws-eks-best-practices/windows/docs/networking/)
+
+- 
+      [Memory and Systems Management](https://aws.github.io/aws-eks-best-practices/windows/docs/oom/)
+
+- 
+      [Infrastructure Management](https://aws.github.io/aws-eks-best-practices/windows/docs/patching/)
+
+- 
+      [Scheduling](https://aws.github.io/aws-eks-best-practices/windows/docs/scheduling/)
+
+-
+
+[Pod Security for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/security/)
+
+- 
+      [Storage Options](https://aws.github.io/aws-eks-best-practices/windows/docs/storage/)
+
+[AMI Management](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+[gMSA for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/gmsa/)
+[Windows Server Hardening](https://aws.github.io/aws-eks-best-practices/windows/docs/hardening/)
+[Scanning Windows Images](https://aws.github.io/aws-eks-best-practices/windows/docs/images/)
+[Windows Versions and Licensing](https://aws.github.io/aws-eks-best-practices/windows/docs/licensing/)
+[Logging](https://aws.github.io/aws-eks-best-practices/windows/docs/logging/)
+[Monitoring Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/monitoring/)
+[Windows Networking](https://aws.github.io/aws-eks-best-practices/windows/docs/networking/)
+[Memory and Systems Management](https://aws.github.io/aws-eks-best-practices/windows/docs/oom/)
+[Infrastructure Management](https://aws.github.io/aws-eks-best-practices/windows/docs/patching/)
+[Scheduling](https://aws.github.io/aws-eks-best-practices/windows/docs/scheduling/)
+[Pod Security for Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/security/)
+[Storage Options](https://aws.github.io/aws-eks-best-practices/windows/docs/storage/)
+- 
+  [Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+
+
+- 
+  [Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+
+
+[Related guides](https://aws.github.io/aws-eks-best-practices/#related-guides)
+[Contributing](https://aws.github.io/aws-eks-best-practices/#contributing)
+We've Moved to the AWS Docs! 🚀
+This content has been updated and relocated to improve your experience. Please visit our new site for the latest version: [AWS EKS Best Practices Guide](https://docs.aws.amazon.com/eks/latest/best-practices/) on the AWS Docs
+Bookmarks and links will continue to work, but we recommend updating them for faster access in the future.
+
+[¶](https://aws.github.io/aws-eks-best-practices/#introduction)
+Welcome to the EKS Best Practices Guides. The primary goal of this project is to offer a set of best practices for day 2 operations for Amazon EKS. We elected to publish this guidance to GitHub so we could iterate quickly, provide timely and effective recommendations for variety of concerns, and easily incorporate suggestions from the broader community.
+We currently have published guides for the following topics:
+- [Best Practices for Security](https://aws.github.io/aws-eks-best-practices/security/docs/)
+- [Best Practices for Reliability](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+- Best Practices for Cluster Autoscaling: [karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/), [cluster-autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/), [EKS Auto Mode](https://aws.github.io/aws-eks-best-practices/auto-mode/)
+- [Best Practices for Networking](https://aws.github.io/aws-eks-best-practices/networking/index/)
+- [Best Practices for Scalability](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+- [Best Practices for Cluster Upgrades](https://aws.github.io/aws-eks-best-practices/upgrades/)
+- [Best Practices for Cost Optimization](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+- [Best Practices for Running Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+[Best Practices for Security](https://aws.github.io/aws-eks-best-practices/security/docs/)
+[Best Practices for Reliability](https://aws.github.io/aws-eks-best-practices/reliability/docs/)
+[karpenter](https://aws.github.io/aws-eks-best-practices/karpenter/)
+[cluster-autoscaler](https://aws.github.io/aws-eks-best-practices/cluster-autoscaling/)
+[EKS Auto Mode](https://aws.github.io/aws-eks-best-practices/auto-mode/)
+[Best Practices for Networking](https://aws.github.io/aws-eks-best-practices/networking/index/)
+[Best Practices for Scalability](https://aws.github.io/aws-eks-best-practices/scalability/docs/)
+[Best Practices for Cluster Upgrades](https://aws.github.io/aws-eks-best-practices/upgrades/)
+[Best Practices for Cost Optimization](https://aws.github.io/aws-eks-best-practices/cost_optimization/cfm_framework/)
+[Best Practices for Running Windows Containers](https://aws.github.io/aws-eks-best-practices/windows/docs/ami/)
+We also open sourced a Python based CLI (Command Line Interface) called [hardeneks](https://github.com/aws-samples/hardeneks) to check some of the recommendations from this guide.
+In the future we will be publishing best practices guidance for performance, cost optimization, and operational excellence.
+
+## Related guides[¶](https://aws.github.io/aws-eks-best-practices/#related-guides)
+[¶](https://aws.github.io/aws-eks-best-practices/#related-guides)
+In addition to the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html), AWS has published several other guides that may help you with your implementation of EKS.
+- [EMR Containers Best Practices Guides](https://aws.github.io/aws-emr-containers-best-practices/)
+- [Data on EKS](https://awslabs.github.io/data-on-eks/)
+- [AWS Observability Best Practices](https://aws-observability.github.io/observability-best-practices/)
+- [Amazon EKS Blueprints for Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints/)
+- [Amazon EKS Blueprints Quick Start](https://aws-quickstart.github.io/cdk-eks-blueprints/)
+[EMR Containers Best Practices Guides](https://aws.github.io/aws-emr-containers-best-practices/)
+[Data on EKS](https://awslabs.github.io/data-on-eks/)
+[AWS Observability Best Practices](https://aws-observability.github.io/observability-best-practices/)
+[Amazon EKS Blueprints for Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints/)
+[Amazon EKS Blueprints Quick Start](https://aws-quickstart.github.io/cdk-eks-blueprints/)
+
+## Contributing[¶](https://aws.github.io/aws-eks-best-practices/#contributing)
+[¶](https://aws.github.io/aws-eks-best-practices/#contributing)
+We encourage you to contribute to these guides. If you have implemented a practice that has proven to be effective, please share it with us by opening an issue or a pull request. Similarly, if you discover an error or flaw in the guidance we've already published, please submit a PR to correct it. The guidelines for submitting PRs can be found in our [Contributing Guidelines](https://github.com/aws/aws-eks-best-practices/blob/master/CONTRIBUTING.md).
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
+

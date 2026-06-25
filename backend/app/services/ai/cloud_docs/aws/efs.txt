@@ -1,0 +1,27 @@
+# Amazon EFS (Elastic File System) - Shared File Systems and Protection Standards
+
+Amazon Elastic File System (Amazon EFS) is a serverless, fully elastic file storage system that makes it easy to set up and configure file data on the AWS Cloud. EFS is designed to provide shared file system access across thousands of Amazon EC2 instances and container tasks concurrently.
+
+## Core Concepts
+
+### Network Access via Mount Targets
+To connect to an EFS file system, you create one or more **Mount Targets** inside your VPC subnets. Mount targets provide an IP address and host DNS name mapping through NFSv4 protocols.
+
+### Performance and Storage Classes
+*   **Standard Storage Class:** High availability, multi-AZ replication designed for active operational file pathways.
+*   **Infrequent Access (IA) Storage Class:** Cost-optimized storage tier for files accessed less regularly, automatically transitioning files via Lifecycle Management policies.
+*   **General Purpose vs. Max I/O:** General Purpose optimizes latencies for web environments, while Max I/O handles parallel reading/writing workloads.
+
+## DevSecOps and EFS Security Guidelines
+
+### 1. Enforce Mandatory Encryption-at-Rest and In-Transit
+*   **Encryption at Rest:** Enable cryptographic protection during EFS system setup using AWS KMS CMKs.
+*   **Encryption in Transit:** Enforce TLS transport handshakes by configuring connection clients with the standard Amazon EFS Mount Helper CLI tool, wrapping NFS traffic in secure stunnel loops.
+
+### 2. Lock Mount Authorization using IAM and Security Groups
+Restrict access to your shared folders:
+*   **Mount Targets Security Groups:** Limit inbound permission rules strictly to the specific security groups assigned to your authorized EC2 hosts or ECS task systems on port 2049, rejecting raw network sweeps.
+*   **EFS Access Points & IAM Policies:** Map mounting clients to specific POSIX UIDs/GIDs and use IAM Identity-Based Policies to enforce read-only or read-write permissions cleanly.
+
+### 3. Create Automated Replication and Backup Routines
+Configure AWS Backup schedules to continuously store copies of your EFS systems inside isolated, encrypted Backup Vaults, enabling quick points recovery during ransomware attacks or system corruptions.

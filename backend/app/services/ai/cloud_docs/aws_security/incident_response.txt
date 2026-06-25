@@ -1,0 +1,25 @@
+Title: AWS Security Incident Response User Guide
+
+Source: https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.html
+
+---
+
+<!DOCTYPE html>
+        <!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>AWS Security Incident Response User Guide</title><meta xmlns="" name="subtitle" content=""><meta xmlns="" name="abstract" content="Describes key concepts for AWS Security Incident Response and provides instructions for how to configure and use AWS Security Incident Response features."><meta http-equiv="refresh" content="0;URL=what-is.html"><script type="text/javascript"><!--
+        var myDefaultPage = "what-is.html";
+           	var myPage = document.location.search.substr(1);
+           	var myHash = document.location.hash;
+        
+              if (myPage == null || myPage.length == 0) {
+                 myPage = myDefaultPage;
+              } else {
+                 var docfile = myPage.match(/[^=\;\/?:\s]+\.html/);
+                 if (docfile == null) {
+       				myPage = myDefaultPage;
+    	     		 } else {
+                    myPage = docfile + myHash;
+                 }
+              }
+              self.location.replace(myPage);
+    --></script></head><body></body></html>
+

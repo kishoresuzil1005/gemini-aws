@@ -1,0 +1,35 @@
+# AWS Backup - Centralized Data Protection & Disaster Recovery
+
+AWS Backup is a fully managed backup service that makes it easy to centralize and automate the back up of data across AWS services in the cloud as well as on-premises.
+
+## Core Concepts
+
+### Backup Plans
+A policy configuration that defines how, when, and where your application resources are backed up. Key parameters in a backup plan include:
+*   **Backup Frequency:** (e.g., every 12 hours, daily, weekly).
+*   **Backup Window:** The designated timeframe when backups occur.
+*   **Lifecycle Rules:** Transition backup snapshots to cold storage or delete them based on age.
+*   **Retention Period:** How long the backup is preserved.
+
+### Backup Vaults
+A logical container encrypted with AWS KMS keys where backup snapshots are stored securely. You can apply specialized resource-based Access Policies to vaults to manage who can access or delete recovery points.
+
+### Supported Services
+AWS Backup offers central governance for:
+*   Amazon EBS volumes.
+*   Amazon RDS / Aurora databases.
+*   Amazon DynamoDB tables.
+*   Amazon S3 buckets.
+*   Amazon EFS (Elastic File System).
+*   AWS Storage Gateway.
+
+## DevSecOps and Disaster Recovery Best Practices
+
+### 1. Enable AWS Backup Vault Lock
+To protect backup histories from ransomware or malicious deletion attempts, enable **AWS Backup Vault Lock** in compliance mode. Once configured, recovery points cannot be deleted, modified, or overwritten by any user (including the AWS root user) for the duration of the retention period.
+
+### 2. Implement Cross-Region and Cross-Account Backup Copying
+Configure Backup Plans to automatically replicate critical snapshots to an alternate AWS region or a separate, isolated AWS sub-account. This guarantees disaster recovery capability even if an entire region goes offline or primary production credentials are compromised.
+
+### 3. Enforce KMS Envelope Encryption on Vaults
+Ensure all backup vaults are encrypted using AWS KMS Customer Managed Keys (CMK) with strict access policies, auditing key usage continuously in CloudTrail during restore drills.

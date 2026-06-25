@@ -1,0 +1,31 @@
+# Amazon Simple Storage Service (Amazon S3) - Core Concepts and Security
+
+Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance. This means customers of all sizes and industries can use it to store and protect any amount of data for a range of use cases, such as data lakes, websites, mobile applications, backup and restore, archive, enterprise applications, IoT devices, and big data analytics.
+
+## Core Concepts
+
+### Buckets
+A bucket is a container for objects stored in Amazon S3. Every object is contained in a bucket. Buckets partition the namespace of Amazon S3 at the highest level. Bucket names are globally unique across all AWS accounts, and must be DNS-compliant.
+
+### Objects
+Objects are the fundamental entities stored in Amazon S3. Objects consist of object data and metadata. The metadata is a set of name-value pairs that describe the object. An object is uniquely identified within a bucket by a key (name) and a version ID.
+
+### Keys
+A key is the unique identifier for an object within a bucket. Every object in a bucket has exactly one key. The combination of a bucket, key, and version ID uniquely identifies each object.
+
+### Regions
+You can choose the geographical AWS Region where Amazon S3 will store the buckets that you create. You might choose a Region to optimize latency, minimize costs, or address regulatory requirements.
+
+## Security and Compliance Best Practices
+
+### 1. Enable Block Public Access (BPA)
+Amazon S3 Block Public Access provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources. By default, new buckets, access points, and objects do not allow public access. Ensure that Block Public Access is enabled at the bucket level and the account level to prevent accidental public leakages.
+
+### 2. Encryption at Rest
+Always encrypt S3 objects at rest. You can use:
+*   **SSE-S3:** Server-side encryption with Amazon S3-managed keys.
+*   **SSE-KMS:** Server-side encryption with AWS Key Management Service (KMS) keys, allowing audit trails of key usage.
+*   **SSE-C:** Server-side encryption with customer-provided keys.
+
+### 3. Implement Bucket Policies and IAM Policies
+Configure strict Bucket Policies to restrict access to trusted IPs, specific VPC endpoints, and authorized IAM roles. Ensure that wildcard permissions inside policies (`"Principal": "*"`) are strictly forbidden unless public read access is explicitly required for static website assets.

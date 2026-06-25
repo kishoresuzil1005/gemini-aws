@@ -1,0 +1,32 @@
+Title: Infrastructure protection - Security Pillar
+
+Source: https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/infrastructure-protection.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/infrastructure-protection.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Well-Architected](https://aws.amazon.com/architecture/well-architected/)
+[AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html)
+
+Infrastructure protection encompasses control methodologies, such as defense in depth, that are necessary to meet best practices and organizational or regulatory obligations. Use of these methodologies is critical for successful, ongoing operations in the cloud.
+Infrastructure protection is a key part of an information security program. It ensures that systems and services within your workload are protected against unintended and unauthorized access, and potential vulnerabilities. For example, you’ll define trust boundaries (for example, network and account boundaries), system security configuration and maintenance (for example, hardening, minimization and patching), operating system authentication and authorizations (for example, users, keys, and access levels), and other appropriate policy-enforcement points (for example, web application firewalls and/or API gateways).
+Regions, Availability Zones, AWS Local Zones, and AWS Outposts
+Make sure you are familiar with Regions, Availability Zones, [AWS Local Zones](https://aws.amazon.com/about-aws/global-infrastructure/localzones/), and [AWS Outposts](https://aws.amazon.com/outposts/), which are components of the AWS secure global infrastructure.
+AWS has the concept of a Region, which is a physical location around the world where we cluster data centers. We call each group of logical data centers an Availability Zone (AZ). Each AWS Region consists of multiple, isolated, and physically separate AZs within a geographic area. If you have data residency requirements, you can choose the AWS Region that is close to your desired location. You retain complete control and ownership over the Region in which your data is physically located, which can be helpful for meeting your regional compliance and data residency requirements. Each AZ has independent power, cooling, and physical security. If an application is partitioned across AZs, you are better isolated and protected from issues such as power outages, lightning strikes, tornadoes, earthquakes, and more. AZs are physically separated by a meaningful distance, many kilometers, from any other AZ, although all are within 100 km (60 miles) of each other. All AZs in an AWS Region are interconnected with high-bandwidth, low-latency networking, using fully redundant, dedicated metro fiber providing high-throughput, low-latency networking between AZs. All traffic between AZs is encrypted. AWS customers focused on high availability can design their applications to run in multiple AZs to achieve even greater fault-tolerance. AWS Regions meet the highest levels of security, compliance, and data protection.
+AWS Local Zones place compute, storage, database, and other select AWS services closer to end users. With AWS Local Zones, you can easily run highly demanding applications that require single-digit millisecond latencies to your end users, such as media and entertainment content creation, real-time gaming, reservoir simulations, electronic design automation, and machine learning. Each AWS Local Zone location is an extension of an AWS Region where you can run your latency-sensitive applications, using AWS services such as Amazon EC2, Amazon VPC, Amazon EBS, Amazon File Storage, and Elastic Load Balancing in geographic proximity to end users. AWS Local Zones provide a high-bandwidth, secure connection between local workloads and those running in the AWS Region, allowing you to seamlessly connect to the full range of in-region services through the same APIs and tool sets.
+AWS Outposts bring native AWS services, infrastructure, and operating models to virtually any data center, co-location space, or on-premises facility. You can use the same AWS APIs, tools, and infrastructure across on-premises facilities and the AWS Cloud to deliver a truly consistent hybrid experience. AWS Outposts is designed for connected environments and can be used to support workloads that must remain on premises due to low latency or local data processing needs.
+In AWS, there are a number of approaches to infrastructure protection. The following sections describe how to use these approaches.
+
+###### Topics
+- [Protecting networks](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-networks.html)
+- [Protecting compute](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-compute.html)
+[Protecting networks](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-networks.html)
+
+[Protecting compute](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/protecting-compute.html)
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

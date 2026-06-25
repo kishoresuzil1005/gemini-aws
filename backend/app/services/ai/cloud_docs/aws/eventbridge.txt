@@ -1,0 +1,29 @@
+# Amazon EventBridge - Event Bus Architecture and Event Auditing
+
+Amazon EventBridge is a serverless event bus that lets you receive, filter, transform, route, and deliver events to construct decoupled, event-driven systems.
+
+## Core Concepts
+
+### Event Buses
+*   **Default Event Bus:** Receives events from AWS services automatically.
+*   **Custom Event Bus:** Receives events from your custom microservices.
+*   **Partner Event Bus:** Integrates with third-party SaaS tools (e.g., Datadog, Auth0, Shopify).
+
+### Rules and Targets
+*   **Rules:** JSON patterns that inspect incoming events and trigger routing paths if properties match.
+*   **Targets:** Endpoints that execute when a rule matches (e.g., Lambda functions, Step Functions, SQS/SNS, or API Destinations).
+
+### Schema Registry and API Destinations
+*   **Schema Registry:** Declares and tracks the exact JSON structure of events, helping developers auto-generate code schemas.
+*   **API Destinations:** Allows EventBridge to make authenticated HTTP requests to external third-party REST services.
+
+## DevSecOps Security Best Practices
+
+### 1. Secure Access with Resource Policies
+Custom event buses must use strict Resource policies. Ensure only trusted external accounts or local subnets are allowed to publish events to your enterprise event bus.
+
+### 2. AWS KMS Encryption for Events
+For sensitive payloads, configure EventBridge to encrypt custom event stores and event-bus message traffic with AWS KMS keys.
+
+### 3. Dead-Letter Queues (DLQ) on Rules
+Configure SQS queues as Dead-Letter Queues for targets on EventBridge rules to prevent loss of critical events and logging data during high-latency periods.

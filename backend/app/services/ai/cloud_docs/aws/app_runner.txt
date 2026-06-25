@@ -1,0 +1,23 @@
+# AWS App Runner - Managed Container Deployment Framework
+
+AWS App Runner is a fully managed service that makes it easy for developers to quickly deploy containerized web applications and APIs, at scale and with no prior infrastructure experience. You start with your source code or a container image, and App Runner builds and deploys the web application, managing load balancing, auto-scaling, and SSL connections.
+
+## Core Concepts
+
+### Service Sources
+*   **Source Code-Based (Repository):** App Runner directly links to your GitHub repository. Whenever code updates are pushed, App Runner packages your code, compiles a container image, and rolls out updates.
+*   **Image-Based (Registry):** Directly pulls container images from Amazon ECR registries to handle deployments.
+
+### Automatic Scaling and Networking
+App Runner monitors active HTTP requests flowing to your service, scaling container instances up or down to match active application load spikes, while provisioning routing endpoints automatically.
+
+## DevSecOps and Container Security Hardening Guidelines
+
+### 1. Establish Private VPC Connectors for Private Resource Access
+If your App Runner containers need to access databases inside private subnets (e.g., RDS or Redshift clusters), configure **VPC Connectors** instead of using public endpoints. This maps secure private endpoints back into your subnets, routing traffic through secure AWS internal network channels.
+
+### 2. Lock Down Container Egress via VPC Security Groups
+When provisioning private VPC connectivity, attach specific Security Groups to the App Runner VPC connector. Restrict outbound connections strictly to authorized targets, preventing your server containers from establishing unauthorized outbound internet sessions.
+
+### 3. Apply Minimal IAM Instance Execution Roles
+Ensure the **Instance Role** configured under your App Runner settings grants only the minimum necessary AWS permissions. Avoid assigning broad administrator privileges, restricting policies exclusively to resource-specific actions (like writing entries into S3 or publishing SQS events).

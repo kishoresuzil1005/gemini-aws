@@ -1,0 +1,25 @@
+# AWS Security Hub - Unified Security Posture Management (CSPM)
+
+AWS Security Hub is a cloud security posture management (CSPM) check service that performs security posture checks, aggregates alerts, and enables automated remediation.
+
+## Core Concepts
+
+### Security Standards & Best Practices
+Security Hub compiles compliance checks against recognized security framework guidelines:
+*   **Center for Internet Security (CIS) AWS Foundations Benchmark.**
+*   **Payment Card Industry Data Security Standard (PCI DSS).**
+*   **AWS Foundational Security Best Practices (FSBP).**
+
+### Insights and Unified Findings
+Aggregates findings and warnings from diverse security tools (such as GuardDuty, Inspector, Macie, IAM Access Analyzer, and AWS firewall systems) into a unified console.
+
+## DevSecOps Security Posture Best Practices
+
+### 1. Actively Achieve Compliance Targets
+Strive to achieve a 100% compliance score by resolving warnings reported by Security Hub, such as unencrypted EBS volumes, MFA disabled on root users, or overly permissive IAM permissions.
+
+### 2. Implement Automated Remediation Workflows
+Do not let alerts go unresolved. Use Security Hub's integration with EventBridge and AWS Systems Manager Automation runbooks to correct non-compliant resources instantly (such as auto-enabling encryption or terminating unapproved internet route paths).
+
+### 3. Set Up Daily CSV/Email Scorecards
+Automate summaries of your overall AWS Security score. Send daily reporting updates to development leads to ensure software architectures maintain clean security posture metrics.

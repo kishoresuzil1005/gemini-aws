@@ -1,0 +1,25 @@
+Title: Sustainability Pillar
+
+Source: https://docs.aws.amazon.com/wellarchitected/latest/sustainability-pillar/welcome.html
+
+---
+
+<!DOCTYPE html>
+        <!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Sustainability Pillar</title><meta xmlns="" name="subtitle" content="AWS Well-Architected Framework"><meta xmlns="" name="abstract" content="This whitepaper focuses on the sustainability pillar of the Amazon Web Services (AWS) Well-Architected Framework. It provides design principles, operational guidance, best-practices, potential trade-offs, and improvement plans you can use to meet sustainability targets for your AWS workloads."><meta http-equiv="refresh" content="0;URL=sustainability-pillar.html"><script type="text/javascript"><!--
+        var myDefaultPage = "sustainability-pillar.html";
+           	var myPage = document.location.search.substr(1);
+           	var myHash = document.location.hash;
+        
+              if (myPage == null || myPage.length == 0) {
+                 myPage = myDefaultPage;
+              } else {
+                 var docfile = myPage.match(/[^=\;\/?:\s]+\.html/);
+                 if (docfile == null) {
+       				myPage = myDefaultPage;
+    	     		 } else {
+                    myPage = docfile + myHash;
+                 }
+              }
+              self.location.replace(myPage);
+    --></script></head><body></body></html>
+

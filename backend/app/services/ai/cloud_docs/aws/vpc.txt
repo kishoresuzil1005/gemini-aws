@@ -1,0 +1,28 @@
+# Amazon Virtual Private Cloud (Amazon VPC) - Network Design and Security
+
+Amazon Virtual Private Cloud (Amazon VPC) enables you to launch AWS resources into a virtual network that you've defined. This virtual network closely resembles a traditional network that you'd operate in your own data center, with the benefits of using the scalable infrastructure of AWS.
+
+## Core Concepts
+
+### Subnets
+A range of IP addresses in your VPC.
+*   **Public Subnets:** Subnets that contain a route to an Internet Gateway (IGW), allowing resources (like EC2 web nodes) to directly communicate with the public internet.
+*   **Private Subnets:** Subnets that do not have a direct route to an Internet Gateway. Instead, private resources can communicate with the internet using NAT Gateways located in public subnets.
+*   **Isolated Subnets:** Subnets without routes to an Internet Gateway or NAT Gateway. They are strictly contained and used for databases or sensitive directory servers.
+
+### Internet Gateway (IGW) and NAT Gateway
+*   **Internet Gateway (IGW):** A horizontally scaled, redundant, and highly available VPC component that allows communication between instances in your VPC and the internet.
+*   **NAT Gateway:** A Network Address Translation (NAT) service that lets private resources initiate outbound traffic to the internet while preventing incoming connections from the public internet.
+
+### Route Tables
+A set of rules (routes) used to determine where network traffic is directed. Each subnet in your VPC must be associated with a route table.
+
+### Security Group vs. Network Access Control List (NACL)
+*   **Security Groups:** Operate at the *instance level*, stateful (return traffic is automatically allowed), and support ALLOW rules only.
+*   **Network ACLs:** Operate at the *subnet level*, stateless (return traffic must be explicitly allowed), and support ALLOW and DENY rules.
+
+## Recommended Multi-tier AWS VPC Network Architecture
+A secure database application should divide resources into three distinct subnet tiers across multiple Availability Zones (AZs) for high availability:
+1.  **Public Tier (Web/LB):** Houses Load Balancers and Bastion Hosts. Direct IGW route.
+2.  **Private Tier (Application):** App servers, backend Microservices. Route out via NAT Gateway.
+3.  **Isolated Database Tier (Data):** No internet path. Only accepts traffic on specific ports from the Application private subnet.

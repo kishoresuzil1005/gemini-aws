@@ -1,0 +1,6 @@
+{
+  "name": "CloudOps",
+  "description": "Autonomous cloud operations, monitoring, diagnostics, and multi-cloud self-healing manager.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,25 @@
+# Amazon Aurora - Serverless and Regional Enterprise Database Design
+
+Amazon Aurora is a fully managed relational database engine compatible with MySQL and PostgreSQL, designed specifically for high-performance enterprise workloads in the cloud.
+
+## Core Concepts
+
+### Architecture and Redundant Storage
+Aurora separates compute instances from the storage tier. The database volume is clustered across three Availability Zones, replicating 6 copies of data automatically. It can tolerate the loss of up to two copies without affecting database write availability and three copies without affecting read availability.
+
+### Aurora Serverless (v2)
+Automatically scales database capacity (measured in Aurora Capacity Units - ACUs) up or down seamlessly depending on active query volume, eliminating resource scaling overhead.
+
+### Global Databases and Read Replicas
+Allows single-digit millisecond latency replication across multiple AWS regions, enabling fast local reads and disaster recovery failover pipelines across the globe.
+
+## DevSecOps Hardening Guidelines
+
+### 1. Mandate IAM Database Authentication
+Avoid relying on traditional database passwords. Use IAM Database Authentication to allow microservices or functions to connect using temporary STS credentials, eliminating local database user management and credential exposure.
+
+### 2. Force SSL/TLS Secure Connections
+Configure DB Parameter Groups (`rds.force_ssl = 1`) to reject standard HTTP/TCP unencrypted connection requests. Secure all client connections with custom transport layers.
+
+### 3. Isolate Network Subnets & Disable Public Access
+Ensure the database clustering configuration has `PubliclyAccessible` set to `False`. Run all database nodes inside dedicated isolated subnets that do not contain route paths pointing to Internet or NAT Gateways, utilizing security groups to filter connections at the database port level.

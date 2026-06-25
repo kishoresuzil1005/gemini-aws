@@ -1,0 +1,25 @@
+# Amazon ECR (Elastic Container Registry) - Image Storage & Image Hardening
+
+Amazon Elastic Container Registry (Amazon ECR) is a fully managed container registry that makes it easy for developers to share and deploy container images and artifacts.
+
+## Core Concepts
+
+### ECR Registry and Repositories
+An ECR Registry is provided for each AWS account. It contains various repositories where container image tags, helm charts, and multi-architecture Docker manifests are securely stored.
+
+### Image Scans and Verifications
+ECR provides automated vulnerability assessments to evaluate security configurations inside container manifests.
+*   **Basic Scanning:** Leverages Clair to scan software packages for active CVEs on image push.
+*   **Enhanced Scanning:** Leverages AWS Inspector for continuous operating system package and application runtime vulnerability monitoring.
+
+## Security Policies and Compliance Best Practices
+
+### 1. Enable Image Scanning on Push
+Ensure that all container repositories configured inside Amazon ECR have "scan on push" enabled. Set up alert automation pipelines using AWS Security Hub or EventBridge notifications to quarantine or alert teams if severe CVEs are detected inside container base layers.
+
+### 2. Configure Immutable Tags
+Always prevent container image tags from being overwritten. By configuring your registries or repositories with "Image Tag Immutability" enabled, an attacker (or misconfigured deploy pipeline) cannot push a corrupt or malicious image using an existing tag (e.g. `release-v1` or `latest`), preserving cryptographic deployment integrity.
+
+### 3. Use Lifecycle Policies and Registry KMS
+*   **Lifecycle Policies:** Periodically delete untagged, orphaned development builds to reduce data exposure footprint and storage costs.
+*   **Encryption at Rest:** Ensure repository contents are encrypted using AWS KMS Customer Managed Keys (CMK) instead of default generic keys to log registry access requests accurately.

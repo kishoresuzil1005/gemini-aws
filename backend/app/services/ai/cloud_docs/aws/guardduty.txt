@@ -1,0 +1,27 @@
+# Amazon GuardDuty - Intelligent Threat Detection and SecOps Automation
+
+Amazon GuardDuty is a continuous security monitoring service that analyzes data from multiple AWS cloud sources to detect malicious and unauthorized activity inside AWS environments.
+
+## Core Concepts
+
+### Log Sources and Continuous Analysis
+GuardDuty automatically ingests and analyzes data from multiple AWS log sources without requiring software agents or impacting system performance:
+*   **AWS CloudTrail Management Events:** Control plane access details.
+*   **AWS CloudTrail Data Events:** S3 bucket object access paths.
+*   **VPC Flow Logs:** Network IP connection patterns.
+*   **Route 53 DNS Logs:** Device query behaviors.
+*   **Kubernetes Audit Logs:** Container execution queries.
+
+### Machine Learning and Threat Intelligence
+Applies machine learning, statistical anomalies, and integrated threat intelligence lists (known malicious IP pools or Tor nodes) to generate detailed security Findings categorized by Severity (Low, Medium, High).
+
+## DevSecOps Threat Remediation Best Practices
+
+### 1. Automated Detection and Incident Response Pipelines
+Do not monitor GuardDuty findings manually. Configure AWS EventBridge rules to trigger on GuardDuty findings, firing Lambda functions to execute containment actions automatically (e.g. immediately updating isolated security groups, quarantining rogue EC2 instances, or disabling leaked IAM API keys).
+
+### 2. Centralized Multi-Account Governance
+In enterprise environments, integrate GuardDuty across all organizations. Configure AWS Administrations to designate a centralized security account to aggregate GuardDuty findings from all partner sub-accounts into a single glass panel.
+
+### 3. Monitor High-Severity Container and S3 Threats
+Focus on severe findings immediately (such as `Trojan:EC2/DNSDataExfiltration` or `PrivilegeEscalation:IAMUser/AdministrativeBypass`), configuring alerts to notify security teams via high-priority chat and notification channels.

@@ -1,0 +1,25 @@
+# AWS CloudTrail - Account Governance and Security API Auditing
+
+AWS CloudTrail is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. It records API calls and event history.
+
+## Core Concepts
+
+### Management Events
+Provide insights into management operations performed on resources in your AWS account. These are also known as control plane operations (e.g., creating an Amazon S3 bucket, creating or updating an IAM user or role).
+
+### Data Events
+Provide insights into the resource operations performed on or within a resource. These are also known as data plane operations. Examples include S3 object-level API actions (`GetObject`, `PutObject`), or Lambda function invoke invocations. These events are recorded at additional cost.
+
+### Trails and Multi-Region Delivery
+A trail is a configuration that enables delivery of events as log files to an Amazon S3 bucket. Always set up a "Multi-region Trail" to record actions in all active and inactive AWS regions, which is crucial for identifying rogue resources spawned in non-standard locations.
+
+## CloudTrail Auditing & Security Hardening Guidelines
+
+### 1. Enable Log File Integrity Validation
+Always toggle log file integrity validation to `Enabled`. When enabled, CloudTrail uses SHA-256 for hashing and SHA-256 with RSA for signing. This creates a secure, verifiable digital signature of CloudTrail logs, allowing security officers to prove that logged actions have not been altered, modified, or deleted by an attacker attempting to cover their tracks.
+
+### 2. Encrypt Logs with AWS KMS Customer-Managed Key
+Deliver CloudTrail logs to an S3 bucket encrypted with a custom KMS key. Restrict KMS access strictly so that only CloudTrail can write logs, and only security audit teams can decrypt the log files, preventing attackers with local admin permissions from reading operational trails.
+
+### 3. Deliver to a Consolidated, Isolated S3 Bucket
+Store trails in an S3 bucket belonging to a separate dedicated Security/Logging AWS Account. Enable S3 Object Lock (WORM - Write Once, Read Many), Bucket Versioning, and MFA Delete to prevent accidental or malicious destruction of historic log trails.

@@ -1,0 +1,27 @@
+# AWS Direct Connect - Hybrid Dedicated Cloud Networking and MACsec Security
+
+AWS Direct Connect is a cloud service solution that makes it easy to establish a dedicated network connection from your on-premises data centers or corporate headquarters directly to AWS.
+
+## Core Concepts
+
+### Connections and Virtual Interfaces (VIFs)
+*   **Dedicated Connection:** A physical ethernet port (1 Gbps, 10 Gbps, or 100 Gbps) assigned directly to you at an AWS Direct Connect location.
+*   **Hosted Connection:** A logical port allocated to you by an approved AWS Direct Connect Partner.
+*   **Virtual Interfaces (VIFs):** Logical routing configurations:
+    *   **Private VIF:** Connects to a deployment's Virtual Private Gateway (VGW) inside a single VPC.
+    *   **Public VIF:** Accesses AWS public endpoints (such as Amazon S3, DynamoDB, or EC2 APIs) bypassing public internet routing.
+    *   **Transit VIF:** Connects to an AWS Transit Gateway, facilitating hybrid access to thousands of interconnected VPCs.
+
+### Link Aggregation Groups (LAG)
+Allows clustering multiple physical Direct Connect ports into a single logical link, stacking bandwidth capacities and adding active physical port redundancy.
+
+## Hybrid DevSecOps and Connection Encryption Guidelines
+
+### 1. Hardening Layer 2 with IEEE 802.1AE MACsec Encryption
+Standard Direct Connect connections transfer packets in clear raw text. For high-security military-grade networks, provision **MACsec (Media Access Control Security)** on 10 Gbps or 100 Gbps Dedicated Connections. This cryptographically secures all data blocks crawling between your router interface and the AWS local cage.
+
+### 2. Overlap Layer 3 Encryption using AWS Site-to-Site VPN
+If your connectivity facilities do not support MACsec, configure an IPsec Site-to-Site VPN over your Direct Connect Virtual Interfaces. This routes all traffic through a secure, AES-256 encrypted VPN tunnel, combining the high throughput consistency of Direct Connect with custom cryptographic payloads.
+
+### 3. Establish Resolute High-Availability Failover Paths
+Never depend on a single Direct Connect route for your production backplane. Deploy dual Direct Connect endpoints terminating in geographically distinct customer-managed routers, and configure standard AWS Site-to-Site VPN loops as automatic passive backup routing configurations using BGP failovers.

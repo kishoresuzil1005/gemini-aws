@@ -1,0 +1,91 @@
+Title: Performance Efficiency Pillar - AWS Well-Architected Framework - Performance Efficiency Pillar
+
+Source: https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/welcome.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/welcome.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Well-Architected](https://aws.amazon.com/architecture/well-architected/)
+[AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/welcome.html)
+[Introduction](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/welcome.html#introduction)
+
+Publication date: November 6, 2024 ([Document revisions](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/document-revisions.html))
+This whitepaper focuses on the performance efficiency pillar of the AWS Well-Architected Framework. It provides guidance to help customers apply best practices in the design, delivery, and maintenance of AWS environments.
+
+The [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) helps you understand the pros and cons of decisions you make while building workloads on AWS. Using the Framework helps you learn architectural best practices for designing and operating reliable, secure, efficient, cost-effective, and sustainable workloads in the cloud. The Framework provides a way for you to consistently measure your architectures against best practices and identify areas for improvement. We believe that having well-architected workloads greatly increases the likelihood of business success.
+The framework is based on six pillars:
+- 
+
+          Operational Excellence
+
+
+- 
+
+          Security
+
+
+- 
+
+          Reliability
+
+
+- 
+
+          Performance Efficiency
+
+
+- 
+
+          Cost Optimization
+
+
+- 
+
+          Sustainability
+
+
+Operational Excellence
+Security
+Reliability
+Performance Efficiency
+Cost Optimization
+Sustainability
+This paper focuses on applying the principles of the performance efficiency pillar to your workloads. In traditional, on-premises environments, achieving high and lasting performance is challenging. Using the principles in this paper will help you build architectures on AWS that efficiently deliver sustained performance over time. The guidance and best practices in this document are spread across five key focus areas that serve as guiding principles for building performance efficient cloud solutions on AWS. These focus areas are:
+- 
+
+          [Architecture selection](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/architecture-selection.html)
+
+
+- 
+
+          [Compute and hardware](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/compute-and-hardware.html)
+
+
+- 
+
+          [Data management](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/data-management.html)
+
+
+- 
+
+          [Networking and content delivery](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/networking-and-content-delivery.html)
+
+
+- 
+
+          [Process and culture](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/process-and-culture.html)
+
+
+[Architecture selection](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/architecture-selection.html)
+[Compute and hardware](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/compute-and-hardware.html)
+[Data management](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/data-management.html)
+[Networking and content delivery](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/networking-and-content-delivery.html)
+[Process and culture](https://docs.aws.amazon.com/wellarchitected/latest/performance-efficiency-pillar/process-and-culture.html)
+This paper is intended for those in technology roles, such as chief technology officers (CTOs), architects, developers, and operations team members. After reading this paper, you’ll understand AWS best practices and strategies to use when designing a performant cloud architecture.
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

@@ -1,0 +1,29 @@
+# AWS Step Functions - Managed Orchestration for Serverless Workflows
+
+AWS Step Functions is a low-code, serverless state machine orchestrator that makes it easy to coordinate distributed components, microservices, and serverless scripts using visual workflow patterns.
+
+## Core Concepts
+
+### State Machine Workflows
+A workflow represents an arrangement of steps modeled inside a JSON-based **Amazon States Language (ASL)** definition. Step Functions operates two workflow categories:
+*   **Standard Workflows:** High durability, long-running processes (up to one year). Execution histories are preserved for 90 days. Ideal for payroll or data extract pipelines.
+*   **Express Workflows:** High-throughput, short-duration processes (up to 5 minutes) designed for high-frequency IoT ingestions, streaming, or web server integrations.
+
+### ASL States and Flow Controls
+Woven variables execute logical flows through built-in states:
+*   **Task State:** Invokes a serverless script (e.g., AWS Lambda, ECS, Batch, or DynamoDB writes).
+*   **Choice State:** Evaluates input variables to branch execution paths.
+*   **Parallel:** Runs concurrent steps.
+*   **Map:** Loops through array elements.
+*   **Wait / Fail / Succeed:** Delays, terminates, or completes execution workflows.
+
+## DevSecOps and Operational Safety Guidelines
+
+### 1. Assign Dedicated Task-Level IAM Execution Roles
+Never assign broad administrator roles to your Step Functions state machine. Restrict execution policies to grant the state machine only the minimum necessary permissions to invoke downstream services (e.g., permission to run a specific Lambda function or insert a record into a specific database table).
+
+### 2. Protect Step Logs using custom KMS Keys
+When logging workflow steps to CloudWatch Logs, ensure target log groups are encrypted using custom AWS KMS Customer Managed Keys (CMKs). This ensures any application parameters, user details, or variables logged during execution are protected.
+
+### 3. Decouple Secrets Management from Workflow Variables
+Never hardcode API tokens, access certificates, or database credentials inside your Amazon States Language JSON. Always pass placeholder variables and use Downstream Task States to query AWS Secrets Manager securely at runtime inside isolated compute execution threads.

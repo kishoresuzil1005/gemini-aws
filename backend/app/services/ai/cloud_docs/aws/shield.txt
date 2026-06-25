@@ -1,0 +1,25 @@
+# AWS Shield - Distributed Denial of Service (DDoS) Protection
+
+AWS Shield is a managed Distributed Denial of Service (DDoS) protection service that safeguards applications running on AWS.
+
+## Core Concepts
+
+### AWS Shield Standard
+Automatically enabled for all AWS accounts at no additional charge. Protects against basic Layer 3 (Network) and Layer 4 (Transport) DDoS exploits like SYN floods, UDP reflection, or other volumetric packet attacks.
+
+### AWS Shield Advanced
+A premium, paid subscription service offering additional protection, analytics, and service reliability guarantees:
+*   Includes **100% DDoS cost protection** to credit back scaling fees incurred during malicious resource floods.
+*   Dynamic access to the **DDoS Response Team (DRT)** to craft custom mitigation rules during active network events.
+*   Real-time reporting and deep visibility into network attacks on ALB, CloudFront, Route 53, or Global Accelerator.
+
+## DevSecOps DDoS Resiliency Guidelines
+
+### 1. Utilize a CloudFront-First Ingress Architecture
+To maximize Shield's volumetric protection, route all public ingress traffic through Amazon CloudFront distributions or AWS Global Accelerator. This ensures that massive internet-scale volumetric packet storms are absorbed by AWS edge locations before reaching VPC subnets.
+
+### 2. Configure Proper Route 53 Health Checks
+Ensure Route 53 health check paths are accurate and active. During an attack on a regional server site, Route 53 failover routing will automatically shift users to secondary locations, keeping application state pages available.
+
+### 3. Establish DRT Access Configurations
+Pre-authorize the AWS DDoS Response Team with the necessary IAM privileges to update your WAF Web ACLs during active emergencies, ensuring immediate expert response capability during critical volumetric attack events.

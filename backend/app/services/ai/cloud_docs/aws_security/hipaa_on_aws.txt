@@ -1,0 +1,19 @@
+Title: Architecting for HIPAA Security and Compliance on Amazon Web Services - Architecting for HIPAA Security and Compliance on Amazon Web Services
+
+Source: https://docs.aws.amazon.com/whitepapers/latest/architecting-hipaa-security-and-compliance-on-aws/architecting-hipaa-security-and-compliance-on-aws.html
+
+---
+
+[View a markdown version of this page](https://docs.aws.amazon.com/whitepapers/latest/architecting-hipaa-security-and-compliance-on-aws/architecting-hipaa-security-and-compliance-on-aws.md)
+[Documentation](https://docs.aws.amazon.com/index.html)
+[AWS Whitepapers](https://aws.amazon.com/whitepapers/)
+[AWS Whitepaper](https://docs.aws.amazon.com/whitepapers/latest/architecting-hipaa-security-and-compliance-on-aws/architecting-hipaa-security-and-compliance-on-aws.html)
+
+# Architecting for HIPAA Security and Compliance on Amazon Web Services
+Notice: This whitepaper has been archived. For the latest technical information on HIPAA Compliance and AWS, see the [HIPAA Eligible Services Reference](https://aws.amazon.com/compliance/hipaa-eligible-services-reference/).
+[Document Conventions](https://docs.aws.amazon.com/general/latest/gr/docconventions.html)
+Thanks for letting us know we're doing a good job!
+If you've got a moment, please tell us what we did right so we can do more of it.
+Thanks for letting us know this page needs work. We're sorry we let you down.
+If you've got a moment, please tell us how we can make the documentation better.
+

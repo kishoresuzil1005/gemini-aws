@@ -1,0 +1,24 @@
+# AWS Directory Service - Managed Active Directory and Enterprise Alignment
+
+AWS Directory Service (also known as AWS Managed Microsoft AD) enables your directory-aware workloads and AWS resources to use managed Microsoft Active Directory (AD) in the AWS Cloud.
+
+## Core Concepts
+
+### Active Directory Types
+*   **AWS Managed Microsoft AD:** A real Microsoft Active Directory domain controller running in Windows Server environments managed fully by AWS, supporting group policies, trust relationships, schema extensions, and single sign-on.
+*   **Simple AD:** A Samba 4-compatible directory engine. Ideal for small, lightweight directory configurations that do not require complex Microsoft traits but need basic LDAP support.
+*   **AD Connector:** A directory gateway proxy that forwards authentication requests to your existing on-premises Microsoft Active Directory without replication.
+
+### Domain Join Integration
+Enables EC2 instances, FSx storage endpoints, and Amazon WorkSpaces to seamlessly domain-join to a central enterprise identity system, managing user access profiles globally.
+
+## DevSecOps and Directory Security Best Practices
+
+### 1. Enforce LDAPS (LDAP over SSL) Security
+When forwarding queries to your directory controllers, disable unencrypted LDAP sessions. Enable **LDAPS (LDAP over SSL/TLS)** on port 636/3269 to encrypt authentication packets, importing custom trustworthy certificates to secure all connection pathways.
+
+### 2. Isolate Directory Domain Controllers inside Private Networks
+AWS provisions two active domain controllers across distinct Availability Zones. Configure the Directory Service exclusively inside isolated private subnets that do not contain NAT gateway routing paths. Use target Security Groups to filter port access down to specific enterprise subnets.
+
+### 3. Enable Multi-Factor Authentication (MFA)
+Protect administrative access by integrating AWS Managed AD with your existing RADIUS servers or MFA systems, requiring an additional dynamic passcode during corporate authentication flows to block brute force system sweeps.
