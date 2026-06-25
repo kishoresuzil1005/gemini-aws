@@ -1218,6 +1218,9 @@ app.include_router(architecture_recommendation_router)
 from app.routes.failure_analysis import router as failure_analysis_router
 app.include_router(failure_analysis_router)
 
+from app.routes.production_review import router as production_review_router
+app.include_router(production_review_router)
+
 from app.api.routes import terminal
 
 app.include_router(
