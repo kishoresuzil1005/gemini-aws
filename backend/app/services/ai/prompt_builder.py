@@ -172,8 +172,25 @@ Average Blast Radius: {review_context.get('criticality', {}).get('average_blast_
 
 Detected Findings & Risks:
 {findings_str if findings_str else 'No findings detected.'}
-------------------------------------
+
 """
+                score_data = review_context.get("scoring")
+                if score_data:
+                    pillars = score_data.get('pillar_scores', {})
+                    review_text += f"""
+Architecture Score
+Overall: {score_data.get('overall_score', 0)}/100 (Grade {score_data.get('grade', 'N/A')})
+
+Pillar Breakdown:
+Availability: {pillars.get('availability', 0)}/10
+Security: {pillars.get('security', 0)}/10
+Reliability: {pillars.get('reliability', 0)}/10
+Performance: {pillars.get('performance', 0)}/10
+Cost: {pillars.get('cost', 0)}/10
+Operational Excellence: {pillars.get('operational_excellence', 0)}/10
+Sustainability: {pillars.get('sustainability', 0)}/10
+"""
+                review_text += "------------------------------------\n"
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}

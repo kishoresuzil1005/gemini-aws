@@ -31,21 +31,39 @@ async def review_architecture(request: ReviewRequest) -> Dict[str, Any]:
         review_data = arch_data.get("review_context", {})
         
         # Build the final response structure
+        score_data = review_data.get("scoring", {})
         return {
-            "architecture_score": 81, # Example static score, to be replaced by scoring engine later
+            "overall_score": score_data.get("overall_score", 0),
+            "grade": score_data.get("grade", "N/A"),
+            "pillar_scores": score_data.get("pillar_scores", {}),
             "summary": review_data.get("inventory", {}),
             "findings": {
                 "high": review_data.get("spofs", []),
                 "medium": review_data.get("security_findings", []) + review_data.get("reliability_findings", []) + review_data.get("network_findings", []),
                 "low": review_data.get("cost_findings", []) + review_data.get("monitoring_findings", [])
             },
-            "recommendations": [
-                "Enable Auto Scaling.",
-                "Configure Multi-AZ RDS.",
-                "Enable CloudTrail.",
-                "Configure AWS Backup."
-            ],
+            "recommendations": score_data.get("recommendations", []),
             "llm_review": result.get("answer", "")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/score")
+async def score_architecture(request: ReviewRequest) -> Dict[str, Any]:
+    try:
+        from app.services.ai.architecture_service import ArchitectureService
+        arch_service = ArchitectureService()
+        # "review" keyword triggers the ArchitectureReview engine in the backend
+        query = "review architecture" 
+        arch_data = arch_service.analyze(query)
+        review_data = arch_data.get("review_context", {})
+        score_data = review_data.get("scoring", {})
+        
+        return {
+            "overall_score": score_data.get("overall_score", 0),
+            "grade": score_data.get("grade", "N/A"),
+            "pillar_scores": score_data.get("pillar_scores", {}),
+            "recommendations": score_data.get("recommendations", [])
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -6,10 +6,12 @@ class ArchitectureReview:
             from app.services.graph.neo4j_service import Neo4jService
             from app.services.graph.criticality_service import CriticalityService
             from app.services.aws.ec2_instances_service import EC2InstanceService
+            from app.services.ai.architecture_scorer import ArchitectureScorer
             # Assume other inventory services exist, we will mock them if they don't
             self.neo4j = Neo4jService()
             self.criticality = CriticalityService()
             self.ec2_service = EC2InstanceService()
+            self.scorer = ArchitectureScorer()
             self.has_services = True
         except ImportError:
             self.has_services = False
@@ -76,6 +78,19 @@ class ArchitectureReview:
         
         network_findings.append("VPC Default Security Group has open rules.")
         
+        findings_dict = {
+            "spofs": spofs,
+            "security_findings": security_findings,
+            "cost_findings": cost_findings,
+            "reliability_findings": reliability_findings,
+            "network_findings": network_findings,
+            "monitoring_findings": monitoring_findings
+        }
+        
+        score_data = {}
+        if hasattr(self, 'scorer'):
+            score_data = self.scorer.score(inventory, findings_dict)
+        
         return {
             "inventory": inventory,
             "graph": graph_context,
@@ -85,5 +100,6 @@ class ArchitectureReview:
             "cost_findings": cost_findings,
             "reliability_findings": reliability_findings,
             "network_findings": network_findings,
-            "monitoring_findings": monitoring_findings
+            "monitoring_findings": monitoring_findings,
+            "scoring": score_data
         }
