@@ -100,7 +100,14 @@ class RAGService:
             
             # Detect Intent and Categories
             intent = self.prompt_builder.detect_intent(query)
+            architecture_mode = self.prompt_builder.is_architecture_question(query)
             target_categories = self.category_mapper.detect_categories(intent, query)
+            
+            print(f"[AI INTENT] {intent}")
+            if architecture_mode:
+                print("[AI MODE] Architecture")
+            else:
+                print("[AI MODE] Standard")
             
             # Generate search query embedding
             query_vector = self.embedding_service.get_embedding(query)
@@ -132,6 +139,8 @@ class RAGService:
             if num_chunks == 0:
                 return {
                     "answer": "The retrieved documentation does not contain enough information.",
+                    "intent": intent,
+                    "architecture_mode": architecture_mode,
                     "confidence": 0.0,
                     "search": {
                         "categories": target_categories,
@@ -192,6 +201,8 @@ class RAGService:
             
             return {
                 "answer": answer,
+                "intent": intent,
+                "architecture_mode": architecture_mode,
                 "confidence": confidence,
                 "search": {
                     "categories": target_categories,
@@ -208,6 +219,8 @@ class RAGService:
             print(f"[RAG QUERY ERROR] {e}")
             return {
                 "answer": f"I encountered an error retrieving or constructing the answer. Please verify connections. Details: {e}",
+                "intent": "unknown",
+                "architecture_mode": False,
                 "confidence": 0.0,
                 "search": {
                     "categories": [], "documents_scanned": 0, "chunks_found": 0, "chunks_used": 0

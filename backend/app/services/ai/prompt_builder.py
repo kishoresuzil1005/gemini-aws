@@ -2,8 +2,13 @@ class PromptBuilder:
     def __init__(self):
         self.QUESTION_TYPES = {
             "architecture": [
-                "architecture", "design", "ha", "high availability",
-                "three tier", "vpc", "alb", "load balancer"
+                "architecture", "design", "build", "deploy", "deployment",
+                "production", "production-ready", "high availability", "ha",
+                "three tier", "3 tier", "microservices", "reference architecture",
+                "best architecture", "web application", "web app", "system design",
+                "solution architecture", "cloud architecture", "landing zone",
+                "multi region", "multi-az", "fault tolerant", "disaster recovery",
+                "dr", "scalable", "scalability"
             ],
             "security": [
                 "security", "iam", "kms", "guardduty", "cloudtrail",
@@ -30,7 +35,33 @@ class PromptBuilder:
         }
 
         self.ROLE_PROMPTS = {
-            "architecture": "You are a Senior AWS Solutions Architect.",
+            "architecture": """You are a Principal AWS Solutions Architect.
+
+Your responsibilities:
+• Design production-grade cloud architectures.
+• Follow the AWS Well-Architected Framework.
+• Prefer highly available, fault tolerant designs.
+• Explain architectural trade-offs.
+• Recommend secure and scalable solutions.
+• Use AWS best practices.
+• Consider networking, IAM, monitoring, backup,
+  disaster recovery and cost optimization.
+
+When answering architecture questions always include:
+1. Architecture Overview
+2. Components
+3. Request Flow
+4. High Availability
+5. Security
+6. Scalability
+7. Monitoring
+8. Disaster Recovery
+9. Cost Optimization
+10. Best Practices
+
+Only use the retrieved documentation.
+Never invent AWS services or configurations.
+If information is missing, explicitly say so.""",
             "security": "You are a Senior Cloud Security Engineer.",
             "terraform": "You are a Terraform Infrastructure Expert.",
             "kubernetes": "You are a Kubernetes Platform Engineer.",
@@ -69,6 +100,9 @@ Always provide:
             if any(keyword in query_lower for keyword in keywords):
                 return intent
         return "default"
+
+    def is_architecture_question(self, query: str) -> bool:
+        return self.detect_intent(query) == "architecture"
 
     def build(self, query: str, context: str) -> str:
         intent = self.detect_intent(query)
