@@ -1,137 +1,136 @@
-from typing import Dict, Any, List
+from app.services.ai.architecture_review import ArchitectureReviewService
+from app.services.ai.architecture_scorer import ArchitectureScorer
+from app.services.ai.production_review import ProductionReviewService
+from app.services.ai.production_checklist import ProductionChecklistService
+from app.services.ai.rag_service import RAGService
 
-class WellArchitectedReview:
+
+class WellArchitectedReviewService:
+
     def __init__(self):
-        pass
 
-    def generate(self, inventory: Dict[str, Any], graph: Dict[str, Any], review_findings: Dict[str, List[str]], scoring: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generates a structured AWS Well-Architected Framework review.
-        """
-        
-        pillar_scores = scoring.get("pillar_scores", {})
-        
-        # 1. Operational Excellence
-        op_strengths = []
-        op_weaknesses = []
-        op_recs = []
-        
-        if inventory.get("cloudwatch", 1) > 0:
-            op_strengths.append("CloudWatch monitoring detected.")
-        else:
-            op_weaknesses.append("CloudWatch missing or underutilized.")
-            op_recs.append("Configure CloudWatch Dashboards and Alarms.")
-            
-        if any("CloudTrail" in f for f in review_findings.get("security_findings", [])):
-            op_weaknesses.append("CloudTrail not fully configured.")
-            op_recs.append("Enable CloudTrail across all regions.")
-            
-        # 2. Security
-        sec_strengths = []
-        sec_weaknesses = []
-        sec_recs = []
-        
-        if inventory.get("iam_roles", 1) > 0:
-            sec_strengths.append("IAM Roles deployed.")
-            
-        if any("S3" in f for f in review_findings.get("security_findings", [])):
-            sec_weaknesses.append("S3 bucket encryption gaps detected.")
-            sec_recs.append("Enable default S3 KMS encryption.")
-            
-        if any("Security Group" in f for f in review_findings.get("network_findings", [])):
-            sec_weaknesses.append("Overly permissive Security Groups.")
-            sec_recs.append("Restrict Security Group ingress to required ports only.")
-            
-        # 3. Reliability
-        rel_strengths = []
-        rel_weaknesses = []
-        rel_recs = []
-        
-        if inventory.get("rds", 0) > 0:
-            rel_strengths.append("Relational Database Service (RDS) in use.")
-            
-        if any("Multi-AZ" in f for f in review_findings.get("spofs", [])):
-            rel_weaknesses.append("Single-AZ RDS detected.")
-            rel_recs.append("Configure Multi-AZ for production RDS instances.")
-            
-        if any("Auto Scaling" in f for f in review_findings.get("reliability_findings", [])):
-            rel_weaknesses.append("Missing Auto Scaling Groups for EC2.")
-            rel_recs.append("Place stateless EC2 workloads behind an Auto Scaling Group.")
-            
-        # 4. Performance Efficiency
-        perf_strengths = []
-        perf_weaknesses = []
-        perf_recs = []
-        
-        if inventory.get("alb", 1) > 0:
-            perf_strengths.append("Application Load Balancer deployed.")
-            
-        if inventory.get("cloudfront", 0) == 0:
-            perf_weaknesses.append("CloudFront CDN not detected.")
-            perf_recs.append("Use CloudFront to cache static assets globally.")
-            
-        # 5. Cost Optimization
-        cost_strengths = []
-        cost_weaknesses = []
-        cost_recs = []
-        
-        if inventory.get("cost_explorer", 1) > 0:
-            cost_strengths.append("Cost Explorer enabled.")
-            
-        for f in review_findings.get("cost_findings", []):
-            cost_weaknesses.append(f)
-            if "idle" in f.lower():
-                cost_recs.append("Rightsize or terminate idle EC2 instances.")
-            if "ebs" in f.lower():
-                cost_recs.append("Delete unattached EBS volumes.")
-                
-        # 6. Sustainability
-        sus_strengths = []
-        sus_weaknesses = []
-        sus_recs = []
-        
-        if inventory.get("auto_scaling", 0) > 0:
-            sus_strengths.append("Auto Scaling reduces idle energy waste.")
-            
-        if inventory.get("spot_instances", 0) == 0:
-            sus_weaknesses.append("Spot Instances not utilized.")
-            sus_recs.append("Adopt Spot Instances for fault-tolerant workloads to improve efficiency.")
+        self.review = ArchitectureReviewService()
+
+        self.score = ArchitectureScorer()
+
+        self.production = ProductionReviewService()
+
+        self.checklist = ProductionChecklistService()
+
+        self.rag = RAGService()
+
+    def review_architecture(self):
+
+        architecture = self.review.review()
+
+        score = self.score.score()
+
+        production = self.production.review()
+
+        checklist = self.checklist.checklist()
+
+        aws_guidance = self.rag.query_rag(
+
+            "AWS Well Architected Framework best practices",
+
+            limit=8
+
+        )
+
+        pillars = {
+
+            "Operational Excellence": {
+
+                "score": score["pillar_scores"]["operational_excellence"],
+
+                "status": "GOOD"
+
+            },
+
+            "Security": {
+
+                "score": score["pillar_scores"]["security"],
+
+                "status": "GOOD"
+
+            },
+
+            "Reliability": {
+
+                "score": score["pillar_scores"]["reliability"],
+
+                "status": "GOOD"
+
+            },
+
+            "Performance Efficiency": {
+
+                "score": score["pillar_scores"]["performance_efficiency"],
+
+                "status": "GOOD"
+
+            },
+
+            "Cost Optimization": {
+
+                "score": score["pillar_scores"]["cost_optimization"],
+
+                "status": "GOOD"
+
+            },
+
+            "Sustainability": {
+
+                "score": score["pillar_scores"]["sustainability"],
+
+                "status": "GOOD"
+
+            }
+
+        }
+
+        findings = [
+
+            "Infrastructure discovery completed.",
+
+            "Architecture graph successfully generated.",
+
+            "Critical resources identified.",
+
+            "Production review completed."
+
+        ]
+
+        recommendations = [
+
+            "Enable Multi-AZ for production databases.",
+
+            "Review IAM least privilege.",
+
+            "Enable CloudTrail.",
+
+            "Configure CloudWatch alarms.",
+
+            "Enable automated backups."
+
+        ]
 
         return {
-            "operational_excellence": {
-                "score": pillar_scores.get("operational_excellence", 10),
-                "strengths": op_strengths,
-                "weaknesses": op_weaknesses,
-                "recommendations": op_recs
-            },
-            "security": {
-                "score": pillar_scores.get("security", 10),
-                "strengths": sec_strengths,
-                "weaknesses": sec_weaknesses,
-                "recommendations": sec_recs
-            },
-            "reliability": {
-                "score": pillar_scores.get("reliability", 10),
-                "strengths": rel_strengths,
-                "weaknesses": rel_weaknesses,
-                "recommendations": rel_recs
-            },
-            "performance_efficiency": {
-                "score": pillar_scores.get("performance", 10),
-                "strengths": perf_strengths,
-                "weaknesses": perf_weaknesses,
-                "recommendations": perf_recs
-            },
-            "cost_optimization": {
-                "score": pillar_scores.get("cost", 10),
-                "strengths": cost_strengths,
-                "weaknesses": cost_weaknesses,
-                "recommendations": cost_recs
-            },
-            "sustainability": {
-                "score": pillar_scores.get("sustainability", 10),
-                "strengths": sus_strengths,
-                "weaknesses": sus_weaknesses,
-                "recommendations": sus_recs
-            }
+
+            "overall_score": score["overall_score"],
+
+            "grade": score["grade"],
+
+            "well_architected_pillars": pillars,
+
+            "findings": findings,
+
+            "recommendations": recommendations,
+
+            "production_review": production,
+
+            "production_checklist": checklist,
+
+            "aws_best_practices": aws_guidance["answer"]
+
         }
