@@ -41,11 +41,16 @@ class PromptBuilder:
         }
 
         self.SHARED_INSTRUCTIONS = """
-Always:
-• Use ONLY the retrieved documentation.
-• Never invent information.
-• If documentation is missing, say:
-"The retrieved documentation does not contain enough information."
+You MUST answer ONLY using the retrieved documentation.
+Do NOT use prior knowledge.
+Do NOT infer.
+Do NOT guess.
+Do NOT complete missing information.
+
+If the answer is not explicitly present inside the retrieved documentation, reply exactly:
+"The retrieved documentation does not contain enough information to answer this question."
+
+Never fabricate AWS services, configurations, commands, or architecture.
 
 Always provide:
 1. Explanation

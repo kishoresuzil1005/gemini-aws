@@ -87,9 +87,12 @@ class RAGService:
 
     def query_rag(self, query: str, limit: int = 8) -> Dict[str, Any]:
         """
-        Retrieves matching chunks and runs Ollama with the augmented context.
+        Retrieves matching chunks, filters low confidence results, 
+        and runs Ollama with the augmented context.
         """
         try:
+            MIN_SCORE = 0.65
+            
             # Generate search query embedding
             query_vector = self.embedding_service.get_embedding(query)
             
@@ -99,20 +102,47 @@ class RAGService:
             # Build Context
             context_blocks = []
             references = []
+            total_score = 0.0
+            
             for idx, match in enumerate(matches):
+                score = match.get("score", 0.0)
+                
+                # Apply similarity threshold
+                if score < MIN_SCORE:
+                    continue
+                    
                 payload = match.get("payload", {})
-                content = payload.get("content", "")
+                content = payload.get("content", "").strip()
+                
+                # Filter empty context
+                if not content:
+                    continue
+                    
                 meta = payload.get("metadata", {})
                 source = meta.get("source", "Unknown Unit")
                 
-                context_blocks.append(f"Context [{idx+1}] (Source: {source}):\n{content}")
+                context_blocks.append(f"Context [{len(context_blocks)+1}] (Source: {source}):\n{content}")
                 references.append({
                     "source": source,
-                    "score": match.get("score", 0.0),
+                    "score": score,
                     "content": content,
                     "id": match.get("id")
                 })
+                total_score += score
             
+            num_chunks = len(context_blocks)
+            
+            # Skip LLM if no valid chunks remain
+            if num_chunks == 0:
+                return {
+                    "answer": "The retrieved documentation does not contain enough information.",
+                    "confidence": 0.0,
+                    "context_chunks": 0,
+                    "sources": [],
+                    "hallucination_check": "BLOCKED"
+                }
+                
+            confidence = total_score / num_chunks
             context_str = "\n\n".join(context_blocks)
             
             # Construct Prompt
@@ -121,15 +151,34 @@ class RAGService:
             # Request completion from Ollama
             answer = self.ollama_service.generate(augmented_prompt)
             
+            # Validate the Final Answer
+            hallucination_indicators = [
+                "Generally", "Typically", "Usually", "In most cases", 
+                "Normally", "It depends"
+            ]
+            
+            hallucination_status = "PASSED"
+            answer_lower = answer.lower()
+            for indicator in hallucination_indicators:
+                if indicator.lower() in answer_lower:
+                    hallucination_status = "WARNING_POSSIBLE_HALLUCINATION"
+                    break
+            
             return {
                 "answer": answer,
+                "confidence": confidence,
+                "context_chunks": num_chunks,
                 "sources": references,
-                "prompt_rendered": augmented_prompt
+                "prompt_rendered": augmented_prompt,
+                "hallucination_check": hallucination_status
             }
         except Exception as e:
             print(f"[RAG QUERY ERROR] {e}")
             return {
                 "answer": f"I encountered an error retrieving or constructing the answer. Please verify connections. Details: {e}",
+                "confidence": 0.0,
+                "context_chunks": 0,
                 "sources": [],
-                "prompt_rendered": ""
+                "prompt_rendered": "",
+                "hallucination_check": "ERROR"
             }
