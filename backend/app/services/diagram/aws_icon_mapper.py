@@ -205,7 +205,7 @@ class AWSIconMapper:
 
     def __init__(self):
 
-        self.layer_builder = LayerBuilder()
+        self.architecture_builder = ArchitectureModelBuilder()
 
         self.icon_cache = self._scan_icons()
 
@@ -254,7 +254,7 @@ class AWSIconMapper:
     #
     def build(self):
 
-        architecture = self.layer_builder.build()
+        architecture = self.architecture_builder.build()
 
         for resources in architecture["layers"].values():
 

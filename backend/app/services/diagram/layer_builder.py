@@ -1,22 +1,11 @@
-from app.services.diagram.graph_parser import GraphParser
-
-
 class LayerBuilder:
 
     LAYER_MAP = {
-
-        #
-        # Internet
-        #
 
         "InternetGateway": "Internet",
         "Route53": "Internet",
         "CloudFront": "Internet",
         "WAF": "Internet",
-
-        #
-        # Networking
-        #
 
         "VPC": "Networking",
         "Subnet": "Networking",
@@ -25,91 +14,40 @@ class LayerBuilder:
         "ALB": "Networking",
         "NLB": "Networking",
 
-        #
-        # Compute
-        #
-
         "EC2": "Compute",
         "Lambda": "Compute",
         "ECS": "Compute",
         "EKS": "Compute",
         "AutoScaling": "Compute",
 
-        #
-        # Database
-        #
-
         "RDS": "Database",
         "DynamoDB": "Database",
         "Redshift": "Database",
         "ElastiCache": "Database",
 
-        #
-        # Storage
-        #
-
         "S3": "Storage",
         "EBS": "Storage",
         "EFS": "Storage",
-
-        #
-        # Monitoring
-        #
 
         "CloudWatch": "Monitoring",
         "CloudTrail": "Monitoring",
         "SNS": "Monitoring",
         "EventBridge": "Monitoring",
 
-        #
-        # Security
-        #
-
         "IAM": "Security",
         "KMS": "Security",
-        "SecretsManager": "Security",
         "GuardDuty": "Security",
         "SecurityHub": "Security",
-        "Inspector": "Security"
+        "Inspector": "Security",
+        "SecretsManager": "Security"
     }
 
-    def __init__(self):
+    def get_layer(self, resource_type):
 
-        self.graph = GraphParser()
+        return self.LAYER_MAP.get(
 
-    def build(self):
+            resource_type,
 
-        graph = self.graph.parse()
+            "Other"
 
-        layers = {
-
-            "Internet": [],
-            "Networking": [],
-            "Compute": [],
-            "Database": [],
-            "Storage": [],
-            "Monitoring": [],
-            "Security": [],
-            "Other": []
-
-        }
-
-        for node in graph["nodes"]:
-
-            layer = self.LAYER_MAP.get(
-
-                node["type"],
-
-                "Other"
-
-            )
-
-            layers[layer].append(node)
-
-        return {
-
-            "layers": layers,
-
-            "edges": graph["edges"]
-
-        }
+        )

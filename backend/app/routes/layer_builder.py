@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.services.diagram.layer_builder import LayerBuilder
+from app.services.diagram.architecture_model_builder import ArchitectureModelBuilder
 
 router = APIRouter(
 
@@ -10,7 +10,7 @@ router = APIRouter(
 
 )
 
-builder = LayerBuilder()
+builder = ArchitectureModelBuilder()
 
 
 @router.get("/layers")
