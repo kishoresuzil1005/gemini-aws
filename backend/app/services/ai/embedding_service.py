@@ -7,10 +7,11 @@ class EmbeddingService:
         self.model_name = "nomic-embed-text"
         self.dimension = 768
         self.ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434")
+        self.session = requests.Session()
 
     def get_embedding(self, text: str):
 
-        response = requests.post(
+        response = self.session.post(
             f"{self.ollama_url}/api/embeddings",
             json={
                 "model": self.model_name,

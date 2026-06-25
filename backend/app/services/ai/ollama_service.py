@@ -11,10 +11,11 @@ class OllamaService:
         )
 
         self.model = "qwen2.5:1.5b"
+        self.session = requests.Session()
 
     def generate(self, prompt):
 
-        response = requests.post(
+        response = self.session.post(
             f"{self.url}/api/generate",
             json={
                 "model": self.model,
