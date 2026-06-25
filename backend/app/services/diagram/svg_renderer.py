@@ -1,33 +1,46 @@
-import base64
-from pathlib import Path
+from app.services.diagram.smart_layout_engine import SmartLayoutEngine
 
-from app.services.diagram.layout_engine import LayoutEngine
+from app.services.diagram.background_renderer import (
+    BackgroundRenderer
+)
+
+from app.services.diagram.container_renderer import (
+    ContainerRenderer
+)
+
+from app.services.diagram.edge_renderer import (
+    EdgeRenderer
+)
+
+from app.services.diagram.icon_renderer import (
+    IconRenderer
+)
+
+from app.services.diagram.label_renderer import (
+    LabelRenderer
+)
 
 
 class SVGRenderer:
     """
-    Renders a professional AWS Architecture Diagram as SVG.
+    Main SVG Composer.
+
+    Coordinates all renderers.
     """
 
-    BACKGROUND = "#F8FAFC"
-    NODE_FILL = "#FFFFFF"
-    NODE_BORDER = "#CBD5E1"
-    LAYER_FILL = "#F1F5F9"
-    LAYER_BORDER = "#94A3B8"
-    TEXT_COLOR = "#1E293B"
-
     def __init__(self):
-        self.layout = LayoutEngine()
 
-    def image_to_base64(self, path):
+        self.layout = SmartLayoutEngine()
 
-        if not Path(path).exists():
-            return None
+        self.background = BackgroundRenderer()
 
-        with open(path, "rb") as f:
-            return base64.b64encode(
-                f.read()
-            ).decode()
+        self.container = ContainerRenderer()
+
+        self.edges = EdgeRenderer()
+
+        self.icons = IconRenderer()
+
+        self.labels = LabelRenderer()
 
     def render(self):
 
@@ -36,106 +49,107 @@ class SVGRenderer:
         svg = []
 
         width = model["canvas"]["width"]
+
         height = model["canvas"]["height"]
 
-        svg.append(
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'width="{width}" height="{height}">'
-        )
+        #
+        # SVG Header
+        #
+
+        svg.append(f"""
+<svg
+xmlns="http://www.w3.org/2000/svg"
+width="{width}"
+height="{height}">
+""")
+
+        #
+        # Arrow Definition
+        #
+
+        svg.append("""
+<defs>
+
+<marker
+id="arrow"
+markerWidth="10"
+markerHeight="10"
+refX="8"
+refY="3"
+orient="auto">
+
+<path
+d="M0,0 L0,6 L9,3 z"
+fill="#607D8B"/>
+
+</marker>
+
+</defs>
+""")
 
         #
         # Background
         #
 
-        svg.append(
-            f'<rect width="{width}" height="{height}" '
-            f'fill="{self.BACKGROUND}"/>'
+        self.background.render(
+
+            svg,
+
+            model
+
         )
 
         #
-        # Draw Edges
+        # Infrastructure Containers
         #
 
-        for edge in model["edges"]:
+        self.container.render(
 
-            source = next(
-                (
-                    n
-                    for n in model["nodes"]
-                    if n["type"] == edge["source"]
-                ),
-                None
-            )
+            svg,
 
-            target = next(
-                (
-                    n
-                    for n in model["nodes"]
-                    if n["type"] == edge["target"]
-                ),
-                None
-            )
+            model
 
-            if not source or not target:
-                continue
-
-            x1 = source["x"] + source["width"] / 2
-            y1 = source["y"] + source["height"]
-
-            x2 = target["x"] + target["width"] / 2
-            y2 = target["y"]
-
-            svg.append(
-                f'<line x1="{x1}" y1="{y1}" '
-                f'x2="{x2}" y2="{y2}" '
-                f'stroke="#64748B" stroke-width="2"/>'
-            )
+        )
 
         #
-        # Draw Nodes
+        # Relationships
         #
 
-        for node in model["nodes"]:
+        self.edges.render(
 
-            x = node["x"]
-            y = node["y"]
-            w = node["width"]
-            h = node["height"]
+            svg,
 
-            svg.append(
-                f'<rect x="{x}" y="{y}" '
-                f'width="{w}" height="{h}" '
-                f'rx="10" ry="10" '
-                f'fill="{self.NODE_FILL}" '
-                f'stroke="{self.NODE_BORDER}" '
-                f'stroke-width="2"/>'
-            )
+            model
 
-            icon_data = self.image_to_base64(
-                node["icon"]
-            )
+        )
 
-            if icon_data:
+        #
+        # AWS Icons
+        #
 
-                svg.append(
-                    f'<image '
-                    f'x="{x+10}" '
-                    f'y="{y+12}" '
-                    f'width="32" '
-                    f'height="32" '
-                    f'href="data:image/svg+xml;base64,{icon_data}"/>'
-                )
+        self.icons.render(
 
-            svg.append(
-                f'<text '
-                f'x="{x+50}" '
-                f'y="{y+34}" '
-                f'font-size="14" '
-                f'font-family="Arial" '
-                f'fill="{self.TEXT_COLOR}">'
-                f'{node["display_name"]}'
-                f'</text>'
-            )
+            svg,
+
+            model["nodes"]
+
+        )
+
+        #
+        # Labels
+        #
+
+        self.labels.render(
+
+            svg,
+
+            model["nodes"]
+
+        )
+
+        #
+        # Close SVG
+        #
 
         svg.append("</svg>")
 
