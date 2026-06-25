@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
+
+from app.services.diagram.svg_renderer import SVGRenderer
+from app.services.diagram.drawio_generator import DrawIOGenerator
 
 router = APIRouter(prefix="/api/ai/architecture", tags=["AI Architecture Diagram"])
 
@@ -10,26 +14,27 @@ class DiagramRequest(BaseModel):
     diagram_type: Optional[str] = "infrastructure"
 
 @router.post("/diagram")
-async def generate_diagram(request: DiagramRequest) -> Dict[str, Any]:
+async def generate_diagram(request: DiagramRequest):
     try:
-        from app.services.diagram.diagram_generator import DiagramGenerator
-        generator = DiagramGenerator()
+        format_type = request.format.lower()
         
-        result = generator.generate(
-            provider=request.provider,
-            format_type=request.format,
-            diagram_type=request.diagram_type
-        )
-        
-        # Depending on format, the response structure varies slightly according to spec
-        response = {
-            "format": result.get("format"),
-            "file": result.get("file")
-        }
-        
-        if result.get("format") == "svg":
-            response["preview"] = result.get("preview")
+        if format_type == "svg":
+            svg = SVGRenderer().render()
+            return Response(
+                content=svg,
+                media_type="image/svg+xml"
+            )
+        elif format_type == "drawio":
+            xml = DrawIOGenerator().generate()
+            return Response(
+                content=xml,
+                media_type="application/xml",
+                headers={
+                    "Content-Disposition": "attachment; filename=architecture.drawio"
+                }
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported format. Use 'svg' or 'drawio'.")
             
-        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
