@@ -1,28 +1,19 @@
-<<<<<<< HEAD
 from fastapi import APIRouter, HTTPException
 import logging
-=======
-from fastapi import APIRouter
->>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
 from app.services.aws.ec2_extended_service import (
     EC2ExtendedService
 )
 from app.services.cache.ec2_cache import EC2Cache
 
-<<<<<<< HEAD
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["EC2-Extended"])
-=======
-router = APIRouter()
->>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
 
 @router.get("/api/ec2/extended")
 def ec2_extended(
     region: str = "ap-south-1"
 ):
-<<<<<<< HEAD
     cached = EC2Cache.get_extended(region)
     if cached:
         return cached
@@ -211,24 +202,3 @@ def get_trust_stores(region: str = "ap-south-1"):
     except Exception as e:
         logger.exception("Trust Stores route error")
         raise HTTPException(status_code=500, detail=str(e))
-=======
-
-    cached = EC2Cache.get_extended(region)
-
-    if cached:
-
-        print(f"[EC2 CACHE] Extended HIT for region: {region}")
-
-        return cached
-
-    print(f"[EC2 CACHE] Extended MISS for region: {region}")
-
-    service = EC2ExtendedService(region)
-
-    data = service.get_extended_summary()
-
-    EC2Cache.set_extended(region, data)
-
-    return data
-
->>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
