@@ -30,20 +30,15 @@ async def review_architecture(request: ReviewRequest) -> Dict[str, Any]:
         arch_data = arch_service.analyze(request.query)
         review_data = arch_data.get("review_context", {})
         
-        # Build the final response structure
-        score_data = review_data.get("scoring", {})
+        # Build the final response structure to match the frontend spec
         return {
-            "overall_score": score_data.get("overall_score", 0),
-            "grade": score_data.get("grade", "N/A"),
-            "pillar_scores": score_data.get("pillar_scores", {}),
-            "summary": review_data.get("inventory", {}),
-            "findings": {
-                "high": review_data.get("spofs", []),
-                "medium": review_data.get("security_findings", []) + review_data.get("reliability_findings", []) + review_data.get("network_findings", []),
-                "low": review_data.get("cost_findings", []) + review_data.get("monitoring_findings", [])
-            },
-            "recommendations": score_data.get("recommendations", []),
-            "llm_review": result.get("answer", "")
+            "summary": review_data.get("summary", {}),
+            "inventory": review_data.get("inventory", {}),
+            "graph": review_data.get("graph", {}),
+            "criticality": review_data.get("criticality", {}),
+            "findings": review_data.get("findings", []),
+            "recommendations": review_data.get("recommendations", []),
+            "overall_status": review_data.get("overall_status", "GOOD")
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
