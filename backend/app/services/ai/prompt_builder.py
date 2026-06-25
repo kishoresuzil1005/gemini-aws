@@ -271,9 +271,24 @@ Critical Findings:
 
 Recommendations for Production:
   - {'\n  - '.join(prod_context.get('recommendations', [])) if prod_context.get('recommendations') else 'None'}
------------------------------------
+"""
+                
+                det_chk = prod_context.get("detailed_checklist")
+                if det_chk:
+                    review_text += f"""
+Deployment Checklist Status:
+Passed: {det_chk.get('summary', {}).get('passed', 0)}
+Failed: {det_chk.get('summary', {}).get('failed', 0)}
+Warnings: {det_chk.get('summary', {}).get('warnings', 0)}
+
+Critical Failed Checks:
+  - {'\n  - '.join(det_chk.get('critical_items', [])) if det_chk.get('critical_items') else 'None'}
+
+Implementation Roadmap (Priority Order):
+  - {'\n  - '.join(det_chk.get('implementation_order', [])) if det_chk.get('implementation_order') else 'None'}
 """
 
+                review_text += "-----------------------------------\n"
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}

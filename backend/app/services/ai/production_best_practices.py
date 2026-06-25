@@ -1,8 +1,9 @@
 from typing import Dict, Any, List
+from app.services.ai.production_checklist import ProductionChecklist
 
 class ProductionBestPractices:
     def __init__(self):
-        pass
+        self.checklist_generator = ProductionChecklist()
 
     def evaluate(self, inventory: Dict[str, Any], findings: Dict[str, List[str]], scoring: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -94,6 +95,9 @@ class ProductionBestPractices:
             "automation": 7,
             "monitoring": 10 if checklist["Monitoring"]["status"] == "Pass" else 6
         }
+        
+        # Generate deep deployment checklist
+        detailed_checklist = self.checklist_generator.generate(inventory, findings, scoring)
 
         return {
             "production_ready": production_ready,
@@ -103,5 +107,6 @@ class ProductionBestPractices:
             "pillar_scores": pillar_scores,
             "critical_findings": critical_findings,
             "recommendations": recommendations,
-            "production_checklist": checklist
+            "production_checklist": checklist,
+            "detailed_checklist": detailed_checklist
         }

@@ -29,7 +29,7 @@ class CategoryMapper:
         if "fail" in query_lower or "blast radius" in query_lower or "outage" in query_lower:
             categories.update(self.CATEGORY_MAP["failure"])
             
-        if "production" in query_lower or "best practice" in query_lower:
+        if "production" in query_lower or "best practice" in query_lower or "checklist" in query_lower or "go live" in query_lower:
             categories.update(self.CATEGORY_MAP["production"])
             
         if "terraform" in query_lower or "tf" in query_lower:

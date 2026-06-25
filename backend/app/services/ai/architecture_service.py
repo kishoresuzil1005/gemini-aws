@@ -167,7 +167,7 @@ class ArchitectureService:
             
         # 8. Production Readiness Trigger
         production_context = {}
-        if "production" in query_lower or "best practice" in query_lower:
+        if "production" in query_lower or "best practice" in query_lower or "checklist" in query_lower:
             # We need review findings and score data for production eval.
             # If review wasn't triggered explicitly, we run a background review now.
             if not review_context:

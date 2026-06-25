@@ -32,3 +32,29 @@ async def review_production_readiness(request: ProductionReviewRequest) -> Dict[
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/checklist")
+async def production_checklist(request: ProductionReviewRequest) -> Dict[str, Any]:
+    try:
+        from app.services.ai.architecture_service import ArchitectureService
+        arch_service = ArchitectureService()
+        
+        query = "generate production checklist"
+        arch_data = arch_service.analyze(query)
+        
+        prod_data = arch_data.get("production_context", {})
+        chk_data = prod_data.get("detailed_checklist", {})
+        
+        if not chk_data:
+            raise HTTPException(status_code=500, detail="Failed to generate Production Checklist.")
+            
+        return {
+            "production_ready": chk_data.get("production_ready", False),
+            "overall_score": chk_data.get("overall_score", 0),
+            "grade": chk_data.get("grade", "N/A"),
+            "summary": chk_data.get("summary", {}),
+            "critical_items": chk_data.get("critical_items", []),
+            "implementation_order": chk_data.get("implementation_order", [])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
