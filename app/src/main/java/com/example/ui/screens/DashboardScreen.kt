@@ -950,6 +950,7 @@ fun Ec2ResourcesView(
     val ec2ExtendedState by viewModel.ec2Extended.collectAsState()
     val dashboardSummary by viewModel.dashboardSummary.collectAsState()
 
+<<<<<<< HEAD
     val instanceTypes by viewModel.ec2InstanceTypes.collectAsState()
     val launchTemplates by viewModel.ec2LaunchTemplates.collectAsState()
     val spotRequests by viewModel.ec2SpotRequests.collectAsState()
@@ -970,11 +971,16 @@ fun Ec2ResourcesView(
     val trustStores by viewModel.ec2TrustStores.collectAsState()
     val instanceTypeAdvice by viewModel.instanceTypeAdvice.collectAsState()
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
     LaunchedEffect(selectedRegion) {
         viewModel.loadEC2Summary()
         viewModel.loadEC2Extended()
         viewModel.loadEC2Instances()
+<<<<<<< HEAD
         viewModel.loadAllEC2ExtendedDetails()
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
     }
 
     var viewMode by remember { mutableStateOf("grid") } // "grid" or "aws_console"
@@ -1382,6 +1388,7 @@ fun Ec2ResourcesView(
                                 fontSize = 11.sp,
                                 color = awsTextSecondary
                             )
+<<<<<<< HEAD
                             Text(
                                 text = "Instances",
                                 fontSize = 10.sp,
@@ -1403,6 +1410,29 @@ fun Ec2ResourcesView(
                                         fontWeight = if (activeConsoleTab == item) FontWeight.Bold else FontWeight.Normal,
                                         color = if (activeConsoleTab == item) awsBlueText else awsTextSecondary
                                     )
+=======
+                            val drawerItems = listOf(
+                                "Instances" to listOf("Instances", "Instance Types", "Launch Templates", "Spot Requests", "Savings Plans", "Reserved Instances", "Dedicated Hosts", "Capacity Reservations", "Capacity Manager")
+                            )
+                            drawerItems.forEach { (category, items) ->
+                                items.forEach { item ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(if (activeConsoleTab == item) awsRowSelectedBg else Color.Transparent)
+                                            .clickable {
+                                                activeConsoleTab = item
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(
+                                            text = item,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (activeConsoleTab == item) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (activeConsoleTab == item) awsBlueText else awsTextSecondary
+                                        )
+                                    }
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                                 }
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -1414,6 +1444,7 @@ fun Ec2ResourcesView(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )
                             listOf("AMIs", "AMI Catalog").forEach { item ->
+<<<<<<< HEAD
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1428,6 +1459,16 @@ fun Ec2ResourcesView(
                                         color = if (activeConsoleTab == item) awsBlueText else awsTextSecondary
                                     )
                                 }
+=======
+                                Text(
+                                    text = item,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = awsTextSecondary
+                                )
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -1438,6 +1479,7 @@ fun Ec2ResourcesView(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )
                             listOf("Volumes", "Snapshots", "Lifecycle Manager").forEach { item ->
+<<<<<<< HEAD
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1524,6 +1566,16 @@ fun Ec2ResourcesView(
                                         color = if (activeConsoleTab == item) awsBlueText else awsTextSecondary
                                     )
                                 }
+=======
+                                Text(
+                                    text = item,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    fontSize = 11.sp,
+                                    color = awsTextSecondary
+                                )
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                             }
                         }
                     }
@@ -2095,6 +2147,7 @@ fun Ec2ResourcesView(
                                 color = awsTextPrimary
                             )
                             Spacer(modifier = Modifier.height(10.dp))
+<<<<<<< HEAD
 
                             // Interactive Advisor Form
                             var workloadType by remember { mutableStateOf("General Purpose") }
@@ -2174,6 +2227,10 @@ fun Ec2ResourcesView(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             val currentTypesList = if (instanceTypeAdvice.isNotEmpty()) instanceTypeAdvice else instanceTypes
+=======
+                            
+                            // Mock Instance Types table
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -2198,6 +2255,7 @@ fun Ec2ResourcesView(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Box(modifier = Modifier.width(36.dp))
+<<<<<<< HEAD
                                         TableHeaderCell("Instance Type", 120.dp)
                                         TableHeaderCell("vCPUs", 60.dp)
                                         TableHeaderCell("Memory (GiB)", 90.dp)
@@ -2247,11 +2305,62 @@ fun Ec2ResourcesView(
                                                 TableCell("$${item.priceLinux}/hr", 90.dp, awsTextPrimary)
                                                 TableCell("$${item.priceWindows}/hr", 110.dp, awsTextPrimary)
                                             }
+=======
+                                        TableHeaderCell("Instance Type", 150.dp)
+                                        TableHeaderCell("vCPUs", 80.dp)
+                                        TableHeaderCell("Memory (GiB)", 100.dp)
+                                        TableHeaderCell("Instance Storage (GB)", 150.dp)
+                                        TableHeaderCell("Network Performance", 150.dp)
+                                    }
+                                    
+                                    val dummyInstanceTypes = listOf(
+                                        listOf("t2.micro", "1", "1", "EBS only", "Low to Moderate"),
+                                        listOf("t3.micro", "2", "1", "EBS only", "Up to 5 Gigabit"),
+                                        listOf("m5.large", "2", "8", "EBS only", "Up to 10 Gigabit"),
+                                        listOf("c5.xlarge", "4", "8", "EBS only", "Up to 10 Gigabit")
+                                    )
+                                    
+                                    dummyInstanceTypes.forEach { typeData ->
+                                        Row(
+                                            modifier = Modifier
+                                                .background(awsRowBg)
+                                                .drawBehind {
+                                                    drawLine(
+                                                        color = awsBorderColor,
+                                                        start = Offset(0f, size.height),
+                                                        end = Offset(size.width, size.height),
+                                                        strokeWidth = 0.5.dp.toPx()
+                                                    )
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Checkbox(
+                                                    checked = false,
+                                                    onCheckedChange = {},
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = awsBlueText,
+                                                        uncheckedColor = awsTextSecondary
+                                                    )
+                                                )
+                                            }
+                                            
+                                            TableCell(typeData[0], 150.dp, awsBlueText)
+                                            TableCell(typeData[1], 80.dp, awsTextPrimary)
+                                            TableCell(typeData[2], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[3], 150.dp, awsTextPrimary)
+                                            TableCell(typeData[4], 150.dp, awsTextPrimary)
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                                         }
                                     }
                                 }
                             }
                         } else if (activeConsoleTab == "Launch Templates") {
+<<<<<<< HEAD
                             Text(text = "Launch Templates", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = awsTextPrimary)
                             Spacer(modifier = Modifier.height(10.dp))
                             Box(modifier = Modifier.fillMaxWidth().border(1.dp, awsBorderColor, RoundedCornerShape(4.dp)).background(awsRowBg)) {
@@ -2796,6 +2905,127 @@ fun Ec2ResourcesView(
                                                 TableCell(item.revokedCertificatesCount.toString(), 120.dp, awsTextPrimary)
                                                 TableCell(item.ownerId, 120.dp, awsTextPrimary)
                                             }
+=======
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Launch Templates (1)",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = awsTextPrimary
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    IconButton(
+                                        onClick = {},
+                                        modifier = Modifier.size(32.dp).border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                    ) {
+                                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = awsBlueText, modifier = Modifier.size(16.dp))
+                                    }
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .border(1.dp, awsBorderColor, RoundedCornerShape(16.dp))
+                                            .background(if (isDarkTheme) Color(0xFF1E1E1E) else Color.White, RoundedCornerShape(16.dp))
+                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("Actions", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = awsBlueText)
+                                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp), tint = awsBlueText)
+                                        }
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .background(awsOrange, RoundedCornerShape(16.dp))
+                                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                                            .clickable { }
+                                    ) {
+                                        Text("Create launch template", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.White else Color.Black)
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            
+                            // Mock Launch Templates table
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, awsBorderColor, RoundedCornerShape(4.dp))
+                                    .background(awsRowBg)
+                            ) {
+                                Column(
+                                    modifier = Modifier.horizontalScroll(scrollState)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .background(awsTableHeaderBg)
+                                            .drawBehind {
+                                                drawLine(
+                                                    color = awsBorderColor,
+                                                    start = Offset(0f, size.height),
+                                                    end = Offset(size.width, size.height),
+                                                    strokeWidth = 1.dp.toPx()
+                                                )
+                                            }
+                                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(modifier = Modifier.width(36.dp))
+                                        TableHeaderCell("Launch Template ID", 180.dp)
+                                        TableHeaderCell("Launch Template Name", 180.dp)
+                                        TableHeaderCell("Default Version", 100.dp)
+                                        TableHeaderCell("Latest Version", 100.dp)
+                                        TableHeaderCell("Create Time", 180.dp)
+                                        TableHeaderCell("Created By", 250.dp)
+                                        TableHeaderCell("Managed", 80.dp)
+                                        TableHeaderCell("Operator", 80.dp)
+                                    }
+                                    
+                                    val dummyLaunchTemplates = listOf(
+                                        listOf("lt-067898a12b6e2d329", "demo-app-template", "1", "1", "2026-06-10T10:26:09.000Z", "arn:aws:iam::077660206700:root", "false", "-")
+                                    )
+                                    
+                                    dummyLaunchTemplates.forEach { typeData ->
+                                        Row(
+                                            modifier = Modifier
+                                                .background(awsRowBg)
+                                                .drawBehind {
+                                                    drawLine(
+                                                        color = awsBorderColor,
+                                                        start = Offset(0f, size.height),
+                                                        end = Offset(size.width, size.height),
+                                                        strokeWidth = 0.5.dp.toPx()
+                                                    )
+                                                }
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Checkbox(
+                                                    checked = false,
+                                                    onCheckedChange = {},
+                                                    colors = CheckboxDefaults.colors(
+                                                        checkedColor = awsBlueText,
+                                                        uncheckedColor = awsTextSecondary
+                                                    )
+                                                )
+                                            }
+                                            
+                                            TableCell(typeData[0], 180.dp, awsBlueText)
+                                            TableCell(typeData[1], 180.dp, awsTextPrimary)
+                                            TableCell(typeData[2], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[3], 100.dp, awsTextPrimary)
+                                            TableCell(typeData[4], 180.dp, awsTextPrimary)
+                                            TableCell(typeData[5], 250.dp, awsTextPrimary)
+                                            TableCell(typeData[6], 80.dp, awsTextPrimary)
+                                            TableCell(typeData[7], 80.dp, awsTextPrimary)
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
                                         }
                                     }
                                 }

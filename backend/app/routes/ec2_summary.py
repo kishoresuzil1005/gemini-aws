@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 import logging
+<<<<<<< HEAD
 from pydantic import BaseModel
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
 from app.services.aws.ec2_summary_service import (
     EC2SummaryService
@@ -22,6 +25,7 @@ router = APIRouter(
 )
 
 
+<<<<<<< HEAD
 class InstanceTypeAdviceRequest(BaseModel):
     workloadType: str
     useCase: str
@@ -29,19 +33,42 @@ class InstanceTypeAdviceRequest(BaseModel):
     cpuManufacturer: str
 
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 @router.get("/api/ec2/summary")
 def ec2_summary(
     region: str
 ):
+<<<<<<< HEAD
     try:
+=======
+    """
+    EC2 Summary API
+
+    Example:
+
+    /api/ec2/summary?region=ap-south-1
+    """
+
+    try:
+
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         cached = EC2Cache.get_summary(
             region
         )
 
         if cached:
+<<<<<<< HEAD
             logger.info(
                 f"[EC2 CACHE HIT] {region}"
             )
+=======
+
+            logger.info(
+                f"[EC2 CACHE HIT] {region}"
+            )
+
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
             return cached
 
         logger.info(
@@ -62,11 +89,23 @@ def ec2_summary(
         return data
 
     except HTTPException:
+<<<<<<< HEAD
         raise
     except Exception as e:
         logger.exception(
             f"EC2 Summary Error ({region})"
         )
+=======
+
+        raise
+
+    except Exception as e:
+
+        logger.exception(
+            f"EC2 Summary Error ({region})"
+        )
+
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         raise HTTPException(
             status_code=500,
             detail=str(e)
@@ -77,6 +116,7 @@ def ec2_summary(
 def ec2_instances(
     region: str
 ):
+<<<<<<< HEAD
     try:
         service = EC2InstancesService(
             region
@@ -88,11 +128,33 @@ def ec2_instances(
         logger.exception(
             f"EC2 Instances Error ({region})"
         )
+=======
+
+    try:
+
+        service = EC2InstancesService(
+            region
+        )
+
+        return service.get_instances()
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.exception(
+            f"EC2 Instances Error ({region})"
+        )
+
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
 
+<<<<<<< HEAD
 
 @router.get("/api/ec2/instance_types")
 def ec2_instance_types(
@@ -128,3 +190,5 @@ def ec2_instance_types_advice(
             status_code=500,
             detail=str(e)
         )
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc

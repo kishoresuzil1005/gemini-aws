@@ -29,8 +29,16 @@ class DocumentLoader:
         for root, _, files in os.walk(directory_path):
             for file in files:
                 if file.endswith((".txt", ".md", ".json", ".pdf")):
+
                     file_path = os.path.join(root, file)
-                    chunks.extend(self.load_and_split_file(file_path))
+
+                    print(f"[LOADING] {file}")
+
+                    file_chunks = self.load_and_split_file(file_path)
+
+                    print(f"[CHUNKS] {file} -> {len(file_chunks)}")
+
+                    chunks.extend(file_chunks)
         return chunks
 
     def load_and_split_file(self, file_path: str) -> List[Dict[str, Any]]:

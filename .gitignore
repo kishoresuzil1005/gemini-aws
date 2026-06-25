@@ -16,6 +16,7 @@
 local.properties
 .env
 debug.keystore
+<<<<<<< HEAD
 
 # Python virtual environments
 venv/
@@ -64,3 +65,5 @@ logs/
 
 # OS files
 Thumbs.db
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc

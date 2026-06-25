@@ -311,7 +311,10 @@ data class EC2RefreshResponse(
 )
 
 @JsonClass(generateAdapter = true)
+<<<<<<< HEAD
 @JsonClass(generateAdapter = true)
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 data class EC2Instance(
     @Json(name = "instance_id") val instanceId: String,
     @Json(name = "instance_type") val instanceType: String,
@@ -331,6 +334,7 @@ data class EC2ActionResponse(
     @Json(name = "status") val status: String
 )
 
+<<<<<<< HEAD
 @JsonClass(generateAdapter = true)
 data class EC2InstanceType(
     val type: String,
@@ -533,6 +537,8 @@ data class EC2TrustStore(
     val tags: List<Map<String, String>>? = null
 )
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 object TokenStorage {
     var jwtToken: String? = null
     var selectedRegion: String? = "ap-south-1"
@@ -631,6 +637,7 @@ interface CloudOpsApiService {
         @Body request: EC2ActionRequest
     ): EC2ActionResponse
 
+<<<<<<< HEAD
     @GET("api/ec2/instance_types")
     suspend fun getEC2InstanceTypes(@Query("region") region: String): List<EC2InstanceType>
 
@@ -688,6 +695,8 @@ interface CloudOpsApiService {
     @GET("api/ec2/trust_stores")
     suspend fun getEC2TrustStores(@Query("region") region: String): List<EC2TrustStore>
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
     @GET("api/topology")
     suspend fun getTopologySummary(): List<TopologyCategory>
 

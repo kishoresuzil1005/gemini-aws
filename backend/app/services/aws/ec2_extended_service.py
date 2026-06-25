@@ -1,14 +1,21 @@
 import boto3
+<<<<<<< HEAD
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
+=======
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
 class EC2ExtendedService:
 
     def __init__(self, region: str):
+<<<<<<< HEAD
         self.region = region
 
         try:
@@ -57,18 +64,82 @@ class EC2ExtendedService:
             return 0
         try:
             return len(self.ec2.describe_hosts()["Hosts"])
+=======
+
+        self.region = region
+
+        self.ec2 = boto3.client(
+            "ec2",
+            region_name=region
+        )
+
+        self.savingsplans = boto3.client(
+            "savingsplans",
+            region_name=region
+        )
+
+    def get_launch_templates(self):
+        try:
+            return len(
+                self.ec2.describe_launch_templates()[
+                    "LaunchTemplates"
+                ]
+            )
+        except Exception:
+            return 0
+
+    def get_spot_requests(self):
+        try:
+            return len(
+                self.ec2
+                .describe_spot_instance_requests()[
+                    "SpotInstanceRequests"
+                ]
+            )
+        except Exception:
+            return 0
+
+    def get_reserved_instances(self):
+        try:
+            return len(
+                self.ec2
+                .describe_reserved_instances()[
+                    "ReservedInstances"
+                ]
+            )
+        except Exception:
+            return 0
+
+    def get_dedicated_hosts(self):
+        try:
+            return len(
+                self.ec2.describe_hosts()[
+                    "Hosts"
+                ]
+            )
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         except Exception:
             return 0
 
     def get_amis(self):
+<<<<<<< HEAD
         if not self.has_credentials:
             return 0
         try:
             return len(self.ec2.describe_images(Owners=["self"])["Images"])
+=======
+        try:
+            return len(
+                self.ec2.describe_images(
+                    Owners=["self"]
+                )["Images"]
+            )
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         except Exception:
             return 0
 
     def get_ami_catalog(self):
+<<<<<<< HEAD
         if not self.has_credentials:
             return 4
         try:
@@ -83,6 +154,27 @@ class EC2ExtendedService:
             return len(self.savingsplans.describe_savings_plans()["savingsPlans"])
         except Exception:
             return 1
+=======
+        try:
+            return len(
+                self.ec2.describe_images(
+                    Owners=["amazon"]
+                )["Images"]
+            )
+        except Exception:
+            return 0
+
+    def get_savings_plans(self):
+        try:
+            return len(
+                self.savingsplans
+                .describe_savings_plans()[
+                    "savingsPlans"
+                ]
+            )
+        except Exception:
+            return 0
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
     def get_extended_summary(self):
         start = time.time()
@@ -108,6 +200,7 @@ class EC2ExtendedService:
 
         print(f"[EC2 EXTENDED] {round(time.time() - start, 2)}s")
         return res
+<<<<<<< HEAD
 
     # --- Details List methods with Fallbacks ---
 
@@ -604,3 +697,5 @@ class EC2ExtendedService:
             except Exception as e:
                 logger.warning(f"Error describe_trust_stores: {e}")
         return []
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc

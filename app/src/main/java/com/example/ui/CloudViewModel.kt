@@ -153,7 +153,10 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
             loadEC2Summary(forceRefresh = true)
             loadEC2Extended(forceRefresh = true)
             loadEC2Instances()
+<<<<<<< HEAD
             loadAllEC2ExtendedDetails()
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
         }
     }
 
@@ -229,6 +232,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _ec2Instances = MutableStateFlow<List<com.example.api.EC2Instance>>(emptyList())
     val ec2Instances = _ec2Instances.asStateFlow()
 
+<<<<<<< HEAD
     private val _ec2InstanceTypes = MutableStateFlow<List<com.example.api.EC2InstanceType>>(emptyList())
     val ec2InstanceTypes = _ec2InstanceTypes.asStateFlow()
 
@@ -286,6 +290,8 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
     private val _ec2TrustStores = MutableStateFlow<List<com.example.api.EC2TrustStore>>(emptyList())
     val ec2TrustStores = _ec2TrustStores.asStateFlow()
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
     fun setShowEc2Resources(show: Boolean) {
         _showEc2Resources.value = show
     }
@@ -612,7 +618,10 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 loadEC2Summary(forceRefresh = true)
                 loadEC2Extended(forceRefresh = true)
                 loadEC2Instances()
+<<<<<<< HEAD
                 loadAllEC2ExtendedDetails()
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
 
                 // Successfully synced all feeds
                 val dateFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
@@ -683,6 +692,7 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+<<<<<<< HEAD
     fun loadAllEC2ExtendedDetails() {
         viewModelScope.launch {
             if (!_useBackend.value) return@launch
@@ -792,6 +802,8 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
     fun startInstance(instanceId: String) {
         viewModelScope.launch {
             try {
@@ -890,7 +902,10 @@ class CloudViewModel(application: Application) : AndroidViewModel(application) {
                 loadEC2Summary(forceRefresh = true)
                 loadEC2Extended(forceRefresh = true)
                 loadEC2Instances()
+<<<<<<< HEAD
                 loadAllEC2ExtendedDetails()
+=======
+>>>>>>> 13ea076bcd3898214a01f2dbc5ededca3ec1b4dc
             }
         }
     }

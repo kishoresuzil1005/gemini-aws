@@ -60,7 +60,13 @@ class RAGService:
                 return 0
             
             points = []
-            for chunk in chunks:
+            total = len(chunks)
+
+            for i, chunk in enumerate(chunks, start=1):
+
+                if i % 10 == 0:
+                    print(f"[EMBEDDING] {i}/{total}")
+
                 vec = self.embedding_service.get_embedding(chunk["content"])
                 points.append({
                     "id": chunk["id"],
