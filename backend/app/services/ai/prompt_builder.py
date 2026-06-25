@@ -289,6 +289,18 @@ Implementation Roadmap (Priority Order):
 """
 
                 review_text += "-----------------------------------\n"
+                
+            diag_context = architecture_context.get("diagram_context")
+            if diag_context:
+                review_text += f"""
+--- VISUAL DIAGRAM GENERATED ---
+A visual AWS Architecture Diagram ({diag_context.get('format', 'svg').upper()}) was successfully generated for the user!
+File Path: {diag_context.get('file')}
+Layers rendered: {len(diag_context.get('layers', []))}
+Please inform the user that their visual diagram is ready, and summarize the layers/components shown.
+--------------------------------
+"""
+
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
         augmented_prompt = f"""{role_prompt}

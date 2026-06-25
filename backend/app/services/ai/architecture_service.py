@@ -4,6 +4,7 @@ from app.services.ai.architecture_patterns import ArchitecturePatterns
 from app.services.ai.architecture_review import ArchitectureReview
 from app.services.ai.failure_analysis import FailureAnalysis
 from app.services.ai.production_best_practices import ProductionBestPractices
+from app.services.diagram.diagram_generator import DiagramGenerator
 
 class ArchitectureService:
     def __init__(self):
@@ -63,6 +64,7 @@ class ArchitectureService:
         self.architecture_review = ArchitectureReview()
         self.failure_analysis = FailureAnalysis()
         self.production_reviewer = ProductionBestPractices()
+        self.diagram_generator = DiagramGenerator()
 
     def analyze(self, query: str) -> Dict[str, Any]:
         query_lower = query.lower()
@@ -183,6 +185,11 @@ class ArchitectureService:
                 "monitoring_findings": review_context.get("monitoring_findings", [])
             }
             production_context = self.production_reviewer.evaluate(inventory_context, findings_dict, score_data)
+            
+        # 9. Diagram Generation Trigger
+        diagram_context = {}
+        if "draw" in query_lower or "diagram" in query_lower:
+            diagram_context = self.diagram_generator.generate(provider="aws", format_type="svg")
 
         return {
             "mode": "architecture",
@@ -196,5 +203,6 @@ class ArchitectureService:
             "cost_findings": review_context.get("cost_findings", []), # Keeping backward compatibility in context structure
             "review_context": review_context,
             "failure_context": failure_context,
-            "production_context": production_context
+            "production_context": production_context,
+            "diagram_context": diagram_context
         }
