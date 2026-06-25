@@ -4,6 +4,7 @@ from app.services.ai.embedding_service import EmbeddingService
 from app.services.ai.qdrant_service import QdrantService
 from app.services.ai.document_loader import DocumentLoader
 from app.services.ai.ollama_service import OllamaService
+from app.services.ai.prompt_builder import PromptBuilder
 
 
 class RAGService:
@@ -12,6 +13,7 @@ class RAGService:
         self.qdrant_service = QdrantService(collection_name=collection_name)
         self.document_loader = DocumentLoader()
         self.ollama_service = OllamaService()
+        self.prompt_builder = PromptBuilder()
 
     def index_document(self, title: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -114,16 +116,7 @@ class RAGService:
             context_str = "\n\n".join(context_blocks)
             
             # Construct Prompt
-            augmented_prompt = (
-                "You are an Elite AWS Solutions Architect and Cloud Security Expert with deep knowledge in FinOps and Cloud Operations.\n"
-                "Your goal is to provide production-grade, highly secure, cost-optimized, and well-architected solutions based on the context provided below.\n"
-                "Rely strictly on the provided context. If the answer is not contained within the context, clearly state that the context lacks the necessary information.\n\n"
-                "=== AWS KNOWLEDGE BASE CONTEXT ===\n"
-                f"{context_str}\n"
-                "==================================\n\n"
-                f"User Question: {query}\n\n"
-                "Please formulate a precise, highly technical, and actionable response that covers best practices, security recommendations, and cost optimization where applicable:"
-            )
+            augmented_prompt = self.prompt_builder.build(query=query, context=context_str)
             
             # Request completion from Ollama
             answer = self.ollama_service.generate(augmented_prompt)
