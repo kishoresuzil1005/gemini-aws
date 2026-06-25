@@ -1233,6 +1233,9 @@ app.include_router(graph_parser_router)
 from app.routes.layer_builder import router as layer_builder_router
 app.include_router(layer_builder_router)
 
+from app.routes.icon_mapper import router as icon_mapper_router
+app.include_router(icon_mapper_router)
+
 from app.api.routes import terminal
 
 app.include_router(
