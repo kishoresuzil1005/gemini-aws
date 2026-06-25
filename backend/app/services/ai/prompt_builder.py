@@ -104,6 +104,12 @@ Always provide:
     def is_architecture_question(self, query: str) -> bool:
         return self.detect_intent(query) == "architecture"
 
+    def _join_list(self, items, separator="\n  - "):
+        """Helper to join list items, avoiding backslash-in-fstring issues on Python 3.11."""
+        if not items:
+            return "None"
+        return separator.join(items)
+
     def build(self, query: str, context: str, architecture_context: dict = None) -> str:
         intent = self.detect_intent(query)
         role_prompt = self.ROLE_PROMPTS.get(intent, self.ROLE_PROMPTS["default"])
@@ -116,38 +122,46 @@ Always provide:
             pattern_text = ""
             pattern = architecture_context.get("architecture_pattern")
             if pattern:
+                flow_str = ' -> '.join(pattern.get('flow', []))
+                services_str = ', '.join(pattern.get('services', []))
+                ha_str = ', '.join(pattern.get('high_availability', []))
+                security_str = ', '.join(pattern.get('security', []))
+                monitoring_str = ', '.join(pattern.get('monitoring', []))
+                cost_str = ', '.join(pattern.get('cost', []))
+                bp_str = self._join_list(pattern.get('best_practices', []), "\n- ")
                 pattern_text = f"""
 --- PRODUCTION ARCHITECTURE PATTERN ---
 Name: {pattern.get('name', '')}
 Description: {pattern.get('description', '')}
 
 Flow:
-{' -> '.join(pattern.get('flow', []))}
+{flow_str}
 
 Recommended Services:
-{', '.join(pattern.get('services', []))}
+{services_str}
 
 High Availability:
-{', '.join(pattern.get('high_availability', []))}
+{ha_str}
 
 Security:
-{', '.join(pattern.get('security', []))}
+{security_str}
 
 Monitoring:
-{', '.join(pattern.get('monitoring', []))}
+{monitoring_str}
 
 Cost Optimization:
-{', '.join(pattern.get('cost', []))}
+{cost_str}
 
 Best Practices:
-- {'\n- '.join(pattern.get('best_practices', []))}
+- {bp_str}
 ---------------------------------------
 """
             review_text = ""
             review_context = architecture_context.get("review_context")
             if review_context:
-                inventory_str = "\n".join([f"{k}: {v}" for k, v in review_context.get("inventory", {}).items()])
-                findings_str = "\n".join(
+                inventory_lines = [f"{k}: {v}" for k, v in review_context.get("inventory", {}).items()]
+                inventory_str = "\n".join(inventory_lines)
+                findings_list = (
                     review_context.get("spofs", []) +
                     review_context.get("security_findings", []) +
                     review_context.get("cost_findings", []) +
@@ -155,6 +169,7 @@ Best Practices:
                     review_context.get("network_findings", []) +
                     review_context.get("monitoring_findings", [])
                 )
+                findings_str = "\n".join(findings_list)
                 
                 review_text = f"""
 --- ARCHITECTURE REVIEW FINDINGS ---
@@ -196,9 +211,9 @@ Sustainability: {pillars.get('sustainability', 0)}/10
                     review_text += "\n--- AWS WELL-ARCHITECTED REVIEW ---\n"
                     for pillar_name, p_data in wa_data.items():
                         title = pillar_name.replace("_", " ").title()
-                        str_list = '\n  - '.join(p_data.get('strengths', [])) if p_data.get('strengths') else "None detected."
-                        weak_list = '\n  - '.join(p_data.get('weaknesses', [])) if p_data.get('weaknesses') else "None detected."
-                        rec_list = '\n  - '.join(p_data.get('recommendations', [])) if p_data.get('recommendations') else "None."
+                        str_list = self._join_list(p_data.get('strengths', []))
+                        weak_list = self._join_list(p_data.get('weaknesses', []))
+                        rec_list = self._join_list(p_data.get('recommendations', []))
                         
                         review_text += f"""
 {title} (Score: {p_data.get('score', 0)}/10)
@@ -214,6 +229,8 @@ Recommendations:
                 if recs_data:
                     review_text += "\n--- ARCHITECTURE RECOMMENDATIONS ---\n"
                     for rec in recs_data:
+                        impl_steps = self._join_list(rec.get('implementation_steps', []))
+                        aws_svcs = ', '.join(rec.get('aws_services', []))
                         review_text += f"""
 [{rec.get('priority', 'UNKNOWN')}] {rec.get('title', 'Unknown')} (Category: {rec.get('category', 'General')})
 Reason: {rec.get('reason', '')}
@@ -221,13 +238,17 @@ Business Impact: {rec.get('business_impact', '')}
 Current State: {rec.get('current_state', '')}
 Recommended State: {rec.get('recommended_state', '')}
 Implementation Steps:
-  - {'\n  - '.join(rec.get('implementation_steps', []))}
-AWS Services: {', '.join(rec.get('aws_services', []))}
+  - {impl_steps}
+AWS Services: {aws_svcs}
 """
                 review_text += "------------------------------------\n"
                 
             failure_context = architecture_context.get("failure_context")
             if failure_context:
+                biz_impact = self._join_list(failure_context.get('business_impact', []))
+                affected = ', '.join(failure_context.get('affected_services', []))
+                root_causes = ', '.join(failure_context.get('likely_root_causes', []))
+                recovery_recs = self._join_list(failure_context.get('recommendations', []))
                 review_text += f"""
 --- FAILURE ANALYSIS REPORT ---
 Failed Resource: {failure_context.get('resource', 'Unknown')}
@@ -237,16 +258,16 @@ Blast Radius (Affected Nodes): {failure_context.get('blast_radius', 0)}
 Estimated Recovery Time: {failure_context.get('estimated_recovery', 'Unknown')}
 
 Business Impact:
-  - {'\n  - '.join(failure_context.get('business_impact', []))}
+  - {biz_impact}
 
 Affected Services (Downstream):
-  - {', '.join(failure_context.get('affected_services', []))}
+  - {affected}
 
 Likely Root Causes:
-  - {', '.join(failure_context.get('likely_root_causes', []))}
+  - {root_causes}
 
 Recovery Plan & Recommendations:
-  - {'\n  - '.join(failure_context.get('recommendations', []))}
+  - {recovery_recs}
 -------------------------------
 """
 
@@ -258,6 +279,9 @@ Recovery Plan & Recommendations:
                     items_str = ", ".join(v.get("items", []))
                     prod_checklist += f"[{status_icon}] {k}: {items_str}\n"
 
+                crit_findings = self._join_list(prod_context.get('critical_findings', []))
+                prod_recs = self._join_list(prod_context.get('recommendations', []))
+
                 review_text += f"""
 --- PRODUCTION READINESS REPORT ---
 Production Ready: {"YES" if prod_context.get('production_ready') else "NO"}
@@ -267,14 +291,16 @@ Readiness Score: {prod_context.get('readiness_score', 0)}% (Grade: {prod_context
 Checklist Validation:
 {prod_checklist}
 Critical Findings:
-  - {'\n  - '.join(prod_context.get('critical_findings', [])) if prod_context.get('critical_findings') else 'None'}
+  - {crit_findings}
 
 Recommendations for Production:
-  - {'\n  - '.join(prod_context.get('recommendations', [])) if prod_context.get('recommendations') else 'None'}
+  - {prod_recs}
 """
                 
                 det_chk = prod_context.get("detailed_checklist")
                 if det_chk:
+                    crit_items = self._join_list(det_chk.get('critical_items', []))
+                    impl_order = self._join_list(det_chk.get('implementation_order', []))
                     review_text += f"""
 Deployment Checklist Status:
 Passed: {det_chk.get('summary', {}).get('passed', 0)}
@@ -282,10 +308,10 @@ Failed: {det_chk.get('summary', {}).get('failed', 0)}
 Warnings: {det_chk.get('summary', {}).get('warnings', 0)}
 
 Critical Failed Checks:
-  - {'\n  - '.join(det_chk.get('critical_items', [])) if det_chk.get('critical_items') else 'None'}
+  - {crit_items}
 
 Implementation Roadmap (Priority Order):
-  - {'\n  - '.join(det_chk.get('implementation_order', [])) if det_chk.get('implementation_order') else 'None'}
+  - {impl_order}
 """
 
                 review_text += "-----------------------------------\n"
