@@ -210,6 +210,21 @@ Recommendations:
   - {rec_list}
 """
                 
+                recs_data = review_context.get("recommendations", [])
+                if recs_data:
+                    review_text += "\n--- ARCHITECTURE RECOMMENDATIONS ---\n"
+                    for rec in recs_data:
+                        review_text += f"""
+[{rec.get('priority', 'UNKNOWN')}] {rec.get('title', 'Unknown')} (Category: {rec.get('category', 'General')})
+Reason: {rec.get('reason', '')}
+Business Impact: {rec.get('business_impact', '')}
+Current State: {rec.get('current_state', '')}
+Recommended State: {rec.get('recommended_state', '')}
+Implementation Steps:
+  - {'\n  - '.join(rec.get('implementation_steps', []))}
+AWS Services: {', '.join(rec.get('aws_services', []))}
+"""
+
                 review_text += "------------------------------------\n"
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 

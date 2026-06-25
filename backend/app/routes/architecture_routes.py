@@ -96,3 +96,19 @@ async def well_architected_review(request: ReviewRequest) -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/recommend")
+async def recommend_architecture(request: ReviewRequest) -> Dict[str, Any]:
+    try:
+        from app.services.ai.architecture_service import ArchitectureService
+        arch_service = ArchitectureService()
+        query = "give architecture recommendations" 
+        arch_data = arch_service.analyze(query)
+        review_data = arch_data.get("review_context", {})
+        recs_data = review_data.get("recommendations", [])
+        
+        return {
+            "recommendations": recs_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

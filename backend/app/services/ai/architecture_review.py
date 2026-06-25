@@ -8,12 +8,14 @@ class ArchitectureReview:
             from app.services.aws.ec2_instances_service import EC2InstanceService
             from app.services.ai.architecture_scorer import ArchitectureScorer
             from app.services.ai.well_architected_review import WellArchitectedReview
+            from app.services.ai.architecture_recommendation import ArchitectureRecommendation
             # Assume other inventory services exist, we will mock them if they don't
             self.neo4j = Neo4jService()
             self.criticality = CriticalityService()
             self.ec2_service = EC2InstanceService()
             self.scorer = ArchitectureScorer()
             self.wa_review = WellArchitectedReview()
+            self.recommender = ArchitectureRecommendation()
             self.has_services = True
         except ImportError:
             self.has_services = False
@@ -96,6 +98,10 @@ class ArchitectureReview:
         wa_data = {}
         if hasattr(self, 'wa_review'):
             wa_data = self.wa_review.generate(inventory, graph_context, findings_dict, score_data)
+            
+        recs_data = []
+        if hasattr(self, 'recommender'):
+            recs_data = self.recommender.generate(inventory, findings_dict, score_data)
         
         return {
             "inventory": inventory,
@@ -108,5 +114,6 @@ class ArchitectureReview:
             "network_findings": network_findings,
             "monitoring_findings": monitoring_findings,
             "scoring": score_data,
-            "well_architected": wa_data
+            "well_architected": wa_data,
+            "recommendations": recs_data
         }
