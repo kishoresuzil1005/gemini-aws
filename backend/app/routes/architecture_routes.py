@@ -67,3 +67,32 @@ async def score_architecture(request: ReviewRequest) -> Dict[str, Any]:
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/well-architected")
+async def well_architected_review(request: ReviewRequest) -> Dict[str, Any]:
+    try:
+        from app.services.ai.architecture_service import ArchitectureService
+        arch_service = ArchitectureService()
+        query = "evaluate well architected review" 
+        arch_data = arch_service.analyze(query)
+        review_data = arch_data.get("review_context", {})
+        score_data = review_data.get("scoring", {})
+        wa_data = review_data.get("well_architected", {})
+        
+        # Format the output to match the expected API specification
+        pillars_output = {}
+        for pillar, data in wa_data.items():
+            pillars_output[pillar] = {
+                "score": data.get("score", 0),
+                "strengths": data.get("strengths", []),
+                "weaknesses": data.get("weaknesses", []),
+                "recommendations": data.get("recommendations", [])
+            }
+            
+        return {
+            "overall_score": score_data.get("overall_score", 0),
+            "grade": score_data.get("grade", "N/A"),
+            "pillars": pillars_output
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

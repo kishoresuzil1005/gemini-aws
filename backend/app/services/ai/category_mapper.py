@@ -3,7 +3,7 @@ from typing import List
 class CategoryMapper:
     def __init__(self):
         self.CATEGORY_MAP = {
-            "architecture": ["architecture", "aws_architecture"],
+            "architecture": ["architecture", "aws_architecture", "well_architected_framework", "operational_excellence", "reliability", "performance_efficiency", "cost_optimization", "sustainability"],
             "security": ["security", "aws_security"],
             "terraform": ["terraform"],
             "kubernetes": ["kubernetes"],

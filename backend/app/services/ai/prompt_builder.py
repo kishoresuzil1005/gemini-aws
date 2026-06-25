@@ -190,6 +190,26 @@ Cost: {pillars.get('cost', 0)}/10
 Operational Excellence: {pillars.get('operational_excellence', 0)}/10
 Sustainability: {pillars.get('sustainability', 0)}/10
 """
+                
+                wa_data = review_context.get("well_architected")
+                if wa_data:
+                    review_text += "\n--- AWS WELL-ARCHITECTED REVIEW ---\n"
+                    for pillar_name, p_data in wa_data.items():
+                        title = pillar_name.replace("_", " ").title()
+                        str_list = '\n  - '.join(p_data.get('strengths', [])) if p_data.get('strengths') else "None detected."
+                        weak_list = '\n  - '.join(p_data.get('weaknesses', [])) if p_data.get('weaknesses') else "None detected."
+                        rec_list = '\n  - '.join(p_data.get('recommendations', [])) if p_data.get('recommendations') else "None."
+                        
+                        review_text += f"""
+{title} (Score: {p_data.get('score', 0)}/10)
+Strengths:
+  - {str_list}
+Weaknesses:
+  - {weak_list}
+Recommendations:
+  - {rec_list}
+"""
+                
                 review_text += "------------------------------------\n"
             architecture_block = f"\n=== ARCHITECTURE CONTEXT ===\n{arch_json}\n{pattern_text}{review_text}============================\n"
 
