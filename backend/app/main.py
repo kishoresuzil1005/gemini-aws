@@ -1209,6 +1209,9 @@ app.include_router(
 from app.routes.architecture_review import router as architecture_review_router
 app.include_router(architecture_review_router)
 
+from app.routes.architecture_score import router as architecture_score_router
+app.include_router(architecture_score_router)
+
 from app.api.routes import terminal
 
 app.include_router(
