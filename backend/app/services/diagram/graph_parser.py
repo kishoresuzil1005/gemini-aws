@@ -20,7 +20,11 @@ class GraphParser:
 
                     "id": n["id"],
 
-                    "type": n["type"]
+                    "type": n["type"],
+
+                    "name": n.get("name"),
+
+                    "metadata": n.get("metadata", {})
 
                 })
 

@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import Element, SubElement, tostring
 
-from app.services.diagram.layout_engine import LayoutEngine
+from app.services.diagram.smart_layout_engine import SmartLayoutEngine
 
 
 class DrawIOGenerator:
@@ -10,7 +10,7 @@ class DrawIOGenerator:
     """
 
     def __init__(self):
-        self.layout = LayoutEngine()
+        self.layout = SmartLayoutEngine()
 
     def generate(self):
 

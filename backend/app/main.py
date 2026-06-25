@@ -1251,6 +1251,15 @@ app.include_router(svg_router)
 from app.routes.drawio import router as drawio_router
 app.include_router(drawio_router)
 
+from app.routes.relationship import router as relationship_router
+app.include_router(relationship_router)
+
+from app.routes.vpc_az import router as vpc_router
+app.include_router(vpc_router)
+
+from app.routes.smart_layout import router as smart_layout_router
+app.include_router(smart_layout_router)
+
 from app.api.routes import terminal
 
 app.include_router(
