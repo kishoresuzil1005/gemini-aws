@@ -5,6 +5,7 @@ from app.services.ai.qdrant_service import QdrantService
 from app.services.ai.document_loader import DocumentLoader
 from app.services.ai.ollama_service import OllamaService
 from app.services.ai.prompt_builder import PromptBuilder
+from app.services.ai.retrieval_optimizer import RetrievalOptimizer
 
 
 class RAGService:
@@ -14,6 +15,7 @@ class RAGService:
         self.document_loader = DocumentLoader()
         self.ollama_service = OllamaService()
         self.prompt_builder = PromptBuilder()
+        self.retrieval_optimizer = RetrievalOptimizer(min_score=0.65)
 
     def index_document(self, title: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -87,63 +89,62 @@ class RAGService:
 
     def query_rag(self, query: str, limit: int = 8) -> Dict[str, Any]:
         """
-        Retrieves matching chunks, filters low confidence results, 
-        and runs Ollama with the augmented context.
+        Retrieves matching chunks, optimizes context with RetrievalOptimizer, 
+        and runs Ollama with the structured context.
         """
         try:
-            MIN_SCORE = 0.65
+            INITIAL_RETRIEVAL = 20
+            FINAL_CONTEXT = limit
             
             # Generate search query embedding
             query_vector = self.embedding_service.get_embedding(query)
             
             # Retrieve nearest neighbors
-            matches = self.qdrant_service.search_similar(query_vector, limit=limit)
+            matches = self.qdrant_service.search_similar(query_vector, limit=INITIAL_RETRIEVAL)
             
-            # Build Context
-            context_blocks = []
-            references = []
-            total_score = 0.0
+            # Optimize Context
+            optimization_result = self.retrieval_optimizer.optimize(query, matches, final_k=FINAL_CONTEXT)
+            optimized_chunks = optimization_result["optimized_chunks"]
+            retrieval_stats = optimization_result["stats"]
             
-            for idx, match in enumerate(matches):
-                score = match.get("score", 0.0)
-                
-                # Apply similarity threshold
-                if score < MIN_SCORE:
-                    continue
-                    
-                payload = match.get("payload", {})
-                content = payload.get("content", "").strip()
-                
-                # Filter empty context
-                if not content:
-                    continue
-                    
-                meta = payload.get("metadata", {})
-                source = meta.get("source", "Unknown Unit")
-                
-                context_blocks.append(f"Context [{len(context_blocks)+1}] (Source: {source}):\n{content}")
-                references.append({
-                    "source": source,
-                    "score": score,
-                    "content": content,
-                    "id": match.get("id")
-                })
-                total_score += score
-            
-            num_chunks = len(context_blocks)
+            num_chunks = len(optimized_chunks)
             
             # Skip LLM if no valid chunks remain
             if num_chunks == 0:
                 return {
                     "answer": "The retrieved documentation does not contain enough information.",
                     "confidence": 0.0,
-                    "context_chunks": 0,
+                    "retrieval": retrieval_stats,
                     "sources": [],
                     "hallucination_check": "BLOCKED"
                 }
                 
+            # Build Structured Context
+            context_blocks = []
+            references = []
+            total_score = 0.0
+            
+            for m in optimized_chunks:
+                score = m.get("score", 0.0)
+                payload = m.get("payload", {})
+                content = payload.get("content", "").strip()
+                meta = payload.get("metadata", {})
+                source = meta.get("source", "Unknown Document")
+                
+                context_block = f"==========\nDocument\n{source}\n==========\n{content}\n"
+                context_blocks.append(context_block)
+                
+                references.append({
+                    "source": source,
+                    "score": score,
+                    "rerank_score": m.get("rerank_score", score),
+                    "content": content,
+                    "id": m.get("id")
+                })
+                total_score += score
+                
             confidence = total_score / num_chunks
-            context_str = "\n\n".join(context_blocks)
+            context_str = "\n".join(context_blocks)
             
             # Construct Prompt
             augmented_prompt = self.prompt_builder.build(query=query, context=context_str)
@@ -167,7 +168,7 @@ class RAGService:
             return {
                 "answer": answer,
                 "confidence": confidence,
-                "context_chunks": num_chunks,
+                "retrieval": retrieval_stats,
                 "sources": references,
                 "prompt_rendered": augmented_prompt,
                 "hallucination_check": hallucination_status
@@ -177,7 +178,9 @@ class RAGService:
             return {
                 "answer": f"I encountered an error retrieving or constructing the answer. Please verify connections. Details: {e}",
                 "confidence": 0.0,
-                "context_chunks": 0,
+                "retrieval": {
+                    "retrieved": 0, "filtered": 0, "duplicates_removed": 0, "reranked": 0, "used": 0
+                },
                 "sources": [],
                 "prompt_rendered": "",
                 "hallucination_check": "ERROR"
