@@ -1,95 +1,133 @@
-from typing import Dict, Any, List
+from app.services.graph.graph_analysis_service import GraphAnalysisService
+from app.services.ai.rag_service import RAGService
 
-class FailureAnalysis:
+
+class FailureAnalysisService:
+
     def __init__(self):
+        self.rag = RAGService()
+
+    def analyze(self, resource_id: str):
+
+        graph_service = GraphAnalysisService()
+
         try:
-            from app.services.graph.neo4j_service import Neo4jService
-            from app.services.graph.criticality_service import CriticalityService
-            self.neo4j = Neo4jService()
-            self.criticality = CriticalityService()
-            self.has_services = True
-        except ImportError:
-            self.has_services = False
 
-    def analyze(self, resource_id: str) -> Dict[str, Any]:
-        """
-        Analyzes the failure impact of a given cloud resource using the Neo4j graph.
-        """
-        
-        # 1. Fetch Topology Data (Mocking for now to match the user's expected payload format,
-        # but in a real setup we'd call self.neo4j.get_blast_radius(resource_id) etc.)
-        
-        # We simulate the graph lookup:
-        upstream = []
-        downstream = ["payment-api", "orders-api", "billing-service"]
-        blast_radius = 12
-        criticality_score = 9
-        severity = "CRITICAL"
-        
-        if self.has_services:
-            try:
-                # If these methods existed on the real classes:
-                # blast_res = self.neo4j.get_blast_radius(resource_id)
-                # downstream = self.neo4j.get_downstream(resource_id)
-                # criticality_score = self.criticality.get_score(resource_id)
-                pass
-            except Exception:
-                pass
-                
-        # 2. Derive Business Impact
-        business_impact = []
-        if criticality_score >= 8:
-            business_impact.extend([
-                "Application database unavailable",
-                "Dependent APIs return errors",
-                "Customer transactions fail",
-                "Revenue loss estimated"
-            ])
-        else:
-            business_impact.extend([
-                "Performance degradation",
-                "Background jobs may fail"
-            ])
-            severity = "MEDIUM"
+            #
+            # Downstream
+            #
 
-        # 3. Formulate Recovery Recommendations
-        recommendations = []
-        likely_causes = []
-        
-        if "db" in resource_id.lower() or "rds" in resource_id.lower():
-            likely_causes.extend(["Storage Failure", "Memory Exhaustion", "AZ Failure"])
-            recommendations.extend([
-                "Immediate: Promote Read Replica",
-                "Immediate: Restart Database if hung",
-                "Short-Term: Restore from latest snapshot",
-                "Long-Term: Enable Multi-AZ",
-                "Long-Term: Configure automated failover routing"
-            ])
-        elif "vpc" in resource_id.lower():
-            likely_causes.extend(["Configuration Error", "Route Table Misconfiguration", "Service Outage"])
-            recommendations.extend([
-                "Immediate: Verify Route Tables and IGW",
-                "Long-Term: Multi-VPC Transit Gateway topology"
-            ])
+            downstream = graph_service.downstream_dependencies(resource_id)
+
+            downstream_resources = [
+
+                {
+
+                    "id": r["id"],
+
+                    "type": r.get("labels", ["Resource"])[0] if r.get("labels") else "Resource"
+
+                }
+
+                for r in downstream
+
+            ]
+
+            #
+            # Upstream
+            #
+
+            upstream = graph_service.upstream_dependencies(resource_id)
+
+            upstream_resources = [
+
+                {
+
+                    "id": r["id"],
+
+                    "type": r.get("labels", ["Resource"])[0] if r.get("labels") else "Resource"
+
+                }
+
+                for r in upstream
+
+            ]
+
+            #
+            # Blast Radius
+            #
+
+            blast_data = graph_service.blast_radius(resource_id)
+            blast_radius = blast_data.get("impacted", 0)
+
+        finally:
+
+            graph_service.close()
+
+        #
+        # Risk
+        #
+
+        if blast_radius >= 10:
+
+            risk = "CRITICAL"
+
+        elif blast_radius >= 5:
+
+            risk = "HIGH"
+
+        elif blast_radius >= 2:
+
+            risk = "MEDIUM"
+
         else:
-            likely_causes.extend(["Network Failure", "CPU Saturation", "Security Group Misconfiguration"])
-            recommendations.extend([
-                "Immediate: Restart Service",
-                "Short-Term: Revert recent configuration changes",
-                "Long-Term: Deploy behind Auto Scaling Group"
-            ])
+
+            risk = "LOW"
+
+        #
+        # AWS Best Practices
+        #
+
+        rag = self.rag.query_rag(
+
+            f"What are AWS best practices if {resource_id} fails?",
+
+            limit=5
+
+        )
+
+        #
+        # Recommendations
+        #
+
+        recommendations = [
+
+            "Enable Multi-AZ.",
+
+            "Enable Automated Backups.",
+
+            "Review Disaster Recovery.",
+
+            "Enable CloudWatch Alarms.",
+
+            "Document Recovery Runbook."
+
+        ]
 
         return {
+
             "resource": resource_id,
-            "resource_type": "Unknown", # Would be fetched from DB/Graph
-            "severity": severity,
-            "criticality_score": criticality_score,
+
+            "risk": risk,
+
             "blast_radius": blast_radius,
-            "estimated_recovery": "30 minutes" if severity == "CRITICAL" else "5 minutes",
-            "business_impact": business_impact,
-            "upstream_dependencies": upstream,
-            "downstream_dependencies": downstream,
-            "affected_services": downstream,
-            "likely_root_causes": likely_causes,
-            "recommendations": recommendations
+
+            "upstream": upstream_resources,
+
+            "downstream": downstream_resources,
+
+            "recommendations": recommendations,
+
+            "best_practices": rag["answer"]
+
         }

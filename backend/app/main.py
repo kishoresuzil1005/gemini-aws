@@ -1215,6 +1215,9 @@ app.include_router(architecture_score_router)
 from app.routes.architecture_recommendation import router as architecture_recommendation_router
 app.include_router(architecture_recommendation_router)
 
+from app.routes.failure_analysis import router as failure_analysis_router
+app.include_router(failure_analysis_router)
+
 from app.api.routes import terminal
 
 app.include_router(
