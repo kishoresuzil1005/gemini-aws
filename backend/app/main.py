@@ -1239,6 +1239,9 @@ app.include_router(icon_mapper_router)
 from app.routes.layout import router as layout_router
 app.include_router(layout_router)
 
+from app.routes.svg import router as svg_router
+app.include_router(svg_router)
+
 from app.api.routes import terminal
 
 app.include_router(
