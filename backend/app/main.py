@@ -1206,6 +1206,9 @@ app.include_router(
     tags=["AI Architect"]
 )
 
+from app.routes.architecture_review import router as architecture_review_router
+app.include_router(architecture_review_router)
+
 from app.api.routes import terminal
 
 app.include_router(

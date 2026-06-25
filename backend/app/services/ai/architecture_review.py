@@ -1,143 +1,192 @@
-from typing import Dict, Any, List
+from sqlalchemy import text
 
-class ArchitectureReview:
+from app.database import SessionLocal
+from app.database_neo4j import driver
+
+from app.services.ai.rag_service import RAGService
+
+
+class ArchitectureReviewService:
+
     def __init__(self):
+        self.rag = RAGService()
+
+    def review(self):
+
+        db = SessionLocal()
+
         try:
-            from app.services.graph.neo4j_service import Neo4jService
-            from app.services.graph.criticality_service import CriticalityService
-            from app.services.aws.ec2_instances_service import EC2InstanceService
-            from app.services.ai.architecture_scorer import ArchitectureScorer
-            from app.services.ai.well_architected_review import WellArchitectedReview
-            from app.services.ai.architecture_recommendation import ArchitectureRecommendation
-            # Assume other inventory services exist, we will mock them if they don't
-            self.neo4j = Neo4jService()
-            self.criticality = CriticalityService()
-            self.ec2_service = EC2InstanceService()
-            self.scorer = ArchitectureScorer()
-            self.wa_review = WellArchitectedReview()
-            self.recommender = ArchitectureRecommendation()
-            self.has_services = True
-        except ImportError:
-            self.has_services = False
 
-    def review(self) -> Dict[str, Any]:
-        """
-        Reviews the actual AWS environment by calling inventory and graph services,
-        then detecting SPOFs, risks, and missing best practices.
-        """
-        
-        # 1. Collect Inventory (mocking some parts if real services are not fully available yet)
-        inventory = {
-            "ec2": 6,
-            "rds": 2,
-            "lambda": 9,
-            "s3": 14,
-            "vpc": 22
-        }
-        
-        try:
-            if self.has_services:
-                instances = self.ec2_service.get_all_instances()
-                if instances:
-                    inventory["ec2"] = len(instances)
-        except Exception:
-            pass
+            #
+            # PostgreSQL Summary
+            #
 
-        # 2. Graph Analysis & Dependencies
-        graph_context = {
-            "nodes_analyzed": sum(inventory.values()),
-            "relationships_found": 18,
-            "orphan_resources": 3
-        }
+            total_resources = db.execute(
+                text("SELECT COUNT(*) FROM resource_nodes")
+            ).scalar()
 
-        # 3. Criticality Analysis
-        criticality_context = {
-            "high_risk_assets": 2,
-            "average_blast_radius": 3.4
-        }
+            resource_types = db.execute(
+                text("""
+                SELECT resource_type,
+                       COUNT(*) AS total
+                FROM resource_nodes
+                GROUP BY resource_type
+                ORDER BY total DESC
+                """)
+            ).fetchall()
 
-        # Detect Findings
-        spofs = []
-        security_findings = []
-        cost_findings = []
-        reliability_findings = []
-        network_findings = []
-        monitoring_findings = []
-        
-        # Hardcoded logic simulating rule-based detections based on typical inventory state
-        if inventory["ec2"] > 0 and inventory.get("auto_scaling", 0) == 0:
-            spofs.append("Single EC2 instances without Auto Scaling detected.")
-            reliability_findings.append("No Auto Scaling Group detected for EC2 workloads.")
-            
-        if inventory["rds"] > 0:
-            spofs.append("RDS is running without Multi-AZ configuration.")
-            
-        security_findings.append("CloudTrail is not configured across all regions.")
-        security_findings.append("Some S3 buckets lack default encryption.")
-        
-        cost_findings.append("2 idle EC2 instances detected.")
-        cost_findings.append("Unused EBS volumes found.")
-        
-        monitoring_findings.append("No CloudWatch Alarms configured for RDS CPU utilization.")
-        
-        network_findings.append("VPC Default Security Group has open rules.")
-        
-        findings_dict = {
-            "spofs": spofs,
-            "security_findings": security_findings,
-            "cost_findings": cost_findings,
-            "reliability_findings": reliability_findings,
-            "network_findings": network_findings,
-            "monitoring_findings": monitoring_findings
-        }
-        
-        score_data = {}
-        if hasattr(self, 'scorer'):
-            score_data = self.scorer.score(inventory, findings_dict)
-            
-        wa_data = {}
-        if hasattr(self, 'wa_review'):
-            wa_data = self.wa_review.generate(inventory, graph_context, findings_dict, score_data)
-            
-        recs_data = []
-        if hasattr(self, 'recommender'):
-            recs_data = self.recommender.generate(inventory, findings_dict, score_data)
-        
-        # 4. Generate Summary for the API
-        summary = {
-            "resources": sum(inventory.values()),
-            "relationships": graph_context.get("relationships_found", 0),
-            "critical_assets": criticality_context.get("high_risk_assets", 0),
-            "accounts": 1,
-            "regions": 3
-        }
-        
-        flat_findings = spofs + security_findings + cost_findings + reliability_findings + network_findings + monitoring_findings
-        
-        # Hardcoded recommendations to match prompt
-        default_recs = [
-            "Enable Multi-AZ for production databases.",
-            "Review Security Group rules.",
-            "Enable CloudWatch monitoring.",
-            "Enable CloudTrail auditing.",
-            "Review IAM least-privilege permissions."
-        ]
+            #
+            # Neo4j Summary
+            #
 
-        return {
-            "summary": summary,
-            "inventory": inventory,
-            "graph": graph_context,
-            "criticality": criticality_context,
-            "findings": flat_findings,
-            "recommendations": default_recs,
-            "overall_status": "GOOD" if len(flat_findings) < 5 else "NEEDS_IMPROVEMENT",
-            "spofs": spofs,
-            "security_findings": security_findings,
-            "cost_findings": cost_findings,
-            "reliability_findings": reliability_findings,
-            "network_findings": network_findings,
-            "monitoring_findings": monitoring_findings,
-            "scoring": score_data,
-            "well_architected": wa_data,
-            "recommendations_data": recs_data
-        }
+            total_nodes = 0
+            total_relationships = 0
+            critical_assets = []
+
+            if driver:
+                with driver.session() as session:
+
+                    total_nodes = session.run(
+                        """
+                        MATCH (n)
+                        RETURN count(n) AS total
+                        """
+                    ).single()["total"]
+
+                    total_relationships = session.run(
+                        """
+                        MATCH ()-[r]->()
+                        RETURN count(r) AS total
+                        """
+                    ).single()["total"]
+
+                #
+                # Critical Assets
+                #
+
+                with driver.session() as session:
+
+                    result = session.run("""
+                    MATCH (n)
+
+                    OPTIONAL MATCH (a)-[]->(n)
+                    WITH n,count(a) AS upstream
+
+                    OPTIONAL MATCH (n)-[]->(b)
+                    WITH n,upstream,count(b) AS downstream
+
+                    RETURN
+                        n.id AS id,
+                        labels(n)[0] AS type,
+                        upstream,
+                        downstream,
+                        upstream+downstream AS score
+
+                    ORDER BY score DESC
+
+                    LIMIT 10
+                    """)
+
+                    for row in result:
+
+                        critical_assets.append({
+
+                            "resource": row["id"],
+
+                            "type": row["type"],
+
+                            "score": row["score"]
+
+                        })
+
+            #
+            # AWS Best Practices
+            #
+
+            rag = self.rag.query_rag(
+                "AWS architecture review best practices",
+                limit=5
+            )
+
+            #
+            # Findings
+            #
+
+            findings = []
+
+            if total_resources == 0:
+                findings.append(
+                    "No cloud resources discovered."
+                )
+
+            if total_relationships == 0:
+                findings.append(
+                    "No resource relationships found."
+                )
+
+            if total_resources > 0:
+                findings.append(
+                    f"{total_resources} cloud resources discovered."
+                )
+
+            #
+            # Recommendations
+            #
+
+            recommendations = [
+
+                "Enable CloudTrail auditing.",
+
+                "Enable CloudWatch monitoring.",
+
+                "Review Security Groups.",
+
+                "Review IAM permissions.",
+
+                "Enable Multi-AZ for production databases."
+
+            ]
+
+            return {
+
+                "summary": {
+
+                    "resources": total_resources,
+
+                    "relationships": total_relationships,
+
+                    "critical_assets": len(critical_assets)
+
+                },
+
+                "resource_types": [
+
+                    {
+
+                        "type": row.resource_type,
+
+                        "count": row.total
+
+                    }
+
+                    for row in resource_types
+
+                ],
+
+                "critical_assets": critical_assets,
+
+                "findings": findings,
+
+                "recommendations": recommendations,
+
+                "best_practices": rag["answer"]
+
+            }
+
+        finally:
+
+            db.close()
+
+
+# Backward-compatible alias for architecture_service.py
+ArchitectureReview = ArchitectureReviewService
