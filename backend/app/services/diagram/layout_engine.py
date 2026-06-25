@@ -1,38 +1,28 @@
-from app.services.diagram.aws_icon_mapper import AWSIconMapper
+from app.services.diagram.architecture_model_builder import (
+    ArchitectureModelBuilder
+)
 
 
 class LayoutEngine:
+    """
+    Computes positions for architecture nodes.
+
+    Responsible ONLY for layout.
+    """
 
     #
-    # Canvas
+    # Layout Constants
     #
-    CANVAS_WIDTH = 1800
-    CANVAS_HEIGHT = 1200
 
-    #
-    # Layer Size
-    #
-    LAYER_WIDTH = 1600
-    LAYER_HEIGHT = 150
+    NODE_WIDTH = 180
+    NODE_HEIGHT = 80
 
-    #
-    # Resource Size
-    #
-    NODE_WIDTH = 90
-    NODE_HEIGHT = 90
+    HORIZONTAL_SPACING = 70
+    VERTICAL_SPACING = 120
 
-    #
-    # Margins
-    #
-    START_X = 120
-    START_Y = 60
+    LEFT_MARGIN = 80
+    TOP_MARGIN = 80
 
-    HORIZONTAL_GAP = 170
-    VERTICAL_GAP = 170
-
-    #
-    # Layer order
-    #
     LAYER_ORDER = [
 
         "Internet",
@@ -55,29 +45,21 @@ class LayoutEngine:
 
     def __init__(self):
 
-        self.mapper = AWSIconMapper()
+        self.builder = ArchitectureModelBuilder()
 
     def build(self):
 
-        architecture = self.mapper.build()
+        architecture = self.builder.build()
 
-        layout = {
+        positioned_nodes = []
 
-            "canvas": {
+        max_width = 0
 
-                "width": self.CANVAS_WIDTH,
+        current_y = self.TOP_MARGIN
 
-                "height": self.CANVAS_HEIGHT
-
-            },
-
-            "layers": [],
-
-            "edges": architecture["edges"]
-
-        }
-
-        current_y = self.START_Y
+        #
+        # Layout one layer at a time
+        #
 
         for layer_name in self.LAYER_ORDER:
 
@@ -86,40 +68,46 @@ class LayoutEngine:
             if not resources:
                 continue
 
-            layer = {
-
-                "name": layer_name,
-
-                "x": 60,
-
-                "y": current_y,
-
-                "width": self.LAYER_WIDTH,
-
-                "height": self.LAYER_HEIGHT,
-
-                "resources": []
-
-            }
-
-            current_x = self.START_X
+            current_x = self.LEFT_MARGIN
 
             for resource in resources:
 
-                node = resource.copy()
+                resource["x"] = current_x
 
-                node["x"] = current_x
-                node["y"] = current_y + 35
+                resource["y"] = current_y
 
-                node["width"] = self.NODE_WIDTH
-                node["height"] = self.NODE_HEIGHT
+                resource["width"] = self.NODE_WIDTH
 
-                layer["resources"].append(node)
+                resource["height"] = self.NODE_HEIGHT
 
-                current_x += self.HORIZONTAL_GAP
+                positioned_nodes.append(resource)
 
-            layout["layers"].append(layer)
+                current_x += (
+                    self.NODE_WIDTH
+                    + self.HORIZONTAL_SPACING
+                )
 
-            current_y += self.VERTICAL_GAP
+            max_width = max(max_width, current_x)
 
-        return layout
+            current_y += (
+                self.NODE_HEIGHT
+                + self.VERTICAL_SPACING
+            )
+
+        canvas = {
+
+            "width": max_width + self.LEFT_MARGIN,
+
+            "height": current_y + self.TOP_MARGIN
+
+        }
+
+        return {
+
+            "canvas": canvas,
+
+            "nodes": positioned_nodes,
+
+            "edges": architecture["edges"]
+
+        }

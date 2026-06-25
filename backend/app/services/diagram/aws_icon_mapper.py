@@ -1,269 +1,76 @@
 from pathlib import Path
 
-from app.services.diagram.layer_builder import LayerBuilder
-
 
 class AWSIconMapper:
+    """
+    Maps AWS resource types to official AWS Architecture icons.
+    """
 
-    #
-    # Root folder containing AWS icons
-    #
-    ICON_ROOT = Path("assets/aws-icons")
+    BASE = "assets/aws-icons"
 
-    #
-    # Possible filenames for each AWS service
-    #
-    SERVICE_ALIASES = {
+    ICONS = {
 
-        # ---------------- Compute ----------------
+        #
+        # Compute
+        #
 
-        "EC2": [
-            "amazon-ec2",
-            "ec2"
-        ],
+        "EC2": "compute/ec2.svg",
+        "Lambda": "compute/lambda.svg",
+        "ECS": "compute/ecs.svg",
+        "EKS": "compute/eks.svg",
 
-        "Lambda": [
-            "aws-lambda",
-            "lambda"
-        ],
+        #
+        # Database
+        #
 
-        "ECS": [
-            "amazon-ecs",
-            "ecs"
-        ],
+        "RDS": "database/rds.svg",
+        "DynamoDB": "database/dynamodb.svg",
 
-        "EKS": [
-            "amazon-eks",
-            "eks"
-        ],
+        #
+        # Networking
+        #
 
-        "AutoScaling": [
-            "amazon-ec2-auto-scaling",
-            "auto-scaling"
-        ],
+        "VPC": "networking/vpc.svg",
+        "Subnet": "networking/subnet.svg",
+        "SecurityGroup": "networking/security-group.svg",
+        "InternetGateway": "networking/internet-gateway.svg",
+        "ALB": "networking/alb.svg",
 
-        "AppRunner": [
-            "aws-app-runner"
-        ],
+        #
+        # Storage
+        #
 
-        "Batch": [
-            "aws-batch"
-        ],
+        "S3": "storage/s3.svg",
+        "EBS": "storage/ebs.svg",
+        "EFS": "storage/efs.svg",
 
-        # ---------------- Database ----------------
+        #
+        # Security
+        #
 
-        "RDS": [
-            "amazon-rds",
-            "rds"
-        ],
+        "IAM": "security/iam.svg",
+        "KMS": "security/kms.svg",
+        "GuardDuty": "security/guardduty.svg",
 
-        "DynamoDB": [
-            "amazon-dynamodb",
-            "dynamodb"
-        ],
+        #
+        # Monitoring
+        #
 
-        "Redshift": [
-            "amazon-redshift",
-            "redshift"
-        ],
+        "CloudWatch": "monitoring/cloudwatch.svg",
+        "CloudTrail": "monitoring/cloudtrail.svg",
+        "SNS": "monitoring/sns.svg"
 
-        "ElastiCache": [
-            "amazon-elasticache",
-            "elasticache"
-        ],
-
-        # ---------------- Storage ----------------
-
-        "S3": [
-            "amazon-s3",
-            "s3"
-        ],
-
-        "EBS": [
-            "amazon-ebs",
-            "ebs"
-        ],
-
-        "EFS": [
-            "amazon-efs",
-            "efs"
-        ],
-
-        "FSx": [
-            "amazon-fsx",
-            "fsx"
-        ],
-
-        # ---------------- Networking ----------------
-
-        "VPC": [
-            "amazon-vpc",
-            "vpc"
-        ],
-
-        "Subnet": [
-            "subnet"
-        ],
-
-        "SecurityGroup": [
-            "security-group",
-            "securitygroup"
-        ],
-
-        "Route53": [
-            "amazon-route-53",
-            "route53"
-        ],
-
-        "CloudFront": [
-            "amazon-cloudfront",
-            "cloudfront"
-        ],
-
-        "InternetGateway": [
-            "internet-gateway"
-        ],
-
-        "NATGateway": [
-            "nat-gateway"
-        ],
-
-        "ALB": [
-            "application-load-balancer",
-            "alb"
-        ],
-
-        "NLB": [
-            "network-load-balancer",
-            "nlb"
-        ],
-
-        # ---------------- Security ----------------
-
-        "IAM": [
-            "amazon-iam",
-            "iam"
-        ],
-
-        "KMS": [
-            "amazon-kms",
-            "kms"
-        ],
-
-        "SecretsManager": [
-            "amazon-secrets-manager",
-            "secrets-manager"
-        ],
-
-        "GuardDuty": [
-            "amazon-guardduty",
-            "guardduty"
-        ],
-
-        "SecurityHub": [
-            "amazon-security-hub",
-            "security-hub"
-        ],
-
-        "Inspector": [
-            "amazon-inspector",
-            "inspector"
-        ],
-
-        "WAF": [
-            "amazon-waf",
-            "waf"
-        ],
-
-        # ---------------- Monitoring ----------------
-
-        "CloudWatch": [
-            "amazon-cloudwatch",
-            "cloudwatch"
-        ],
-
-        "CloudTrail": [
-            "amazon-cloudtrail",
-            "cloudtrail"
-        ],
-
-        "SNS": [
-            "amazon-sns",
-            "sns"
-        ],
-
-        "SQS": [
-            "amazon-sqs",
-            "sqs"
-        ],
-
-        "EventBridge": [
-            "amazon-eventbridge",
-            "eventbridge"
-        ]
     }
 
-    def __init__(self):
+    DEFAULT_ICON = "general/resource.svg"
 
-        self.architecture_builder = ArchitectureModelBuilder()
+    def get_icon(self, resource_type: str):
 
-        self.icon_cache = self._scan_icons()
-
-    #
-    # Scan icon folder once
-    #
-    def _scan_icons(self):
-
-        cache = {}
-
-        if not self.ICON_ROOT.exists():
-            return cache
-
-        for file in self.ICON_ROOT.rglob("*"):
-
-            if file.is_file():
-
-                cache[file.stem.lower()] = str(file)
-
-        return cache
-
-    #
-    # Find matching icon
-    #
-    def find_icon(self, resource_type):
-
-        aliases = self.SERVICE_ALIASES.get(
-
+        relative = self.ICONS.get(
             resource_type,
-
-            [resource_type.lower()]
-
+            self.DEFAULT_ICON
         )
 
-        for alias in aliases:
-
-            path = self.icon_cache.get(alias.lower())
-
-            if path:
-                return path
-
-        return None
-
-    #
-    # Build architecture with icons
-    #
-    def build(self):
-
-        architecture = self.architecture_builder.build()
-
-        for resources in architecture["layers"].values():
-
-            for resource in resources:
-
-                resource["icon"] = self.find_icon(
-
-                    resource["type"]
-
-                )
-
-        return architecture
+        return str(
+            Path(self.BASE) / relative
+        )

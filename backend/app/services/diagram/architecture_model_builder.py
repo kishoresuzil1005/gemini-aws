@@ -1,5 +1,6 @@
 from app.services.diagram.resource_aggregator import ResourceAggregator
 from app.services.diagram.layer_builder import LayerBuilder
+from app.services.diagram.aws_icon_mapper import AWSIconMapper
 
 
 class ArchitectureModelBuilder:
@@ -10,6 +11,7 @@ class ArchitectureModelBuilder:
     def __init__(self):
         self.aggregator = ResourceAggregator()
         self.layer_builder = LayerBuilder()
+        self.icon_mapper = AWSIconMapper()
 
     def build(self):
 
@@ -55,6 +57,7 @@ class ArchitectureModelBuilder:
             )
 
             resource["layer"] = layer
+            resource["icon"] = self.icon_mapper.get_icon(resource["type"])
 
             architecture["layers"][layer].append(resource)
 

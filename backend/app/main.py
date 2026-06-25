@@ -1248,6 +1248,9 @@ app.include_router(layout_router)
 from app.routes.svg import router as svg_router
 app.include_router(svg_router)
 
+from app.routes.drawio import router as drawio_router
+app.include_router(drawio_router)
+
 from app.api.routes import terminal
 
 app.include_router(
