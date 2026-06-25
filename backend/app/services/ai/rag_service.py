@@ -6,6 +6,7 @@ from app.services.ai.document_loader import DocumentLoader
 from app.services.ai.ollama_service import OllamaService
 from app.services.ai.prompt_builder import PromptBuilder
 from app.services.ai.retrieval_optimizer import RetrievalOptimizer
+from app.services.ai.category_mapper import CategoryMapper
 
 
 class RAGService:
@@ -16,6 +17,7 @@ class RAGService:
         self.ollama_service = OllamaService()
         self.prompt_builder = PromptBuilder()
         self.retrieval_optimizer = RetrievalOptimizer(min_score=0.65)
+        self.category_mapper = CategoryMapper()
 
     def index_document(self, title: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -96,12 +98,29 @@ class RAGService:
             INITIAL_RETRIEVAL = 20
             FINAL_CONTEXT = limit
             
+            # Detect Intent and Categories
+            intent = self.prompt_builder.detect_intent(query)
+            target_categories = self.category_mapper.detect_categories(intent, query)
+            
             # Generate search query embedding
             query_vector = self.embedding_service.get_embedding(query)
             
-            # Retrieve nearest neighbors
-            matches = self.qdrant_service.search_similar(query_vector, limit=INITIAL_RETRIEVAL)
+            # Retrieve nearest neighbors in primary categories
+            matches = self.qdrant_service.search_similar(query_vector, limit=INITIAL_RETRIEVAL, categories=target_categories)
             
+            # Fallback Strategy if insufficient results
+            if len(matches) < 5:
+                fallback_cats = self.category_mapper.get_fallback_categories(target_categories)
+                if fallback_cats:
+                    target_categories.extend(fallback_cats)
+                    fallback_matches = self.qdrant_service.search_similar(query_vector, limit=INITIAL_RETRIEVAL, categories=fallback_cats)
+                    # Merge unique
+                    seen_ids = {m.get("id") for m in matches}
+                    for fm in fallback_matches:
+                        if fm.get("id") not in seen_ids:
+                            matches.append(fm)
+                            seen_ids.add(fm.get("id"))
+                            
             # Optimize Context
             optimization_result = self.retrieval_optimizer.optimize(query, matches, final_k=FINAL_CONTEXT)
             optimized_chunks = optimization_result["optimized_chunks"]
@@ -114,6 +133,12 @@ class RAGService:
                 return {
                     "answer": "The retrieved documentation does not contain enough information.",
                     "confidence": 0.0,
+                    "search": {
+                        "categories": target_categories,
+                        "documents_scanned": len(matches), # Approximation based on matches found
+                        "chunks_found": len(matches),
+                        "chunks_used": 0
+                    },
                     "retrieval": retrieval_stats,
                     "sources": [],
                     "hallucination_check": "BLOCKED"
@@ -168,6 +193,12 @@ class RAGService:
             return {
                 "answer": answer,
                 "confidence": confidence,
+                "search": {
+                    "categories": target_categories,
+                    "documents_scanned": len(matches),
+                    "chunks_found": len(matches),
+                    "chunks_used": num_chunks
+                },
                 "retrieval": retrieval_stats,
                 "sources": references,
                 "prompt_rendered": augmented_prompt,
@@ -178,6 +209,9 @@ class RAGService:
             return {
                 "answer": f"I encountered an error retrieving or constructing the answer. Please verify connections. Details: {e}",
                 "confidence": 0.0,
+                "search": {
+                    "categories": [], "documents_scanned": 0, "chunks_found": 0, "chunks_used": 0
+                },
                 "retrieval": {
                     "retrieved": 0, "filtered": 0, "duplicates_removed": 0, "reranked": 0, "used": 0
                 },

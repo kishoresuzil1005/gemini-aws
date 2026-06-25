@@ -86,12 +86,26 @@ class QdrantService:
             }
         return True
 
-    def search_similar(self, query_vector: List[float], limit: int = 5) -> List[Dict[str, Any]]:
+    def search_similar(self, query_vector: List[float], limit: int = 5, categories: List[str] = None) -> List[Dict[str, Any]]:
         if self.client is not None:
             try:
+                from qdrant_client.http.models import Filter, FieldCondition, MatchAny
+                
+                query_filter = None
+                if categories:
+                    query_filter = Filter(
+                        must=[
+                            FieldCondition(
+                                key="metadata.category",
+                                match=MatchAny(any=categories)
+                            )
+                        ]
+                    )
+                    
                 response = self.client.query_points(
                     collection_name=self.collection_name,
                     query=query_vector,
+                    query_filter=query_filter,
                     limit=limit
                 )
                 results = response.points
@@ -113,6 +127,14 @@ class QdrantService:
         qv_norm = np.linalg.norm(qv)
 
         for k, item in self._local_storage.items():
+            payload = item.get("payload", {})
+            metadata = payload.get("metadata", {})
+            item_category = metadata.get("category")
+            
+            # Filter by categories if provided
+            if categories and item_category not in categories:
+                continue
+                
             v = np.array(item["vector"])
             v_norm = np.linalg.norm(v)
             if qv_norm > 0 and v_norm > 0:
@@ -122,7 +144,7 @@ class QdrantService:
             results.append({
                 "id": k,
                 "score": score,
-                "payload": item["payload"]
+                "payload": payload
             })
 
         results.sort(key=lambda x: x["score"], reverse=True)

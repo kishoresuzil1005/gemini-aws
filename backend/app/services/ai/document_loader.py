@@ -27,6 +27,7 @@ class DocumentLoader:
             return chunks
 
         for root, _, files in os.walk(directory_path):
+            category = os.path.basename(root)
             for file in files:
                 if file.endswith((".txt", ".md", ".json", ".pdf")):
 
@@ -34,14 +35,14 @@ class DocumentLoader:
 
                     print(f"[LOADING] {file}")
 
-                    file_chunks = self.load_and_split_file(file_path)
+                    file_chunks = self.load_and_split_file(file_path, category=category)
 
                     print(f"[CHUNKS] {file} -> {len(file_chunks)}")
 
                     chunks.extend(file_chunks)
         return chunks
 
-    def load_and_split_file(self, file_path: str) -> List[Dict[str, Any]]:
+    def load_and_split_file(self, file_path: str, category: str = "default") -> List[Dict[str, Any]]:
         try:
             content = ""
             if file_path.endswith(".pdf"):
@@ -53,7 +54,7 @@ class DocumentLoader:
                     content = f.read()
             
             filename = os.path.basename(file_path)
-            return self.split_text(content, source=filename)
+            return self.split_text(content, source=filename, extra_metadata={"category": category})
         except Exception as e:
             print(f"[DOCUMENT LOADER] Error reading file {file_path}: {e}")
             return []
