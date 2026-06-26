@@ -6,6 +6,7 @@ from app.services.diagram.vpc_az_builder import VPCAZBuilder
 from app.services.diagram.relationship_analyzer import RelationshipAnalyzer
 from app.services.diagram.aws_icon_mapper import AWSIconMapper
 from app.services.diagram.relationship_builder import RelationshipBuilder
+from app.services.diagram.grid_engine import GridEngine
 
 
 class SmartLayoutEngine:
@@ -39,6 +40,8 @@ class SmartLayoutEngine:
         self.icon_mapper = AWSIconMapper()
 
         self.relationship_builder = RelationshipBuilder()
+
+        self.grid = GridEngine()
 
     def build(self):
 
@@ -132,23 +135,18 @@ class SmartLayoutEngine:
                 orphan_y += self.VERTICAL_SPACING
 
         #
-        # Canvas
+        # Grid Engine positioning
         #
 
-        max_x = max(
-            (n["x"] for n in nodes),
-            default=0
-        )
+        grid_out = self.grid.build(nodes)
 
-        max_y = max(
-            (n["y"] for n in nodes),
-            default=0
-        )
+        nodes = grid_out["nodes"]
+        canvas = grid_out["canvas"]
 
         layout = {
             "canvas": {
-                "width": max_x + 400,
-                "height": max_y + 250
+                "width": canvas["width"],
+                "height": canvas["height"]
             },
             "nodes": nodes,
             "edges": edges,
