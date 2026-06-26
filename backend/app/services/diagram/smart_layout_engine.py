@@ -25,15 +25,6 @@ class SmartLayoutEngine:
     Smart Layout
     """
 
-    NODE_WIDTH = 180
-    NODE_HEIGHT = 110
-
-    HORIZONTAL_SPACING = 220
-    VERTICAL_SPACING = 140
-
-    LEFT_MARGIN = 120
-    TOP_MARGIN = 80
-
     def __init__(self):
 
         self.vpc_builder = VPCAZBuilder()
@@ -79,8 +70,6 @@ class SmartLayoutEngine:
 
         visited = set()
 
-        current_x = self.LEFT_MARGIN
-
         #
         # Layout each VPC
         #
@@ -93,32 +82,17 @@ class SmartLayoutEngine:
                 continue
 
             self._layout_tree(
-
                 node=vpc_node,
-
                 parent_children=parent_children,
-
                 node_lookup=node_lookup,
-
                 nodes=nodes,
-
                 visited=visited,
-
-                x=current_x,
-
-                y=self.TOP_MARGIN,
-
                 hierarchy_layers=hierarchy_layers
-
             )
-
-            current_x += 900
 
         #
         # Layout all remaining resources that were not placed
         #
-
-        orphan_x = self.LEFT_MARGIN
 
         for node in graph["nodes"]:
 
@@ -131,15 +105,8 @@ class SmartLayoutEngine:
                 node_lookup=node_lookup,
                 nodes=nodes,
                 visited=visited,
-                x=orphan_x,
-                y=self.TOP_MARGIN,
                 hierarchy_layers=hierarchy_layers
             )
-
-            orphan_x += self.HORIZONTAL_SPACING
-
-            if orphan_x > 3000:
-                orphan_x = self.LEFT_MARGIN
 
         #
         # Grid Engine positioning
@@ -281,118 +248,58 @@ class SmartLayoutEngine:
         return layout
 
     def _layout_tree(
-
         self,
-
         node,
-
         parent_children,
-
         node_lookup,
-
         nodes,
-
         visited,
-
-        x,
-
-        y,
-
         hierarchy_layers
-
     ):
 
         if node["id"] in visited:
-
             return
 
         visited.add(node["id"])
 
         layer = hierarchy_layers.get(node["id"], 0)
-        actual_y = self.TOP_MARGIN + layer * self.VERTICAL_SPACING
 
         nodes.append({
-
             "id": node["id"],
-
             "type": node["type"],
-
             "display_name": node.get("name") or node["type"],
-
-            "icon": self.icon_mapper.get_icon(
-
-                node["type"]
-
-            ),
-
-            "x": x,
-
-            "y": actual_y,
-
-            "width": self.NODE_WIDTH,
-
-            "height": self.NODE_HEIGHT,
-
-            "row": layer
-
+            "icon": self.icon_mapper.get_icon(node["type"]),
+            
+            # Layout metadata only
+            "row": layer,
+            "column": None,
+            
+            # GridEngine will assign these
+            "x": 0,
+            "y": 0,
+            "depth": layer
         })
 
         children = parent_children.get(
-
             node["id"],
-
             []
-
         )
 
         if not children:
-
             return
-
-        #
-        # Spread children horizontally
-        #
-
-        total = len(children)
-
-        start_x = x - (
-
-            (total - 1)
-
-            * self.HORIZONTAL_SPACING
-
-        ) / 2
-
-        child_x = start_x
-
-        child_y = y + self.VERTICAL_SPACING
 
         for child_id in children:
 
             child = node_lookup.get(child_id)
 
             if not child:
-
                 continue
 
             self._layout_tree(
-
                 node=child,
-
                 parent_children=parent_children,
-
                 node_lookup=node_lookup,
-
                 nodes=nodes,
-
                 visited=visited,
-
-                x=child_x,
-
-                y=child_y,
-
                 hierarchy_layers=hierarchy_layers
-
             )
-
-            child_x += self.HORIZONTAL_SPACING
