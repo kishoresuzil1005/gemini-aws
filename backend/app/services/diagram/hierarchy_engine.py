@@ -21,9 +21,10 @@ class HierarchyEngine:
         for node in graph["nodes"]:
             indegree[node["id"]] = 0
 
-        for edge in graph["edges"]:
-            if edge["target"] in indegree:
-                indegree[edge["target"]] += 1
+        for parent, children in graph.get("hierarchy_children", {}).items():
+            for child in children:
+                if child in indegree:
+                    indegree[child] += 1
 
         queue = deque()
 
@@ -45,9 +46,7 @@ class HierarchyEngine:
 
             current_layer = layer[current]
 
-            for edge in graph["children"].get(current, []):
-
-                child = edge["target"]
+            for child in graph.get("hierarchy_children", {}).get(current, []):
 
                 if child not in layer:
 

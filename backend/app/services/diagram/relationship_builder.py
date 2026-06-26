@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from app.services.diagram.hierarchy_graph_builder import HierarchyGraphBuilder
+
 
 class RelationshipBuilder:
     """
@@ -125,6 +127,8 @@ class RelationshipBuilder:
             children_graph[source].append(edge)
             parents_graph[target].append(edge)
 
+        hierarchy_children, hierarchy_parents = HierarchyGraphBuilder().build(cleaned_edges)
+
         return {
 
             "nodes": nodes,
@@ -140,6 +144,10 @@ class RelationshipBuilder:
             "children": dict(children_graph),
             
             "parents": dict(parents_graph),
+
+            "hierarchy_children": hierarchy_children,
+
+            "hierarchy_parents": hierarchy_parents,
 
             "statistics": {
 
