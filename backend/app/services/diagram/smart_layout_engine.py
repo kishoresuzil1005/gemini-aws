@@ -1,4 +1,6 @@
 from collections import defaultdict
+import math
+
 
 from app.services.diagram.vpc_az_builder import VPCAZBuilder
 from app.services.diagram.relationship_analyzer import RelationshipAnalyzer
@@ -113,70 +115,69 @@ class SmartLayoutEngine:
         )
 
         layout = {
-
             "canvas": {
-
                 "width": max_x + 400,
-
                 "height": max_y + 250
-
             },
-
             "nodes": nodes,
-
             "edges": edges,
-            
             "node_lookup": {n["id"]: n for n in nodes}
-
         }
 
         layout["vpcs"] = []
 
-        current_y = 60
-
+        #
+        # Deduplicate VPCs
+        #
+        unique_vpcs = []
+        drawn_vpcs = set()
         for vpc in hierarchy["vpcs"]:
+            if vpc["id"] in drawn_vpcs:
+                continue
+            drawn_vpcs.add(vpc["id"])
+            unique_vpcs.append(vpc)
+
+        VPCS_PER_ROW = 3
+        VPC_WIDTH = 1600
+        VPC_HEIGHT = 700
+        H_GAP = 120
+        V_GAP = 120
+
+        for index, vpc in enumerate(unique_vpcs):
+
+            row = index // VPCS_PER_ROW
+            col = index % VPCS_PER_ROW
+
+            x = 40 + col * (VPC_WIDTH + H_GAP)
+            y = 60 + row * (VPC_HEIGHT + V_GAP)
+
 
             vpc_box = {
-
                 "id": vpc["id"],
-
                 "name": vpc.get("name", "VPC"),
-
-                "x": 40,
-
-                "y": current_y,
-
-                "width": 1600,
-
-                "height": 700,
-
+                "x": x,
+                "y": y,
+                "width": VPC_WIDTH,
+                "height": VPC_HEIGHT,
                 "availability_zones": []
-
             }
 
-            az_x = 70
+            az_x = x + 30
+
 
             for az in vpc["availability_zones"]:
 
                 az_box = {
-
                     "name": az["name"],
-
                     "x": az_x,
-
-                    "y": current_y + 60,
-
+                    "y": y + 60,
                     "width": 700,
-
                     "height": 600,
-
                     "public_subnets": [],
-
                     "private_subnets": []
-
                 }
 
-                py = current_y + 110
+                py = y + 110
 
                 for subnet in az["public_subnets"]:
 
@@ -218,11 +219,15 @@ class SmartLayoutEngine:
 
                 az_x += 760
 
-            layout["vpcs"].append(
+            layout["vpcs"].append(vpc_box)
 
-                vpc_box
+        # Dynamic Canvas
+        rows = math.ceil(len(unique_vpcs) / VPCS_PER_ROW) if unique_vpcs else 1
+        svg_width = (VPCS_PER_ROW * (VPC_WIDTH + H_GAP)) + 80
+        svg_height = (rows * (VPC_HEIGHT + V_GAP)) + 120
 
-            )
+        layout["canvas"]["width"] = max(layout["canvas"]["width"], svg_width)
+        layout["canvas"]["height"] = max(layout["canvas"]["height"], svg_height)
 
         return layout
 
