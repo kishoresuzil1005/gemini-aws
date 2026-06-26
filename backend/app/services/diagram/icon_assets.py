@@ -23,7 +23,11 @@ class IconAssetManager:
         _current = _current.parent
     else:
         # Fallback to a default if not found
-        BASE_DIR = Path("/app/assets/aws-icons")
+        # In Docker, since WORKDIR is not set, COPY . . puts assets at /assets, not /app/assets
+        if Path("/assets/aws-icons").exists():
+            BASE_DIR = Path("/assets/aws-icons")
+        else:
+            BASE_DIR = Path("/app/assets/aws-icons")
 
     ALIASES = {
         "s3": "simple-storage-service",
