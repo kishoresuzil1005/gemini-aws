@@ -1,75 +1,70 @@
 from app.services.diagram.typography_engine import TypographyEngine
+from app.services.diagram.label_engine import LabelEngine
+from app.services.diagram.label_layout import LabelLayout
+from app.services.diagram.label_collision_detector import LabelCollisionDetector
+from app.services.diagram.tooltip_renderer import TooltipRenderer
+
 
 class LabelRenderer:
-    """
-    Responsible ONLY for rendering text labels.
 
-    It renders:
+    def __init__(self):
 
-    - Display name
-    - Resource ID
-    - Resource state
-    - Instance type
-    """
+        self.detector = LabelCollisionDetector()
 
     def render(self, svg, nodes):
 
         for node in nodes:
 
-            self.render_node(svg, node)
+            layout = LabelLayout.compute(node)
 
-    def render_node(self, svg, node):
+            title = LabelEngine.title(node)
 
-        from app.services.diagram.node_layout_engine import NodeLayoutEngine
+            meta = LabelEngine.metadata(node)
 
-        layout = NodeLayoutEngine.build(node)
+            TooltipRenderer.render(
+                svg,
+                LabelEngine.tooltip(node)
+            )
 
-        #
-        # Display Name
-        #
+            title_style = TypographyEngine.NODE
 
-        name = (
-            node.get("display_name")
-            or node.get("name")
-            or node.get("id")
-        )
-        name_style = TypographyEngine.NODE
-        name = TypographyEngine.truncate(name, 28)
+            if self.detector.allow(
+                layout["title_x"] - 60,
+                layout["title_y"] - 12,
+                120,
+                16
+            ):
 
-        svg.append(f"""
+                svg.append(f"""
 <text
 x="{layout['title_x']}"
 y="{layout['title_y']}"
 text-anchor="middle"
-font-size="{name_style.size}"
-font-family="{name_style.family}"
-font-weight="{name_style.weight}"
-fill="{name_style.color}">
-{name}
+font-family="{title_style.family}"
+font-size="{title_style.size}"
+font-weight="{title_style.weight}"
+fill="{title_style.color}">
+{title}
 </text>
 """)
 
-        #
-        # Resource ID
-        #
-
-        resource_id = node.get("id", "")
-
-        # Draw the ID only if it's different
-        if resource_id and resource_id != name:
-            
             meta_style = TypographyEngine.METADATA
-            short_id = TypographyEngine.truncate(resource_id, 24)
 
-            svg.append(f"""
+            if self.detector.allow(
+                layout["meta_x"] - 60,
+                layout["meta_y"] - 10,
+                120,
+                14
+            ):
+
+                svg.append(f"""
 <text
-x="{layout['subtitle_x']}"
-y="{layout['subtitle_y']}"
+x="{layout['meta_x']}"
+y="{layout['meta_y']}"
 text-anchor="middle"
-font-size="{meta_style.size}"
 font-family="{meta_style.family}"
-font-weight="{meta_style.weight}"
+font-size="{meta_style.size}"
 fill="{meta_style.color}">
-{short_id}
+{meta}
 </text>
 """)
