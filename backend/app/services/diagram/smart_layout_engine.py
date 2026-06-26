@@ -111,31 +111,31 @@ class SmartLayoutEngine:
         #
 
         orphan_x = self.LEFT_MARGIN
-        orphan_y = max((n["y"] for n in nodes), default=self.TOP_MARGIN) + 300
+        
+        max_layer = max((n.get("layer", 0) for n in nodes), default=0) if nodes else 0
+        base_depth = max_layer + 2
 
         for node in graph["nodes"]:
 
             if node["id"] in visited:
                 continue
 
-            nodes.append({
-                "id": node["id"],
-                "type": node["type"],
-                "display_name": node.get("name") or node["id"],
-                "icon": self.icon_mapper.get_icon(node["type"]),
-                "x": orphan_x,
-                "y": orphan_y,
-                "width": self.NODE_WIDTH,
-                "height": self.NODE_HEIGHT,
-            })
-
-            visited.add(node["id"])
+            self._layout_tree(
+                node=node,
+                parent_children=parent_children,
+                node_lookup=node_lookup,
+                nodes=nodes,
+                visited=visited,
+                x=orphan_x,
+                y=self.TOP_MARGIN + base_depth * self.VERTICAL_SPACING,
+                depth=base_depth
+            )
 
             orphan_x += self.HORIZONTAL_SPACING
 
             if orphan_x > 3000:
                 orphan_x = self.LEFT_MARGIN
-                orphan_y += self.VERTICAL_SPACING
+                base_depth += 2
 
         #
         # Grid Engine positioning
