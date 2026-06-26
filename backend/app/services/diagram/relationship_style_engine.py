@@ -76,6 +76,42 @@ class RelationshipStyleEngine:
         label_color="#E65100"
     )
 
+    IN_SUBNET = RelationshipStyle(
+        stroke="#42A5F5",
+        width=2.0,
+        dasharray="6 3",
+        arrow="arrow",
+        opacity=1.0,
+        label_color="#1E88E5"
+    )
+
+    IN_VPC = RelationshipStyle(
+        stroke="#5C6BC0",
+        width=2.2,
+        dasharray="8 4",
+        arrow="arrow",
+        opacity=1.0,
+        label_color="#3949AB"
+    )
+
+    USES_ROLE = RelationshipStyle(
+        stroke="#8E24AA",
+        width=2.0,
+        dasharray="3 3",
+        arrow="arrow",
+        opacity=1.0,
+        label_color="#6A1B9A"
+    )
+
+    ATTACHED_VOLUME = RelationshipStyle(
+        stroke="#546E7A",
+        width=2.5,
+        dasharray=None,
+        arrow="arrow",
+        opacity=1.0,
+        label_color="#455A64"
+    )
+
     @classmethod
     def get_style(cls, relationship: str):
 
@@ -86,9 +122,13 @@ class RelationshipStyleEngine:
 
         mapping = {
             "ATTACHED_TO": cls.ATTACHED_TO,
+            "ATTACHED_VOLUME": cls.ATTACHED_VOLUME,
             "CONNECTS_TO": cls.CONNECTS_TO,
             "RUNS_IN": cls.RUNS_IN,
+            "IN_SUBNET": cls.IN_SUBNET,
+            "IN_VPC": cls.IN_VPC,
             "MEMBER_OF": cls.MEMBER_OF,
+            "USES_ROLE": cls.USES_ROLE,
             "DEPENDS_ON": cls.DEPENDS_ON,
         }
 
