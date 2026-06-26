@@ -1,3 +1,5 @@
+from app.services.diagram.orthogonal_router import OrthogonalRouter
+
 class EdgeRenderer:
     """
     Responsible ONLY for rendering relationships between resources.
@@ -5,68 +7,29 @@ class EdgeRenderer:
     Supports orthogonal routing.
     """
 
-    EDGE_COLOR = "#607D8B"
-    EDGE_WIDTH = 2
-
     def render(self, svg, model):
 
-        #
-        # Build node lookup
-        #
+        router = OrthogonalRouter()
+        
+        # Ensure node_lookup exists in model if not already present
+        if "node_lookup" not in model:
+            model["node_lookup"] = {node["id"]: node for node in model["nodes"]}
 
-        node_lookup = {
-            node["id"]: node
-            for node in model["nodes"]
-        }
+        edges = router.route(model)
 
-        #
-        # Draw every edge
-        #
+        for edge in edges:
 
-        for edge in model["edges"]:
+            p = edge["points"]
 
-            source = node_lookup.get(edge["source"])
-            target = node_lookup.get(edge["target"])
-
-            if not source or not target:
-                continue
-
-            self.draw_edge(svg, source, target)
-
-    def draw_edge(self, svg, source, target):
-
-        #
-        # Bottom center of source
-        #
-
-        x1 = source["x"] + source["width"] / 2
-        y1 = source["y"] + source["height"]
-
-        #
-        # Top center of target
-        #
-
-        x2 = target["x"] + target["width"] / 2
-        y2 = target["y"]
-
-        #
-        # Orthogonal routing
-        #
-
-        mid_y = (y1 + y2) / 2
-
-        path = (
-            f"M {x1} {y1} "
-            f"L {x1} {mid_y} "
-            f"L {x2} {mid_y} "
-            f"L {x2} {y2}"
-        )
-
-        svg.append(f"""
+            svg.append(f'''
 <path
-d="{path}"
+d="M {p[0][0]} {p[0][1]}
+L {p[1][0]} {p[1][1]}
+L {p[2][0]} {p[2][1]}
+L {p[3][0]} {p[3][1]}"
+stroke="#64748B"
+stroke-width="2"
 fill="none"
-stroke="{self.EDGE_COLOR}"
-stroke-width="{self.EDGE_WIDTH}"
-marker-end="url(#arrow)"/>
-""")
+marker-end="url(#arrow)"
+/>
+''')

@@ -124,7 +124,9 @@ class SmartLayoutEngine:
 
             "nodes": nodes,
 
-            "edges": edges
+            "edges": edges,
+            
+            "node_lookup": {n["id"]: n for n in nodes}
 
         }
 
