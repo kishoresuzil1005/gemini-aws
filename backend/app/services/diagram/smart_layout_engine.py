@@ -8,6 +8,7 @@ from app.services.diagram.aws_icon_mapper import AWSIconMapper
 from app.services.diagram.relationship_builder import RelationshipBuilder
 from app.services.diagram.grid_engine import GridEngine
 from app.services.diagram.alignment_engine import AlignmentEngine
+from app.services.diagram.spacing_engine import SpacingEngine
 from app.services.diagram.hierarchy_engine import HierarchyEngine
 
 
@@ -46,6 +47,8 @@ class SmartLayoutEngine:
         self.grid = GridEngine()
 
         self.alignment = AlignmentEngine()
+
+        self.spacing = SpacingEngine()
 
         self.hierarchy_engine = HierarchyEngine()
 
@@ -151,6 +154,8 @@ class SmartLayoutEngine:
             nodes,
             graph["relationship_groups"],
         )
+
+        nodes = self.spacing.build(nodes)
 
         layout = {
             "canvas": {

@@ -44,56 +44,9 @@ class AlignmentEngine:
 
     # ---------------------------------------------------------
 
-    def align_columns(self, nodes):
+    # --------------------------------------------------
 
-        cols = defaultdict(list)
-
-        for node in nodes:
-            cols[node["column"]].append(node)
-
-        for col_nodes in cols.values():
-
-            x = min(n["x"] for n in col_nodes)
-
-            for node in col_nodes:
-                node["x"] = x
-
-        return nodes
-
-    # ---------------------------------------------------------
-
-    def equal_spacing(self, nodes):
-
-        rows = defaultdict(list)
-
-        for node in nodes:
-            rows[node["row"]].append(node)
-
-        for row_nodes in rows.values():
-
-            row_nodes.sort(key=lambda n: n["column"])
-
-            if len(row_nodes) < 2:
-                continue
-
-            spacing = (
-                row_nodes[1]["x"]
-                - row_nodes[0]["x"]
-            )
-
-            current = row_nodes[0]["x"]
-
-            for node in row_nodes:
-
-                node["x"] = current
-
-                current += spacing
-
-        return nodes
-
-    # ---------------------------------------------------------
-
-    def center_relationship_groups(
+    def balance_group(
         self,
         nodes,
         relationship_groups,
@@ -104,79 +57,9 @@ class AlignmentEngine:
             for n in nodes
         }
 
-        for parent_id, group_data in relationship_groups.items():
+        MIN_X = 80
 
-            parent = lookup.get(parent_id)
-
-            if not parent:
-                continue
-
-            child_nodes = [
-                lookup[c]
-                for c in group_data["children"]
-                if c in lookup
-            ]
-
-            if not child_nodes:
-                continue
-
-            #
-            # Only children in SAME LAYER
-            #
-
-            same_layer = [
-
-                c
-
-                for c in child_nodes
-
-                if c.get("layer", 0) == child_nodes[0].get("layer", 0)
-
-            ]
-
-            xs = [
-
-                c["x"]
-
-                for c in same_layer
-
-            ]
-
-            if not xs:
-                continue
-
-            parent["x"] = (
-
-                min(xs)
-
-                + max(xs)
-
-            ) / 2
-
-        return nodes
-
-    # ---------------------------------------------------------
-
-    def balance_group(
-        self,
-        nodes,
-        relationship_groups
-    ):
-
-        GROUPABLE_RELATIONSHIPS = {
-            "USES_ROLE",
-            "USES_SECURITY_GROUP",
-        }
-
-        lookup = {
-            n["id"]: n
-            for n in nodes
-        }
-
-        for parent_id, group_data in relationship_groups.items():
-
-            if group_data["relationship"] not in GROUPABLE_RELATIONSHIPS:
-                continue
+        for parent_id, group in relationship_groups.items():
 
             parent = lookup.get(parent_id)
 
@@ -185,23 +68,59 @@ class AlignmentEngine:
 
             children = [
                 lookup[c]
-                for c in group_data["children"]
+                for c in group["children"]
                 if c in lookup
             ]
 
+            if not children:
+                continue
+
+            #
+            # Keep only children on same row
+            #
+
+            children = [
+                c
+                for c in children
+                if c["row"] == children[0]["row"]
+            ]
+
+            if not children:
+                continue
+
+            #
+            # Sort by grid column
+            #
+
             children.sort(
-                key=lambda n:n["x"]
+                key=lambda n: n["column"]
             )
 
-            spacing = 220
-            MIN_X = 80
-            
+            #
+            # Dynamic spacing
+            #
+
+            if len(children) == 1:
+
+                parent["x"] = children[0]["x"]
+                continue
+
+            xs = sorted(
+                c["x"]
+                for c in children
+            )
+
+            spacing = min(
+                xs[i + 1] - xs[i]
+                for i in range(len(xs) - 1)
+            )
+
+            if spacing <= 0:
+                spacing = 260
+
             group_width = spacing * (len(children) - 1)
 
-            start = (
-                parent["x"]
-                - (group_width / 2)
-            )
+            start = parent["x"] - group_width / 2
 
             if start < MIN_X:
                 start = MIN_X
@@ -211,10 +130,36 @@ class AlignmentEngine:
             for child in children:
 
                 child["x"] = x
-                if child["x"] < MIN_X:
-                    child["x"] = MIN_X
 
                 x += spacing
+
+        return nodes
+
+    # --------------------------------------------------
+
+    def center_relationship_groups(
+        self,
+        nodes,
+        relationship_groups,
+    ):
+        """
+        Centers parent nodes horizontally over their children.
+        Uses sum(xs) / len(xs) for stable averaging.
+        """
+        lookup = {n["id"]: n for n in nodes}
+
+        for parent_id, group in relationship_groups.items():
+            parent = lookup.get(parent_id)
+            if not parent:
+                continue
+
+            children = [lookup[c] for c in group["children"] if c in lookup]
+            if not children:
+                continue
+
+            xs = [c["x"] for c in children]
+            
+            parent["x"] = sum(xs) / len(xs)
 
         return nodes
 
@@ -243,10 +188,6 @@ class AlignmentEngine:
     ):
 
         nodes = self.align_rows(nodes)
-
-        nodes = self.align_columns(nodes)
-
-        nodes = self.equal_spacing(nodes)
 
         nodes = self.center_relationship_groups(
             nodes,
