@@ -368,6 +368,12 @@ class SmartLayoutEngine:
 
                 continue
 
+            next_depth = self.get_layer(
+                node["type"],
+                child["type"],
+                depth
+            )
+
             self._layout_tree(
 
                 node=child,
@@ -384,37 +390,22 @@ class SmartLayoutEngine:
 
                 y=child_y,
 
-                depth=depth + self.layer_offset(child["type"])
+                depth=next_depth
 
             )
 
             child_x += self.HORIZONTAL_SPACING
 
-    def layer_offset(self, resource_type):
+    def get_layer(self, parent_type, child_type, current_depth):
 
         offsets = {
-
-            "VPC":1,
-
-            "Subnet":1,
-
-            "EC2":1,
-
-            "Lambda":1,
-
-            "RDS":1,
-
-            "SecurityGroup":2,
-
-            "EBS":2,
-
-            "IAM":2,
-
-            "InternetGateway":1,
-
+            ("Lambda", "IAM"): 1,
+            ("EC2", "EBS"): 1,
+            ("EC2", "SecurityGroup"): 1,
+            ("Subnet", "EC2"): 1,
+            ("VPC", "Subnet"): 1,
         }
 
-        return offsets.get(
-            resource_type,
-            1
-        )
+        offset = offsets.get((parent_type, child_type), 1)
+
+        return current_depth + offset

@@ -122,7 +122,7 @@ class AlignmentEngine:
             for n in nodes
         }
 
-        for parent_id, children in relationship_groups.items():
+        for parent_id, group_data in relationship_groups.items():
 
             parent = lookup.get(parent_id)
 
@@ -131,7 +131,7 @@ class AlignmentEngine:
 
             child_nodes = [
                 lookup[c]
-                for c in children
+                for c in group_data["children"]
                 if c in lookup
             ]
 
@@ -181,12 +181,20 @@ class AlignmentEngine:
         relationship_groups
     ):
 
+        GROUPABLE_RELATIONSHIPS = {
+            "USES_ROLE",
+            "USES_SECURITY_GROUP",
+        }
+
         lookup = {
             n["id"]: n
             for n in nodes
         }
 
-        for parent_id, children in relationship_groups.items():
+        for parent_id, group_data in relationship_groups.items():
+
+            if group_data["relationship"] not in GROUPABLE_RELATIONSHIPS:
+                continue
 
             parent = lookup.get(parent_id)
 
@@ -195,7 +203,7 @@ class AlignmentEngine:
 
             children = [
                 lookup[c]
-                for c in children
+                for c in group_data["children"]
                 if c in lookup
             ]
 
@@ -204,20 +212,25 @@ class AlignmentEngine:
             )
 
             spacing = 220
+            MIN_X = 80
+            
+            group_width = spacing * (len(children) - 1)
 
             start = (
-
                 parent["x"]
-
-                - spacing * (len(children)-1)/2
-
+                - (group_width / 2)
             )
+
+            if start < MIN_X:
+                start = MIN_X
 
             x = start
 
             for child in children:
 
                 child["x"] = x
+                if child["x"] < MIN_X:
+                    child["x"] = MIN_X
 
                 x += spacing
 
