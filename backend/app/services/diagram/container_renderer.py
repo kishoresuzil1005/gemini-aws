@@ -1,35 +1,63 @@
 from app.services.diagram.theme_manager import ThemeManager
 from app.services.diagram.typography_engine import TypographyEngine
 
+
 class ContainerRenderer:
     """
-    Responsible ONLY for drawing infrastructure containers.
+    Enterprise Container Renderer
 
-    It does NOT render:
+    Draws:
 
-    - resources
-    - icons
-    - labels
-    - edges
+    - AWS Account
+    - VPC
+    - Availability Zone
+    - Public Subnet
+    - Private Subnet
 
-    It only draws:
+    Never draws:
 
-    AWS Account
-    VPC
-    Availability Zones
-    Public / Private Subnets
+    - EC2
+    - Lambda
+    - Icons
+    - Relationships
     """
 
-    def render(self, svg, layout):
+    ACCOUNT_PADDING = 20
+    HEADER_HEIGHT = 40
 
-        canvas = layout["canvas"]
+    def __init__(self):
 
-        theme = ThemeManager()
+        self.theme = ThemeManager()
+
+    def render(self, svg, model):
+
+        self.render_account(svg, model)
+
+        for vpc in model.get("vpcs", []):
+
+            self.render_vpc(svg, vpc)
+
+            for az in vpc.get("availability_zones", []):
+
+                self.render_availability_zone(svg, az)
+
+                for subnet in az.get("public_subnets", []):
+
+                    self.render_public_subnet(svg, subnet)
+
+                for subnet in az.get("private_subnets", []):
+
+                    self.render_private_subnet(svg, subnet)
+
+    ####################################################################
+    # AWS ACCOUNT
+    ####################################################################
+
+    def render_account(self, svg, model):
+
+        canvas = model["canvas"]
+
         style = TypographyEngine.ACCOUNT
-
-        #
-        # AWS Account
-        #
 
         svg.append(f"""
 <rect
@@ -38,8 +66,8 @@ y="20"
 width="{canvas['width']-40}"
 height="{canvas['height']-40}"
 rx="16"
-fill="{theme.account.fill}"
-stroke="{theme.account.border}"
+fill="{self.theme.account.fill}"
+stroke="{self.theme.account.border}"
 stroke-width="2"/>
 """)
 
@@ -47,193 +75,130 @@ stroke-width="2"/>
 <text
 x="40"
 y="55"
-font-size="{style.size}"
 font-family="{style.family}"
+font-size="{style.size}"
 font-weight="{style.weight}"
 fill="{style.color}">
 AWS Account
 </text>
 """)
 
-        #
-        # VPC Containers
-        #
-
-        for vpc in layout.get("vpcs", []):
-
-            self.render_vpc(svg, vpc)
+    ####################################################################
+    # VPC
+    ####################################################################
 
     def render_vpc(self, svg, vpc):
 
-        x = vpc["x"]
-
-        y = vpc["y"]
-
-        w = vpc["width"]
-
-        h = vpc["height"]
-
-        theme = ThemeManager()
         style = TypographyEngine.VPC
 
         svg.append(f"""
 <rect
-x="{x}"
-y="{y}"
-width="{w}"
-height="{h}"
+x="{vpc['x']}"
+y="{vpc['y']}"
+width="{vpc['width']}"
+height="{vpc['height']}"
 rx="14"
-fill="{theme.vpc.fill}"
-stroke="{theme.vpc.border}"
+fill="{self.theme.vpc.fill}"
+stroke="{self.theme.vpc.border}"
 stroke-width="2"/>
 """)
 
         svg.append(f"""
+<rect
+x="{vpc['x']}"
+y="{vpc['y']}"
+width="{vpc['width']}"
+height="{self.HEADER_HEIGHT}"
+rx="14"
+fill="{self.theme.vpc.border}"/>
+""")
+
+        svg.append(f"""
 <text
-x="{x+15}"
-y="{y+25}"
-font-size="{style.size}"
+x="{vpc['x']+18}"
+y="{vpc['y']+27}"
 font-family="{style.family}"
+font-size="{style.size}"
 font-weight="{style.weight}"
-fill="{style.color}">
-{vpc["name"]}
+fill="#FFFFFF">
+{TypographyEngine.truncate(vpc['name'])}
 </text>
 """)
 
-        #
-        # Availability Zones
-        #
+    ####################################################################
+    # AVAILABILITY ZONE
+    ####################################################################
 
-        for az in vpc.get("availability_zones", []):
+    def render_availability_zone(self, svg, az):
 
-            self.render_az(svg, az)
-
-    def render_az(self, svg, az):
-
-        x = az["x"]
-
-        y = az["y"]
-
-        w = az["width"]
-
-        h = az["height"]
-
-        theme = ThemeManager()
         style = TypographyEngine.AZ
 
         svg.append(f"""
 <rect
-x="{x}"
-y="{y}"
-width="{w}"
-height="{h}"
-rx="10"
-fill="{theme.az.fill}"
-stroke="{theme.az.border}"
-stroke-dasharray="6,4"/>
-""")
-
-        svg.append(f"""
-<text
-x="{x+10}"
-y="{y+20}"
-font-size="{style.size}"
-font-family="{style.family}"
-font-weight="{style.weight}"
-fill="{style.color}">
-{az["name"]}
-</text>
-""")
-
-        #
-        # Public Subnets
-        #
-
-        for subnet in az.get("public_subnets", []):
-
-            self.render_subnet(
-
-                svg,
-
-                subnet,
-
-                public=True
-
-            )
-
-        #
-        # Private Subnets
-        #
-
-        for subnet in az.get("private_subnets", []):
-
-            self.render_subnet(
-
-                svg,
-
-                subnet,
-
-                public=False
-
-            )
-
-    def render_subnet(
-
-        self,
-
-        svg,
-
-        subnet,
-
-        public
-
-    ):
-
-        theme = ThemeManager()
-        style = TypographyEngine.METADATA
-        
-        color = (
-            theme.subnet.public_fill
-            if public
-            else
-            theme.subnet.private_fill
-        )
-
-        title = (
-            "Public Subnet"
-            if public
-            else
-            "Private Subnet"
-        )
-
-        x = subnet["x"]
-
-        y = subnet["y"]
-
-        w = subnet["width"]
-
-        h = subnet["height"]
-
-        svg.append(f"""
-<rect
-x="{x}"
-y="{y}"
-width="{w}"
-height="{h}"
-rx="8"
-fill="{color}"
-stroke="{theme.subnet.border}"
+x="{az['x']}"
+y="{az['y']}"
+width="{az['width']}"
+height="{az['height']}"
+rx="12"
+fill="{self.theme.az.fill}"
+stroke="{self.theme.az.border}"
 stroke-width="1.5"/>
 """)
 
         svg.append(f"""
+<rect
+x="{az['x']}"
+y="{az['y']}"
+width="{az['width']}"
+height="34"
+rx="12"
+fill="#CFD8DC"/>
+""")
+
+        svg.append(f"""
 <text
-x="{x+10}"
-y="{y+20}"
-font-size="{style.size}"
+x="{az['x']+15}"
+y="{az['y']+22}"
 font-family="{style.family}"
+font-size="{style.size}"
 font-weight="{style.weight}"
 fill="{style.color}">
-{title}
+{TypographyEngine.truncate(az['name'])}
 </text>
+""")
+
+    ####################################################################
+    # PUBLIC SUBNET
+    ####################################################################
+
+    def render_public_subnet(self, svg, subnet):
+
+        svg.append(f"""
+<rect
+x="{subnet['x']}"
+y="{subnet['y']}"
+width="{subnet['width']}"
+height="{subnet['height']}"
+rx="10"
+fill="{self.theme.subnet.public_fill}"
+stroke="#64B5F6"
+stroke-width="1.5"/>
+""")
+
+    ####################################################################
+    # PRIVATE SUBNET
+    ####################################################################
+
+    def render_private_subnet(self, svg, subnet):
+
+        svg.append(f"""
+<rect
+x="{subnet['x']}"
+y="{subnet['y']}"
+width="{subnet['width']}"
+height="{subnet['height']}"
+rx="10"
+fill="{self.theme.subnet.private_fill}"
+stroke="#B0BEC5"
+stroke-width="1.5"/>
 """)
