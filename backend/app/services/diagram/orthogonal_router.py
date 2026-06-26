@@ -21,7 +21,12 @@ class OrthogonalRouter:
             source = node_lookup.get(edge["source"])
             target = node_lookup.get(edge["target"])
 
-            if not source or not target:
+            if not source:
+                print(f"Missing source node: {edge['source']}")
+                continue
+
+            if not target:
+                print(f"Missing target node: {edge['target']}")
                 continue
 
             #
@@ -62,5 +67,11 @@ class OrthogonalRouter:
                 ]
 
             })
+
+        print("================================")
+        print("ORTHOGONAL ROUTER")
+        print("Input edges :", len(graph["edges"]))
+        print("Output routes :", len(routed_edges))
+        print("================================")
 
         return routed_edges

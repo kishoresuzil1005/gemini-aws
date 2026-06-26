@@ -229,6 +229,12 @@ class SmartLayoutEngine:
         layout["canvas"]["width"] = max(layout["canvas"]["width"], svg_width)
         layout["canvas"]["height"] = max(layout["canvas"]["height"], svg_height)
 
+        print("================================")
+        print("SMART LAYOUT")
+        print("Nodes :", len(layout["nodes"]))
+        print("Edges :", len(layout["edges"]))
+        print("================================")
+
         return layout
 
     def _layout_tree(
