@@ -25,9 +25,14 @@ class IconRenderer:
 
         from app.services.diagram.node_layout_engine import NodeLayoutEngine
 
+        print("========== ICON RENDERER ==========")
+        print("Nodes received:", len(nodes))
+
         for node in nodes:
 
             icon_svg = SVGIconCache.get(node["type"])
+
+            print(node["type"], "->", "FOUND" if icon_svg else "MISSING")
 
             #
             # Unknown resource
@@ -44,5 +49,7 @@ class IconRenderer:
                 y=layout["icon_y"],
                 size=self.ICON_SIZE
             )
+
+            print("Embedded:", node["type"])
 
             svg.append(transformed)
