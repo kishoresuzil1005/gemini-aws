@@ -57,56 +57,24 @@ class SmartLayoutEngine:
 
         hierarchy_layers = self.hierarchy_engine.assign_layers(graph)
 
-        node_lookup = {
-            n["id"]: n
-            for n in graph["nodes"]
-        }
-
-        parent_children = graph["parent_to_children"]
-
         nodes = []
 
-        edges = graph["edges"]
-
-        visited = set()
-
-        #
-        # Layout each VPC
-        #
-
-        for vpc in hierarchy["vpcs"]:
-
-            vpc_node = node_lookup.get(vpc["id"])
-
-            if not vpc_node:
-                continue
-
-            self._layout_tree(
-                node=vpc_node,
-                parent_children=parent_children,
-                node_lookup=node_lookup,
-                nodes=nodes,
-                visited=visited,
-                hierarchy_layers=hierarchy_layers
-            )
-
-        #
-        # Layout all remaining resources that were not placed
-        #
-
         for node in graph["nodes"]:
+            layer = hierarchy_layers.get(node["id"], 0)
 
-            if node["id"] in visited:
-                continue
+            nodes.append({
+                "id": node["id"],
+                "type": node["type"],
+                "display_name": node.get("name") or node["type"],
+                "icon": self.icon_mapper.get_icon(node["type"]),
+                "row": layer,
+                "column": None,
+                "x": 0,
+                "y": 0,
+                "depth": layer
+            })
 
-            self._layout_tree(
-                node=node,
-                parent_children=parent_children,
-                node_lookup=node_lookup,
-                nodes=nodes,
-                visited=visited,
-                hierarchy_layers=hierarchy_layers
-            )
+        edges = graph["edges"]
 
         #
         # Grid Engine positioning
@@ -247,59 +215,4 @@ class SmartLayoutEngine:
 
         return layout
 
-    def _layout_tree(
-        self,
-        node,
-        parent_children,
-        node_lookup,
-        nodes,
-        visited,
-        hierarchy_layers
-    ):
 
-        if node["id"] in visited:
-            return
-
-        visited.add(node["id"])
-
-        layer = hierarchy_layers.get(node["id"], 0)
-
-        nodes.append({
-            "id": node["id"],
-            "type": node["type"],
-            "display_name": node.get("name") or node["type"],
-            "icon": self.icon_mapper.get_icon(node["type"]),
-            
-            # Layout metadata only
-            "row": layer,
-            "column": None,
-            
-            # GridEngine will assign these
-            "x": 0,
-            "y": 0,
-            "depth": layer
-        })
-
-        children = parent_children.get(
-            node["id"],
-            []
-        )
-
-        if not children:
-            return
-
-        for child_id in children:
-
-            child = node_lookup.get(child_id)
-
-            if not child:
-                continue
-
-            self._layout_tree(
-                node=child,
-                parent_children=parent_children,
-                node_lookup=node_lookup,
-                nodes=nodes,
-                visited=visited,
-                hierarchy_layers=hierarchy_layers
-            )
