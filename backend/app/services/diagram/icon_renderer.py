@@ -1,61 +1,58 @@
-import base64
-from pathlib import Path
+from app.services.diagram.svg_icon_cache import SVGIconCache
+from app.services.diagram.svg_transform_engine import SVGTransformEngine
 
 
 class IconRenderer:
     """
-    Responsible ONLY for rendering AWS SVG icons.
+    Renders AWS icons into the final SVG.
+
+    Responsibilities
+    ----------------
+    - Fetch icon from cache
+    - Position icon
+    - Embed SVG
+
+    Does NOT
+    --------
+    - Load icons
+    - Cache icons
+    - Sanitize SVG
     """
 
-    ICON_SIZE = 42
+    ICON_SIZE = 48
 
-    def __init__(self):
-
-        self.cache = {}
-
-    def image_to_base64(self, path):
-
-        if path in self.cache:
-            return self.cache[path]
-
-        p = Path(path)
-
-        if not p.exists():
-            return None
-
-        with open(p, "rb") as f:
-
-            encoded = base64.b64encode(
-                f.read()
-            ).decode()
-
-        self.cache[path] = encoded
-
-        return encoded
-
-    def render(self, svg, nodes):
+    def render(self, svg: list, nodes: list):
 
         for node in nodes:
 
-            icon = node.get("icon")
+            icon_svg = SVGIconCache.get(node["type"])
 
-            if not icon:
+            #
+            # Unknown resource
+            #
+
+            if not icon_svg:
                 continue
 
-            encoded = self.image_to_base64(icon)
+            #
+            # Center icon
+            #
 
-            if not encoded:
-                continue
+            x = (
+                node["x"]
+                + (node["width"] - self.ICON_SIZE) / 2
+            )
 
-            x = node["x"] + 12
+            y = (
+                node["y"]
+                + 12
+            )
 
-            y = node["y"] + 10
+            transformed = SVGTransformEngine.transform(
+                svg_fragment=icon_svg,
+                x=x,
+                y=y,
+                size=self.ICON_SIZE
+            )
 
-            svg.append(f"""
-<image
-x="{x}"
-y="{y}"
-width="{self.ICON_SIZE}"
-height="{self.ICON_SIZE}"
-href="data:image/svg+xml;base64,{encoded}" />
-""")
+            svg.append(transformed)
