@@ -118,13 +118,6 @@ class RelationshipBuilder:
         
         rules = HierarchyRules()
 
-        HIERARCHY_RELATIONSHIPS = {
-            "IN_VPC",
-            "IN_SUBNET",
-            "MEMBER_OF",
-            "CONTAINS",
-        }
-
         for edge in cleaned_edges:
             target = edge["target"]
             source = edge["source"]
@@ -140,10 +133,21 @@ class RelationshipBuilder:
             children_graph[source].append(edge)
             parents_graph[target].append(edge)
 
-            if relationship in HIERARCHY_RELATIONSHIPS:
-                parent, child = rules.resolve(edge)
-                hierarchy_children[parent].append(child)
-                hierarchy_parents[child].append(parent)
+            parent, child = rules.resolve(edge)
+
+            # Ignore non-hierarchy relationships
+            if parent is None or child is None:
+                continue
+
+            # Ignore invalid nodes
+            if parent not in node_ids:
+                continue
+
+            if child not in node_ids:
+                continue
+
+            hierarchy_children[parent].append(child)
+            hierarchy_parents[child].append(parent)
 
         return {
 
