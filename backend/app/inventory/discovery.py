@@ -3,6 +3,7 @@ from app.database import ResourceDB, CloudAccountDB, ResourceNodeDB, ResourceEdg
 from app.services.discovery.scanner import AWSDiscoveryScanner
 from app.providers.aws.regions import get_all_regions
 from app.services.graph.neo4j_service import Neo4jService
+from app.services.graph.aws_relationship_builder import AWSRelationshipBuilder
 
 
 def discover_resources(
@@ -290,6 +291,34 @@ def discover_resources(
         print(
             "[DISCOVERY] Database commit successful"
         )
+        
+        #
+        # Build AWS relationships dynamically
+        #
+
+        builder = AWSRelationshipBuilder()
+
+        relationships_new = builder.build()
+
+        print(f"[Discovery] Writing {len(relationships_new)} relationships to Neo4j")
+
+        for rel in relationships_new:
+
+            try:
+
+                Neo4jService.create_relationship(
+                    source_id=rel["from"],
+                    target_id=rel["to"],
+                    relationship_type=rel["type"]
+                )
+
+            except Exception as e:
+
+                print(
+                    "[Neo4j Relationship Error]",
+                    rel,
+                    str(e)
+                )
     except Exception as e:
         db.rollback()
         raise Exception(
