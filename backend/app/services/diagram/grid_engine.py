@@ -100,22 +100,36 @@ class GridEngine:
             row = node.get("row", 0)
             rows_map[row].append(node)
 
+        current_visual_row = 0
+
         # For each row, sort by X to determine columns
         for row_index in sorted(rows_map.keys()):
             row_nodes = rows_map[row_index]
             row_nodes.sort(key=lambda n: n.get("x", 0))
             
-            for col_index, node in enumerate(row_nodes):
-                x, y = self.grid_to_canvas(row_index, col_index)
+            # Ensure visual row doesn't fall behind logical topological row
+            current_visual_row = max(current_visual_row, row_index)
+            
+            for index, node in enumerate(row_nodes):
                 
-                node["row"] = row_index
-                node["column"] = col_index
+                visual_row = current_visual_row + (index // self.columns)
+                visual_col = index % self.columns
+                
+                x, y = self.grid_to_canvas(visual_row, visual_col)
+                
+                node["row"] = visual_row
+                node["column"] = visual_col
                 
                 # Grid owns positioning
                 node["x"] = x
                 node["y"] = y
                 
                 positioned.append(node)
+
+            if row_nodes:
+                current_visual_row += (len(row_nodes) - 1) // self.columns + 1
+            else:
+                current_visual_row += 1
 
         return positioned
 
