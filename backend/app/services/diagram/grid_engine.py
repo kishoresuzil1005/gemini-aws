@@ -92,24 +92,35 @@ class GridEngine:
 
         positioned = []
 
-        for index, node in enumerate(nodes):
+        # Group nodes by their existing layer/Y coordinate to determine rows
+        from collections import defaultdict
+        rows_map = defaultdict(list)
+        
+        for node in nodes:
+            # If layer is available, use it as the row. Otherwise, fallback to an arbitrary row
+            row = node.get("layer", 0)
+            rows_map[row].append(node)
 
-            row = index // self.columns
-
-            column = index % self.columns
-
-            x, y = self.grid_to_canvas(
-                row,
-                column,
-            )
-
-            positioned.append({
-                **node,
-                "row": row,
-                "column": column,
-                "x": x,
-                "y": y,
-            })
+        # For each row, sort by X to determine columns
+        for row_index, row_nodes in rows_map.items():
+            row_nodes.sort(key=lambda n: n.get("x", 0))
+            
+            for col_index, node in enumerate(row_nodes):
+                x, y = self.grid_to_canvas(row_index, col_index)
+                
+                # If SmartLayoutEngine already set a good X, keep it. But we must provide row/col.
+                # Actually, AlignmentEngine expects grid_to_canvas output for Y, and maybe X.
+                # Let's keep the X from SmartLayoutEngine since it did a spanning tree layout!
+                # But we use grid_to_canvas for Y to ensure row alignment.
+                
+                node["row"] = row_index
+                node["column"] = col_index
+                
+                # We KEEP the node["x"] if it exists, otherwise use grid x
+                node["x"] = node.get("x", x)
+                node["y"] = y
+                
+                positioned.append(node)
 
         return positioned
 
@@ -117,19 +128,23 @@ class GridEngine:
 
     def canvas_size(
         self,
-        node_count: int,
+        nodes: list[dict],
     ) -> tuple[int, int]:
+    
+        if not nodes:
+            return 800, 600
 
-        rows = max(
-            1,
-            ceil(node_count / self.columns),
-        )
+        max_row = max(n.get("row", 0) for n in nodes)
+        max_col = max(n.get("column", 0) for n in nodes)
+        
+        rows = max_row + 1
+        cols = max_col + 1
 
         width = (
             self.LEFT_MARGIN
             + self.RIGHT_MARGIN
-            + self.columns * self.CELL_WIDTH
-            + (self.columns - 1) * self.HORIZONTAL_GAP
+            + cols * self.CELL_WIDTH
+            + (cols - 1) * self.HORIZONTAL_GAP
         )
 
         height = (
@@ -154,9 +169,7 @@ class GridEngine:
 
         nodes = self.allocate(nodes)
 
-        width, height = self.canvas_size(
-            len(nodes)
-        )
+        width, height = self.canvas_size(nodes)
 
         return {
             "nodes": nodes,
