@@ -21,8 +21,8 @@ class SmartLayoutEngine:
     Smart Layout
     """
 
-    NODE_WIDTH = 170
-    NODE_HEIGHT = 70
+    NODE_WIDTH = 180
+    NODE_HEIGHT = 110
 
     HORIZONTAL_SPACING = 220
     VERTICAL_SPACING = 140

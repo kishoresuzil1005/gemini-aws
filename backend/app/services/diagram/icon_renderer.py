@@ -23,6 +23,8 @@ class IconRenderer:
 
     def render(self, svg: list, nodes: list):
 
+        from app.services.diagram.node_layout_engine import NodeLayoutEngine
+
         for node in nodes:
 
             icon_svg = SVGIconCache.get(node["type"])
@@ -34,24 +36,12 @@ class IconRenderer:
             if not icon_svg:
                 continue
 
-            #
-            # Center icon
-            #
-
-            x = (
-                node["x"]
-                + (node["width"] - self.ICON_SIZE) / 2
-            )
-
-            y = (
-                node["y"]
-                + 12
-            )
+            layout = NodeLayoutEngine.build(node)
 
             transformed = SVGTransformEngine.transform(
                 svg_fragment=icon_svg,
-                x=x,
-                y=y,
+                x=layout["icon_x"],
+                y=layout["icon_y"],
                 size=self.ICON_SIZE
             )
 

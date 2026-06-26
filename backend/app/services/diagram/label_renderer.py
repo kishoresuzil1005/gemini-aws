@@ -24,10 +24,9 @@ class LabelRenderer:
 
     def render_node(self, svg, node):
 
-        x = node["x"]
-        y = node["y"]
+        from app.services.diagram.node_layout_engine import NodeLayoutEngine
 
-        metadata = node.get("metadata", {})
+        layout = NodeLayoutEngine.build(node)
 
         #
         # Display Name
@@ -41,8 +40,9 @@ class LabelRenderer:
 
         svg.append(f"""
 <text
-x="{x+60}"
-y="{y+26}"
+x="{layout['title_x']}"
+y="{layout['title_y']}"
+text-anchor="middle"
 font-size="{self.TITLE_SIZE}"
 font-family="Arial"
 font-weight="bold"
@@ -59,66 +59,22 @@ fill="{self.TITLE_COLOR}">
 
         # Draw the ID only if it's different
         if resource_id and resource_id != name:
+            
+            def shorten(text, limit=24):
+                if len(text) <= limit:
+                    return text
+                return text[:21] + "..."
+                
+            short_id = shorten(resource_id)
 
             svg.append(f"""
 <text
-x="{x+60}"
-y="{y+44}"
+x="{layout['subtitle_x']}"
+y="{layout['subtitle_y']}"
+text-anchor="middle"
 font-size="{self.META_SIZE}"
 font-family="Arial"
 fill="{self.META_COLOR}">
-{resource_id}
-</text>
-""")
-
-        #
-        # State
-        #
-
-        state = (
-
-            metadata.get("state")
-
-            or metadata.get("status")
-
-            or metadata.get("State")
-
-        )
-
-        if state:
-
-            svg.append(f"""
-<text
-x="{x+60}"
-y="{y+60}"
-font-size="{self.META_SIZE}"
-font-family="Arial"
-fill="{self.META_COLOR}">
-{state}
-</text>
-""")
-
-        #
-        # Instance Type
-        #
-
-        instance_type = (
-
-            metadata.get("instance_type")
-
-            or metadata.get("InstanceType")
-
-        )
-
-        if instance_type:
-
-            svg.append(f"""
-<text
-x="{x+60}"
-y="{y+76}"
-font-size="{self.META_SIZE}"
-font-family="Arial"
-fill="{self.META_COLOR}">
-{instance_type}
+{short_id}
 </text>
 """)
