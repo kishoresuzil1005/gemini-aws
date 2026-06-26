@@ -18,8 +18,29 @@ class AlignmentEngine:
     GRID_X = 20
     GRID_Y = 20
 
+    TOP_MARGIN = 80
+    LAYER_HEIGHT = 220
+
     def __init__(self):
         pass
+
+    # ---------------------------------------------------------
+
+    def lock_layers(self, nodes):
+
+        for node in nodes:
+
+            layer = node.get("layer")
+
+            if layer is None:
+                continue
+
+            node["y"] = (
+                self.TOP_MARGIN
+                + layer * self.LAYER_HEIGHT
+            )
+
+        return nodes
 
     # ---------------------------------------------------------
 
@@ -106,22 +127,23 @@ class AlignmentEngine:
         for edge in edges:
 
             children[
+                edge["target"]
+            ].append(
                 edge["source"]
-            ].append(edge["target"])
+            )
 
-        for parent, child_ids in children.items():
+        for parent_id, child_ids in children.items():
 
-            if parent not in lookup:
-                continue
+            parent = lookup.get(parent_id)
 
-            if not child_ids:
+            if not parent:
                 continue
 
             xs = []
 
-            for cid in child_ids:
+            for child_id in child_ids:
 
-                child = lookup.get(cid)
+                child = lookup.get(child_id)
 
                 if child:
 
@@ -130,12 +152,18 @@ class AlignmentEngine:
             if not xs:
                 continue
 
-            center = (
+            #
+            # Only move horizontally
+            #
+
+            parent["x"] = (
                 min(xs)
                 + max(xs)
             ) / 2
 
-            lookup[parent]["x"] = center
+            #
+            # DO NOT TOUCH parent["y"]
+            #
 
         return nodes
 
@@ -173,6 +201,8 @@ class AlignmentEngine:
             nodes,
             edges,
         )
+
+        nodes = self.lock_layers(nodes)
 
         nodes = self.snap(nodes)
 

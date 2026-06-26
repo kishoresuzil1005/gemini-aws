@@ -324,7 +324,9 @@ class SmartLayoutEngine:
 
             "height": self.NODE_HEIGHT,
 
-            "depth": depth
+            "depth": depth,
+
+            "layer": depth
 
         })
 
