@@ -14,13 +14,16 @@ class IconAssetManager:
     Auto-indexes the assets folder at startup to gracefully support newer icon packs.
     """
 
-    BASE_DIR = (
-        Path(__file__)
-        .resolve()
-        .parents[4]
-        / "assets"
-        / "aws-icons"
-    )
+    # Find the assets directory by checking upward paths (works locally and in Docker)
+    _current = Path(__file__).resolve()
+    while _current.parent != _current:
+        if (_current / "assets" / "aws-icons").exists():
+            BASE_DIR = _current / "assets" / "aws-icons"
+            break
+        _current = _current.parent
+    else:
+        # Fallback to a default if not found
+        BASE_DIR = Path("/app/assets/aws-icons")
 
     ALIASES = {
         "s3": "simple-storage-service",
