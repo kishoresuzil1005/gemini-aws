@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from app.services.diagram.graph_parser import GraphParser
+from app.services.diagram.hierarchy_rules import HierarchyRules
 
 
 class RelationshipAnalyzer:
@@ -36,21 +37,22 @@ class RelationshipAnalyzer:
         graph = self.graph.parse()
 
         parent_to_children = defaultdict(list)
+        child_to_parent = defaultdict(list)
 
-        child_to_parent = {}
+        rules = HierarchyRules()
 
         #
         # Build relationships
         #
 
         for edge in graph["edges"]:
+            parent, child = rules.resolve(edge)
 
-            source = edge["source"]
-            target = edge["target"]
+            if parent is None or child is None:
+                continue
 
-            parent_to_children[source].append(target)
-
-            child_to_parent[target] = source
+            parent_to_children[parent].append(child)
+            child_to_parent[child].append(parent)
 
         #
         # Detect entry nodes
@@ -85,17 +87,10 @@ class RelationshipAnalyzer:
                 leaf_nodes.append(node)
 
         return {
-
             "nodes": graph["nodes"],
-
             "edges": graph["edges"],
-
             "parent_to_children": dict(parent_to_children),
-
-            "child_to_parent": child_to_parent,
-
+            "child_to_parent": dict(child_to_parent),
             "entry_nodes": entry_nodes,
-
             "leaf_nodes": leaf_nodes
-
         }
