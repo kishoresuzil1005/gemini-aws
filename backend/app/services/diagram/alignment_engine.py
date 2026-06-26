@@ -148,7 +148,7 @@ class AlignmentEngine:
 
                 for c in child_nodes
 
-                if c["layer"] == child_nodes[0]["layer"]
+                if c.get("layer", 0) == child_nodes[0].get("layer", 0)
 
             ]
 
