@@ -1,3 +1,5 @@
+from app.services.diagram.typography_engine import TypographyEngine
+
 class LabelRenderer:
     """
     Responsible ONLY for rendering text labels.
@@ -9,12 +11,6 @@ class LabelRenderer:
     - Resource state
     - Instance type
     """
-
-    TITLE_SIZE = 14
-    META_SIZE = 11
-
-    TITLE_COLOR = "#263238"
-    META_COLOR = "#607D8B"
 
     def render(self, svg, nodes):
 
@@ -37,16 +33,18 @@ class LabelRenderer:
             or node.get("name")
             or node.get("id")
         )
+        name_style = TypographyEngine.NODE
+        name = TypographyEngine.truncate(name, 28)
 
         svg.append(f"""
 <text
 x="{layout['title_x']}"
 y="{layout['title_y']}"
 text-anchor="middle"
-font-size="{self.TITLE_SIZE}"
-font-family="Arial"
-font-weight="bold"
-fill="{self.TITLE_COLOR}">
+font-size="{name_style.size}"
+font-family="{name_style.family}"
+font-weight="{name_style.weight}"
+fill="{name_style.color}">
 {name}
 </text>
 """)
@@ -60,21 +58,18 @@ fill="{self.TITLE_COLOR}">
         # Draw the ID only if it's different
         if resource_id and resource_id != name:
             
-            def shorten(text, limit=24):
-                if len(text) <= limit:
-                    return text
-                return text[:21] + "..."
-                
-            short_id = shorten(resource_id)
+            meta_style = TypographyEngine.METADATA
+            short_id = TypographyEngine.truncate(resource_id, 24)
 
             svg.append(f"""
 <text
 x="{layout['subtitle_x']}"
 y="{layout['subtitle_y']}"
 text-anchor="middle"
-font-size="{self.META_SIZE}"
-font-family="Arial"
-fill="{self.META_COLOR}">
+font-size="{meta_style.size}"
+font-family="{meta_style.family}"
+font-weight="{meta_style.weight}"
+fill="{meta_style.color}">
 {short_id}
 </text>
 """)

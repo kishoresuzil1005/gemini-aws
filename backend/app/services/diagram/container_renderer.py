@@ -1,3 +1,6 @@
+from app.services.diagram.theme_manager import ThemeManager
+from app.services.diagram.typography_engine import TypographyEngine
+
 class ContainerRenderer:
     """
     Responsible ONLY for drawing infrastructure containers.
@@ -17,27 +20,12 @@ class ContainerRenderer:
     Public / Private Subnets
     """
 
-    #
-    # Colors
-    #
-
-    AWS_ACCOUNT = "#FFFFFF"
-
-    VPC = "#E8F1FE"
-
-    AZ = "#F6F8FA"
-
-    PUBLIC_SUBNET = "#FFF8E1"
-
-    PRIVATE_SUBNET = "#F3E5F5"
-
-    BORDER = "#90A4AE"
-
-    TITLE = "#37474F"
-
     def render(self, svg, layout):
 
         canvas = layout["canvas"]
+
+        theme = ThemeManager()
+        style = TypographyEngine.ACCOUNT
 
         #
         # AWS Account
@@ -50,18 +38,19 @@ y="20"
 width="{canvas['width']-40}"
 height="{canvas['height']-40}"
 rx="16"
-fill="{self.AWS_ACCOUNT}"
-stroke="#607D8B"
+fill="{theme.account.fill}"
+stroke="{theme.account.border}"
 stroke-width="2"/>
 """)
 
-        svg.append("""
+        svg.append(f"""
 <text
 x="40"
 y="55"
-font-size="24"
-font-family="Arial"
-font-weight="bold">
+font-size="{style.size}"
+font-family="{style.family}"
+font-weight="{style.weight}"
+fill="{style.color}">
 AWS Account
 </text>
 """)
@@ -84,6 +73,9 @@ AWS Account
 
         h = vpc["height"]
 
+        theme = ThemeManager()
+        style = TypographyEngine.VPC
+
         svg.append(f"""
 <rect
 x="{x}"
@@ -91,8 +83,8 @@ y="{y}"
 width="{w}"
 height="{h}"
 rx="14"
-fill="{self.VPC}"
-stroke="{self.BORDER}"
+fill="{theme.vpc.fill}"
+stroke="{theme.vpc.border}"
 stroke-width="2"/>
 """)
 
@@ -100,9 +92,10 @@ stroke-width="2"/>
 <text
 x="{x+15}"
 y="{y+25}"
-font-size="18"
-font-family="Arial"
-font-weight="bold">
+font-size="{style.size}"
+font-family="{style.family}"
+font-weight="{style.weight}"
+fill="{style.color}">
 {vpc["name"]}
 </text>
 """)
@@ -125,6 +118,9 @@ font-weight="bold">
 
         h = az["height"]
 
+        theme = ThemeManager()
+        style = TypographyEngine.AZ
+
         svg.append(f"""
 <rect
 x="{x}"
@@ -132,8 +128,8 @@ y="{y}"
 width="{w}"
 height="{h}"
 rx="10"
-fill="{self.AZ}"
-stroke="{self.BORDER}"
+fill="{theme.az.fill}"
+stroke="{theme.az.border}"
 stroke-dasharray="6,4"/>
 """)
 
@@ -141,9 +137,10 @@ stroke-dasharray="6,4"/>
 <text
 x="{x+10}"
 y="{y+20}"
-font-size="15"
-font-family="Arial"
-font-weight="bold">
+font-size="{style.size}"
+font-family="{style.family}"
+font-weight="{style.weight}"
+fill="{style.color}">
 {az["name"]}
 </text>
 """)
@@ -192,28 +189,21 @@ font-weight="bold">
 
     ):
 
+        theme = ThemeManager()
+        style = TypographyEngine.METADATA
+        
         color = (
-
-            self.PUBLIC_SUBNET
-
+            theme.subnet.public_fill
             if public
-
             else
-
-            self.PRIVATE_SUBNET
-
+            theme.subnet.private_fill
         )
 
         title = (
-
             "Public Subnet"
-
             if public
-
             else
-
             "Private Subnet"
-
         )
 
         x = subnet["x"]
@@ -232,7 +222,7 @@ width="{w}"
 height="{h}"
 rx="8"
 fill="{color}"
-stroke="#B0BEC5"
+stroke="{theme.subnet.border}"
 stroke-width="1.5"/>
 """)
 
@@ -240,8 +230,10 @@ stroke-width="1.5"/>
 <text
 x="{x+10}"
 y="{y+20}"
-font-size="13"
-font-family="Arial">
+font-size="{style.size}"
+font-family="{style.family}"
+font-weight="{style.weight}"
+fill="{style.color}">
 {title}
 </text>
 """)
