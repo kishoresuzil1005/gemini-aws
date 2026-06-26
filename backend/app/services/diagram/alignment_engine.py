@@ -26,24 +26,6 @@ class AlignmentEngine:
 
     # ---------------------------------------------------------
 
-    def lock_layers(self, nodes):
-
-        for node in nodes:
-
-            layer = node.get("layer")
-
-            if layer is None:
-                continue
-
-            node["y"] = (
-                self.TOP_MARGIN
-                + layer * self.LAYER_HEIGHT
-            )
-
-        return nodes
-
-    # ---------------------------------------------------------
-
     def align_rows(self, nodes):
 
         rows = defaultdict(list)
@@ -275,8 +257,6 @@ class AlignmentEngine:
             nodes,
             relationship_groups,
         )
-
-        nodes = self.lock_layers(nodes)
 
         nodes = self.snap(nodes)
 

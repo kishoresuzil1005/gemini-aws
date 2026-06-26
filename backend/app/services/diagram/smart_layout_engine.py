@@ -8,6 +8,7 @@ from app.services.diagram.aws_icon_mapper import AWSIconMapper
 from app.services.diagram.relationship_builder import RelationshipBuilder
 from app.services.diagram.grid_engine import GridEngine
 from app.services.diagram.alignment_engine import AlignmentEngine
+from app.services.diagram.hierarchy_engine import HierarchyEngine
 
 
 class SmartLayoutEngine:
@@ -46,6 +47,8 @@ class SmartLayoutEngine:
 
         self.alignment = AlignmentEngine()
 
+        self.hierarchy_engine = HierarchyEngine()
+
     def build(self):
 
         graph = self.relationships.analyze()
@@ -57,6 +60,8 @@ class SmartLayoutEngine:
         graph["parent_to_children"] = parent_children
 
         hierarchy = self.vpc_builder.build()
+
+        hierarchy_layers = self.hierarchy_engine.assign_layers(graph)
 
         node_lookup = {
             n["id"]: n
@@ -100,7 +105,7 @@ class SmartLayoutEngine:
 
                 y=self.TOP_MARGIN,
 
-                depth=0
+                hierarchy_layers=hierarchy_layers
 
             )
 
@@ -111,9 +116,6 @@ class SmartLayoutEngine:
         #
 
         orphan_x = self.LEFT_MARGIN
-        
-        max_layer = max((n.get("layer", 0) for n in nodes), default=0) if nodes else 0
-        base_depth = max_layer + 2
 
         for node in graph["nodes"]:
 
@@ -127,15 +129,14 @@ class SmartLayoutEngine:
                 nodes=nodes,
                 visited=visited,
                 x=orphan_x,
-                y=self.TOP_MARGIN + base_depth * self.VERTICAL_SPACING,
-                depth=base_depth
+                y=self.TOP_MARGIN,
+                hierarchy_layers=hierarchy_layers
             )
 
             orphan_x += self.HORIZONTAL_SPACING
 
             if orphan_x > 3000:
                 orphan_x = self.LEFT_MARGIN
-                base_depth += 2
 
         #
         # Grid Engine positioning
@@ -292,7 +293,7 @@ class SmartLayoutEngine:
 
         y,
 
-        depth
+        hierarchy_layers
 
     ):
 
@@ -301,6 +302,9 @@ class SmartLayoutEngine:
             return
 
         visited.add(node["id"])
+
+        layer = hierarchy_layers.get(node["id"], 0)
+        actual_y = self.TOP_MARGIN + layer * self.VERTICAL_SPACING
 
         nodes.append({
 
@@ -318,15 +322,13 @@ class SmartLayoutEngine:
 
             "x": x,
 
-            "y": y,
+            "y": actual_y,
 
             "width": self.NODE_WIDTH,
 
             "height": self.NODE_HEIGHT,
 
-            "depth": depth,
-
-            "layer": depth
+            "layer": layer
 
         })
 
@@ -368,12 +370,6 @@ class SmartLayoutEngine:
 
                 continue
 
-            next_depth = self.get_layer(
-                node["type"],
-                child["type"],
-                depth
-            )
-
             self._layout_tree(
 
                 node=child,
@@ -390,22 +386,8 @@ class SmartLayoutEngine:
 
                 y=child_y,
 
-                depth=next_depth
+                hierarchy_layers=hierarchy_layers
 
             )
 
             child_x += self.HORIZONTAL_SPACING
-
-    def get_layer(self, parent_type, child_type, current_depth):
-
-        offsets = {
-            ("Lambda", "IAM"): 1,
-            ("EC2", "EBS"): 1,
-            ("EC2", "SecurityGroup"): 1,
-            ("Subnet", "EC2"): 1,
-            ("VPC", "Subnet"): 1,
-        }
-
-        offset = offsets.get((parent_type, child_type), 1)
-
-        return current_depth + offset

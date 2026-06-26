@@ -108,15 +108,22 @@ class RelationshipBuilder:
         #
 
         relationship_groups = {}
+        children_graph = defaultdict(list)
+        parents_graph = defaultdict(list)
 
         for edge in cleaned_edges:
             target = edge["target"]
+            source = edge["source"]
+            
             if target not in relationship_groups:
                 relationship_groups[target] = {
                     "relationship": edge["relationship"],
                     "children": []
                 }
-            relationship_groups[target]["children"].append(edge["source"])
+            relationship_groups[target]["children"].append(source)
+            
+            children_graph[source].append(edge)
+            parents_graph[target].append(edge)
 
         return {
 
@@ -129,6 +136,10 @@ class RelationshipBuilder:
             "incoming": dict(incoming),
             
             "relationship_groups": dict(relationship_groups),
+            
+            "children": dict(children_graph),
+            
+            "parents": dict(parents_graph),
 
             "statistics": {
 
