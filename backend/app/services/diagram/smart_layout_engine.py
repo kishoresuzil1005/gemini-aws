@@ -7,6 +7,7 @@ from app.services.diagram.relationship_analyzer import RelationshipAnalyzer
 from app.services.diagram.aws_icon_mapper import AWSIconMapper
 from app.services.diagram.relationship_builder import RelationshipBuilder
 from app.services.diagram.grid_engine import GridEngine
+from app.services.diagram.alignment_engine import AlignmentEngine
 
 
 class SmartLayoutEngine:
@@ -42,6 +43,8 @@ class SmartLayoutEngine:
         self.relationship_builder = RelationshipBuilder()
 
         self.grid = GridEngine()
+
+        self.alignment = AlignmentEngine()
 
     def build(self):
 
@@ -142,6 +145,11 @@ class SmartLayoutEngine:
 
         nodes = grid_out["nodes"]
         canvas = grid_out["canvas"]
+
+        nodes = self.alignment.build(
+            nodes,
+            edges,
+        )
 
         layout = {
             "canvas": {
