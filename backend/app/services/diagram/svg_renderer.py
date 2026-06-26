@@ -24,6 +24,10 @@ from app.services.diagram.node_renderer import (
     NodeRenderer
 )
 
+from app.services.diagram.legend_renderer import (
+    LegendRenderer
+)
+
 
 class SVGRenderer:
     """
@@ -47,6 +51,8 @@ class SVGRenderer:
         self.labels = LabelRenderer()
 
         self.node_renderer = NodeRenderer()
+
+        self.legend = LegendRenderer()
 
     def render(self):
 
@@ -169,6 +175,15 @@ fill="#607D8B"/>
 
             model["nodes"]
 
+        )
+
+        #
+        # Legend
+        #
+
+        self.legend.render(
+            svg,
+            model
         )
 
         #
