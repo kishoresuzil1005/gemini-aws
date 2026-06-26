@@ -33,14 +33,10 @@ class LabelRenderer:
         # Display Name
         #
 
-        display = (
-
+        name = (
             node.get("display_name")
-
             or node.get("name")
-
-            or node["type"]
-
+            or node.get("id")
         )
 
         svg.append(f"""
@@ -51,7 +47,7 @@ font-size="{self.TITLE_SIZE}"
 font-family="Arial"
 font-weight="bold"
 fill="{self.TITLE_COLOR}">
-{display}
+{name}
 </text>
 """)
 
@@ -59,9 +55,10 @@ fill="{self.TITLE_COLOR}">
         # Resource ID
         #
 
-        resource_id = node.get("id")
+        resource_id = node.get("id", "")
 
-        if resource_id:
+        # Draw the ID only if it's different
+        if resource_id and resource_id != name:
 
             svg.append(f"""
 <text
