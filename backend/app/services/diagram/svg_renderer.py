@@ -20,6 +20,10 @@ from app.services.diagram.label_renderer import (
     LabelRenderer
 )
 
+from app.services.diagram.node_renderer import (
+    NodeRenderer
+)
+
 
 class SVGRenderer:
     """
@@ -41,6 +45,8 @@ class SVGRenderer:
         self.icons = IconRenderer()
 
         self.labels = LabelRenderer()
+
+        self.node_renderer = NodeRenderer()
 
     def render(self):
 
@@ -113,6 +119,18 @@ fill="#607D8B"/>
             svg,
 
             model
+
+        )
+
+        #
+        # Node Cards
+        #
+
+        self.node_renderer.render(
+
+            svg,
+
+            model["nodes"]
 
         )
 
