@@ -17,10 +17,9 @@ class EdgeRenderer:
 
         edges = router.route(model)
 
-        print("================================")
-        print("EDGE RENDERER")
-        print("Edges received :", len(edges))
-        print("================================")
+        print("========== EDGE RENDERER ==========")
+        print("Routes returned :", len(edges))
+        print("===================================")
 
         for edge in edges:
 

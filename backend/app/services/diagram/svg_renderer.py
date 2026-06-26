@@ -46,6 +46,11 @@ class SVGRenderer:
 
         model = self.layout.build()
 
+        print("========== SVG RENDERER ==========")
+        print("Nodes :", len(model["nodes"]))
+        print("Edges :", len(model["edges"]))
+        print("==================================")
+
         svg = []
 
         width = model["canvas"]["width"]

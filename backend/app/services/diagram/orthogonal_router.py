@@ -12,6 +12,10 @@ class OrthogonalRouter:
 
     def route(self, graph: dict):
 
+        print("========== ORTHOGONAL ROUTER ==========")
+        print("Graph edges :", len(graph["edges"]))
+        print("Node lookup :", len(graph["node_lookup"]))
+
         node_lookup = graph["node_lookup"]
 
         routed_edges = []
@@ -68,10 +72,7 @@ class OrthogonalRouter:
 
             })
 
-        print("================================")
-        print("ORTHOGONAL ROUTER")
-        print("Input edges :", len(graph["edges"]))
-        print("Output routes :", len(routed_edges))
-        print("================================")
+        print("Routes created :", len(routed_edges))
+        print("======================================")
 
         return routed_edges
