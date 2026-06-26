@@ -83,14 +83,15 @@ height="{height}">
 
 <marker
 id="arrow"
-markerWidth="10"
-markerHeight="10"
-refX="8"
-refY="3"
-orient="auto">
+markerWidth="12"
+markerHeight="12"
+refX="10"
+refY="4"
+orient="auto"
+markerUnits="strokeWidth">
 
 <path
-d="M0,0 L0,6 L9,3 z"
+d="M0,0 L0,8 L10,4 z"
 fill="#607D8B"/>
 
 </marker>
