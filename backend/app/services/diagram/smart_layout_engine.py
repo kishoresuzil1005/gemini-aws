@@ -328,7 +328,7 @@ class SmartLayoutEngine:
 
             "height": self.NODE_HEIGHT,
 
-            "layer": layer
+            "row": layer
 
         })
 

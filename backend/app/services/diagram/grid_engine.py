@@ -97,27 +97,22 @@ class GridEngine:
         rows_map = defaultdict(list)
         
         for node in nodes:
-            # If layer is available, use it as the row. Otherwise, fallback to an arbitrary row
-            row = node.get("layer", 0)
+            row = node.get("row", 0)
             rows_map[row].append(node)
 
         # For each row, sort by X to determine columns
-        for row_index, row_nodes in rows_map.items():
+        for row_index in sorted(rows_map.keys()):
+            row_nodes = rows_map[row_index]
             row_nodes.sort(key=lambda n: n.get("x", 0))
             
             for col_index, node in enumerate(row_nodes):
                 x, y = self.grid_to_canvas(row_index, col_index)
                 
-                # If SmartLayoutEngine already set a good X, keep it. But we must provide row/col.
-                # Actually, AlignmentEngine expects grid_to_canvas output for Y, and maybe X.
-                # Let's keep the X from SmartLayoutEngine since it did a spanning tree layout!
-                # But we use grid_to_canvas for Y to ensure row alignment.
-                
                 node["row"] = row_index
                 node["column"] = col_index
                 
-                # We KEEP the node["x"] if it exists, otherwise use grid x
-                node["x"] = node.get("x", x)
+                # Grid owns positioning
+                node["x"] = x
                 node["y"] = y
                 
                 positioned.append(node)
