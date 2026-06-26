@@ -3,6 +3,7 @@ from collections import defaultdict
 from app.services.diagram.vpc_az_builder import VPCAZBuilder
 from app.services.diagram.relationship_analyzer import RelationshipAnalyzer
 from app.services.diagram.aws_icon_mapper import AWSIconMapper
+from app.services.diagram.relationship_builder import RelationshipBuilder
 
 
 class SmartLayoutEngine:
@@ -35,9 +36,17 @@ class SmartLayoutEngine:
 
         self.icon_mapper = AWSIconMapper()
 
+        self.relationship_builder = RelationshipBuilder()
+
     def build(self):
 
         graph = self.relationships.analyze()
+        
+        # Save parent_children so the builder doesn't erase it
+        parent_children = graph.get("parent_to_children", {})
+
+        graph = self.relationship_builder.build(graph)
+        graph["parent_to_children"] = parent_children
 
         hierarchy = self.vpc_builder.build()
 

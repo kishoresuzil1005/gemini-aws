@@ -34,6 +34,10 @@ app = FastAPI(
 )
 app.include_router(inventory_router, prefix="/api/v1/inventory", tags=["Inventory Management"])
 
+from app.api.diagram_relationships import router as diagram_relationship_router
+app.include_router(diagram_relationship_router)
+
+
 # Enable CORS so our local Android Emulators (10.0.2.2 or real devices) can speak to our services
 app.add_middleware(
     CORSMiddleware,
