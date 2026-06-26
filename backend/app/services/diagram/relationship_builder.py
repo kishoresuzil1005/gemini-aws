@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from app.services.diagram.hierarchy_graph_builder import HierarchyGraphBuilder
+from app.services.diagram.hierarchy_rules import HierarchyRules
 
 
 class RelationshipBuilder:
@@ -112,6 +112,11 @@ class RelationshipBuilder:
         relationship_groups = {}
         children_graph = defaultdict(list)
         parents_graph = defaultdict(list)
+        
+        hierarchy_children = defaultdict(list)
+        hierarchy_parents = defaultdict(list)
+        
+        rules = HierarchyRules()
 
         for edge in cleaned_edges:
             target = edge["target"]
@@ -127,7 +132,9 @@ class RelationshipBuilder:
             children_graph[source].append(edge)
             parents_graph[target].append(edge)
 
-        hierarchy_children, hierarchy_parents = HierarchyGraphBuilder().build(cleaned_edges)
+            parent, child = rules.resolve(edge)
+            hierarchy_children[parent].append(child)
+            hierarchy_parents[child].append(parent)
 
         return {
 
