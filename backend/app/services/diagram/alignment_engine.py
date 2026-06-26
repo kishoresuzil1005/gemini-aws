@@ -111,10 +111,10 @@ class AlignmentEngine:
 
     # ---------------------------------------------------------
 
-    def center_children(
+    def center_relationship_groups(
         self,
         nodes,
-        edges,
+        relationship_groups,
     ):
 
         lookup = {
@@ -122,48 +122,104 @@ class AlignmentEngine:
             for n in nodes
         }
 
-        children = defaultdict(list)
-
-        for edge in edges:
-
-            children[
-                edge["target"]
-            ].append(
-                edge["source"]
-            )
-
-        for parent_id, child_ids in children.items():
+        for parent_id, children in relationship_groups.items():
 
             parent = lookup.get(parent_id)
 
             if not parent:
                 continue
 
-            xs = []
+            child_nodes = [
+                lookup[c]
+                for c in children
+                if c in lookup
+            ]
 
-            for child_id in child_ids:
+            if not child_nodes:
+                continue
 
-                child = lookup.get(child_id)
+            #
+            # Only children in SAME LAYER
+            #
 
-                if child:
+            same_layer = [
 
-                    xs.append(child["x"])
+                c
+
+                for c in child_nodes
+
+                if c["layer"] == child_nodes[0]["layer"]
+
+            ]
+
+            xs = [
+
+                c["x"]
+
+                for c in same_layer
+
+            ]
 
             if not xs:
                 continue
 
-            #
-            # Only move horizontally
-            #
-
             parent["x"] = (
+
                 min(xs)
+
                 + max(xs)
+
             ) / 2
 
-            #
-            # DO NOT TOUCH parent["y"]
-            #
+        return nodes
+
+    # ---------------------------------------------------------
+
+    def balance_group(
+        self,
+        nodes,
+        relationship_groups
+    ):
+
+        lookup = {
+            n["id"]: n
+            for n in nodes
+        }
+
+        for parent_id, children in relationship_groups.items():
+
+            parent = lookup.get(parent_id)
+
+            if not parent:
+                continue
+
+            children = [
+                lookup[c]
+                for c in children
+                if c in lookup
+            ]
+
+            children.sort(
+                key=lambda n:n["x"]
+            )
+
+            spacing = 220
+
+            start = (
+
+                parent["x"]
+
+                - spacing * (len(children)-1)/2
+
+            )
+
+            x = start
+
+            for child in children:
+
+                child["x"] = x
+
+                x += spacing
 
         return nodes
 
@@ -188,7 +244,7 @@ class AlignmentEngine:
     def build(
         self,
         nodes,
-        edges,
+        relationship_groups,
     ):
 
         nodes = self.align_rows(nodes)
@@ -197,9 +253,14 @@ class AlignmentEngine:
 
         nodes = self.equal_spacing(nodes)
 
-        nodes = self.center_children(
+        nodes = self.center_relationship_groups(
             nodes,
-            edges,
+            relationship_groups,
+        )
+
+        nodes = self.balance_group(
+            nodes,
+            relationship_groups,
         )
 
         nodes = self.lock_layers(nodes)

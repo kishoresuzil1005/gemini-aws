@@ -107,6 +107,11 @@ class RelationshipBuilder:
         # Statistics
         #
 
+        relationship_groups = defaultdict(list)
+
+        for edge in cleaned_edges:
+            relationship_groups[edge["target"]].append(edge["source"])
+
         return {
 
             "nodes": nodes,
@@ -116,6 +121,8 @@ class RelationshipBuilder:
             "outgoing": dict(outgoing),
 
             "incoming": dict(incoming),
+            
+            "relationship_groups": dict(relationship_groups),
 
             "statistics": {
 

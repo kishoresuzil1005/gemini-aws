@@ -148,7 +148,7 @@ class SmartLayoutEngine:
 
         nodes = self.alignment.build(
             nodes,
-            edges,
+            graph["relationship_groups"],
         )
 
         layout = {
@@ -384,8 +384,37 @@ class SmartLayoutEngine:
 
                 y=child_y,
 
-                depth=depth + 1
+                depth=depth + self.layer_offset(child["type"])
 
             )
 
             child_x += self.HORIZONTAL_SPACING
+
+    def layer_offset(self, resource_type):
+
+        offsets = {
+
+            "VPC":1,
+
+            "Subnet":1,
+
+            "EC2":1,
+
+            "Lambda":1,
+
+            "RDS":1,
+
+            "SecurityGroup":2,
+
+            "EBS":2,
+
+            "IAM":2,
+
+            "InternetGateway":1,
+
+        }
+
+        return offsets.get(
+            resource_type,
+            1
+        )
