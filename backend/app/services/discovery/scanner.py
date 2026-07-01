@@ -189,12 +189,11 @@ class AWSDiscoveryScanner:
             # ALB
             try:
                 for alb in ALBDiscovery.discover(reg):
-
                     resources.append({
                         "provider": "AWS",
                         "id": alb["resource_id"],
-                        "type": "ALB",
-                        "name": alb["resource_id"],
+                        "type": alb.get("resource_type", "ALB"),
+                        "name": alb.get("name", alb["resource_id"]),
                         "status":
                             alb.get("state", "active"),
                         "region": reg
