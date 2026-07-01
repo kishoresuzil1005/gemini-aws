@@ -301,11 +301,25 @@ class AWSRelationshipBuilder:
                             profile_arn = profile.get("Arn")
                             if not profile_arn:
                                 continue
-                            relationships.append({
-                                "from": instance["InstanceId"],
-                                "to": profile_arn,
-                                "type": "ASSUMES_ROLE"
-                            })
+                            
+                            try:
+                                profile_name = profile_arn.split("/")[-1]
+                                if self.iam:
+                                    res = self.iam.get_instance_profile(
+                                        InstanceProfileName=profile_name
+                                    )
+                                    roles = res.get("InstanceProfile", {}).get("Roles", [])
+                                    for role in roles:
+                                        relationships.append({
+                                            "from": instance["InstanceId"],
+                                            "to": role["Arn"],
+                                            "type": "USES_ROLE"
+                                        })
+                            except Exception as e:
+                                logger.warning(
+                                    "Failed to resolve IAM Role for instance profile %s: %s",
+                                    profile_arn, str(e)
+                                )
             except Exception:
                 logger.exception("EC2->IAM failed in %s", region)
         return relationships
