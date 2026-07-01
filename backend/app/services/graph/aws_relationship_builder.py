@@ -21,6 +21,7 @@ class AWSRelationshipBuilder:
     USES_TARGET_GROUP = "USES_TARGET_GROUP"
     TARGETS = "TARGETS"
     ASSOCIATED_WITH = "ASSOCIATED_WITH"
+    USES_ELASTIC_IP = "USES_ELASTIC_IP"
 
     def __init__(self):
         self.regions = get_all_regions()
@@ -83,6 +84,8 @@ class AWSRelationshipBuilder:
             self.route_table_to_subnet,
             self.route_table_to_gateway,
             self.route_table_to_nat_gateway,
+            self.nat_gateway_to_subnet,
+            self.nat_gateway_to_eip,
             self.alb_to_ec2,
         ]
 
@@ -353,6 +356,29 @@ class AWSRelationshipBuilder:
                         nat = route.get("NatGatewayId")
                         if nat:
                             rels.append(self.relationship(rt["RouteTableId"], nat, self.ROUTES_TO))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def nat_gateway_to_subnet(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_nat_gateways").paginate():
+                for nat in page["NatGateways"]:
+                    subnet = nat.get("SubnetId")
+                    if subnet:
+                        rels.append(self.relationship(nat["NatGatewayId"], subnet, self.IN_SUBNET))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def nat_gateway_to_eip(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_nat_gateways").paginate():
+                for nat in page["NatGateways"]:
+                    for address in nat.get("NatGatewayAddresses", []):
+                        allocation = address.get("AllocationId")
+                        if allocation:
+                            rels.append(self.relationship(nat["NatGatewayId"], allocation, self.USES_ELASTIC_IP))
             return rels
         return self.scan_regions("ec2", collect)
 
