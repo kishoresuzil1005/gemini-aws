@@ -233,21 +233,36 @@ class Neo4jService:
     # ---------------------------------------------------------
 
     def create_relationship(
-        self=None,
-        source_id: str = None,
-        target_id: str = None,
-        relationship_type: str = None
+        *args,
+        **kwargs
     ):
         """
         Create relationship between nodes
         """
-        if not isinstance(self, Neo4jService):
-            # Called statically as Neo4jService.create_relationship(source_id, target_id, relation)
+        # Determine if called as instance method or statically
+        self = None
+        if args and isinstance(args[0], Neo4jService):
+            self = args[0]
+            args = args[1:]
+
+        # Map positional arguments if any remain
+        source_id = kwargs.get("source_id")
+        target_id = kwargs.get("target_id")
+        relationship_type = kwargs.get("relationship_type")
+
+        if len(args) > 0 and source_id is None:
+            source_id = args[0]
+        if len(args) > 1 and target_id is None:
+            target_id = args[1]
+        if len(args) > 2 and relationship_type is None:
+            relationship_type = args[2]
+
+        if not self:
             inst = Neo4jService()
             return inst.create_relationship(
-                source_id=self,
-                target_id=source_id,
-                relationship_type=target_id
+                source_id=source_id,
+                target_id=target_id,
+                relationship_type=relationship_type
             )
 
         # Update fallback
