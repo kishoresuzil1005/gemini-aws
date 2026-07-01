@@ -23,6 +23,7 @@ class AWSRelationshipBuilder:
     ASSOCIATED_WITH = "ASSOCIATED_WITH"
     USES_ELASTIC_IP = "USES_ELASTIC_IP"
     MANAGES = "MANAGES"
+    HAS_NODEGROUP = "HAS_NODEGROUP"
 
     def __init__(self):
         self.regions = get_all_regions()
@@ -92,6 +93,8 @@ class AWSRelationshipBuilder:
             self.eni_to_subnet,
             self.eni_to_vpc,
             self.autoscaling_to_ec2,
+            self.eks_cluster_to_nodegroup,
+            self.nodegroup_to_ec2,
             self.alb_to_ec2,
         ]
 
@@ -445,6 +448,48 @@ class AWSRelationshipBuilder:
                         rels.append(self.relationship(group_name, instance["InstanceId"], self.MANAGES))
             return rels
         return self.scan_regions("autoscaling", collect)
+
+    def eks_cluster_to_nodegroup(self) -> list[dict]:
+        def collect(eks, region):
+            rels = []
+            try:
+                for cluster_page in eks.get_paginator("list_clusters").paginate():
+                    for cluster_name in cluster_page.get("clusters", []):
+                        for nodegroup_page in eks.get_paginator("list_nodegroups").paginate(clusterName=cluster_name):
+                            for nodegroup in nodegroup_page.get("nodegroups", []):
+                                rels.append(self.relationship(cluster_name, nodegroup, self.HAS_NODEGROUP))
+            except Exception:
+                pass
+            return rels
+        return self.scan_regions("eks", collect)
+
+    def nodegroup_to_ec2(self) -> list[dict]:
+        def collect(eks, region):
+            rels = []
+            try:
+                autoscaling = self.get_client("autoscaling", region)
+                if not autoscaling:
+                    return rels
+                    
+                for cluster_page in eks.get_paginator("list_clusters").paginate():
+                    for cluster_name in cluster_page.get("clusters", []):
+                        for nodegroup_page in eks.get_paginator("list_nodegroups").paginate(clusterName=cluster_name):
+                            for nodegroup in nodegroup_page.get("nodegroups", []):
+                                details = eks.describe_nodegroup(clusterName=cluster_name, nodegroupName=nodegroup)
+                                asgs = details.get("nodegroup", {}).get("resources", {}).get("autoScalingGroups", [])
+                                for asg in asgs:
+                                    group_name = asg.get("name")
+                                    if not group_name:
+                                        continue
+                                    
+                                    response = autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[group_name])
+                                    for group in response.get("AutoScalingGroups", []):
+                                        for instance in group.get("Instances", []):
+                                            rels.append(self.relationship(nodegroup, instance["InstanceId"], self.MANAGES))
+            except Exception:
+                pass
+            return rels
+        return self.scan_regions("eks", collect)
 
     def alb_to_ec2(self) -> list[dict]:
         def collect(elbv2, region):
