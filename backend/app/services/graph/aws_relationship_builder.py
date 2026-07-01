@@ -18,6 +18,7 @@ class AWSRelationshipBuilder:
     ATTACHED_TO = "ATTACHED_TO"
     USES_ROLE = "USES_ROLE"
     ROUTES_TO = "ROUTES_TO"
+    USES_TARGET_GROUP = "USES_TARGET_GROUP"
     TARGETS = "TARGETS"
 
     def __init__(self):
@@ -318,16 +319,17 @@ class AWSRelationshipBuilder:
     def alb_to_ec2(self) -> list[dict]:
         def collect(elbv2, region):
             rels = []
-            for page in elbv2.get_paginator("describe_target_groups").paginate():
-                for tg in page["TargetGroups"]:
-                    arn = tg["TargetGroupArn"]
-                    lb_arns = tg.get("LoadBalancerArns", [])
-                    for lb_arn in lb_arns:
-                        rels.append(self.relationship(lb_arn, arn, self.ROUTES_TO))
-
-                    health = elbv2.describe_target_health(TargetGroupArn=arn)
-                    for target in health["TargetHealthDescriptions"]:
-                        instance_id = target["Target"]["Id"]
-                        rels.append(self.relationship(arn, instance_id, self.TARGETS))
+            for page in elbv2.get_paginator("describe_load_balancers").paginate():
+                for lb in page["LoadBalancers"]:
+                    lb_arn = lb["LoadBalancerArn"]
+                    for tg_page in elbv2.get_paginator("describe_target_groups").paginate(LoadBalancerArn=lb_arn):
+                        for tg in tg_page["TargetGroups"]:
+                            tg_arn = tg["TargetGroupArn"]
+                            rels.append(self.relationship(lb_arn, tg_arn, self.USES_TARGET_GROUP))
+                            
+                            health = elbv2.describe_target_health(TargetGroupArn=tg_arn)
+                            for target in health["TargetHealthDescriptions"]:
+                                instance_id = target["Target"]["Id"]
+                                rels.append(self.relationship(tg_arn, instance_id, self.TARGETS))
             return rels
         return self.scan_regions("elbv2", collect)
