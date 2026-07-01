@@ -22,6 +22,7 @@ class AWSRelationshipBuilder:
     TARGETS = "TARGETS"
     ASSOCIATED_WITH = "ASSOCIATED_WITH"
     USES_ELASTIC_IP = "USES_ELASTIC_IP"
+    MANAGES = "MANAGES"
 
     def __init__(self):
         self.regions = get_all_regions()
@@ -90,6 +91,7 @@ class AWSRelationshipBuilder:
             self.eni_to_security_group,
             self.eni_to_subnet,
             self.eni_to_vpc,
+            self.autoscaling_to_ec2,
             self.alb_to_ec2,
         ]
 
@@ -432,6 +434,17 @@ class AWSRelationshipBuilder:
                         rels.append(self.relationship(eni["NetworkInterfaceId"], vpc, self.IN_VPC))
             return rels
         return self.scan_regions("ec2", collect)
+
+    def autoscaling_to_ec2(self) -> list[dict]:
+        def collect(autoscaling, region):
+            rels = []
+            for page in autoscaling.get_paginator("describe_auto_scaling_groups").paginate():
+                for group in page["AutoScalingGroups"]:
+                    group_name = group["AutoScalingGroupName"]
+                    for instance in group.get("Instances", []):
+                        rels.append(self.relationship(group_name, instance["InstanceId"], self.MANAGES))
+            return rels
+        return self.scan_regions("autoscaling", collect)
 
     def alb_to_ec2(self) -> list[dict]:
         def collect(elbv2, region):
