@@ -178,13 +178,14 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                response = ec2.describe_subnets()
-                for subnet in response["Subnets"]:
-                    relationships.append({
-                        "from": subnet["SubnetId"],
-                        "to": subnet["VpcId"],
-                        "type": "IN_VPC"
-                    })
+                paginator = ec2.get_paginator("describe_subnets")
+                for page in paginator.paginate():
+                    for subnet in page["Subnets"]:
+                        relationships.append({
+                            "from": subnet["SubnetId"],
+                            "to": subnet["VpcId"],
+                            "type": "IN_VPC"
+                        })
             except Exception:
                 logger.exception("Subnet->VPC failed in %s", region)
         return relationships
@@ -194,16 +195,17 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                response = ec2.describe_security_groups()
-                for sg in response["SecurityGroups"]:
-                    vpc = sg.get("VpcId")
-                    if not vpc:
-                        continue
-                    relationships.append({
-                        "from": sg["GroupId"],
-                        "to": vpc,
-                        "type": "IN_VPC"
-                    })
+                paginator = ec2.get_paginator("describe_security_groups")
+                for page in paginator.paginate():
+                    for sg in page["SecurityGroups"]:
+                        vpc = sg.get("VpcId")
+                        if not vpc:
+                            continue
+                        relationships.append({
+                            "from": sg["GroupId"],
+                            "to": vpc,
+                            "type": "IN_VPC"
+                        })
             except Exception:
                 logger.exception("SG->VPC failed in %s", region)
         return relationships
@@ -213,14 +215,15 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                response = ec2.describe_internet_gateways()
-                for igw in response["InternetGateways"]:
-                    for attachment in igw.get("Attachments", []):
-                        relationships.append({
-                            "from": igw["InternetGatewayId"],
-                            "to": attachment["VpcId"],
-                            "type": "ATTACHED_TO"
-                        })
+                paginator = ec2.get_paginator("describe_internet_gateways")
+                for page in paginator.paginate():
+                    for igw in page["InternetGateways"]:
+                        for attachment in igw.get("Attachments", []):
+                            relationships.append({
+                                "from": igw["InternetGatewayId"],
+                                "to": attachment["VpcId"],
+                                "type": "ATTACHED_TO"
+                            })
             except Exception:
                 logger.exception("IGW->VPC failed in %s", region)
         return relationships
@@ -353,6 +356,15 @@ class AWSRelationshipBuilder:
                 for page in paginator.paginate():
                     for tg in page["TargetGroups"]:
                         arn = tg["TargetGroupArn"]
+                        # Link Load Balancers to Target Group
+                        lb_arns = tg.get("LoadBalancerArns", [])
+                        for lb_arn in lb_arns:
+                            relationships.append({
+                                "from": lb_arn,
+                                "to": arn,
+                                "type": "ROUTES_TO"
+                            })
+
                         health = elbv2.describe_target_health(TargetGroupArn=arn)
                         for target in health["TargetHealthDescriptions"]:
                             instance_id = target["Target"]["Id"]
