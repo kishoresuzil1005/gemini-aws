@@ -20,6 +20,7 @@ class AWSRelationshipBuilder:
     ROUTES_TO = "ROUTES_TO"
     USES_TARGET_GROUP = "USES_TARGET_GROUP"
     TARGETS = "TARGETS"
+    ASSOCIATED_WITH = "ASSOCIATED_WITH"
 
     def __init__(self):
         self.regions = get_all_regions()
@@ -79,6 +80,9 @@ class AWSRelationshipBuilder:
             self.lambda_to_vpc,
             self.lambda_to_subnet,
             self.lambda_to_sg,
+            self.route_table_to_subnet,
+            self.route_table_to_gateway,
+            self.route_table_to_nat_gateway,
             self.alb_to_ec2,
         ]
 
@@ -315,6 +319,42 @@ class AWSRelationshipBuilder:
                         rels.append(self.relationship(fn["FunctionName"], sg, self.USES_SECURITY_GROUP))
             return rels
         return self.scan_regions("lambda", collect)
+
+    def route_table_to_subnet(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_route_tables").paginate():
+                for rt in page["RouteTables"]:
+                    for assoc in rt.get("Associations", []):
+                        subnet_id = assoc.get("SubnetId")
+                        if subnet_id:
+                            rels.append(self.relationship(rt["RouteTableId"], subnet_id, self.ASSOCIATED_WITH))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def route_table_to_gateway(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_route_tables").paginate():
+                for rt in page["RouteTables"]:
+                    for route in rt.get("Routes", []):
+                        gateway = route.get("GatewayId")
+                        if gateway:
+                            rels.append(self.relationship(rt["RouteTableId"], gateway, self.ROUTES_TO))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def route_table_to_nat_gateway(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_route_tables").paginate():
+                for rt in page["RouteTables"]:
+                    for route in rt.get("Routes", []):
+                        nat = route.get("NatGatewayId")
+                        if nat:
+                            rels.append(self.relationship(rt["RouteTableId"], nat, self.ROUTES_TO))
+            return rels
+        return self.scan_regions("ec2", collect)
 
     def alb_to_ec2(self) -> list[dict]:
         def collect(elbv2, region):
