@@ -86,6 +86,10 @@ class AWSRelationshipBuilder:
             self.route_table_to_nat_gateway,
             self.nat_gateway_to_subnet,
             self.nat_gateway_to_eip,
+            self.eni_to_ec2,
+            self.eni_to_security_group,
+            self.eni_to_subnet,
+            self.eni_to_vpc,
             self.alb_to_ec2,
         ]
 
@@ -379,6 +383,53 @@ class AWSRelationshipBuilder:
                         allocation = address.get("AllocationId")
                         if allocation:
                             rels.append(self.relationship(nat["NatGatewayId"], allocation, self.USES_ELASTIC_IP))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def eni_to_ec2(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_network_interfaces").paginate():
+                for eni in page["NetworkInterfaces"]:
+                    attachment = eni.get("Attachment")
+                    if not attachment:
+                        continue
+                    instance_id = attachment.get("InstanceId")
+                    if instance_id:
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], instance_id, self.ATTACHED_TO))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def eni_to_security_group(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_network_interfaces").paginate():
+                for eni in page["NetworkInterfaces"]:
+                    eni_id = eni["NetworkInterfaceId"]
+                    for sg in eni.get("Groups", []):
+                        rels.append(self.relationship(eni_id, sg["GroupId"], self.USES_SECURITY_GROUP))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def eni_to_subnet(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_network_interfaces").paginate():
+                for eni in page["NetworkInterfaces"]:
+                    subnet = eni.get("SubnetId")
+                    if subnet:
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], subnet, self.IN_SUBNET))
+            return rels
+        return self.scan_regions("ec2", collect)
+
+    def eni_to_vpc(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+            for page in ec2.get_paginator("describe_network_interfaces").paginate():
+                for eni in page["NetworkInterfaces"]:
+                    vpc = eni.get("VpcId")
+                    if vpc:
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], vpc, self.IN_VPC))
             return rels
         return self.scan_regions("ec2", collect)
 
