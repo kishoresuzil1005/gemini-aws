@@ -12,16 +12,38 @@ class AWSRelationshipBuilder:
 
         self.regions = get_all_regions()
 
+        # Cache for boto3 clients
+        self.clients = {}
+
         try:
-            self.iam = boto3.client("iam")
+            self.iam = self.get_client("iam")
         except Exception:
             logger.exception("Unable to initialize IAM client")
             self.iam = None
 
+    def get_client(self, service, region=None):
+        """
+        Returns a cached boto3 client.
+
+        A client is created only once for each
+        (service, region) combination.
+        """
+        key = (service, region)
+
+        if key not in self.clients:
+            kwargs = {}
+            if region:
+                kwargs["region_name"] = region
+
+            self.clients[key] = boto3.client(
+                service,
+                **kwargs
+            )
+
+        return self.clients[key]
+
     def build(self):
-
         relationships = []
-
         builders = [
             self.ec2_to_ebs,
             self.ec2_to_vpc,
@@ -53,13 +75,8 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
-                paginator = ec2.get_paginator(
-                    "describe_instances"
-                )
+                ec2 = self.get_client("ec2", region)
+                paginator = ec2.get_paginator("describe_instances")
                 for page in paginator.paginate():
                     for reservation in page["Reservations"]:
                         for instance in reservation["Instances"]:
@@ -72,23 +89,15 @@ class AWSRelationshipBuilder:
                                 "type": "IN_VPC"
                             })
             except Exception:
-                logger.exception(
-                    "EC2->VPC failed in %s",
-                    region
-                )
+                logger.exception("EC2->VPC failed in %s", region)
         return relationships
 
     def ec2_to_subnet(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
-                paginator = ec2.get_paginator(
-                    "describe_instances"
-                )
+                ec2 = self.get_client("ec2", region)
+                paginator = ec2.get_paginator("describe_instances")
                 for page in paginator.paginate():
                     for reservation in page["Reservations"]:
                         for instance in reservation["Instances"]:
@@ -100,60 +109,38 @@ class AWSRelationshipBuilder:
                                     "type": "IN_SUBNET"
                                 })
             except Exception:
-                logger.exception(
-                    "EC2->Subnet failed in %s",
-                    region
-                )
+                logger.exception("EC2->Subnet failed in %s", region)
         return relationships
 
     def ec2_to_sg(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
-                paginator = ec2.get_paginator(
-                    "describe_instances"
-                )
+                ec2 = self.get_client("ec2", region)
+                paginator = ec2.get_paginator("describe_instances")
                 for page in paginator.paginate():
                     for reservation in page["Reservations"]:
                         for instance in reservation["Instances"]:
-                            for sg in instance.get(
-                                "SecurityGroups",
-                                []
-                            ):
+                            for sg in instance.get("SecurityGroups", []):
                                 relationships.append({
                                     "from": instance["InstanceId"],
                                     "to": sg["GroupId"],
                                     "type": "USES_SECURITY_GROUP"
                                 })
             except Exception:
-                logger.exception(
-                    "EC2->SG failed in %s",
-                    region
-                )
+                logger.exception("EC2->SG failed in %s", region)
         return relationships
 
     def ec2_to_ebs(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
-                paginator = ec2.get_paginator(
-                    "describe_instances"
-                )
+                ec2 = self.get_client("ec2", region)
+                paginator = ec2.get_paginator("describe_instances")
                 for page in paginator.paginate():
                     for reservation in page["Reservations"]:
                         for instance in reservation["Instances"]:
-                            for mapping in instance.get(
-                                "BlockDeviceMappings",
-                                []
-                            ):
+                            for mapping in instance.get("BlockDeviceMappings", []):
                                 ebs = mapping.get("Ebs")
                                 if not ebs:
                                     continue
@@ -163,20 +150,14 @@ class AWSRelationshipBuilder:
                                     "type": "ATTACHED_VOLUME"
                                 })
             except Exception:
-                logger.exception(
-                    "EC2->EBS failed in %s",
-                    region
-                )
+                logger.exception("EC2->EBS failed in %s", region)
         return relationships
 
     def subnet_to_vpc(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
+                ec2 = self.get_client("ec2", region)
                 response = ec2.describe_subnets()
                 for subnet in response["Subnets"]:
                     relationships.append({
@@ -185,20 +166,14 @@ class AWSRelationshipBuilder:
                         "type": "IN_VPC"
                     })
             except Exception:
-                logger.exception(
-                    "Subnet->VPC failed in %s",
-                    region
-                )
+                logger.exception("Subnet->VPC failed in %s", region)
         return relationships
 
     def sg_to_vpc(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
+                ec2 = self.get_client("ec2", region)
                 response = ec2.describe_security_groups()
                 for sg in response["SecurityGroups"]:
                     vpc = sg.get("VpcId")
@@ -210,43 +185,31 @@ class AWSRelationshipBuilder:
                         "type": "IN_VPC"
                     })
             except Exception:
-                logger.exception(
-                    "SG->VPC failed in %s",
-                    region
-                )
+                logger.exception("SG->VPC failed in %s", region)
         return relationships
 
     def igw_to_vpc(self):
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client(
-                    "ec2",
-                    region_name=region
-                )
+                ec2 = self.get_client("ec2", region)
                 response = ec2.describe_internet_gateways()
                 for igw in response["InternetGateways"]:
-                    for attachment in igw.get(
-                        "Attachments",
-                        []
-                    ):
+                    for attachment in igw.get("Attachments", []):
                         relationships.append({
                             "from": igw["InternetGatewayId"],
                             "to": attachment["VpcId"],
                             "type": "ATTACHED_TO"
                         })
             except Exception:
-                logger.exception(
-                    "IGW->VPC failed in %s",
-                    region
-                )
+                logger.exception("IGW->VPC failed in %s", region)
         return relationships
 
     def rds_to_vpc(self):
         relationships = []
         for region in self.regions:
             try:
-                rds = boto3.client("rds", region_name=region)
+                rds = self.get_client("rds", region)
                 paginator = rds.get_paginator("describe_db_instances")
                 for page in paginator.paginate():
                     for db in page["DBInstances"]:
@@ -266,7 +229,7 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                rds = boto3.client("rds", region_name=region)
+                rds = self.get_client("rds", region)
                 paginator = rds.get_paginator("describe_db_instances")
                 for page in paginator.paginate():
                     for db in page["DBInstances"]:
@@ -288,7 +251,7 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                rds = boto3.client("rds", region_name=region)
+                rds = self.get_client("rds", region)
                 paginator = rds.get_paginator("describe_db_instances")
                 for page in paginator.paginate():
                     for db in page["DBInstances"]:
@@ -307,7 +270,7 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                ec2 = boto3.client("ec2", region_name=region)
+                ec2 = self.get_client("ec2", region)
                 paginator = ec2.get_paginator("describe_instances")
                 for page in paginator.paginate():
                     for reservation in page["Reservations"]:
@@ -331,7 +294,7 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                lmb = boto3.client("lambda", region_name=region)
+                lmb = self.get_client("lambda", region)
                 paginator = lmb.get_paginator("list_functions")
                 for page in paginator.paginate():
                     for fn in page["Functions"]:
@@ -351,7 +314,7 @@ class AWSRelationshipBuilder:
         relationships = []
         for region in self.regions:
             try:
-                elbv2 = boto3.client("elbv2", region_name=region)
+                elbv2 = self.get_client("elbv2", region)
                 paginator = elbv2.get_paginator("describe_target_groups")
                 for page in paginator.paginate():
                     for tg in page["TargetGroups"]:
