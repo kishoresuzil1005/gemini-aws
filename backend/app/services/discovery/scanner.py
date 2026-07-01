@@ -14,6 +14,15 @@ from app.providers.aws.eks import EKSDiscovery
 from app.providers.aws.iam import IAMDiscovery
 from app.providers.aws.igw import IGWDiscovery
 from app.providers.aws.regions import get_all_regions
+# Sprint 1 providers
+from app.providers.aws.subnet import SubnetDiscovery
+from app.providers.aws.security_group import SecurityGroupDiscovery
+from app.providers.aws.route_table import RouteTableDiscovery
+from app.providers.aws.nat_gateway import NatGatewayDiscovery
+from app.providers.aws.network_interface import NetworkInterfaceDiscovery
+from app.providers.aws.elastic_ip import ElasticIPDiscovery
+from app.providers.aws.autoscaling import AutoScalingDiscovery
+from app.providers.aws.target_group import TargetGroupDiscovery
 
 logger = logging.getLogger("AWS_Discovery_Scanner")
 
@@ -155,20 +164,106 @@ class AWSDiscoveryScanner:
             # VPC
             try:
                 for vpc in VPCDiscovery.discover(reg):
-
                     resources.append({
                         "provider": "AWS",
                         "id": vpc["resource_id"],
                         "type": "VPC",
                         "name": vpc["resource_id"],
-                        "status": vpc["state"],
+                        "status": vpc.get("state", "available"),
                         "region": reg
                     })
-
             except Exception as e:
-                logger.warning(
-                    f"VPC Discovery failed in region {reg}: {e}"
-                )
+                logger.warning(f"VPC Discovery failed in region {reg}: {e}")
+
+            # Subnet
+            try:
+                for subnet in SubnetDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": subnet["resource_id"],
+                        "type": "Subnet",
+                        "name": subnet["resource_id"],
+                        "status": subnet.get("state", "available"),
+                        "region": reg,
+                        "configuration_hint": f"AZ={subnet.get('availability_zone')} CIDR={subnet.get('cidr_block')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Subnet Discovery failed in region {reg}: {e}")
+
+            # Security Group
+            try:
+                for sg in SecurityGroupDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": sg["resource_id"],
+                        "type": "SecurityGroup",
+                        "name": sg.get("name", sg["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Ingress={sg.get('ingress_rules')} Egress={sg.get('egress_rules')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Security Group Discovery failed in region {reg}: {e}")
+
+            # Route Table
+            try:
+                for rt in RouteTableDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": rt["resource_id"],
+                        "type": "RouteTable",
+                        "name": rt["resource_id"],
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Routes={rt.get('route_count')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Route Table Discovery failed in region {reg}: {e}")
+
+            # NAT Gateway
+            try:
+                for nat in NatGatewayDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": nat["resource_id"],
+                        "type": "NatGateway",
+                        "name": nat["resource_id"],
+                        "status": nat.get("state", "available"),
+                        "region": reg,
+                        "configuration_hint": f"Type={nat.get('connectivity_type')}"
+                    })
+            except Exception as e:
+                logger.warning(f"NAT Gateway Discovery failed in region {reg}: {e}")
+
+            # Network Interface (ENI)
+            try:
+                for eni in NetworkInterfaceDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": eni["resource_id"],
+                        "type": "NetworkInterface",
+                        "name": eni["resource_id"],
+                        "status": eni.get("status", "available"),
+                        "region": reg,
+                        "configuration_hint": f"Type={eni.get('interface_type')} IP={eni.get('private_ip')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Network Interface Discovery failed in region {reg}: {e}")
+
+            # Elastic IP
+            try:
+                for eip in ElasticIPDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": eip["resource_id"],
+                        "type": "ElasticIP",
+                        "name": eip.get("public_ip", eip["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"PublicIP={eip.get('public_ip')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Elastic IP Discovery failed in region {reg}: {e}")
 
             # IGW
             try:
@@ -178,13 +273,11 @@ class AWSDiscoveryScanner:
                         "id": igw["resource_id"],
                         "type": "InternetGateway",
                         "name": igw["resource_id"],
-                        "status": igw["state"],
+                        "status": igw.get("state", "available"),
                         "region": reg
                     })
             except Exception as e:
-                logger.warning(
-                    f"IGW Discovery failed in region {reg}: {e}"
-                )
+                logger.warning(f"IGW Discovery failed in region {reg}: {e}")
 
             # ALB
             try:
@@ -249,7 +342,6 @@ class AWSDiscoveryScanner:
             # EKS
             try:
                 for eks in EKSDiscovery.discover(reg):
-
                     resources.append({
                         "provider": "AWS",
                         "id": eks["resource_id"],
@@ -258,11 +350,38 @@ class AWSDiscoveryScanner:
                         "status": "active",
                         "region": reg
                     })
-
             except Exception as e:
-                logger.warning(
-                    f"EKS Discovery failed in region {reg}: {e}"
-                )
+                logger.warning(f"EKS Discovery failed in region {reg}: {e}")
+
+            # Auto Scaling Group
+            try:
+                for asg in AutoScalingDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": asg["resource_id"],
+                        "type": "AutoScalingGroup",
+                        "name": asg.get("name", asg["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Min={asg.get('min_size')} Max={asg.get('max_size')} Desired={asg.get('desired_capacity')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Auto Scaling Discovery failed in region {reg}: {e}")
+
+            # Target Group
+            try:
+                for tg in TargetGroupDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": tg["resource_id"],
+                        "type": "TargetGroup",
+                        "name": tg.get("name", tg["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Protocol={tg.get('protocol')} Port={tg.get('port')} Type={tg.get('target_type')}"
+                    })
+            except Exception as e:
+                logger.warning(f"Target Group Discovery failed in region {reg}: {e}")
 
         # S3 (Global)
         try:
