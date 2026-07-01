@@ -75,6 +75,9 @@ class AWSRelationshipBuilder:
             self.rds_to_sg,
             self.ec2_to_iam,
             self.lambda_to_iam,
+            self.lambda_to_vpc,
+            self.lambda_to_subnet,
+            self.lambda_to_sg,
             self.alb_to_ec2,
         ]
 
@@ -275,6 +278,40 @@ class AWSRelationshipBuilder:
                     role_arn = fn.get("Role")
                     if role_arn:
                         rels.append(self.relationship(fn["FunctionName"], role_arn, self.USES_ROLE))
+            return rels
+        return self.scan_regions("lambda", collect)
+
+    def lambda_to_vpc(self) -> list[dict]:
+        def collect(lmb, region):
+            rels = []
+            for page in lmb.get_paginator("list_functions").paginate():
+                for fn in page["Functions"]:
+                    config = fn.get("VpcConfig", {})
+                    vpc_id = config.get("VpcId")
+                    if vpc_id:
+                        rels.append(self.relationship(fn["FunctionName"], vpc_id, self.IN_VPC))
+            return rels
+        return self.scan_regions("lambda", collect)
+
+    def lambda_to_subnet(self) -> list[dict]:
+        def collect(lmb, region):
+            rels = []
+            for page in lmb.get_paginator("list_functions").paginate():
+                for fn in page["Functions"]:
+                    config = fn.get("VpcConfig", {})
+                    for subnet in config.get("SubnetIds", []):
+                        rels.append(self.relationship(fn["FunctionName"], subnet, self.IN_SUBNET))
+            return rels
+        return self.scan_regions("lambda", collect)
+
+    def lambda_to_sg(self) -> list[dict]:
+        def collect(lmb, region):
+            rels = []
+            for page in lmb.get_paginator("list_functions").paginate():
+                for fn in page["Functions"]:
+                    config = fn.get("VpcConfig", {})
+                    for sg in config.get("SecurityGroupIds", []):
+                        rels.append(self.relationship(fn["FunctionName"], sg, self.USES_SECURITY_GROUP))
             return rels
         return self.scan_regions("lambda", collect)
 
