@@ -1,3 +1,5 @@
+from botocore.exceptions import ClientError
+from botocore.exceptions import EndpointConnectionError
 import boto3
 import logging
 
@@ -17,6 +19,10 @@ class AWSRelationshipBuilder:
 
         try:
             self.iam = self.get_client("iam")
+        except ClientError:
+            logger.exception("Unable to initialize IAM client")
+        except EndpointConnectionError:
+            logger.exception("Unable to initialize IAM client")
         except Exception:
             logger.exception("Unable to initialize IAM client")
             self.iam = None
@@ -63,6 +69,16 @@ class AWSRelationshipBuilder:
         for builder in builders:
             try:
                 relationships.extend(builder())
+            except ClientError:
+                logger.exception(
+                    "Relationship builder failed: %s",
+                    builder.__name__
+                )
+            except EndpointConnectionError:
+                logger.exception(
+                    "Relationship builder failed: %s",
+                    builder.__name__
+                )
             except Exception:
                 logger.exception(
                     "Relationship builder failed: %s",
@@ -108,6 +124,10 @@ class AWSRelationshipBuilder:
                                 "to": vpc,
                                 "type": "IN_VPC"
                             })
+            except ClientError:
+                logger.exception("EC2->VPC failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("EC2->VPC failed in %s", region)
             except Exception:
                 logger.exception("EC2->VPC failed in %s", region)
         return relationships
@@ -128,6 +148,10 @@ class AWSRelationshipBuilder:
                                     "to": subnet,
                                     "type": "IN_SUBNET"
                                 })
+            except ClientError:
+                logger.exception("EC2->Subnet failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("EC2->Subnet failed in %s", region)
             except Exception:
                 logger.exception("EC2->Subnet failed in %s", region)
         return relationships
@@ -147,6 +171,10 @@ class AWSRelationshipBuilder:
                                     "to": sg["GroupId"],
                                     "type": "USES_SECURITY_GROUP"
                                 })
+            except ClientError:
+                logger.exception("EC2->SG failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("EC2->SG failed in %s", region)
             except Exception:
                 logger.exception("EC2->SG failed in %s", region)
         return relationships
@@ -169,6 +197,10 @@ class AWSRelationshipBuilder:
                                     "to": ebs["VolumeId"],
                                     "type": "ATTACHED_VOLUME"
                                 })
+            except ClientError:
+                logger.exception("EC2->EBS failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("EC2->EBS failed in %s", region)
             except Exception:
                 logger.exception("EC2->EBS failed in %s", region)
         return relationships
@@ -178,14 +210,27 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                paginator = ec2.get_paginator("describe_subnets")
-                for page in paginator.paginate():
-                    for subnet in page["Subnets"]:
+                next_token = None
+                while True:
+                    params = {}
+                    if next_token:
+                        params["NextToken"] = next_token
+                    
+                    response = ec2.describe_subnets(**params)
+                    for subnet in response.get("Subnets", []):
                         relationships.append({
                             "from": subnet["SubnetId"],
                             "to": subnet["VpcId"],
                             "type": "IN_VPC"
                         })
+                        
+                    next_token = response.get("NextToken")
+                    if not next_token:
+                        break
+            except ClientError:
+                logger.exception("Subnet->VPC failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("Subnet->VPC failed in %s", region)
             except Exception:
                 logger.exception("Subnet->VPC failed in %s", region)
         return relationships
@@ -195,9 +240,14 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                paginator = ec2.get_paginator("describe_security_groups")
-                for page in paginator.paginate():
-                    for sg in page["SecurityGroups"]:
+                next_token = None
+                while True:
+                    params = {}
+                    if next_token:
+                        params["NextToken"] = next_token
+                        
+                    response = ec2.describe_security_groups(**params)
+                    for sg in response.get("SecurityGroups", []):
                         vpc = sg.get("VpcId")
                         if not vpc:
                             continue
@@ -206,6 +256,14 @@ class AWSRelationshipBuilder:
                             "to": vpc,
                             "type": "IN_VPC"
                         })
+                        
+                    next_token = response.get("NextToken")
+                    if not next_token:
+                        break
+            except ClientError:
+                logger.exception("SG->VPC failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("SG->VPC failed in %s", region)
             except Exception:
                 logger.exception("SG->VPC failed in %s", region)
         return relationships
@@ -215,15 +273,28 @@ class AWSRelationshipBuilder:
         for region in self.regions:
             try:
                 ec2 = self.get_client("ec2", region)
-                paginator = ec2.get_paginator("describe_internet_gateways")
-                for page in paginator.paginate():
-                    for igw in page["InternetGateways"]:
+                next_token = None
+                while True:
+                    params = {}
+                    if next_token:
+                        params["NextToken"] = next_token
+                        
+                    response = ec2.describe_internet_gateways(**params)
+                    for igw in response.get("InternetGateways", []):
                         for attachment in igw.get("Attachments", []):
                             relationships.append({
                                 "from": igw["InternetGatewayId"],
                                 "to": attachment["VpcId"],
                                 "type": "ATTACHED_TO"
                             })
+                            
+                    next_token = response.get("NextToken")
+                    if not next_token:
+                        break
+            except ClientError:
+                logger.exception("IGW->VPC failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("IGW->VPC failed in %s", region)
             except Exception:
                 logger.exception("IGW->VPC failed in %s", region)
         return relationships
@@ -244,6 +315,10 @@ class AWSRelationshipBuilder:
                             "to": vpc_id,
                             "type": "IN_VPC"
                         })
+            except ClientError:
+                logger.exception("RDS->VPC failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("RDS->VPC failed in %s", region)
             except Exception:
                 logger.exception("RDS->VPC failed in %s", region)
         return relationships
@@ -266,6 +341,10 @@ class AWSRelationshipBuilder:
                                     "to": subnet_id,
                                     "type": "IN_SUBNET"
                                 })
+            except ClientError:
+                logger.exception("RDS->Subnet failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("RDS->Subnet failed in %s", region)
             except Exception:
                 logger.exception("RDS->Subnet failed in %s", region)
         return relationships
@@ -285,6 +364,10 @@ class AWSRelationshipBuilder:
                                 "to": sg["VpcSecurityGroupId"],
                                 "type": "USES_SECURITY_GROUP"
                             })
+            except ClientError:
+                logger.exception("RDS->SG failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("RDS->SG failed in %s", region)
             except Exception:
                 logger.exception("RDS->SG failed in %s", region)
         return relationships
@@ -323,6 +406,10 @@ class AWSRelationshipBuilder:
                                     "Failed to resolve IAM Role for instance profile %s: %s",
                                     profile_arn, str(e)
                                 )
+            except ClientError:
+                logger.exception("EC2->IAM failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("EC2->IAM failed in %s", region)
             except Exception:
                 logger.exception("EC2->IAM failed in %s", region)
         return relationships
@@ -343,6 +430,10 @@ class AWSRelationshipBuilder:
                             "to": role_arn,
                             "type": "USES_ROLE"
                         })
+            except ClientError:
+                logger.exception("Lambda->IAM failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("Lambda->IAM failed in %s", region)
             except Exception:
                 logger.exception("Lambda->IAM failed in %s", region)
         return relationships
@@ -373,6 +464,10 @@ class AWSRelationshipBuilder:
                                 "to": instance_id,
                                 "type": "TARGETS"
                             })
+            except ClientError:
+                logger.exception("ALB->EC2 failed in %s", region)
+            except EndpointConnectionError:
+                logger.exception("ALB->EC2 failed in %s", region)
             except Exception:
                 logger.exception("ALB->EC2 failed in %s", region)
         return relationships
