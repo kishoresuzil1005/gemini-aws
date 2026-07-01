@@ -69,7 +69,27 @@ class AWSRelationshipBuilder:
                     builder.__name__
                 )
 
-        return relationships
+        # Remove duplicate relationships
+        seen = set()
+        unique_relationships = []
+
+        for relationship in relationships:
+            key = (
+                relationship["from"],
+                relationship["to"],
+                relationship["type"]
+            )
+            if key not in seen:
+                seen.add(key)
+                unique_relationships.append(relationship)
+
+        logger.info(
+            "Discovered %d unique relationships (%d duplicates removed)",
+            len(unique_relationships),
+            len(relationships) - len(unique_relationships)
+        )
+
+        return unique_relationships
 
     def ec2_to_vpc(self):
         relationships = []
