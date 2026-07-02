@@ -291,14 +291,18 @@ def discover_resources(
         print(
             "[DISCOVERY] Database commit successful"
         )
+        print("STEP 1")
         
         #
         # Build AWS relationships dynamically
         #
 
+        print("STEP 2")
         builder = AWSRelationshipBuilder()
+        print("STEP 3")
 
         relationships_new = builder.build()
+        print("STEP 4", len(relationships_new))
 
         print("===================================")
         print("builder.build() finished")
@@ -311,6 +315,7 @@ def discover_resources(
 
         print(f"[Discovery] Writing {len(relationships_new)} relationships to Neo4j")
 
+        print("STEP 5")
         for rel in relationships_new:
 
             try:
@@ -349,6 +354,8 @@ def discover_resources(
                     rel,
                     str(e)
                 )
+
+        print("STEP 6")
     except Exception as e:
         db.rollback()
         raise Exception(
