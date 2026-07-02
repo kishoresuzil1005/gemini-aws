@@ -1446,8 +1446,11 @@ from app.inventory.discovery import discover_resources
 import traceback
 
 def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS", region: str = "all"):
+    print("========== WORKER STARTED ==========")
     db = db_session_factory()
+    print("Database session created")
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
+    print("Job loaded:", job_id)
     if not job:
         db.close()
         return
@@ -1465,6 +1468,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         job.progress = 0.4
         db.commit()
 
+        print("Accounts found:", len(accounts))
         for account in accounts:
             try:
                 discover_resources(db, account.id, region=region)
