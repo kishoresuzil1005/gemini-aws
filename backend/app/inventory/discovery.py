@@ -300,6 +300,15 @@ def discover_resources(
 
         relationships_new = builder.build()
 
+        print("===================================")
+        print("builder.build() finished")
+        print("relationships:", len(relationships_new))
+
+        for r in relationships_new[:10]:
+            print(r)
+
+        print("===================================")
+
         print(f"[Discovery] Writing {len(relationships_new)} relationships to Neo4j")
 
         for rel in relationships_new:
