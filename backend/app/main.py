@@ -1532,6 +1532,8 @@ def trigger_discovery(
     db.commit()
     db.refresh(db_job)
 
+    print("STARTING THREAD")
+
     threading.Thread(
         target=run_discovery_worker,
         args=(
@@ -1541,6 +1543,8 @@ def trigger_discovery(
             request.region
         )
     ).start()
+
+    print("THREAD STARTED")
 
     return BackgroundJobSchema(
         id=db_job.id,
