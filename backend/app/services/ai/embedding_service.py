@@ -1,12 +1,16 @@
 import os
 import requests
 
+
 class EmbeddingService:
 
     def __init__(self):
         self.model_name = "nomic-embed-text"
         self.dimension = 768
-        self.ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434")
+        self.ollama_url = os.getenv(
+            "OLLAMA_URL",
+            "http://localhost:11434"
+        )
         self.session = requests.Session()
 
     def get_embedding(self, text: str):
@@ -30,3 +34,13 @@ class EmbeddingService:
             self.get_embedding(text)
             for text in texts
         ]
+
+    # --------------------------------------------------
+    # Compatibility wrapper
+    # --------------------------------------------------
+
+    def embed(self, text: str):
+        return self.get_embedding(text)
+
+    def embed_many(self, texts):
+        return self.get_embeddings(texts)
