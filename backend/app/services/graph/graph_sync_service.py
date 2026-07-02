@@ -78,23 +78,48 @@ class GraphSyncService:
             relationships = builder.build()
 
             for rel in relationships:
-                # Store in in-memory graph
+
+                #
+                # Ensure source node exists
+                #
+
+                self.graph.create_node(
+                    node_type=rel.get("source_type", "Resource"),
+                    resource_id=rel["from"],
+                    name=rel["from"]
+                )
+
+                #
+                # Ensure target node exists
+                #
+
+                self.graph.create_node(
+                    node_type=rel.get("target_type", "Resource"),
+                    resource_id=rel["to"],
+                    name=rel["to"]
+                )
+
+                #
+                # Store in memory
+                #
+
                 from app.services.graph.neo4j_service import MemoryGraphStore
-                MemoryGraphStore.merge_edge(rel["from"], rel["to"], rel["type"])
 
-                # Sync to Neo4j if driver is available
-                if self.graph.driver:
-                    try:
-                        query = """
-                        MATCH (a {id:$from_id})
-                        MATCH (b {id:$to_id})
+                MemoryGraphStore.merge_edge(
+                    rel["from"],
+                    rel["to"],
+                    rel["type"]
+                )
 
-                        MERGE (a)-[r:%s]->(b)
-                        """ % rel["type"]
-                        with self.graph.driver.session() as session:
-                            session.run(query, from_id=rel["from"], to_id=rel["to"])
-                    except Exception as re_e:
-                        print(f"Failed to merge relationship ({rel['from']})-[{rel['type']}]->({rel['to']}) in Neo4j: {re_e}")
+                #
+                # Write relationship
+                #
+
+                self.graph.create_relationship(
+                    source_id=rel["from"],
+                    target_id=rel["to"],
+                    relationship_type=rel["type"]
+                )
         except Exception as ge_e:
             print(f"Error executing graph relationships builder: {ge_e}")
 
