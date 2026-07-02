@@ -36,13 +36,15 @@ class DocumentRetriever:
                 if isinstance(result, dict):
 
                     payload = result.get("payload", {})
+                    metadata = payload.get("metadata", {})
 
                     documents.append(
                         {
                             "score": result.get("score", 0),
-                            "title": payload.get("title"),
-                            "source": payload.get("source"),
-                            "content": payload.get("text"),
+                            "title": metadata.get("title"),
+                            "source": metadata.get("source"),
+                            "chunk_index": metadata.get("chunk_index"),
+                            "content": payload.get("content"),
                         }
                     )
 
@@ -52,13 +54,15 @@ class DocumentRetriever:
                 else:
 
                     payload = result.payload
+                    metadata = payload.get("metadata", {})
 
                     documents.append(
                         {
                             "score": result.score,
-                            "title": payload.get("title"),
-                            "source": payload.get("source"),
-                            "content": payload.get("text"),
+                            "title": metadata.get("title"),
+                            "source": metadata.get("source"),
+                            "chunk_index": metadata.get("chunk_index"),
+                            "content": payload.get("content"),
                         }
                     )
 
