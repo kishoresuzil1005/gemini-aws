@@ -1449,24 +1449,30 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
     print("========== WORKER STARTED ==========")
     db = db_session_factory()
     print("Database session created")
-    print("Before job query")
+
+    print("STEP A")
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
-    print("After job query")
+    print("STEP B")
+
     if not job:
+        print("JOB NOT FOUND")
         db.close()
         return
 
     try:
-        print("Before update RUNNING")
+        print("STEP C")
         job.status = "RUNNING"
         job.progress = 0.1
+
+        print("STEP D")
         db.commit()
-        print("After update RUNNING")
-        time.sleep(1.0)
-        
-        # Discover resources and store in ResourceDB
+
+        print("STEP E")
         from app.database import CloudAccountDB
         accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == provider).all()
+
+        print("STEP F")
+        print(accounts)
 
         job.progress = 0.4
         db.commit()
