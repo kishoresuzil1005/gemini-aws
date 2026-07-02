@@ -62,62 +62,16 @@ class AWSRelationshipBuilder:
         self,
         source: str,
         target: str,
-        rel_type: str
+        rel_type: str,
+        source_type: str,
+        target_type: str
     ) -> dict:
-
-        def get_resource_type(resource_id: str) -> str:
-
-            if not resource_id:
-                return "Resource"
-
-            if resource_id.startswith("i-"):
-                return "EC2"
-
-            elif resource_id.startswith("vol-"):
-                return "EBS"
-
-            elif resource_id.startswith("vpc-"):
-                return "VPC"
-
-            elif resource_id.startswith("subnet-"):
-                return "Subnet"
-
-            elif resource_id.startswith("sg-"):
-                return "SecurityGroup"
-
-            elif resource_id.startswith("igw-"):
-                return "InternetGateway"
-
-            elif resource_id.startswith("eni-"):
-                return "NetworkInterface"
-
-            elif resource_id.startswith("rtb-"):
-                return "RouteTable"
-
-            elif resource_id.startswith("nat-"):
-                return "NatGateway"
-
-            elif resource_id.startswith("eipalloc-"):
-                return "ElasticIP"
-
-            elif resource_id.startswith("arn:aws:iam"):
-                return "IAM"
-
-            elif resource_id.startswith("arn:aws:elasticloadbalancing:"):
-
-                if ":targetgroup/" in resource_id:
-                    return "TargetGroup"
-
-                return "ALB"
-
-            return "Resource"
-
         return {
             "from": source,
             "to": target,
             "type": rel_type,
-            "source_type": get_resource_type(source),
-            "target_type": get_resource_type(target)
+            "source_type": source_type,
+            "target_type": target_type
         }
 
     def build(self) -> list[dict]:
@@ -185,7 +139,7 @@ class AWSRelationshipBuilder:
                     for instance in reservation["Instances"]:
                         vpc = instance.get("VpcId")
                         if vpc:
-                            rels.append(self.relationship(instance["InstanceId"], vpc, self.IN_VPC))
+                            rels.append(self.relationship(instance["InstanceId"], vpc, self.IN_VPC, "EC2", "VPC"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -197,7 +151,7 @@ class AWSRelationshipBuilder:
                     for instance in reservation["Instances"]:
                         subnet = instance.get("SubnetId")
                         if subnet:
-                            rels.append(self.relationship(instance["InstanceId"], subnet, self.IN_SUBNET))
+                            rels.append(self.relationship(instance["InstanceId"], subnet, self.IN_SUBNET, "EC2", "Subnet"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -208,7 +162,7 @@ class AWSRelationshipBuilder:
                 for reservation in page["Reservations"]:
                     for instance in reservation["Instances"]:
                         for sg in instance.get("SecurityGroups", []):
-                            rels.append(self.relationship(instance["InstanceId"], sg["GroupId"], self.USES_SECURITY_GROUP))
+                            rels.append(self.relationship(instance["InstanceId"], sg["GroupId"], self.USES_SECURITY_GROUP, "EC2", "SecurityGroup"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -221,7 +175,7 @@ class AWSRelationshipBuilder:
                         for mapping in instance.get("BlockDeviceMappings", []):
                             ebs = mapping.get("Ebs")
                             if ebs:
-                                rels.append(self.relationship(instance["InstanceId"], ebs["VolumeId"], self.ATTACHED_VOLUME))
+                                rels.append(self.relationship(instance["InstanceId"], ebs["VolumeId"], self.ATTACHED_VOLUME, "EC2", "EBS"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -235,7 +189,7 @@ class AWSRelationshipBuilder:
                     params["NextToken"] = next_token
                 response = ec2.describe_subnets(**params)
                 for subnet in response.get("Subnets", []):
-                    rels.append(self.relationship(subnet["SubnetId"], subnet["VpcId"], self.IN_VPC))
+                    rels.append(self.relationship(subnet["SubnetId"], subnet["VpcId"], self.IN_VPC, "Subnet", "VPC"))
                 next_token = response.get("NextToken")
                 if not next_token:
                     break
@@ -254,7 +208,7 @@ class AWSRelationshipBuilder:
                 for sg in response.get("SecurityGroups", []):
                     vpc = sg.get("VpcId")
                     if vpc:
-                        rels.append(self.relationship(sg["GroupId"], vpc, self.IN_VPC))
+                        rels.append(self.relationship(sg["GroupId"], vpc, self.IN_VPC, "SecurityGroup", "VPC"))
                 next_token = response.get("NextToken")
                 if not next_token:
                     break
@@ -272,7 +226,7 @@ class AWSRelationshipBuilder:
                 response = ec2.describe_internet_gateways(**params)
                 for igw in response.get("InternetGateways", []):
                     for attachment in igw.get("Attachments", []):
-                        rels.append(self.relationship(igw["InternetGatewayId"], attachment["VpcId"], self.ATTACHED_TO))
+                        rels.append(self.relationship(igw["InternetGatewayId"], attachment["VpcId"], self.ATTACHED_TO, "InternetGateway", "VPC"))
                 next_token = response.get("NextToken")
                 if not next_token:
                     break
@@ -286,7 +240,7 @@ class AWSRelationshipBuilder:
                 for db in page["DBInstances"]:
                     vpc_id = db.get("DBSubnetGroup", {}).get("VpcId")
                     if vpc_id:
-                        rels.append(self.relationship(db["DBInstanceIdentifier"], vpc_id, self.IN_VPC))
+                        rels.append(self.relationship(db["DBInstanceIdentifier"], vpc_id, self.IN_VPC, "RDS", "VPC"))
             return rels
         return self.scan_regions("rds", collect)
 
@@ -299,7 +253,7 @@ class AWSRelationshipBuilder:
                     for subnet in db.get("DBSubnetGroup", {}).get("Subnets", []):
                         subnet_id = subnet.get("SubnetIdentifier")
                         if subnet_id:
-                            rels.append(self.relationship(rds_id, subnet_id, self.IN_SUBNET))
+                            rels.append(self.relationship(rds_id, subnet_id, self.IN_SUBNET, "RDS", "Subnet"))
             return rels
         return self.scan_regions("rds", collect)
 
@@ -310,7 +264,7 @@ class AWSRelationshipBuilder:
                 for db in page["DBInstances"]:
                     rds_id = db["DBInstanceIdentifier"]
                     for sg in db.get("VpcSecurityGroups", []):
-                        rels.append(self.relationship(rds_id, sg["VpcSecurityGroupId"], self.USES_SECURITY_GROUP))
+                        rels.append(self.relationship(rds_id, sg["VpcSecurityGroupId"], self.USES_SECURITY_GROUP, "RDS", "SecurityGroup"))
             return rels
         return self.scan_regions("rds", collect)
 
@@ -335,7 +289,7 @@ class AWSRelationshipBuilder:
                                 )
                                 roles = res.get("InstanceProfile", {}).get("Roles", [])
                                 for role in roles:
-                                    rels.append(self.relationship(instance["InstanceId"], role["Arn"], self.USES_ROLE))
+                                    rels.append(self.relationship(instance["InstanceId"], role["Arn"], self.USES_ROLE, "EC2", "IAM"))
                         except Exception as e:
                             logger.warning(
                                 "Failed to resolve IAM Role for instance profile %s: %s",
@@ -351,7 +305,7 @@ class AWSRelationshipBuilder:
                 for fn in page["Functions"]:
                     role_arn = fn.get("Role")
                     if role_arn:
-                        rels.append(self.relationship(fn["FunctionName"], role_arn, self.USES_ROLE))
+                        rels.append(self.relationship(fn["FunctionName"], role_arn, self.USES_ROLE, "Lambda", "IAM"))
             return rels
         return self.scan_regions("lambda", collect)
 
@@ -363,7 +317,7 @@ class AWSRelationshipBuilder:
                     config = fn.get("VpcConfig", {})
                     vpc_id = config.get("VpcId")
                     if vpc_id:
-                        rels.append(self.relationship(fn["FunctionName"], vpc_id, self.IN_VPC))
+                        rels.append(self.relationship(fn["FunctionName"], vpc_id, self.IN_VPC, "Lambda", "VPC"))
             return rels
         return self.scan_regions("lambda", collect)
 
@@ -374,7 +328,7 @@ class AWSRelationshipBuilder:
                 for fn in page["Functions"]:
                     config = fn.get("VpcConfig", {})
                     for subnet in config.get("SubnetIds", []):
-                        rels.append(self.relationship(fn["FunctionName"], subnet, self.IN_SUBNET))
+                        rels.append(self.relationship(fn["FunctionName"], subnet, self.IN_SUBNET, "Lambda", "Subnet"))
             return rels
         return self.scan_regions("lambda", collect)
 
@@ -385,7 +339,7 @@ class AWSRelationshipBuilder:
                 for fn in page["Functions"]:
                     config = fn.get("VpcConfig", {})
                     for sg in config.get("SecurityGroupIds", []):
-                        rels.append(self.relationship(fn["FunctionName"], sg, self.USES_SECURITY_GROUP))
+                        rels.append(self.relationship(fn["FunctionName"], sg, self.USES_SECURITY_GROUP, "Lambda", "SecurityGroup"))
             return rels
         return self.scan_regions("lambda", collect)
 
@@ -397,7 +351,7 @@ class AWSRelationshipBuilder:
                     for assoc in rt.get("Associations", []):
                         subnet_id = assoc.get("SubnetId")
                         if subnet_id:
-                            rels.append(self.relationship(rt["RouteTableId"], subnet_id, self.ASSOCIATED_WITH))
+                            rels.append(self.relationship(rt["RouteTableId"], subnet_id, self.ASSOCIATED_WITH, "RouteTable", "Subnet"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -416,11 +370,7 @@ class AWSRelationshipBuilder:
                     if vpc_id:
 
                         rels.append(
-                            self.relationship(
-                                rt["RouteTableId"],
-                                vpc_id,
-                                self.IN_VPC
-                            )
+                            self.relationship(rt["RouteTableId"], vpc_id, self.IN_VPC, "RouteTable", "VPC")
                         )
 
             return rels
@@ -438,7 +388,7 @@ class AWSRelationshipBuilder:
                     for route in rt.get("Routes", []):
                         gateway = route.get("GatewayId")
                         if gateway:
-                            rels.append(self.relationship(rt["RouteTableId"], gateway, self.ROUTES_TO))
+                            rels.append(self.relationship(rt["RouteTableId"], gateway, self.ROUTES_TO, "RouteTable", "InternetGateway"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -450,7 +400,7 @@ class AWSRelationshipBuilder:
                     for route in rt.get("Routes", []):
                         nat = route.get("NatGatewayId")
                         if nat:
-                            rels.append(self.relationship(rt["RouteTableId"], nat, self.ROUTES_TO))
+                            rels.append(self.relationship(rt["RouteTableId"], nat, self.ROUTES_TO, "RouteTable", "NatGateway"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -461,7 +411,7 @@ class AWSRelationshipBuilder:
                 for nat in page["NatGateways"]:
                     subnet = nat.get("SubnetId")
                     if subnet:
-                        rels.append(self.relationship(nat["NatGatewayId"], subnet, self.IN_SUBNET))
+                        rels.append(self.relationship(nat["NatGatewayId"], subnet, self.IN_SUBNET, "NatGateway", "Subnet"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -473,7 +423,7 @@ class AWSRelationshipBuilder:
                     for address in nat.get("NatGatewayAddresses", []):
                         allocation = address.get("AllocationId")
                         if allocation:
-                            rels.append(self.relationship(nat["NatGatewayId"], allocation, self.USES_ELASTIC_IP))
+                            rels.append(self.relationship(nat["NatGatewayId"], allocation, self.USES_ELASTIC_IP, "NatGateway", "ElasticIP"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -487,7 +437,7 @@ class AWSRelationshipBuilder:
                         continue
                     instance_id = attachment.get("InstanceId")
                     if instance_id:
-                        rels.append(self.relationship(eni["NetworkInterfaceId"], instance_id, self.ATTACHED_TO))
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], instance_id, self.ATTACHED_TO, "NetworkInterface", "EC2"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -498,7 +448,7 @@ class AWSRelationshipBuilder:
                 for eni in page["NetworkInterfaces"]:
                     eni_id = eni["NetworkInterfaceId"]
                     for sg in eni.get("Groups", []):
-                        rels.append(self.relationship(eni_id, sg["GroupId"], self.USES_SECURITY_GROUP))
+                        rels.append(self.relationship(eni_id, sg["GroupId"], self.USES_SECURITY_GROUP, "NetworkInterface", "SecurityGroup"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -509,7 +459,7 @@ class AWSRelationshipBuilder:
                 for eni in page["NetworkInterfaces"]:
                     subnet = eni.get("SubnetId")
                     if subnet:
-                        rels.append(self.relationship(eni["NetworkInterfaceId"], subnet, self.IN_SUBNET))
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], subnet, self.IN_SUBNET, "NetworkInterface", "Subnet"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -520,7 +470,7 @@ class AWSRelationshipBuilder:
                 for eni in page["NetworkInterfaces"]:
                     vpc = eni.get("VpcId")
                     if vpc:
-                        rels.append(self.relationship(eni["NetworkInterfaceId"], vpc, self.IN_VPC))
+                        rels.append(self.relationship(eni["NetworkInterfaceId"], vpc, self.IN_VPC, "NetworkInterface", "VPC"))
             return rels
         return self.scan_regions("ec2", collect)
 
@@ -531,7 +481,7 @@ class AWSRelationshipBuilder:
                 for group in page["AutoScalingGroups"]:
                     group_name = group["AutoScalingGroupName"]
                     for instance in group.get("Instances", []):
-                        rels.append(self.relationship(group_name, instance["InstanceId"], self.MANAGES))
+                        rels.append(self.relationship(group_name, instance["InstanceId"], self.MANAGES, "AutoScalingGroup", "EC2"))
             return rels
         return self.scan_regions("autoscaling", collect)
 
@@ -543,7 +493,7 @@ class AWSRelationshipBuilder:
                     for cluster_name in cluster_page.get("clusters", []):
                         for nodegroup_page in eks.get_paginator("list_nodegroups").paginate(clusterName=cluster_name):
                             for nodegroup in nodegroup_page.get("nodegroups", []):
-                                rels.append(self.relationship(cluster_name, nodegroup, self.HAS_NODEGROUP))
+                                rels.append(self.relationship(cluster_name, nodegroup, self.HAS_NODEGROUP, "EKSCluster", "NodeGroup"))
             except Exception:
                 pass
             return rels
@@ -571,7 +521,7 @@ class AWSRelationshipBuilder:
                                     response = autoscaling.describe_auto_scaling_groups(AutoScalingGroupNames=[group_name])
                                     for group in response.get("AutoScalingGroups", []):
                                         for instance in group.get("Instances", []):
-                                            rels.append(self.relationship(nodegroup, instance["InstanceId"], self.MANAGES))
+                                            rels.append(self.relationship(nodegroup, instance["InstanceId"], self.MANAGES, "NodeGroup", "EC2"))
             except Exception:
                 pass
             return rels
@@ -586,12 +536,12 @@ class AWSRelationshipBuilder:
                     for tg_page in elbv2.get_paginator("describe_target_groups").paginate(LoadBalancerArn=lb_arn):
                         for tg in tg_page["TargetGroups"]:
                             tg_arn = tg["TargetGroupArn"]
-                            rels.append(self.relationship(lb_arn, tg_arn, self.USES_TARGET_GROUP))
+                            rels.append(self.relationship(lb_arn, tg_arn, self.USES_TARGET_GROUP, "ALB", "TargetGroup"))
                             
                             health = elbv2.describe_target_health(TargetGroupArn=tg_arn)
                             for target in health["TargetHealthDescriptions"]:
                                 instance_id = target["Target"]["Id"]
-                                rels.append(self.relationship(tg_arn, instance_id, self.TARGETS))
+                                rels.append(self.relationship(tg_arn, instance_id, self.TARGETS, "TargetGroup", "EC2"))
             return rels
         return self.scan_regions("elbv2", collect)
 
@@ -659,11 +609,13 @@ class AWSRelationshipBuilder:
                     if instance_id:
 
                         relationships.append(
-                            self.relationship(
-                                allocation_id,
-                                instance_id,
-                                "ASSIGNED_TO"
-                            )
+                            {
+                                "from": allocation_id,
+                                "to": instance_id,
+                                "type": "ASSIGNED_TO",
+                                "source_type": "ElasticIP",
+                                "target_type": "EC2"
+                            }
                         )
 
                     #
@@ -675,11 +627,13 @@ class AWSRelationshipBuilder:
                     if eni:
 
                         relationships.append(
-                            self.relationship(
-                                allocation_id,
-                                eni,
-                                "ASSIGNED_TO"
-                            )
+                            {
+                                "from": allocation_id,
+                                "to": eni,
+                                "type": "ASSIGNED_TO",
+                                "source_type": "ElasticIP",
+                                "target_type": "NetworkInterface"
+                            }
                         )
 
                     #
@@ -689,11 +643,13 @@ class AWSRelationshipBuilder:
                     if allocation_id in nat_map:
 
                         relationships.append(
-                            self.relationship(
-                                allocation_id,
-                                nat_map[allocation_id],
-                                "ASSIGNED_TO"
-                            )
+                            {
+                                "from": allocation_id,
+                                "to": nat_map[allocation_id],
+                                "type": "ASSIGNED_TO",
+                                "source_type": "ElasticIP",
+                                "target_type": "NatGateway"
+                            }
                         )
 
             except Exception:
