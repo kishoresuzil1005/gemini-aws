@@ -957,27 +957,43 @@ class AWSRelationshipBuilder:
 
     def target_group_to_task(self) -> list[dict]:
         def collect(ecs, region):
+            import boto3
             rels = []
-            for cluster_page in ecs.get_paginator("list_clusters").paginate():
-                for cluster_arn in cluster_page.get("clusterArns", []):
-                    for svc_page in ecs.get_paginator("list_services").paginate(cluster=cluster_arn):
-                        services = svc_page.get("serviceArns", [])
-                        if services:
-                            for i in range(0, len(services), 10):
-                                chunk = services[i:i+10]
-                                try:
-                                    svc_resp = ecs.describe_services(cluster=cluster_arn, services=chunk)
-                                    for svc in svc_resp.get("services", []):
-                                        tgs = [lb.get("targetGroupArn") for lb in svc.get("loadBalancers", []) if lb.get("targetGroupArn")]
-                                        if not tgs:
-                                            continue
-                                        svc_name = svc["serviceName"]
-                                        for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn, serviceName=svc_name):
-                                            for task_arn in task_page.get("taskArns", []):
-                                                for tg_arn in tgs:
-                                                    rels.append(self.relationship(tg_arn, task_arn, self.TARGETS_TASK, "TargetGroup", "ECSTask"))
-                                except Exception:
-                                    pass
+            try:
+                elbv2 = boto3.client("elbv2", region_name=region)
+                ip_to_task = {}
+                for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                    for cluster_arn in cluster_page.get("clusterArns", []):
+                        for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                            tasks = task_page.get("taskArns", [])
+                            if tasks:
+                                for i in range(0, len(tasks), 100):
+                                    chunk = tasks[i:i+100]
+                                    try:
+                                        task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                        for task in task_resp.get("tasks", []):
+                                            task_arn = task["taskArn"]
+                                            for att in task.get("attachments", []):
+                                                if att.get("type") == "ElasticNetworkInterface":
+                                                    for kv in att.get("details", []):
+                                                        if kv.get("name") == "privateIPv4Address":
+                                                            ip_to_task[kv.get("value")] = task_arn
+                                    except Exception:
+                                        pass
+
+                for tg_page in elbv2.get_paginator("describe_target_groups").paginate():
+                    for tg in tg_page.get("TargetGroups", []):
+                        tg_arn = tg["TargetGroupArn"]
+                        try:
+                            health_resp = elbv2.describe_target_health(TargetGroupArn=tg_arn)
+                            for th in health_resp.get("TargetHealthDescriptions", []):
+                                target_id = th["Target"]["Id"]
+                                if target_id in ip_to_task:
+                                    rels.append(self.relationship(tg_arn, ip_to_task[target_id], self.TARGETS_TASK, "TargetGroup", "ECSTask"))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
             return rels
         return self.scan_regions("ecs", collect)
 
