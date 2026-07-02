@@ -1,28 +1,31 @@
 """
 CloudOps AI Router
 
-This module is responsible for routing user requests into the
-Cloud Context Builder pipeline.
+Exposes the AI pipeline via FastAPI endpoints.
 """
 
-from app.ai.context.intent_classifier import IntentClassifier
+from fastapi import APIRouter
+
+from pydantic import BaseModel
+
+from app.ai.orchestrator.llm_orchestrator import LLMOrchestrator
 
 
-class AIRouter:
+router = APIRouter()
 
-    def __init__(self):
-        self.intent_classifier = IntentClassifier()
-
-    def classify(self, query: str):
-        """
-        Classify a natural language query.
-
-        Returns
-        -------
-        IntentResult
-        """
-        return self.intent_classifier.classify(query)
+orchestrator = LLMOrchestrator()
 
 
-# Singleton
-router = AIRouter()
+class AIRequest(BaseModel):
+    question: str
+
+
+@router.post("/ask")
+def ask_ai(request: AIRequest):
+    """
+    Submit a natural language question about your cloud infrastructure.
+
+    Returns intent, topology context, documentation, and AI answer.
+    """
+    result = orchestrator.ask(request.question)
+    return result

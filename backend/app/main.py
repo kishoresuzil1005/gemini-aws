@@ -1204,6 +1204,13 @@ app.include_router(
     tags=["AI Chat"]
 )
 
+from app.ai.router import router as llm_orchestrator_router
+app.include_router(
+    llm_orchestrator_router,
+    prefix="/api/ai/v2",
+    tags=["AI Orchestrator"]
+)
+
 from app.api.ai_architect import router as ai_architect_router
 app.include_router(
     ai_architect_router,
