@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 
 from neo4j import GraphDatabase
 
-from app.core.config import settings
+from app.config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 
 
 class GraphRetriever:
@@ -16,10 +16,10 @@ class GraphRetriever:
     def __init__(self):
 
         self.driver = GraphDatabase.driver(
-            settings.NEO4J_URI,
+            NEO4J_URI,
             auth=(
-                settings.NEO4J_USERNAME,
-                settings.NEO4J_PASSWORD
+                NEO4J_USER,
+                NEO4J_PASSWORD
             )
         )
 
