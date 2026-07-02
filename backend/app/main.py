@@ -1443,6 +1443,7 @@ def reset_incidents(db: Session = Depends(get_db)):
 # --- Background Job / Discovery Scan Multi-thread Worker ---
 
 from app.inventory.discovery import discover_resources
+import traceback
 
 def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS", region: str = "all"):
     db = db_session_factory()
@@ -1467,8 +1468,11 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         for account in accounts:
             try:
                 discover_resources(db, account.id, region=region)
-            except Exception as e:
-                print(f"Failed discovering for account {account.id}: {e}")
+            except Exception:
+                print(f"\n========== DISCOVERY FAILED ==========")
+                print(f"Account: {account.id}")
+                traceback.print_exc()
+                print("======================================\n")
 
         try:
             from app.services.graph.auto_sync import AutoGraphSync
@@ -1482,7 +1486,11 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         job.progress = 1.0
         job.status = "COMPLETED"
         db.commit()
-    except Exception as e:
+    except Exception:
+        print("\n========== WORKER FAILED ==========")
+        traceback.print_exc()
+        print("===================================\n")
+
         job.status = "FAILED"
         db.commit()
     finally:
