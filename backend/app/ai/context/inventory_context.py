@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from sqlalchemy.orm import Session
 
@@ -8,47 +8,49 @@ from app.database import SessionLocal, ResourceDB
 class InventoryContext:
 
     def __init__(self):
-        self.db: Session = SessionLocal()
+        pass
 
-    def close(self):
-        self.db.close()
+    def build(self, intent: Any) -> List[Dict]:
 
-    def build(self, intent) -> List[Dict]:
-
+        db: Session = SessionLocal()
+        
         try:
 
-            query = self.db.query(ResourceDB)
+            query = db.query(ResourceDB)
 
-            # Filter by service types if intent carries them
-            if hasattr(intent, "resources") and intent.resources:
-                services = [
-                    r.resource_type.value
-                    for r in intent.resources
-                    if r.resource_type
-                ]
-                if services:
-                    query = query.filter(
-                        ResourceDB.resource_type.in_(services)
-                    )
+            services = []
+            if isinstance(intent, dict):
+                services = intent.get("services", [])
+            elif hasattr(intent, "resources") and intent.resources:
+                services = [r.resource_type.value for r in intent.resources if r.resource_type]
+
+            if services:
+                query = query.filter(
+                    ResourceDB.resource_type.in_(services)
+                )
 
             resources = query.limit(100).all()
 
             return [
                 {
                     "id": r.id,
-                    "name": r.name,
+                    "provider": r.provider,
                     "resource_type": r.resource_type,
                     "resource_id": r.resource_id,
+                    "name": r.name,
                     "region": r.region,
                     "status": r.status,
-                    "cloud_account_id": r.cloud_account_id,
                     "instance_type": r.instance_type,
+                    "instance_class": r.instance_class,
+                    "size_gb": r.size_gb,
+                    "memory_size": r.memory_size,
+                    "monthly_requests": r.monthly_requests,
+                    "avg_duration_ms": r.avg_duration_ms,
                     "tags": r.tags,
+                    "discovered_at": r.discovered_at,
                 }
                 for r in resources
             ]
 
-        except Exception as e:
-
-            print(f"[InventoryContext] build failed: {e}")
-            return []
+        finally:
+            db.close()

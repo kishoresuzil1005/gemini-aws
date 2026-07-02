@@ -34,8 +34,6 @@ class CloudContextBuilder:
 
     def close(self):
 
-        self.inventory.close()
-
         self.graph.close()
 
     def build(
