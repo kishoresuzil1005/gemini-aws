@@ -149,3 +149,45 @@ class QdrantService:
 
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
+
+    # --------------------------------------------------
+    # Compatibility wrapper
+    # --------------------------------------------------
+
+    def search(
+        self,
+        vector,
+        limit: int = 5,
+        filters: dict | None = None
+    ):
+        """
+        Backward-compatible wrapper used by DocumentRetriever.
+        """
+
+        categories = None
+
+        if filters:
+            categories = filters.get("category")
+
+            if categories and not isinstance(categories, list):
+                categories = [categories]
+
+        return self.search_similar(
+            query_vector=vector,
+            limit=limit,
+            categories=categories
+        )
+
+    def search_text(self, text: str, limit: int = 5):
+        """
+        Placeholder until semantic text search is implemented.
+        """
+
+        from app.services.ai.embedding_service import EmbeddingService
+
+        embedding = EmbeddingService().embed(text)
+
+        return self.search(
+            vector=embedding,
+            limit=limit
+        )
