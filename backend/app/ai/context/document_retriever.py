@@ -30,16 +30,37 @@ class DocumentRetriever:
 
             for result in results:
 
-                payload = result.payload
+                # -----------------------------
+                # Handle dictionary results
+                # -----------------------------
+                if isinstance(result, dict):
 
-                documents.append(
-                    {
-                        "score": result.score,
-                        "title": payload.get("title"),
-                        "source": payload.get("source"),
-                        "content": payload.get("text")
-                    }
-                )
+                    payload = result.get("payload", {})
+
+                    documents.append(
+                        {
+                            "score": result.get("score", 0),
+                            "title": payload.get("title"),
+                            "source": payload.get("source"),
+                            "content": payload.get("text"),
+                        }
+                    )
+
+                # -----------------------------
+                # Handle native Qdrant objects
+                # -----------------------------
+                else:
+
+                    payload = result.payload
+
+                    documents.append(
+                        {
+                            "score": result.score,
+                            "title": payload.get("title"),
+                            "source": payload.get("source"),
+                            "content": payload.get("text"),
+                        }
+                    )
 
             return documents
 
@@ -47,6 +68,7 @@ class DocumentRetriever:
 
             print(f"[DocumentRetriever] search failed: {e}")
             return []
+
 
     def search_by_category(
         self,
