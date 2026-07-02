@@ -306,6 +306,30 @@ def discover_resources(
 
             try:
 
+                #
+                # Ensure source node exists
+                #
+
+                Neo4jService.create_resource({
+                    "id": rel["from"],
+                    "type": rel.get("source_type", "Resource"),
+                    "name": rel["from"]
+                })
+
+                #
+                # Ensure destination node exists
+                #
+
+                Neo4jService.create_resource({
+                    "id": rel["to"],
+                    "type": rel.get("target_type", "Resource"),
+                    "name": rel["to"]
+                })
+
+                #
+                # Create relationship
+                #
+
                 Neo4jService.create_relationship(
                     source_id=rel["from"],
                     target_id=rel["to"],
