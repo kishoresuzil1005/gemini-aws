@@ -60,7 +60,7 @@ class GraphRetriever:
                     nodes.append(
                         {
                             "id": node.get("id"),
-                            "type": node.get("resource_type"),
+                            "type": list(node.labels)[0] if node.labels else None,
                             "name": node.get("name"),
                         }
                     )
@@ -115,20 +115,15 @@ class GraphRetriever:
         resource_type: str
     ) -> List[Dict]:
 
-        query = """
-        MATCH (n)
-
-        WHERE n.resource_type=$type
+        query = f"""
+        MATCH (n:{resource_type})
 
         RETURN n
         """
 
         with self.driver.session() as session:
 
-            result = session.run(
-                query,
-                type=resource_type
-            )
+            result = session.run(query)
 
             return [
                 dict(record["n"])
@@ -148,7 +143,7 @@ class GraphRetriever:
         RETURN
             type(r) AS relationship,
             b.id AS target,
-            b.resource_type AS target_type,
+            labels(b)[0] AS target_type,
             b.name AS target_name
         """
 
