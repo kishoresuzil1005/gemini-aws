@@ -1,9 +1,9 @@
+import json
 from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
-from app.models.resource import ResourceDB
+from app.database import SessionLocal, ResourceDB
 
 
 class MetadataRetriever:
@@ -35,10 +35,10 @@ class MetadataRetriever:
             "name": resource.name,
             "resource_type": resource.resource_type,
             "region": resource.region,
-            "account_id": resource.account_id,
-            "arn": resource.arn,
-            "state": resource.state,
-            "metadata": resource.metadata_json or {}
+            "cloud_account_id": resource.cloud_account_id,
+            "status": resource.status,
+            "instance_type": resource.instance_type,
+            "tags": resource.tags or {}
         }
 
     def get_resources_by_type(
@@ -57,8 +57,8 @@ class MetadataRetriever:
                 "resource_id": r.resource_id,
                 "name": r.name,
                 "region": r.region,
-                "state": r.state,
-                "metadata": r.metadata_json or {}
+                "status": r.status,
+                "instance_type": r.instance_type
             }
             for r in resources
         ]
@@ -79,19 +79,19 @@ class MetadataRetriever:
                 "resource_id": r.resource_id,
                 "resource_type": r.resource_type,
                 "name": r.name,
-                "state": r.state
+                "status": r.status
             }
             for r in resources
         ]
 
     def get_resources_by_account(
         self,
-        account_id: str
+        cloud_account_id: int
     ) -> List[Dict]:
 
         resources = (
             self.db.query(ResourceDB)
-            .filter(ResourceDB.account_id == account_id)
+            .filter(ResourceDB.cloud_account_id == cloud_account_id)
             .all()
         )
 
@@ -116,9 +116,10 @@ class MetadataRetriever:
 
         for r in resources:
 
-            metadata = r.metadata_json or {}
-
-            tags = metadata.get("Tags", [])
+            try:
+                tags = json.loads(r.tags) if r.tags else []
+            except Exception:
+                tags = []
 
             for tag in tags:
 
