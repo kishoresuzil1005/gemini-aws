@@ -1449,16 +1449,19 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
     print("========== WORKER STARTED ==========")
     db = db_session_factory()
     print("Database session created")
+    print("Before job query")
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
-    print("Job loaded:", job_id)
+    print("After job query")
     if not job:
         db.close()
         return
 
     try:
+        print("Before update RUNNING")
         job.status = "RUNNING"
         job.progress = 0.1
         db.commit()
+        print("After update RUNNING")
         time.sleep(1.0)
         
         # Discover resources and store in ResourceDB
