@@ -96,6 +96,7 @@ class AWSRelationshipBuilder:
             self.eks_cluster_to_nodegroup,
             self.nodegroup_to_ec2,
             self.alb_to_ec2,
+            self.eip_to_resource,
         ]
 
         for builder in builders:
@@ -508,3 +509,119 @@ class AWSRelationshipBuilder:
                                 rels.append(self.relationship(tg_arn, instance_id, self.TARGETS))
             return rels
         return self.scan_regions("elbv2", collect)
+
+    def eip_to_resource(self):
+        """
+        Elastic IP
+            ├── ASSIGNED_TO EC2
+            ├── ASSIGNED_TO NetworkInterface
+            └── ASSIGNED_TO NatGateway
+        """
+
+        relationships = []
+
+        for region in self.regions:
+
+            try:
+
+                ec2 = self.get_client("ec2", region)
+
+                addresses = ec2.describe_addresses()
+
+                #
+                # Build AllocationId -> NatGateway map
+                #
+
+                nat_map = {}
+
+                try:
+
+                    ngws = ec2.describe_nat_gateways()
+
+                    for ngw in ngws.get("NatGateways", []):
+
+                        nat_id = ngw.get("NatGatewayId")
+
+                        for addr in ngw.get("NatGatewayAddresses", []):
+
+                            allocation_id = addr.get("AllocationId")
+
+                            if allocation_id:
+
+                                nat_map[allocation_id] = nat_id
+
+                except Exception:
+
+                    logger.exception(
+                        "Unable to discover NAT Gateways in %s",
+                        region
+                    )
+
+                #
+                # Elastic IP Relationships
+                #
+
+                for eip in addresses.get("Addresses", []):
+
+                    allocation_id = eip.get("AllocationId")
+
+                    #
+                    # Elastic IP -> EC2
+                    #
+
+                    instance_id = eip.get("InstanceId")
+
+                    if instance_id:
+
+                        relationships.append({
+
+                            "from": allocation_id,
+
+                            "to": instance_id,
+
+                            "type": "ASSIGNED_TO"
+
+                        })
+
+                    #
+                    # Elastic IP -> ENI
+                    #
+
+                    eni = eip.get("NetworkInterfaceId")
+
+                    if eni:
+
+                        relationships.append({
+
+                            "from": allocation_id,
+
+                            "to": eni,
+
+                            "type": "ASSIGNED_TO"
+
+                        })
+
+                    #
+                    # Elastic IP -> NAT Gateway
+                    #
+
+                    if allocation_id in nat_map:
+
+                        relationships.append({
+
+                            "from": allocation_id,
+
+                            "to": nat_map[allocation_id],
+
+                            "type": "ASSIGNED_TO"
+
+                        })
+
+            except Exception:
+
+                logger.exception(
+                    "Elastic IP relationship discovery failed in %s",
+                    region
+                )
+
+        return relationships
