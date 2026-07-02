@@ -1,7 +1,7 @@
 from typing import List, Dict
 
-from app.ai.services.embedding_service import EmbeddingService
-from app.ai.services.qdrant_service import QdrantService
+from app.services.ai.embedding_service import EmbeddingService
+from app.services.ai.qdrant_service import QdrantService
 
 
 class DocumentRetriever:
@@ -17,29 +17,36 @@ class DocumentRetriever:
         limit: int = 5
     ) -> List[Dict]:
 
-        vector = self.embedding.embed(question)
+        try:
 
-        results = self.qdrant.search(
-            vector=vector,
-            limit=limit
-        )
+            vector = self.embedding.embed(question)
 
-        documents = []
-
-        for result in results:
-
-            payload = result.payload
-
-            documents.append(
-                {
-                    "score": result.score,
-                    "title": payload.get("title"),
-                    "source": payload.get("source"),
-                    "content": payload.get("text")
-                }
+            results = self.qdrant.search(
+                vector=vector,
+                limit=limit
             )
 
-        return documents
+            documents = []
+
+            for result in results:
+
+                payload = result.payload
+
+                documents.append(
+                    {
+                        "score": result.score,
+                        "title": payload.get("title"),
+                        "source": payload.get("source"),
+                        "content": payload.get("text")
+                    }
+                )
+
+            return documents
+
+        except Exception as e:
+
+            print(f"[DocumentRetriever] search failed: {e}")
+            return []
 
     def search_by_category(
         self,
@@ -48,15 +55,16 @@ class DocumentRetriever:
         limit: int = 5
     ):
 
-        vector = self.embedding.embed(question)
-
-        return self.qdrant.search(
-            vector=vector,
-            limit=limit,
-            filters={
-                "category": category
-            }
-        )
+        try:
+            vector = self.embedding.embed(question)
+            return self.qdrant.search(
+                vector=vector,
+                limit=limit,
+                filters={"category": category}
+            )
+        except Exception as e:
+            print(f"[DocumentRetriever] search_by_category failed: {e}")
+            return []
 
     def search_service_docs(
         self,
@@ -64,10 +72,11 @@ class DocumentRetriever:
         limit: int = 10
     ):
 
-        return self.qdrant.search_text(
-            service,
-            limit
-        )
+        try:
+            return self.qdrant.search_text(service, limit)
+        except Exception as e:
+            print(f"[DocumentRetriever] search_service_docs failed: {e}")
+            return []
 
     def search_runbooks(
         self,
@@ -75,17 +84,19 @@ class DocumentRetriever:
         limit: int = 5
     ):
 
-        return self.qdrant.search_text(
-            f"runbook {issue}",
-            limit
-        )
+        try:
+            return self.qdrant.search_text(f"runbook {issue}", limit)
+        except Exception as e:
+            print(f"[DocumentRetriever] search_runbooks failed: {e}")
+            return []
 
     def search_best_practices(
         self,
         service: str
     ):
 
-        return self.qdrant.search_text(
-            f"{service} best practices",
-            5
-        )
+        try:
+            return self.qdrant.search_text(f"{service} best practices", 5)
+        except Exception as e:
+            print(f"[DocumentRetriever] search_best_practices failed: {e}")
+            return []

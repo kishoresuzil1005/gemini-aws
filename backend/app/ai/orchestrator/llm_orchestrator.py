@@ -3,7 +3,7 @@ from typing import Dict
 
 from app.ai.context.context_builder import ContextBuilder
 from app.ai.prompt.prompt_builder import PromptBuilder
-from app.ai.services.ollama_service import OllamaService
+from app.services.ai.ollama_service import OllamaService
 
 
 class LLMOrchestrator:
@@ -32,17 +32,16 @@ class LLMOrchestrator:
         prompt_time = time.time() - start
 
         # --- LLM ---
+        # OllamaService exposes .generate(prompt) with system baked in
         start = time.time()
-        response = self.llm.chat(
-            system=prompt["system"],
-            prompt=prompt["user"]
-        )
+        full_prompt = f"{prompt['system']}\n\n{prompt['user']}"
+        response = self.llm.generate(full_prompt)
         llm_time = time.time() - start
 
         return {
             "question": question,
             "answer": response,
-            "model": self.llm.model_name,
+            "model": self.llm.model,
             "context": context,
             "timing": {
                 "context": round(context_time, 3),
