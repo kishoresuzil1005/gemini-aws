@@ -84,6 +84,7 @@ class AWSRelationshipBuilder:
             self.lambda_to_subnet,
             self.lambda_to_sg,
             self.route_table_to_subnet,
+            self.route_table_to_vpc,
             self.route_table_to_gateway,
             self.route_table_to_nat_gateway,
             self.nat_gateway_to_subnet,
@@ -344,6 +345,35 @@ class AWSRelationshipBuilder:
                             rels.append(self.relationship(rt["RouteTableId"], subnet_id, self.ASSOCIATED_WITH))
             return rels
         return self.scan_regions("ec2", collect)
+
+    def route_table_to_vpc(self) -> list[dict]:
+        def collect(ec2, region):
+            rels = []
+
+            for page in ec2.get_paginator(
+                "describe_route_tables"
+            ).paginate():
+
+                for rt in page.get("RouteTables", []):
+
+                    vpc_id = rt.get("VpcId")
+
+                    if vpc_id:
+
+                        rels.append(
+                            self.relationship(
+                                rt["RouteTableId"],
+                                vpc_id,
+                                self.IN_VPC
+                            )
+                        )
+
+            return rels
+
+        return self.scan_regions(
+            "ec2",
+            collect
+        )
 
     def route_table_to_gateway(self) -> list[dict]:
         def collect(ec2, region):
