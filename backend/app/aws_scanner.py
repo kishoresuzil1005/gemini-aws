@@ -278,6 +278,135 @@ def scan_aws_resources():
         except Exception as lam_err:
             logger.error(f"Failed scanning Lambda: {lam_err}")
 
+
+        # 6. Scan Containers (ECS)
+        try:
+            ecs = session.client("ecs")
+            
+            # List Clusters
+            cluster_arns = []
+            for page in ecs.get_paginator("list_clusters").paginate():
+                cluster_arns.extend(page.get("clusterArns", []))
+            
+            task_definition_arns = set()
+
+            if cluster_arns:
+                clusters_resp = ecs.describe_clusters(clusters=cluster_arns)
+                for cluster in clusters_resp.get("clusters", []):
+                    cluster_arn = cluster["clusterArn"]
+                    cluster_name = cluster["clusterName"]
+                    status = cluster.get("status")
+                    
+                    resources.append({
+                        "id": cluster_arn,
+                        "provider": "AWS",
+                        "type": "ECSCluster",
+                        "name": cluster_name,
+                        "status": status,
+                        "configurationHint": f"Status: {status} | Active Services: {cluster.get('activeServicesCount', 0)}",
+                        "costEstimate": 0.0,
+                        "dependenciesString": ""
+                    })
+
+                    # List Services
+                    service_arns = []
+                    for page in ecs.get_paginator("list_services").paginate(cluster=cluster_arn):
+                        service_arns.extend(page.get("serviceArns", []))
+                    
+                    if service_arns:
+                        # describe_services only accepts up to 10 services per call
+                        for i in range(0, len(service_arns), 10):
+                            chunk = service_arns[i:i+10]
+                            services_resp = ecs.describe_services(cluster=cluster_arn, services=chunk)
+                            for svc in services_resp.get("services", []):
+                                svc_arn = svc["serviceArn"]
+                                svc_name = svc["serviceName"]
+                                task_def = svc.get("taskDefinition")
+                                if task_def:
+                                    task_definition_arns.add(task_def)
+                                
+                                resources.append({
+                                    "id": svc_arn,
+                                    "provider": "AWS",
+                                    "type": "ECSService",
+                                    "name": svc_name,
+                                    "status": svc.get("status"),
+                                    "configurationHint": f"LaunchType: {svc.get('launchType', 'UNKNOWN')} | Desired: {svc.get('desiredCount', 0)}",
+                                    "costEstimate": 0.0,
+                                    "dependenciesString": ""
+                                })
+                    
+                    # List Tasks
+                    task_arns = []
+                    for page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        task_arns.extend(page.get("taskArns", []))
+                    
+                    if task_arns:
+                        for i in range(0, len(task_arns), 100):
+                            chunk = task_arns[i:i+100]
+                            tasks_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                            for task in tasks_resp.get("tasks", []):
+                                task_arn = task["taskArn"]
+                                task_def = task.get("taskDefinitionArn")
+                                if task_def:
+                                    task_definition_arns.add(task_def)
+                                
+                                resources.append({
+                                    "id": task_arn,
+                                    "provider": "AWS",
+                                    "type": "ECSTask",
+                                    "name": task_arn.split("/")[-1],
+                                    "status": task.get("lastStatus"),
+                                    "configurationHint": f"Status: {task.get('lastStatus')} | CPU: {task.get('cpu', 'N/A')}",
+                                    "costEstimate": 0.0,
+                                    "dependenciesString": ""
+                                })
+
+                    # List Container Instances
+                    ci_arns = []
+                    for page in ecs.get_paginator("list_container_instances").paginate(cluster=cluster_arn):
+                        ci_arns.extend(page.get("containerInstanceArns", []))
+                    
+                    if ci_arns:
+                        for i in range(0, len(ci_arns), 100):
+                            chunk = ci_arns[i:i+100]
+                            ci_resp = ecs.describe_container_instances(cluster=cluster_arn, containerInstances=chunk)
+                            for ci in ci_resp.get("containerInstances", []):
+                                ci_arn = ci["containerInstanceArn"]
+                                ec2_id = ci.get("ec2InstanceId")
+                                resources.append({
+                                    "id": ci_arn,
+                                    "provider": "AWS",
+                                    "type": "ECSContainerInstance",
+                                    "name": ci_arn.split("/")[-1],
+                                    "status": ci.get("status"),
+                                    "configurationHint": f"EC2 Instance: {ec2_id}",
+                                    "costEstimate": 0.0,
+                                    "dependenciesString": ""
+                                })
+
+            # Describe Task Definitions
+            for task_def_arn in list(task_definition_arns):
+                try:
+                    td_resp = ecs.describe_task_definition(taskDefinition=task_def_arn)
+                    td = td_resp.get("taskDefinition", {})
+                    td_arn = td.get("taskDefinitionArn")
+                    resources.append({
+                        "id": td_arn,
+                        "provider": "AWS",
+                        "type": "ECSTaskDefinition",
+                        "name": f"{td.get('family')}:{td.get('revision')}",
+                        "status": td.get("status"),
+                        "configurationHint": f"NetworkMode: {td.get('networkMode', 'N/A')} | Compat: {','.join(td.get('requiresCompatibilities', []))}",
+                        "costEstimate": 0.0,
+                        "dependenciesString": ""
+                    })
+                except ClientError as e:
+                    logger.warning(f"Could not describe task definition {task_def_arn}: {e}")
+
+        except Exception as ecs_err:
+            logger.error(f"Failed scanning ECS: {ecs_err}")
+
     except Exception as general_err:
         logger.error(f"General error during AWS metadata sweep: {general_err}")
 

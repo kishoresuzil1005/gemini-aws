@@ -24,6 +24,15 @@ class AWSRelationshipBuilder:
     USES_ELASTIC_IP = "USES_ELASTIC_IP"
     MANAGES = "MANAGES"
     HAS_NODEGROUP = "HAS_NODEGROUP"
+    HAS_SERVICE = "HAS_SERVICE"
+    HAS_TASK = "HAS_TASK"
+    RUNS_TASK = "RUNS_TASK"
+    USES_TASK_DEFINITION = "USES_TASK_DEFINITION"
+    EXECUTION_ROLE = "EXECUTION_ROLE"
+    TASK_ROLE = "TASK_ROLE"
+    ATTACHED_TO_ENI = "ATTACHED_TO_ENI"
+    RUNS_ON_CONTAINER_INSTANCE = "RUNS_ON_CONTAINER_INSTANCE"
+
 
     def __init__(self):
         self.regions = get_all_regions()
@@ -107,6 +116,19 @@ class AWSRelationshipBuilder:
             self.nodegroup_to_ec2,
             self.alb_to_ec2,
             self.eip_to_resource,
+            self.ecs_cluster_to_service,
+            self.ecs_cluster_to_task,
+            self.ecs_service_to_task_definition,
+            self.ecs_service_to_task,
+            self.ecs_task_to_subnet,
+            self.ecs_task_to_vpc,
+            self.ecs_task_to_security_group,
+            self.ecs_task_to_eni,
+            self.ecs_task_to_container_instance,
+            self.task_definition_to_execution_role,
+            self.task_definition_to_task_role,
+            self.container_instance_to_ec2,
+            self.target_group_to_ecs_service,
         ]
 
         for builder in builders:
@@ -660,3 +682,271 @@ class AWSRelationshipBuilder:
                 )
 
         return relationships
+
+    def ecs_cluster_to_service(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in page.get("clusterArns", []):
+                    for svc_page in ecs.get_paginator("list_services").paginate(cluster=cluster_arn):
+                        for svc_arn in svc_page.get("serviceArns", []):
+                            rels.append(self.relationship(cluster_arn, svc_arn, self.HAS_SERVICE, "ECSCluster", "ECSService"))
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_cluster_to_task(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        for task_arn in task_page.get("taskArns", []):
+                            rels.append(self.relationship(cluster_arn, task_arn, self.HAS_TASK, "ECSCluster", "ECSTask"))
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_service_to_task_definition(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for svc_page in ecs.get_paginator("list_services").paginate(cluster=cluster_arn):
+                        services = svc_page.get("serviceArns", [])
+                        if services:
+                            for i in range(0, len(services), 10):
+                                chunk = services[i:i+10]
+                                try:
+                                    svc_resp = ecs.describe_services(cluster=cluster_arn, services=chunk)
+                                    for svc in svc_resp.get("services", []):
+                                        svc_arn = svc["serviceArn"]
+                                        task_def = svc.get("taskDefinition")
+                                        if task_def:
+                                            rels.append(self.relationship(svc_arn, task_def, self.USES_TASK_DEFINITION, "ECSService", "ECSTaskDefinition"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_service_to_task(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        group = task.get("group", "")
+                                        if group.startswith("service:"):
+                                            svc_name = group.split("service:")[-1]
+                                            region_acc = ":".join(cluster_arn.split(":")[3:5])
+                                            c_name = cluster_arn.split("/")[-1]
+                                            svc_arn = f"arn:aws:ecs:{region_acc}:service/{c_name}/{svc_name}"
+                                            rels.append(self.relationship(svc_arn, task_arn, self.RUNS_TASK, "ECSService", "ECSTask"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_task_to_subnet(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        for att in task.get("attachments", []):
+                                            if att.get("type") == "ElasticNetworkInterface":
+                                                for kv in att.get("details", []):
+                                                    if kv.get("name") == "subnetId":
+                                                        rels.append(self.relationship(task_arn, kv.get("value"), self.IN_SUBNET, "ECSTask", "Subnet"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_task_to_vpc(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        for att in task.get("attachments", []):
+                                            if att.get("type") == "ElasticNetworkInterface":
+                                                for kv in att.get("details", []):
+                                                    if kv.get("name") == "vpcId":
+                                                        rels.append(self.relationship(task_arn, kv.get("value"), self.IN_VPC, "ECSTask", "VPC"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_task_to_security_group(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        for att in task.get("attachments", []):
+                                            if att.get("type") == "ElasticNetworkInterface":
+                                                for kv in att.get("details", []):
+                                                    if kv.get("name") == "securityGroups":
+                                                        sgs = kv.get("value", "").split(",")
+                                                        for sg in sgs:
+                                                            if sg:
+                                                                rels.append(self.relationship(task_arn, sg, self.USES_SECURITY_GROUP, "ECSTask", "SecurityGroup"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_task_to_eni(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        for att in task.get("attachments", []):
+                                            if att.get("type") == "ElasticNetworkInterface":
+                                                for kv in att.get("details", []):
+                                                    if kv.get("name") == "networkInterfaceId":
+                                                        rels.append(self.relationship(task_arn, kv.get("value"), self.ATTACHED_TO_ENI, "ECSTask", "NetworkInterface"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def ecs_task_to_container_instance(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for task_page in ecs.get_paginator("list_tasks").paginate(cluster=cluster_arn):
+                        tasks = task_page.get("taskArns", [])
+                        if tasks:
+                            for i in range(0, len(tasks), 100):
+                                chunk = tasks[i:i+100]
+                                try:
+                                    task_resp = ecs.describe_tasks(cluster=cluster_arn, tasks=chunk)
+                                    for task in task_resp.get("tasks", []):
+                                        task_arn = task["taskArn"]
+                                        ci_arn = task.get("containerInstanceArn")
+                                        if ci_arn:
+                                            rels.append(self.relationship(task_arn, ci_arn, self.RUNS_ON_CONTAINER_INSTANCE, "ECSTask", "ECSContainerInstance"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def task_definition_to_execution_role(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for page in ecs.get_paginator("list_task_definitions").paginate():
+                for td_arn in page.get("taskDefinitionArns", []):
+                    try:
+                        td_resp = ecs.describe_task_definition(taskDefinition=td_arn)
+                        td = td_resp.get("taskDefinition", {})
+                        er_arn = td.get("executionRoleArn")
+                        if er_arn:
+                            rels.append(self.relationship(td_arn, er_arn, self.EXECUTION_ROLE, "ECSTaskDefinition", "IAM"))
+                    except Exception:
+                        pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def task_definition_to_task_role(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for page in ecs.get_paginator("list_task_definitions").paginate():
+                for td_arn in page.get("taskDefinitionArns", []):
+                    try:
+                        td_resp = ecs.describe_task_definition(taskDefinition=td_arn)
+                        td = td_resp.get("taskDefinition", {})
+                        tr_arn = td.get("taskRoleArn")
+                        if tr_arn:
+                            rels.append(self.relationship(td_arn, tr_arn, self.TASK_ROLE, "ECSTaskDefinition", "IAM"))
+                    except Exception:
+                        pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def container_instance_to_ec2(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for ci_page in ecs.get_paginator("list_container_instances").paginate(cluster=cluster_arn):
+                        cis = ci_page.get("containerInstanceArns", [])
+                        if cis:
+                            for i in range(0, len(cis), 100):
+                                chunk = cis[i:i+100]
+                                try:
+                                    ci_resp = ecs.describe_container_instances(cluster=cluster_arn, containerInstances=chunk)
+                                    for ci in ci_resp.get("containerInstances", []):
+                                        ci_arn = ci["containerInstanceArn"]
+                                        ec2_id = ci.get("ec2InstanceId")
+                                        if ec2_id:
+                                            rels.append(self.relationship(ci_arn, ec2_id, self.ATTACHED_TO, "ECSContainerInstance", "EC2"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
+
+    def target_group_to_ecs_service(self) -> list[dict]:
+        def collect(ecs, region):
+            rels = []
+            for cluster_page in ecs.get_paginator("list_clusters").paginate():
+                for cluster_arn in cluster_page.get("clusterArns", []):
+                    for svc_page in ecs.get_paginator("list_services").paginate(cluster=cluster_arn):
+                        services = svc_page.get("serviceArns", [])
+                        if services:
+                            for i in range(0, len(services), 10):
+                                chunk = services[i:i+10]
+                                try:
+                                    svc_resp = ecs.describe_services(cluster=cluster_arn, services=chunk)
+                                    for svc in svc_resp.get("services", []):
+                                        svc_arn = svc["serviceArn"]
+                                        for lb in svc.get("loadBalancers", []):
+                                            tg_arn = lb.get("targetGroupArn")
+                                            if tg_arn:
+                                                rels.append(self.relationship(tg_arn, svc_arn, self.TARGETS, "TargetGroup", "ECSService"))
+                                except Exception:
+                                    pass
+            return rels
+        return self.scan_regions("ecs", collect)
