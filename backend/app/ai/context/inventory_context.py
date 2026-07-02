@@ -1,54 +1,54 @@
 from typing import Dict, List
 
+from sqlalchemy.orm import Session
+
 from app.database import SessionLocal, ResourceDB
 
 
 class InventoryContext:
-    """
-    Pulls live resource inventory from PostgreSQL.
-    """
 
     def __init__(self):
-        self.db = SessionLocal()
+        self.db: Session = SessionLocal()
 
     def close(self):
         self.db.close()
 
-    def build(self, intent) -> Dict:
-        """
-        Build inventory context based on the classified intent.
-        Returns resource counts and a filtered list of resources.
-        """
+    def build(self, intent) -> List[Dict]:
 
         try:
 
-            resources = self.db.query(ResourceDB).all()
+            query = self.db.query(ResourceDB)
 
-            # Summarize by type
-            counts: Dict[str, int] = {}
-            for r in resources:
-                counts[r.resource_type] = counts.get(r.resource_type, 0) + 1
+            # Filter by service types if intent carries them
+            if hasattr(intent, "resources") and intent.resources:
+                services = [
+                    r.resource_type.value
+                    for r in intent.resources
+                    if r.resource_type
+                ]
+                if services:
+                    query = query.filter(
+                        ResourceDB.resource_type.in_(services)
+                    )
 
-            # Pull resource list relevant to extracted entities
-            resource_list = [
+            resources = query.limit(100).all()
+
+            return [
                 {
-                    "resource_id": r.resource_id,
-                    "resource_type": r.resource_type,
+                    "id": r.id,
                     "name": r.name,
+                    "resource_type": r.resource_type,
+                    "resource_id": r.resource_id,
                     "region": r.region,
                     "status": r.status,
-                    "instance_type": r.instance_type
+                    "cloud_account_id": r.cloud_account_id,
+                    "instance_type": r.instance_type,
+                    "tags": r.tags,
                 }
-                for r in resources[:50]  # cap for context window
+                for r in resources
             ]
-
-            return {
-                "total": len(resources),
-                "by_type": counts,
-                "resources": resource_list
-            }
 
         except Exception as e:
 
             print(f"[InventoryContext] build failed: {e}")
-            return {"total": 0, "by_type": {}, "resources": []}
+            return []
