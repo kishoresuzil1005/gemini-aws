@@ -59,10 +59,56 @@ class AWSRelationshipBuilder:
         return relationships
 
     def relationship(self, source: str, target: str, rel_type: str) -> dict:
+
+        def resource_type(resource_id: str) -> str:
+
+            if resource_id.startswith("i-"):
+                return "EC2"
+
+            if resource_id.startswith("subnet-"):
+                return "Subnet"
+
+            if resource_id.startswith("sg-"):
+                return "SecurityGroup"
+
+            if resource_id.startswith("vpc-"):
+                return "VPC"
+
+            if resource_id.startswith("vol-"):
+                return "EBS"
+
+            if resource_id.startswith("igw-"):
+                return "InternetGateway"
+
+            if resource_id.startswith("rtb-"):
+                return "RouteTable"
+
+            if resource_id.startswith("eni-"):
+                return "NetworkInterface"
+
+            if resource_id.startswith("nat-"):
+                return "NatGateway"
+
+            if resource_id.startswith("eipalloc-"):
+                return "ElasticIP"
+
+            if resource_id.startswith("arn:aws:iam"):
+                return "IAM"
+
+            if resource_id.startswith("arn:aws:elasticloadbalancing"):
+                if ":targetgroup/" in resource_id:
+                    return "TargetGroup"
+                if ":loadbalancer/" in resource_id:
+                    return "ALB"
+
+            return "Resource"
+
         return {
             "from": source,
             "to": target,
-            "type": rel_type
+            "type": rel_type,
+            "source_type": resource_type(source),
+            "target_type": resource_type(target),
         }
 
     def build(self) -> list[dict]:
@@ -603,15 +649,13 @@ class AWSRelationshipBuilder:
 
                     if instance_id:
 
-                        relationships.append({
-
-                            "from": allocation_id,
-
-                            "to": instance_id,
-
-                            "type": "ASSIGNED_TO"
-
-                        })
+                        relationships.append(
+                            self.relationship(
+                                allocation_id,
+                                instance_id,
+                                "ASSIGNED_TO"
+                            )
+                        )
 
                     #
                     # Elastic IP -> ENI
@@ -621,15 +665,13 @@ class AWSRelationshipBuilder:
 
                     if eni:
 
-                        relationships.append({
-
-                            "from": allocation_id,
-
-                            "to": eni,
-
-                            "type": "ASSIGNED_TO"
-
-                        })
+                        relationships.append(
+                            self.relationship(
+                                allocation_id,
+                                eni,
+                                "ASSIGNED_TO"
+                            )
+                        )
 
                     #
                     # Elastic IP -> NAT Gateway
@@ -637,15 +679,13 @@ class AWSRelationshipBuilder:
 
                     if allocation_id in nat_map:
 
-                        relationships.append({
-
-                            "from": allocation_id,
-
-                            "to": nat_map[allocation_id],
-
-                            "type": "ASSIGNED_TO"
-
-                        })
+                        relationships.append(
+                            self.relationship(
+                                allocation_id,
+                                nat_map[allocation_id],
+                                "ASSIGNED_TO"
+                            )
+                        )
 
             except Exception:
 
