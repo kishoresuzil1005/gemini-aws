@@ -58,48 +58,57 @@ class AWSRelationshipBuilder:
                 logger.exception("%s scan failed in %s", service, region)
         return relationships
 
-    def relationship(self, source: str, target: str, rel_type: str) -> dict:
+    def relationship(
+        self,
+        source: str,
+        target: str,
+        rel_type: str
+    ) -> dict:
 
-        def resource_type(resource_id: str) -> str:
+        def get_resource_type(resource_id: str) -> str:
+
+            if not resource_id:
+                return "Resource"
 
             if resource_id.startswith("i-"):
                 return "EC2"
 
-            if resource_id.startswith("subnet-"):
-                return "Subnet"
-
-            if resource_id.startswith("sg-"):
-                return "SecurityGroup"
-
-            if resource_id.startswith("vpc-"):
-                return "VPC"
-
-            if resource_id.startswith("vol-"):
+            elif resource_id.startswith("vol-"):
                 return "EBS"
 
-            if resource_id.startswith("igw-"):
+            elif resource_id.startswith("vpc-"):
+                return "VPC"
+
+            elif resource_id.startswith("subnet-"):
+                return "Subnet"
+
+            elif resource_id.startswith("sg-"):
+                return "SecurityGroup"
+
+            elif resource_id.startswith("igw-"):
                 return "InternetGateway"
 
-            if resource_id.startswith("rtb-"):
-                return "RouteTable"
-
-            if resource_id.startswith("eni-"):
+            elif resource_id.startswith("eni-"):
                 return "NetworkInterface"
 
-            if resource_id.startswith("nat-"):
+            elif resource_id.startswith("rtb-"):
+                return "RouteTable"
+
+            elif resource_id.startswith("nat-"):
                 return "NatGateway"
 
-            if resource_id.startswith("eipalloc-"):
+            elif resource_id.startswith("eipalloc-"):
                 return "ElasticIP"
 
-            if resource_id.startswith("arn:aws:iam"):
+            elif resource_id.startswith("arn:aws:iam"):
                 return "IAM"
 
-            if resource_id.startswith("arn:aws:elasticloadbalancing"):
+            elif resource_id.startswith("arn:aws:elasticloadbalancing:"):
+
                 if ":targetgroup/" in resource_id:
                     return "TargetGroup"
-                if ":loadbalancer/" in resource_id:
-                    return "ALB"
+
+                return "ALB"
 
             return "Resource"
 
@@ -107,8 +116,8 @@ class AWSRelationshipBuilder:
             "from": source,
             "to": target,
             "type": rel_type,
-            "source_type": resource_type(source),
-            "target_type": resource_type(target),
+            "source_type": get_resource_type(source),
+            "target_type": get_resource_type(target)
         }
 
     def build(self) -> list[dict]:
