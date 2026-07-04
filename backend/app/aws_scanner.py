@@ -4,6 +4,15 @@ from botocore.exceptions import ClientError
 from .providers.aws.regions import get_all_regions
 from .config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION, is_aws_configured
 
+# Phase 4 Discovery Modules
+from .providers.aws.apigateway import APIGatewayDiscovery
+from .providers.aws.cloudfront import CloudFrontDiscovery
+from .providers.aws.waf import WAFDiscovery
+from .providers.aws.sns import SNSDiscovery
+from .providers.aws.eventbridge import EventBridgeDiscovery
+from .providers.aws.route53 import Route53Discovery
+from .providers.aws.dynamodb import DynamoDBDiscovery
+
 logger = logging.getLogger("AWS_Scanner")
 
 def get_session():
@@ -103,6 +112,29 @@ def scan_aws_resources():
                 })
     except Exception as s3_err:
         logger.error(f"Failed scanning S3: {s3_err}")
+
+    # Phase 4 Global Providers
+    try:
+        for dist in CloudFrontDiscovery.discover():
+            resources.append({
+                "id": dist["resource_id"], "provider": "AWS", "type": dist["resource_type"],
+                "name": dist.get("name", dist["resource_id"]),
+                "configurationHint": f"Domain: {dist.get('domain_name')}",
+                "costEstimate": 0.0, "dependenciesString": ""
+            })
+    except Exception as cf_err:
+        logger.error(f"Failed scanning CloudFront: {cf_err}")
+
+    try:
+        for r53 in Route53Discovery.discover():
+            resources.append({
+                "id": r53["resource_id"], "provider": "AWS", "type": r53["resource_type"],
+                "name": r53.get("name", r53["resource_id"]),
+                "configurationHint": f"Type: {r53.get('record_type', '')}",
+                "costEstimate": 0.0, "dependenciesString": ""
+            })
+    except Exception as r53_err:
+        logger.error(f"Failed scanning Route53: {r53_err}")
 
     for region in get_all_regions():
         try:
@@ -288,6 +320,22 @@ def scan_aws_resources():
                         })
                     except Exception: pass
             except Exception as ecs_err: pass
+
+            # Phase 4 Regional Providers
+            for module in (APIGatewayDiscovery, WAFDiscovery, SNSDiscovery, EventBridgeDiscovery, DynamoDBDiscovery):
+                try:
+                    for res in module.discover(region):
+                        resources.append({
+                            "id": res["resource_id"],
+                            "provider": "AWS",
+                            "type": res["resource_type"],
+                            "name": res.get("name", res["resource_id"]),
+                            "configurationHint": res.get("configuration_hint", ""),
+                            "costEstimate": 0.0,
+                            "dependenciesString": ""
+                        })
+                except Exception as mod_err:
+                    logger.error(f"Failed scanning {module.__name__} in {region}: {mod_err}")
 
         except Exception as region_err:
             logger.error(f"Failed scanning region {region}: {region_err}")
