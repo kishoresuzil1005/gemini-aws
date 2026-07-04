@@ -217,9 +217,9 @@ class Neo4jService:
 
         SET
             n:{node_type},
-            n.name = $name,
-            n.provider = $provider,
-            n.region = $region,
+            n.name = CASE WHEN $name <> $id AND $name <> '' THEN $name ELSE coalesce(n.name, $name) END,
+            n.provider = CASE WHEN $provider <> '' THEN $provider ELSE coalesce(n.provider, $provider) END,
+            n.region = CASE WHEN $region <> '' THEN $region ELSE coalesce(n.region, $region) END,
             n.updated_at = datetime()
 
         RETURN n
