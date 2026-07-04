@@ -10,8 +10,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .config import is_aws_configured, AWS_DEFAULT_REGION
-from .database import (
-    init_db, get_db, SessionLocal, CloudAccountDB, DiscoveryResourceDB, 
+from .database import init_db, get_db, SessionLocal
+from .models import (
+    CloudAccountDB, DiscoveryResourceDB, 
     SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB, ResourceDB,
     ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB
 )

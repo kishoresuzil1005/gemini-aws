@@ -1,4 +1,4 @@
-from app.database import CostReportDB
+from app.models import CostReportDB
 
 
 class SpendAnomalyDetector:

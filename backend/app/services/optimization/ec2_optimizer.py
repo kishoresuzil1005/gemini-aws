@@ -1,4 +1,4 @@
-from app.database import MetricDB
+from app.models import MetricDB
 from app.services.optimization.cost_analyzer import CostAnalyzer
 from app.services.optimization.rightsizer import Rightsizer
 

@@ -4,7 +4,7 @@ import logging
 import time
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.database import PricingCacheDB
+from app.models import PricingCacheDB
 
 logger = logging.getLogger("PricingService")
 

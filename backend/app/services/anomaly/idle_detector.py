@@ -1,4 +1,4 @@
-from app.database import MetricDB
+from app.models import MetricDB
 
 
 class IdleResourceDetector:
