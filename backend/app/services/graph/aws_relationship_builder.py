@@ -67,26 +67,42 @@ class AWSRelationshipBuilder:
             self.iam = None
 
     def get_client(self, service: str, region: str = None) -> Any:
+        import threading
+        if not hasattr(self, '_client_lock'):
+            self._client_lock = threading.Lock()
+            
         key = (service, region)
-        if key not in self.clients:
-            kwargs = {}
-            if region:
-                kwargs["region_name"] = region
-            self.clients[key] = boto3.client(service, **kwargs)
-        return self.clients[key]
+        with self._client_lock:
+            if key not in self.clients:
+                kwargs = {}
+                if region:
+                    kwargs["region_name"] = region
+                self.clients[key] = boto3.client(service, **kwargs)
+            return self.clients[key]
 
     def scan_regions(self, service: str, callback: Callable) -> list[dict]:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import threading
+        
         relationships = []
-        for region in self.regions:
+        lock = threading.Lock()
+        
+        def process_region(region):
             try:
                 client = self.get_client(service, region)
-                relationships.extend(callback(client, region))
-            except ClientError:
-                logger.exception("%s scan failed in %s", service, region)
-            except EndpointConnectionError:
-                logger.exception("%s scan failed in %s", service, region)
+                return callback(client, region)
             except Exception:
                 logger.exception("%s scan failed in %s", service, region)
+                return []
+                
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(process_region, r) for r in self.regions]
+            for future in as_completed(futures):
+                res = future.result()
+                if res:
+                    with lock:
+                        relationships.extend(res)
+                        
         return relationships
 
     def relationship(

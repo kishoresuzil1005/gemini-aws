@@ -41,30 +41,27 @@ def discover_resources(
             print(regions_to_scan)
 
             discovered = []
-
             seen_global_ids = set()
 
-            for r_name in regions_to_scan:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+            import threading
+            global_lock = threading.Lock()
 
-                scan_res = AWSDiscoveryScanner.scan_all(
-                    region=r_name
-                )
+            def scan_r(r_name):
+                return AWSDiscoveryScanner.scan_all(region=r_name)
 
-                for item in scan_res:
-
-                    if item.get("region") == "global":
-
-                        if item.get("id") not in seen_global_ids:
-
-                            seen_global_ids.add(
-                                item.get("id")
-                            )
-
-                            discovered.append(item)
-
-                    else:
-
-                        discovered.append(item)
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = {executor.submit(scan_r, r_name): r_name for r_name in regions_to_scan}
+                for future in as_completed(futures):
+                    scan_res = future.result()
+                    for item in scan_res:
+                        with global_lock:
+                            if item.get("region") == "global":
+                                if item.get("id") not in seen_global_ids:
+                                    seen_global_ids.add(item.get("id"))
+                                    discovered.append(item)
+                            else:
+                                discovered.append(item)
 
             if not discovered:
 
