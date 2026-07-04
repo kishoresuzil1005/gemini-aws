@@ -73,6 +73,11 @@ class Neo4jService:
                 NEO4J_URI,
                 auth=(NEO4J_USER, NEO4J_PASSWORD)
             )
+            # Apply uniqueness constraint for idempotency against race conditions
+            with self.driver.session() as session:
+                session.run(
+                    "CREATE CONSTRAINT aws_resource_id_unique IF NOT EXISTS FOR (r:AWSResource) REQUIRE r.id IS UNIQUE"
+                )
         except Exception as e:
             logger.warning(f"Neo4j driver connection failed: {e}. Active mock fallback store enabled.")
             self.driver = None
@@ -206,11 +211,12 @@ class Neo4jService:
             return
 
         query = f"""
-        MERGE (n:{node_type} {{
+        MERGE (n:AWSResource {{
             id: $id
         }})
 
         SET
+            n:{node_type},
             n.name = $name,
             n.provider = $provider,
             n.region = $region,
@@ -278,8 +284,8 @@ class Neo4jService:
             return
 
         query = f"""
-        MATCH (a {{id: $source}})
-        MATCH (b {{id: $target}})
+        MATCH (a:AWSResource {{id: $source}})
+        MATCH (b:AWSResource {{id: $target}})
 
         MERGE (a)-[:{safe_rel_type}]->(b)
         """
@@ -484,8 +490,18 @@ class Neo4jService:
         res_id = resource.get("id") or resource.get("resource_id")
         res_type = resource.get("type") or resource.get("resource_type") or "Resource"
         name = resource.get("name") or res_id
+        
+        provider = resource.get("provider") or "AWS"
+        region = resource.get("region") or ""
+        
         inst = Neo4jService()
-        inst.create_node(node_type=res_type, resource_id=res_id, name=name)
+        inst.create_node(
+            node_type=res_type, 
+            resource_id=res_id, 
+            name=name, 
+            provider=provider.upper(), 
+            region=region
+        )
 
     @staticmethod
     def get_full_graph():
