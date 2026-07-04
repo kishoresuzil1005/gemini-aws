@@ -11,10 +11,8 @@ class OpenSearchDiscovery:
         resources = []
         try:
             client = boto3.client("opensearch", region_name=region)
-            paginator = client.get_paginator("list_domain_names")
-            domain_names = []
-            for page in paginator.paginate():
-                domain_names.extend([d["DomainName"] for d in page.get("DomainNames", [])])
+            response = client.list_domain_names()
+            domain_names = [d["DomainName"] for d in response.get("DomainNames", [])]
 
             if not domain_names:
                 return resources

@@ -16,9 +16,14 @@ class WAFDiscovery:
 
             for scope in ("REGIONAL", "CLOUDFRONT") if region == "us-east-1" else ("REGIONAL",):
                 try:
-                    paginator = client.get_paginator("list_web_acls")
-                    for page in paginator.paginate(Scope=scope):
-                        for acl in page.get("WebACLs", []):
+                    next_marker = None
+                    while True:
+                        kwargs = {"Scope": scope, "Limit": 50}
+                        if next_marker:
+                            kwargs["NextMarker"] = next_marker
+                        
+                        response = client.list_web_acls(**kwargs)
+                        for acl in response.get("WebACLs", []):
                             acl_id = acl["Id"]
                             acl_arn = acl["ARN"]
                             acl_name = acl["Name"]
@@ -66,6 +71,10 @@ class WAFDiscovery:
                                 "managed_by_firewall_manager": managed_by,
                                 "associated_resources": associations,
                             })
+                        
+                        next_marker = response.get("NextMarker")
+                        if not next_marker:
+                            break
                 except Exception:
                     logger.exception("WAFv2 %s scope discovery failed for region %s", scope, region)
 

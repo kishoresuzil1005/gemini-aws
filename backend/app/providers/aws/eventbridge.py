@@ -13,9 +13,14 @@ class EventBridgeDiscovery:
             client = boto3.client("events", region_name=region)
 
             # Event Buses
-            paginator = client.get_paginator("list_event_buses")
-            for page in paginator.paginate():
-                for bus in page.get("EventBuses", []):
+            next_token = None
+            while True:
+                kwargs = {}
+                if next_token:
+                    kwargs["NextToken"] = next_token
+                response = client.list_event_buses(**kwargs)
+                
+                for bus in response.get("EventBuses", []):
                     bus_arn = bus["Arn"]
                     bus_name = bus["Name"]
 
@@ -29,9 +34,14 @@ class EventBridgeDiscovery:
                     })
 
                     # Rules on this bus
-                    rule_paginator = client.get_paginator("list_rules")
-                    for rule_page in rule_paginator.paginate(EventBusName=bus_name):
-                        for rule in rule_page.get("Rules", []):
+                    rule_next_token = None
+                    while True:
+                        rule_kwargs = {"EventBusName": bus_name}
+                        if rule_next_token:
+                            rule_kwargs["NextToken"] = rule_next_token
+                        rule_resp = client.list_rules(**rule_kwargs)
+                        
+                        for rule in rule_resp.get("Rules", []):
                             rule_arn = rule["Arn"]
                             rule_name = rule["Name"]
 
@@ -67,6 +77,14 @@ class EventBridgeDiscovery:
                                 "targets": targets,
                                 "target_arns": [t["arn"] for t in targets],
                             })
+                        
+                        rule_next_token = rule_resp.get("NextToken")
+                        if not rule_next_token:
+                            break
+                
+                next_token = response.get("NextToken")
+                if not next_token:
+                    break
 
         except Exception:
             logger.exception("EventBridge discovery failed for region %s", region)
