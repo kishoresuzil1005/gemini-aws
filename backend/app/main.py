@@ -34,8 +34,6 @@ app = FastAPI(
 )
 app.include_router(inventory_router, prefix="/api/v1/inventory", tags=["Inventory Management"])
 
-from app.api.diagram_relationships import router as diagram_relationship_router
-app.include_router(diagram_relationship_router)
 
 
 # Enable CORS so our local Android Emulators (10.0.2.2 or real devices) can speak to our services
@@ -451,12 +449,21 @@ def startup_event():
     from app.jobs.scheduler import start_scheduler
     start_scheduler()
 
-    # Create first-time startup auto sync
+    # Create first-time startup auto sync in the background so it doesn't block API load
     try:
         from app.services.graph.auto_sync import AutoGraphSync
-        AutoGraphSync.sync(db)
+        def run_sync():
+            sync_db = SessionLocal()
+            try:
+                AutoGraphSync.sync(sync_db)
+            except Exception as e:
+                print(f"[GRAPH AUTO SYNC BG] {e}")
+            finally:
+                sync_db.close()
+        
+        threading.Thread(target=run_sync, daemon=True).start()
     except Exception as ge_e:
-        print(f"[GRAPH AUTO SYNC] {ge_e}")
+        print(f"[GRAPH AUTO SYNC INIT] {ge_e}")
 
     db.commit()
     db.close()
