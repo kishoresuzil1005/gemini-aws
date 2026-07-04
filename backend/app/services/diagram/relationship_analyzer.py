@@ -51,8 +51,11 @@ class RelationshipAnalyzer:
             if parent is None or child is None:
                 continue
 
-            parent_to_children[parent].append(child)
-            child_to_parent[child].append(parent)
+            if child not in parent_to_children[parent]:
+                parent_to_children[parent].append(child)
+
+            if parent not in child_to_parent[child]:
+                child_to_parent[child].append(parent)
 
         #
         # Detect entry nodes

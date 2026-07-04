@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from app.database import get_db, SessionLocal, ResourceDB
+from app.models import get_db, SessionLocal, ResourceDB
 from app.services.ai.insights import AIInsightEngine
 from app.services.ai.chat import CloudAssistant
 from app.services.optimization.recommendations import RecommendationEngine
@@ -15,6 +15,7 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     question: str
+    scan_id: Optional[str] = None
 
 
 # Matching Response Schemas for Client validation compatibility
@@ -32,6 +33,7 @@ class LocalAIChatResponseSchema(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     resource_id: str
+    scan_id: Optional[str] = None
 
 
 class AnalyzeResponse(BaseModel):

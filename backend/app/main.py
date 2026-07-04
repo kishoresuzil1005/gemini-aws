@@ -741,7 +741,7 @@ def get_relationships_endpoint(db: Session = Depends(get_db)):
     return rels
 
 
-from app.database import ResourceNodeDB, ResourceEdgeDB
+from app.models import ResourceNodeDB, ResourceEdgeDB
 from app.services.topology.topology_service import TopologyService
 from app.services.topology.dependency_service import DependencyService
 
@@ -1366,31 +1366,34 @@ app.include_router(
 
 # --- Incident & Healing API Endpoints ---
 
+from app.services.incident.incident_engine import IncidentEngine
+import time
+
 @app.get("/api/incidents", response_model=List[CloudIncidentSchema])
 def get_incidents(db: Session = Depends(get_db)):
-    # Merge and query incidents. We check if there are real-world credentials to do a hot sync!
-    incidents = db.query(CloudIncidentDB).all()
+    # Run Incident Engine offline evaluation
+    engine = IncidentEngine(db=db)
+    evaluated_incidents = engine.generate_incidents()
     
-    # Check if we should inject real AWS scanned issues as well
-    if is_aws_configured():
-        _, aws_incidents = scan_aws_resources()
-        # Merge those not already stored or just return dynamically
-        stored_ids = {i.id for i in incidents}
-        for item in aws_incidents:
-            if item["id"] not in stored_ids:
-                timestr = time.strftime("%H:%M:%S")
-                new_inc = CloudIncidentDB(
-                    id=item["id"],
-                    title=item["title"],
-                    severity=item["severity"],
-                    resource_id=item["resourceId"],
-                    description=item["description"],
-                    status=item["status"],
-                    timestamp=timestr
-                )
-                db.add(new_inc)
-                db.commit()
-                incidents.append(new_inc)
+    incidents = db.query(CloudIncidentDB).all()
+    stored_ids = {i.id for i in incidents}
+    
+    for item in evaluated_incidents:
+        if item["id"] not in stored_ids:
+            timestr = time.strftime("%H:%M:%S")
+            new_inc = CloudIncidentDB(
+                id=item["id"],
+                title=item["title"],
+                severity=item["severity"],
+                resource_id=item["resource_id"],
+                description=item["description"],
+                status=item.get("status", "ACTIVE"),
+                timestamp=timestr
+            )
+            db.add(new_inc)
+            incidents.append(new_inc)
+            
+    db.commit()
 
     return [
         CloudIncidentSchema(
@@ -1398,10 +1401,11 @@ def get_incidents(db: Session = Depends(get_db)):
             title=i.title,
             severity=i.severity,
             resourceId=i.resource_id,
-            description=i.description,
+            description=i.description or "",
             status=i.status,
             timestamp=i.timestamp
-        ) for i in incidents
+        )
+        for i in incidents
     ]
 
 @app.post("/api/incidents/self-heal/{incident_id}")
@@ -1482,7 +1486,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         db.commit()
 
         print("STEP E")
-        from app.database import CloudAccountDB
+        from app.models import CloudAccountDB
         accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == provider).all()
 
         print("STEP F")
@@ -2085,7 +2089,7 @@ def verify_graph():
 
 @app.get("/api/graph/dashboard")
 def graph_dashboard(db: Session = Depends(get_db)):
-    from app.database import ResourceNodeDB, ResourceRelationshipDB
+    from app.models import ResourceNodeDB, ResourceRelationshipDB
     try:
         nodes = db.query(ResourceNodeDB).count()
         rels_count = db.query(ResourceRelationshipDB).count()

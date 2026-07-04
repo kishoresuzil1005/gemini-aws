@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.database import get_db, ResourceDB
+from app.models import get_db, ResourceDB
 from app.services.optimization.recommendations import RecommendationEngine
 
 router = APIRouter()

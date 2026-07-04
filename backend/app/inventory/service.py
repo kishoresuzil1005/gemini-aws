@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from app.database import ResourceDB
-from app.database import CloudAccountDB
+from app.models import ResourceDB
+from app.models import CloudAccountDB
 
 from app.inventory.discovery import discover_resources
 

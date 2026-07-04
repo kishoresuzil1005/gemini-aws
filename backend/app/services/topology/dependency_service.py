@@ -1,4 +1,4 @@
-from app.database import ResourceNodeDB, ResourceEdgeDB
+from app.models import ResourceNodeDB, ResourceEdgeDB
 
 class DependencyService:
     def __init__(self, db):

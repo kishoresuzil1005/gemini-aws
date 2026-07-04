@@ -1,6 +1,10 @@
 import logging
 import time
+import uuid
+from datetime import datetime
 from typing import List, Dict, Any
+
+from app.services.discovery.models import ScanResult
 
 from app.providers.aws.ec2 import EC2Discovery
 from app.providers.aws.rds import RDSDiscovery
@@ -48,9 +52,11 @@ class AWSDiscoveryScanner:
     @staticmethod
     def scan_all(
         region: str = None
-    ) -> List[Dict[str, Any]]:
+    ) -> ScanResult:
 
         now = time.time()
+        started_at = datetime.utcnow()
+        scan_id = str(uuid.uuid4())
         cache_key = region or "all_regions"
         if CACHE_TTL > 0 and cache_key in DISCOVERY_CACHE:
             cached_data, timestamp = DISCOVERY_CACHE[cache_key]
@@ -635,5 +641,21 @@ class AWSDiscoveryScanner:
         except Exception as e:
             logger.warning(f"Route53 Discovery failed: {e}")
 
-        DISCOVERY_CACHE[cache_key] = (resources, now)
-        return resources
+        finished_at = datetime.utcnow()
+        duration = int((finished_at - started_at).total_seconds())
+
+        scan_result = ScanResult(
+            scan_id=scan_id,
+            account_id=None,
+            regions=regions_to_scan,
+            started_at=started_at,
+            finished_at=finished_at,
+            duration=duration,
+            resources=resources,
+            warnings=[],
+            errors=[],
+            statistics={"total_resources": len(resources)}
+        )
+
+        DISCOVERY_CACHE[cache_key] = (scan_result, now)
+        return scan_result

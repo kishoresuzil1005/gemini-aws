@@ -1,6 +1,6 @@
 import logging
 from sqlalchemy.orm import Session
-from app.database import ResourceDB
+from app.models import ResourceDB
 from app.services.cost.pricing_service import PricingService
 
 logger = logging.getLogger("NATOptimizer")

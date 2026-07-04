@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 
-from app.database import ResourceDB
+from app.models import ResourceDB
 from app.services.cost.pricing_service import PricingService
 from app.services.cost.ec2_cost import EC2CostCalculator
 from app.services.cost.rds_cost import RDSCostCalculator

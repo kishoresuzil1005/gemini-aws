@@ -1,4 +1,4 @@
-from app.database import ResourceDB
+from app.models import ResourceDB
 from app.services.cost.pricing_service import PricingService
 
 from app.services.optimization.ec2_optimizer import EC2Optimizer

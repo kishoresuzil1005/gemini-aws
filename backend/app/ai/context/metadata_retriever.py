@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal, ResourceDB
+from app.models import SessionLocal, ResourceDB
 
 
 class MetadataRetriever:

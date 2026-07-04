@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.database import ResourceDB, ResourceNodeDB
+from app.models import ResourceDB, ResourceNodeDB
 from app.services.graph.neo4j_service import Neo4jService
 
 
@@ -76,7 +76,7 @@ class GraphSyncService:
         # ── Build and sync relationships (Phase 2) ───────────────────────────
         try:
             from app.services.graph.aws_relationship_builder import AWSRelationshipBuilder
-            builder = AWSRelationshipBuilder()
+            builder = AWSRelationshipBuilder(db=self.db)
             relationships = builder.build()
 
             for rel in relationships:

@@ -1,5 +1,5 @@
 import boto3
-from app.database import SessionLocal, CloudAccountDB
+from app.models import SessionLocal, CloudAccountDB
 
 def get_aws_client(service, cloud_account_id, region="us-east-1"):
     db = SessionLocal()

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.database import ResourceDB, CloudAccountDB
+from app.models import ResourceDB, CloudAccountDB
 from typing import List, Dict, Any
 
 class InventoryManager:

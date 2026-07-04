@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
-from app.database import ResourceDB, CloudAccountDB, ResourceNodeDB, ResourceEdgeDB, ResourceRelationshipDB
+from app.models import ResourceDB, CloudAccountDB, ScanHistoryDB
 from app.services.discovery.scanner import AWSDiscoveryScanner
-from app.providers.aws.regions import get_all_regions
-from app.services.graph.neo4j_service import Neo4jService
-from app.services.graph.aws_relationship_builder import AWSRelationshipBuilder
-
+from app.services.discovery.normalizer import ResourceNormalizer
+from datetime import datetime
 
 def discover_resources(
     db: Session,
@@ -22,112 +20,57 @@ def discover_resources(
     if not account:
         return
 
-    resources = []
-
     if account.provider == "AWS":
-
         try:
+            # 1. Discover AWS
+            scan_result = AWSDiscoveryScanner.scan_all(region=region)
+            
+            # 2. Normalize
+            normalized_resources = ResourceNormalizer.normalize(scan_result.resources)
+            scan_result.account_id = str(cloud_account_id)
 
-            if region and region.lower() != "all":
-                regions_to_scan = [region]
-            else:
-                regions_to_scan = get_all_regions()
+            # 3. Save Inventory
+            for norm in normalized_resources:
+                # Upsert logic based on resource_id
+                existing = db.query(ResourceDB).filter(ResourceDB.resource_id == norm["resource_id"]).first()
+                if existing:
+                    existing.name = norm["name"]
+                    existing.region = norm["region"]
+                    existing.status = norm["status"]
+                    existing.metadata = norm["metadata"]
+                    existing.scan_id = scan_result.scan_id
+                    existing.resource_version += 1
+                else:
+                    db.add(ResourceDB(
+                        cloud_account_id=cloud_account_id,
+                        provider=norm["provider"],
+                        resource_type=norm["resource_type"],
+                        resource_id=norm["resource_id"],
+                        name=norm["name"],
+                        region=norm["region"],
+                        status=norm["status"],
+                        metadata=norm["metadata"],
+                        scan_id=scan_result.scan_id,
+                        resource_version=1
+                    ))
 
-            print(
-                f"[DISCOVERY] Regions discovered: "
-                f"{len(regions_to_scan)}"
-            )
+            # 4. Save Scan History
+            db.add(ScanHistoryDB(
+                id=scan_result.scan_id,
+                account_id=str(cloud_account_id),
+                scan_start=scan_result.started_at,
+                scan_end=scan_result.finished_at,
+                status="COMPLETED",
+                resources_found=len(normalized_resources),
+                duration=scan_result.duration,
+                errors=len(scan_result.errors),
+                warnings=len(scan_result.warnings)
+            ))
 
-            print(regions_to_scan)
+            db.commit()
 
-            discovered = []
-            seen_global_ids = set()
-
-            from concurrent.futures import ThreadPoolExecutor, as_completed
-            import threading
-            global_lock = threading.Lock()
-
-            def scan_r(r_name):
-                return AWSDiscoveryScanner.scan_all(region=r_name)
-
-            with ThreadPoolExecutor(max_workers=10) as executor:
-                futures = {executor.submit(scan_r, r_name): r_name for r_name in regions_to_scan}
-                for future in as_completed(futures):
-                    scan_res = future.result()
-                    for item in scan_res:
-                        with global_lock:
-                            if item.get("region") == "global":
-                                if item.get("id") not in seen_global_ids:
-                                    seen_global_ids.add(item.get("id"))
-                                    discovered.append(item)
-                            else:
-                                discovered.append(item)
-
-            if not discovered:
-
-                raise Exception(
-                    "No AWS resources discovered"
-                )
-
-            for r in discovered:
-
-                resources.append(
-                    ResourceDB(
-                        cloud_account_id=
-                        cloud_account_id,
-
-                        provider=r.get(
-                            "provider",
-                            "AWS"
-                        ),
-
-                        resource_type=r.get(
-                            "type"
-                        ),
-
-                        resource_id=r.get(
-                            "id"
-                        ),
-
-                        name=r.get(
-                            "name"
-                        ),
-
-                        region=r.get(
-                            "region",
-                            account.region
-                        ),
-
-                        status=(
-                            r.get("status")
-                            or r.get("state")
-                        ),
-
-                        instance_type=r.get(
-                            "instance_type"
-                        ),
-
-                        instance_class=r.get(
-                            "instance_class"
-                        ),
-
-                        size_gb=r.get(
-                            "size_gb"
-                        ),
-
-                        memory_size=r.get(
-                            "memory_size"
-                        ),
-
-                        monthly_requests=r.get(
-                            "monthly_requests"
-                        ),
-
-                        avg_duration_ms=r.get(
-                            "avg_duration_ms"
-                        )
-                    )
-                )
+            # Phase 4 removes Neo4j syncing from here; GraphSyncService handles it offline
+            return scan_result
 
         except Exception as e:
 

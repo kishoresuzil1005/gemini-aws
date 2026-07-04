@@ -1,5 +1,5 @@
 from collections import defaultdict
-from app.database import ResourceDB
+from app.models import ResourceDB
 from app.services.topology.category_map import CATEGORY_MAP
 
 class TopologyService:
