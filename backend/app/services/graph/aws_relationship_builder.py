@@ -40,7 +40,7 @@ class AWSRelationshipBuilder:
     PROTECTED_BY = "PROTECTED_BY"
     RESOLVES_TO = "RESOLVES_TO"
     HAS_INTEGRATION = "HAS_INTEGRATION"
-    INVOKES = "INVOKES"
+    USES_LAMBDA = "USES_LAMBDA"
     USES_SECRET = "USES_SECRET"
     ROTATED_BY = "ROTATED_BY"
     PUBLISHES_TO = "PUBLISHES_TO"
@@ -1117,7 +1117,7 @@ class AWSRelationshipBuilder:
                                         uri = integ.get("uri", "")
                                         if "lambda" in uri.lower():
                                             fn_arn = uri.split("functions/")[-1].split("/invocations")[0]
-                                            rels.append(self.relationship(api_id, fn_arn, self.INVOKES, "APIGateway", "Lambda"))
+                                            rels.append(self.relationship(api_id, fn_arn, self.USES_LAMBDA, "APIGateway", "Lambda"))
                                     except Exception:
                                         pass
                         except Exception:

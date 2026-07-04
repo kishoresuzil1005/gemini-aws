@@ -23,6 +23,19 @@ from app.providers.aws.network_interface import NetworkInterfaceDiscovery
 from app.providers.aws.elastic_ip import ElasticIPDiscovery
 from app.providers.aws.autoscaling import AutoScalingDiscovery
 from app.providers.aws.target_group import TargetGroupDiscovery
+# Phase 4 providers
+from app.providers.aws.apigateway import APIGatewayDiscovery
+from app.providers.aws.cloudfront import CloudFrontDiscovery
+from app.providers.aws.route53 import Route53Discovery
+from app.providers.aws.waf import WAFDiscovery
+from app.providers.aws.secrets_manager import SecretsManagerDiscovery, SSMDiscovery
+from app.providers.aws.sns import SNSDiscovery
+from app.providers.aws.sqs import SQSDiscovery
+from app.providers.aws.eventbridge import EventBridgeDiscovery
+from app.providers.aws.dynamodb import DynamoDBDiscovery
+from app.providers.aws.elasticache import ElastiCacheDiscovery
+from app.providers.aws.opensearch import OpenSearchDiscovery
+from app.providers.aws.efs import EFSDiscovery
 
 logger = logging.getLogger("AWS_Discovery_Scanner")
 
@@ -383,7 +396,173 @@ class AWSDiscoveryScanner:
             except Exception as e:
                 logger.warning(f"Target Group Discovery failed in region {reg}: {e}")
 
-        # S3 (Global)
+            # ── Phase 4 Regional Providers ───────────────────────────────────
+
+            # API Gateway (REST + HTTP)
+            try:
+                for apigw in APIGatewayDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": apigw["resource_id"],
+                        "type": apigw["resource_type"],
+                        "name": apigw.get("name", apigw["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Protocol={apigw.get('protocol')} Endpoint={apigw.get('endpoint', '')[:80]}"
+                    })
+            except Exception as e:
+                logger.warning(f"API Gateway Discovery failed in region {reg}: {e}")
+
+            # WAF Web ACLs (Regional)
+            try:
+                for acl in WAFDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": acl["resource_id"],
+                        "type": acl["resource_type"],
+                        "name": acl.get("name", acl["resource_id"]),
+                        "status": "active",
+                        "region": acl.get("region", reg),
+                        "configuration_hint": f"Rules={acl.get('rule_count', 0)} Scope={acl.get('scope')}"
+                    })
+            except Exception as e:
+                logger.warning(f"WAF Discovery failed in region {reg}: {e}")
+
+            # Secrets Manager
+            try:
+                for secret in SecretsManagerDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": secret["resource_id"],
+                        "type": secret["resource_type"],
+                        "name": secret.get("name", secret["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Rotation={secret.get('rotation_enabled')} KMS={bool(secret.get('kms_key_id'))}"
+                    })
+            except Exception as e:
+                logger.warning(f"Secrets Manager Discovery failed in region {reg}: {e}")
+
+            # SSM Parameter Store
+            try:
+                for param in SSMDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": param["resource_id"],
+                        "type": param["resource_type"],
+                        "name": param.get("name", param["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Type={param.get('type')} Tier={param.get('tier')}"
+                    })
+            except Exception as e:
+                logger.warning(f"SSM Discovery failed in region {reg}: {e}")
+
+            # SNS Topics
+            try:
+                for topic in SNSDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": topic["resource_id"],
+                        "type": topic["resource_type"],
+                        "name": topic.get("name", topic["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"Subscriptions={topic.get('subscription_count', 0)} FIFO={topic.get('fifo', False)}"
+                    })
+            except Exception as e:
+                logger.warning(f"SNS Discovery failed in region {reg}: {e}")
+
+            # SQS Queues
+            try:
+                for queue in SQSDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": queue["resource_id"],
+                        "type": queue["resource_type"],
+                        "name": queue.get("name", queue["resource_id"]),
+                        "status": "active",
+                        "region": reg,
+                        "configuration_hint": f"FIFO={queue.get('is_fifo')} DLQ={bool(queue.get('dlq_arn'))} Messages={queue.get('approximate_messages', 0)}"
+                    })
+            except Exception as e:
+                logger.warning(f"SQS Discovery failed in region {reg}: {e}")
+
+            # EventBridge Buses + Rules
+            try:
+                for eb in EventBridgeDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": eb["resource_id"],
+                        "type": eb["resource_type"],
+                        "name": eb.get("name", eb["resource_id"]),
+                        "status": eb.get("state", "active"),
+                        "region": reg,
+                        "configuration_hint": f"State={eb.get('state')} Targets={len(eb.get('targets', []))}"
+                    })
+            except Exception as e:
+                logger.warning(f"EventBridge Discovery failed in region {reg}: {e}")
+
+            # DynamoDB Tables
+            try:
+                for table in DynamoDBDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": table["resource_id"],
+                        "type": table["resource_type"],
+                        "name": table.get("name", table["resource_id"]),
+                        "status": table.get("status", "active"),
+                        "region": reg,
+                        "configuration_hint": f"Billing={table.get('billing_mode')} Items={table.get('item_count', 0)} Encrypted={table.get('encryption_status')}"
+                    })
+            except Exception as e:
+                logger.warning(f"DynamoDB Discovery failed in region {reg}: {e}")
+
+            # ElastiCache
+            try:
+                for ec_res in ElastiCacheDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": ec_res["resource_id"],
+                        "type": ec_res["resource_type"],
+                        "name": ec_res.get("name", ec_res["resource_id"]),
+                        "status": ec_res.get("status", "active"),
+                        "region": reg,
+                        "configuration_hint": f"Engine={ec_res.get('engine')} NodeType={ec_res.get('node_type')} MultiAZ={ec_res.get('multi_az')}"
+                    })
+            except Exception as e:
+                logger.warning(f"ElastiCache Discovery failed in region {reg}: {e}")
+
+            # OpenSearch Domains
+            try:
+                for domain in OpenSearchDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": domain["resource_id"],
+                        "type": domain["resource_type"],
+                        "name": domain.get("name", domain["resource_id"]),
+                        "status": domain.get("status", "active"),
+                        "region": reg,
+                        "configuration_hint": f"Engine={domain.get('engine_version')} Instance={domain.get('instance_type')} Encrypted={domain.get('encryption_at_rest')}"
+                    })
+            except Exception as e:
+                logger.warning(f"OpenSearch Discovery failed in region {reg}: {e}")
+
+            # EFS File Systems + Mount Targets
+            try:
+                for efs_res in EFSDiscovery.discover(reg):
+                    resources.append({
+                        "provider": "AWS",
+                        "id": efs_res["resource_id"],
+                        "type": efs_res["resource_type"],
+                        "name": efs_res.get("name", efs_res["resource_id"]),
+                        "status": efs_res.get("lifecycle_state", "active"),
+                        "region": reg,
+                        "configuration_hint": f"Throughput={efs_res.get('throughput_mode')} Encrypted={efs_res.get('encrypted')}"
+                    })
+            except Exception as e:
+                logger.warning(f"EFS Discovery failed in region {reg}: {e}")
+
         try:
             for bucket in S3Discovery.discover():
 
@@ -423,6 +602,38 @@ class AWSDiscoveryScanner:
             logger.warning(
                 f"IAM Discovery failed: {e}"
             )
+
+        # ── Phase 4 Global Providers ─────────────────────────────────────────
+
+        # CloudFront (global)
+        try:
+            for dist in CloudFrontDiscovery.discover():
+                resources.append({
+                    "provider": "AWS",
+                    "id": dist["resource_id"],
+                    "type": dist["resource_type"],
+                    "name": dist.get("name", dist["resource_id"]),
+                    "status": dist.get("status", "active"),
+                    "region": "global",
+                    "configuration_hint": f"Domain={dist.get('domain_name')} WAF={bool(dist.get('web_acl_id'))}"
+                })
+        except Exception as e:
+            logger.warning(f"CloudFront Discovery failed: {e}")
+
+        # Route 53 (global)
+        try:
+            for r53 in Route53Discovery.discover():
+                resources.append({
+                    "provider": "AWS",
+                    "id": r53["resource_id"],
+                    "type": r53["resource_type"],
+                    "name": r53.get("name", r53["resource_id"]),
+                    "status": "active",
+                    "region": "global",
+                    "configuration_hint": f"Type={r53.get('record_type', '')} Alias={r53.get('is_alias', False)}"
+                })
+        except Exception as e:
+            logger.warning(f"Route53 Discovery failed: {e}")
 
         DISCOVERY_CACHE[cache_key] = (resources, now)
         return resources

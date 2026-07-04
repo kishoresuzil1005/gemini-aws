@@ -1561,7 +1561,41 @@ def trigger_discovery(
         timestamp=db_job.timestamp
     )
 
-@app.get("/api/jobs", response_model=List[BackgroundJobSchema])
+@app.post(
+    "/api/discovery/run",
+    response_model=BackgroundJobSchema,
+    summary="Trigger a full AWS discovery scan (alias for /api/discover)"
+)
+def trigger_discovery_run(
+    db: Session = Depends(get_db)
+):
+    """Convenience endpoint: triggers a full discovery scan across all regions."""
+    job_id = f"job-{uuid.uuid4().hex[:6]}"
+    timestr = time.strftime("%H:%M:%S")
+    db_job = BackgroundJobDB(
+        id=job_id,
+        name="Discovery (all)",
+        progress=0.0,
+        status="QUEUED",
+        timestamp=timestr
+    )
+    db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+
+    threading.Thread(
+        target=run_discovery_worker,
+        args=(job_id, SessionLocal, "AWS", "all")
+    ).start()
+
+    return BackgroundJobSchema(
+        id=db_job.id,
+        name=db_job.name,
+        progress=db_job.progress,
+        status=db_job.status,
+        timestamp=db_job.timestamp
+    )
+
 def list_jobs(db: Session = Depends(get_db)):
     jobs = db.query(BackgroundJobDB).order_by(BackgroundJobDB.timestamp.desc()).all()
     return [

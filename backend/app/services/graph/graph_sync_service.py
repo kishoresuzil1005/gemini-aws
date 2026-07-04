@@ -34,7 +34,7 @@ class GraphSyncService:
         except Exception as e:
             print(f"[GRAPH_SYNC] Error reading resource_nodes: {e}")
 
-        # 2. Overlay with resources table (has richer metadata)
+        # 2. Overlay with resources table (has richer metadata + region)
         try:
             resource_rows = self.db.query(ResourceDB).all()
             for row in resource_rows:
@@ -44,7 +44,8 @@ class GraphSyncService:
                     "resource_type": row.resource_type,
                     "resource_id": row.resource_id,
                     "name": row.name or row.resource_id,
-                    "provider": row.provider or "aws"
+                    "provider": row.provider or "aws",
+                    "region": row.region or ""
                 }
         except Exception as e:
             print(f"[GRAPH_SYNC] Error reading resources: {e}")
@@ -58,7 +59,8 @@ class GraphSyncService:
                     node_type=data["resource_type"],
                     resource_id=data["resource_id"],
                     name=data["name"],
-                    provider=data["provider"]
+                    provider=data["provider"],
+                    region=data.get("region", "")
                 )
                 synced += 1
             except Exception as e:
@@ -80,23 +82,28 @@ class GraphSyncService:
             for rel in relationships:
 
                 #
-                # Ensure source node exists
+                # Ensure source node exists — use real name/region from DB
+                # fall back to resource_id only if not found in inventory
                 #
-
+                src_data = all_nodes.get(rel["from"], {})
                 self.graph.create_node(
                     node_type=rel.get("source_type", "Resource"),
                     resource_id=rel["from"],
-                    name=rel["from"]
+                    name=src_data.get("name") or rel["from"],
+                    provider=src_data.get("provider", "aws"),
+                    region=src_data.get("region", "")
                 )
 
                 #
-                # Ensure target node exists
+                # Ensure target node exists — use real name/region from DB
                 #
-
+                tgt_data = all_nodes.get(rel["to"], {})
                 self.graph.create_node(
                     node_type=rel.get("target_type", "Resource"),
                     resource_id=rel["to"],
-                    name=rel["to"]
+                    name=tgt_data.get("name") or rel["to"],
+                    provider=tgt_data.get("provider", "aws"),
+                    region=tgt_data.get("region", "")
                 )
 
                 #

@@ -188,7 +188,8 @@ class Neo4jService:
         node_type: str,
         resource_id: str,
         name: str,
-        provider: str = "AWS"
+        provider: str = "AWS",
+        region: str = ""
     ):
         """
         Create or update graph node
@@ -212,6 +213,7 @@ class Neo4jService:
         SET
             n.name = $name,
             n.provider = $provider,
+            n.region = $region,
             n.updated_at = datetime()
 
         RETURN n
@@ -223,7 +225,8 @@ class Neo4jService:
                     query,
                     id=resource_id,
                     name=name,
-                    provider=provider
+                    provider=provider,
+                    region=region
                 )
         except Exception as e:
             logger.error(f"Error merging resource node {resource_id} in Neo4j: {e}")
