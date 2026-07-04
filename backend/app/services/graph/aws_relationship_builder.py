@@ -32,8 +32,8 @@ class AWSRelationshipBuilder:
             
             # 3. Fallback: Parse generic dependencies list embedded in metadata by AWSDiscoveryScanner
             for res in resources:
-                if res.metadata and "dependencies" in res.metadata:
-                    for dep in res.metadata["dependencies"]:
+                if res.resource_metadata and "dependencies" in res.resource_metadata:
+                    for dep in res.resource_metadata["dependencies"]:
                         if isinstance(dep, dict) and "type" in dep and "id" in dep:
                             relationships.append({
                                 "from": res.resource_id,

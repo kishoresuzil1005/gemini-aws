@@ -6,8 +6,8 @@ class EC2GraphBuilder:
     def build(resources: List[ResourceDB]) -> List[dict]:
         relationships = []
         for res in resources:
-            if res.resource_type == "EC2" and res.metadata:
-                metadata = res.metadata
+            if res.resource_type == "EC2" and res.resource_metadata:
+                metadata = res.resource_metadata
                 # EC2 -> VPC
                 vpc_id = metadata.get("vpc_id")
                 if vpc_id:

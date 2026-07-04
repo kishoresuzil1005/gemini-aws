@@ -37,7 +37,7 @@ def discover_resources(
                     existing.name = norm["name"]
                     existing.region = norm["region"]
                     existing.status = norm["status"]
-                    existing.metadata = norm["metadata"]
+                    existing.resource_metadata = norm["metadata"]
                     existing.scan_id = scan_result.scan_id
                     existing.resource_version += 1
                 else:
@@ -49,7 +49,7 @@ def discover_resources(
                         name=norm["name"],
                         region=norm["region"],
                         status=norm["status"],
-                        metadata=norm["metadata"],
+                        resource_metadata=norm["metadata"],
                         scan_id=scan_result.scan_id,
                         resource_version=1
                     ))

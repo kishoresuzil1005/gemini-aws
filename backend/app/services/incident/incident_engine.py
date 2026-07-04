@@ -34,15 +34,15 @@ class IncidentEngine:
         return incidents
 
     def _check_s3_rules(self, res: ResourceDB, incidents: List[Dict[str, Any]]):
-        if not res.metadata:
+        if not res.resource_metadata:
             return
             
         # Example S3 Encryption rule
         # Legacy scanner stored this in metadata (or we mapped it there)
         # Note: AWSDiscoveryScanner's S3 provider will need to capture 'encrypted'
         # Currently we just check the _legacy_configuration_hint if encrypted=False
-        is_encrypted = res.metadata.get("encrypted")
-        legacy_hint = res.metadata.get("_legacy_configuration_hint", "")
+        is_encrypted = res.resource_metadata.get("encrypted")
+        legacy_hint = res.resource_metadata.get("_legacy_configuration_hint", "")
         
         if is_encrypted is False or "Encrypted: False" in str(legacy_hint):
             incidents.append({
@@ -54,10 +54,10 @@ class IncidentEngine:
             })
 
     def _check_iam_rules(self, res: ResourceDB, incidents: List[Dict[str, Any]]):
-        if not res.metadata:
+        if not res.resource_metadata:
             return
             
-        legacy_hint = res.metadata.get("_legacy_configuration_hint", "")
+        legacy_hint = res.resource_metadata.get("_legacy_configuration_hint", "")
         if "AdministratorAccess" in str(legacy_hint):
             incidents.append({
                 "id": f"inc-iam-admin-{res.resource_id}",

@@ -23,7 +23,7 @@ class ResourceDB(Base):
     avg_duration_ms = Column(Float, nullable=True)
     
     # Phase 4
-    metadata = Column(JSONB, nullable=True)
+    resource_metadata = Column("metadata", JSONB, nullable=True)
     scan_id = Column(UUID(as_uuid=True), nullable=True)
     resource_version = Column(Integer, default=1)
 
