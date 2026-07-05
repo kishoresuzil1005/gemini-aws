@@ -2,7 +2,8 @@ from typing import Dict, List, Any
 
 from sqlalchemy.orm import Session
 
-from app.models import SessionLocal, ResourceDB
+from app.database import SessionLocal
+from app.models import ResourceDB
 
 
 class InventoryContext:

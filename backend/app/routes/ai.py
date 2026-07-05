@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from app.models import get_db, SessionLocal, ResourceDB
+from app.database import get_db
+from app.models import ResourceDB
 from app.services.ai.insights import AIInsightEngine
 from app.services.ai.chat import CloudAssistant
 from app.services.optimization.recommendations import RecommendationEngine
