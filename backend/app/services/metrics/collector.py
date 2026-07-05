@@ -1,7 +1,7 @@
 import time
 
-from app.database import (
-    SessionLocal,
+from app.database import SessionLocal
+from app.models import (
     ResourceDB,
     MetricDB
 )

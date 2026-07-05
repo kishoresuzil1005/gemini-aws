@@ -1,7 +1,7 @@
 import time
 import logging
 
-from app.database import (
+from app.models import (
     ResourceDB,
     RemediationRequestDB
 )

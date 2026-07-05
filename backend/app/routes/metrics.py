@@ -1,8 +1,6 @@
 from fastapi import APIRouter
-from app.database import (
-    SessionLocal,
-    MetricDB
-)
+from app.database import SessionLocal
+from app.models import MetricDB
 
 router = APIRouter(
     tags=["Metrics"]

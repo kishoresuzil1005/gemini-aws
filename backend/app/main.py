@@ -934,7 +934,7 @@ def get_cost_summary(
         CostExplorerAdapter
     )
 
-    from app.database import (
+    from app.models import (
         CloudAccountDB
     )
 

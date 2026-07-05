@@ -12,7 +12,7 @@ from app.services.optimization.savings import SavingsCalculator
 from app.services.budget.budget_engine import BudgetEngine
 from app.services.cost.cache import CostSummaryCache
 
-from app.database import (
+from app.models import (
     BudgetDB,
     RemediationRequestDB
 )
