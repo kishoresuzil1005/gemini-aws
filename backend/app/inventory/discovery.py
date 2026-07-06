@@ -26,12 +26,29 @@ def discover_resources(
             # 1. Discover AWS
             scan_result = AWSDiscoveryScanner.scan_all(region=region)
             
+            print("=" * 80)
+            print("SCAN RESULT")
+            print("scan_id =", scan_result.scan_id)
+            print("resources =", len(scan_result.resources))
+            print("=" * 80)
+            
             # 2. Normalize
             normalized_resources = ResourceNormalizer.normalize(scan_result.resources)
+            
+            print("=" * 80)
+            print("NORMALIZED =", len(normalized_resources))
+            if normalized_resources:
+                print(normalized_resources[0])
+            print("=" * 80)
+            
             scan_result.account_id = str(cloud_account_id)
 
             # 3. Save Inventory
             for norm in normalized_resources:
+                print("Saving:", norm["resource_id"])
+                print("Metadata:", norm.get("metadata"))
+                print("Scan:", scan_result.scan_id)
+                
                 # Upsert logic based on resource_id
                 existing = db.query(ResourceDB).filter(ResourceDB.resource_id == norm["resource_id"]).first()
                 if existing:
@@ -98,7 +115,9 @@ def discover_resources(
             
             db.add_all(relationships)
 
+            print("ABOUT TO COMMIT")
             db.commit()
+            print("COMMIT DONE")
 
             # Phase 4 removes Neo4j syncing from here; GraphSyncService handles it offline
             return scan_result
