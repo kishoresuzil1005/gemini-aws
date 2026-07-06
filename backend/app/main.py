@@ -1469,10 +1469,24 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
     db = db_session_factory()
     print("Database session created")
 
+    print("=" * 80)
     print("STEP A")
-    job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
-    print("STEP B")
-    print("JOB =", job)
+    print("job_id =", job_id)
+
+    try:
+        job = (
+            db.query(BackgroundJobDB)
+            .filter(BackgroundJobDB.id == job_id)
+            .first()
+        )
+
+        print("STEP B")
+        print(job)
+
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        raise
 
     if not job:
         print("JOB NOT FOUND")
