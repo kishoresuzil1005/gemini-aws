@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
-from app.services.graph.analysis.dependencies import DependencyAnalyzer
+from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
 from app.services.ai.recommendation_engine import AIRecommendationEngine
