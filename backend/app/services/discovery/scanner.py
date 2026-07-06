@@ -67,10 +67,10 @@ class AWSDiscoveryScanner:
         logger.info(f"[DISCOVERY CACHE] MISS for region: {cache_key}")
         resources = []
 
-        if region:
-            regions_to_scan = [region]
+        if region and region.strip().lower() != "all":
+            regions_to_scan = [region.strip()]
         else:
-            regions_to_scan = get_all_regions()
+            regions_to_scan = [r for r in get_all_regions() if r.lower() != "all"]
 
         logger.info(f"Scanning regions: {regions_to_scan}")
 

@@ -37,16 +37,18 @@ def init_db():
         ]
         for col_name, col_type in resources_cols:
             try:
-                conn.execute(text(f"ALTER TABLE resources ADD COLUMN {col_name} {col_type}"))
+                conn.execute(text(f'ALTER TABLE resources ADD COLUMN "{col_name}" {col_type}'))
                 conn.commit()
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+                logging.warning(f"Could not add {col_name}: {e}")
+                conn.rollback()
         
         try:
             conn.execute(text("ALTER TABLE resources ALTER COLUMN cloud_account_id DROP NOT NULL"))
             conn.commit()
         except Exception:
-            pass
+            conn.rollback()
 
         # columns to add to scan_history
         scan_history_cols = [
@@ -60,7 +62,7 @@ def init_db():
                 conn.execute(text(f"ALTER TABLE scan_history ADD COLUMN {col_name} {col_type}"))
                 conn.commit()
             except Exception:
-                pass
+                conn.rollback()
 
         # columns to add to remediation_requests
         remediation_cols = [
@@ -72,7 +74,7 @@ def init_db():
                 conn.execute(text(f"ALTER TABLE remediation_requests ADD COLUMN {col_name} {col_type}"))
                 conn.commit()
             except Exception:
-                pass
+                conn.rollback()
 
 # Dependency to get db session
 def get_db():
