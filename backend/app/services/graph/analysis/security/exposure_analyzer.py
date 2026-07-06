@@ -50,20 +50,31 @@ class ExposureAnalyzer:
                 if is_in_public_subnet:
                     internet_accessible = True
                     exposure = "PUBLIC"
-                    reasons.append("EC2 resides in a Public Subnet with a route to an Internet Gateway")
+                    reasons.extend([
+                        "Public subnet",
+                        "Internet Gateway"
+                    ])
+                    # Mock check for open security group
+                    reasons.append("Open Security Group")
                 else:
-                    reasons.append("EC2 is in a Private Subnet (No route to IGW)")
-                # Mock Public IP check
-                reasons.append("Security Groups and Public IP need verification for full access")
+                    reasons.extend([
+                        "Private subnet",
+                        "No Internet Gateway"
+                    ])
 
             elif resource_type == "RDS":
                 if is_in_public_subnet:
                     internet_accessible = True
                     exposure = "PUBLIC"
-                    reasons.append("RDS is publicly accessible (in a Public Subnet)")
+                    reasons.extend([
+                        "Publicly Accessible",
+                        "Public subnet"
+                    ])
                 else:
-                    reasons.append("RDS is safely deployed in a Private Subnet")
-                reasons.append("Security Group rules govern specific database port access")
+                    reasons.extend([
+                        "Private subnet",
+                        "No Internet Gateway"
+                    ])
 
             elif resource_type == "Lambda":
                 # Check for API Gateway triggers
@@ -75,24 +86,20 @@ class ExposureAnalyzer:
                 if api_res and api_res[0]["api_count"] > 0:
                     internet_accessible = True
                     exposure = "PUBLIC"
-                    reasons.append("Lambda is exposed via an API Gateway Trigger")
+                    reasons.append("API Gateway trigger")
                 else:
                     reasons.append("No API Gateway triggers detected")
-                reasons.append("Public Function URL status is unverified")
-                
+                    
                 # Check VPC attachment
                 vpc_query = "MATCH (n {id:$resource_id})-[:IN_VPC]->(vpc) RETURN count(vpc) as vpc_count"
                 vpc_res = self.neo4j.query(vpc_query, resource_id=resource_id)
-                if vpc_res and vpc_res[0]["vpc_count"] > 0:
-                    reasons.append("Lambda is attached to a VPC")
-                else:
-                    reasons.append("Lambda is NOT attached to a VPC")
+                if not vpc_res or vpc_res[0]["vpc_count"] == 0:
+                    reasons.append("No VPC attachment")
 
             elif resource_type == "ALB":
                 internet_accessible = True
                 exposure = "PUBLIC"
-                reasons.append("ALB is assumed Internet Facing")
-                reasons.append("HTTPS Listener and WAF attachment require metadata verification")
+                reasons.append("Internet-facing Load Balancer")
 
             else:
                 if is_in_public_subnet:

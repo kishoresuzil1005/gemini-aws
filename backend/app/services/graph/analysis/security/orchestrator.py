@@ -100,8 +100,9 @@ class SecurityImpactAnalyzer:
         return {
             "resource": resource_id,
             "risk": risk,
+            "internet_accessible": is_public,
+            "reason": exposure_result.get("reason", []),
             "findings": findings,
             "recommendations": recommendations,
-            "exposure_details": exposure_result,
             "attack_paths": attack_result.get("paths", [])
         }
