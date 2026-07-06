@@ -7,11 +7,15 @@ from app.services.graph.builders.compute.ec2 import EC2GraphBuilder
 from app.services.graph.builders.compute.autoscaling import AutoScalingGraphBuilder
 from app.services.graph.builders.compute.target_group import TargetGroupGraphBuilder
 from app.services.graph.builders.compute.alb import ALBGraphBuilder
-from app.services.graph.builders.compute.lambda_builder import LambdaGraphBuilder
 from app.services.graph.builders.database.rds import RDSGraphBuilder
 from app.services.graph.builders.database.dynamodb import DynamoDBGraphBuilder
 from app.services.graph.builders.database.elasticache import ElastiCacheGraphBuilder
 from app.services.graph.builders.database.opensearch import OpenSearchGraphBuilder
+from app.services.graph.builders.serverless.lambda_builder import LambdaGraphBuilder
+from app.services.graph.builders.serverless.api_gateway import APIGatewayGraphBuilder
+from app.services.graph.builders.serverless.sns import SNSGraphBuilder
+from app.services.graph.builders.serverless.sqs import SQSGraphBuilder
+from app.services.graph.builders.serverless.eventbridge import EventBridgeGraphBuilder
 from app.services.graph.builders.storage.s3 import S3GraphBuilder
 from app.services.graph.builders.network.vpc import VPCGraphBuilder
 
@@ -56,7 +60,14 @@ class AWSRelationshipBuilder:
             relationships.extend(AutoScalingGraphBuilder.build(resources))
             relationships.extend(TargetGroupGraphBuilder.build(resources))
             relationships.extend(ALBGraphBuilder.build(resources))
+            
+            # Serverless & Integration
             relationships.extend(LambdaGraphBuilder.build(resources))
+            relationships.extend(APIGatewayGraphBuilder.build(resources))
+            relationships.extend(SNSGraphBuilder.build(resources))
+            relationships.extend(SQSGraphBuilder.build(resources))
+            relationships.extend(EventBridgeGraphBuilder.build(resources))
+            
             # Database
             relationships.extend(RDSGraphBuilder.build(resources))
             relationships.extend(DynamoDBGraphBuilder.build(resources))

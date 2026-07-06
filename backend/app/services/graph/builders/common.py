@@ -31,5 +31,13 @@ RELATIONSHIP_MAP = {
     "RDS": "USES_DATABASE",
     "DYNAMODB": "USES_DATABASE",
     "ELASTICACHE": "USES_CACHE",
-    "OPENSEARCH": "USES_SEARCH"
+    "OPENSEARCH": "USES_SEARCH",
+    
+    # Sprint 7 Serverless additions
+    "LAMBDA": "INVOKES",
+    "SNS": "TRIGGERS",
+    "SQS": "TRIGGERS",
+    "EVENTBRIDGE": "TRIGGERS",
+    "API_GATEWAY": "INVOKES",
+    "S3": "USES_BUCKET"
 }
