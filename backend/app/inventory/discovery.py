@@ -38,9 +38,9 @@ def discover_resources(
                     existing.name = norm["name"]
                     existing.region = norm["region"]
                     existing.status = norm["status"]
-                    existing.resource_metadata = norm["metadata"]
+                    existing.resource_metadata = dict(norm.get("metadata", {}))
                     existing.scan_id = uuid.UUID(scan_result.scan_id)
-                    existing.resource_version += 1
+                    existing.resource_version = (existing.resource_version or 0) + 1
                 else:
                     db.add(ResourceDB(
                         cloud_account_id=cloud_account_id,
@@ -50,7 +50,7 @@ def discover_resources(
                         name=norm["name"],
                         region=norm["region"],
                         status=norm["status"],
-                        resource_metadata=norm["metadata"],
+                        resource_metadata=dict(norm.get("metadata", {})),
                         scan_id=uuid.UUID(scan_result.scan_id),
                         resource_version=1
                     ))
