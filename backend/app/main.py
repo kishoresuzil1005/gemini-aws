@@ -47,6 +47,7 @@ from app.services.graph.analysis.security.attack_path_analyzer import AttackPath
 
 # Sprint 9 AI Operations Engine
 from app.services.ai.recommendation_engine import AIRecommendationEngine
+from app.services.ai.remediation_planner import RemediationPlanner
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2261,6 +2262,18 @@ def get_resource_recommendations(resource_id: str):
     engine = AIRecommendationEngine()
     recs = engine.analyze_resource(resource_id)
     return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
+
+@app.get("/api/ai/remediation")
+def get_all_remediation_plans():
+    planner = RemediationPlanner()
+    plans = planner.plan_environment()
+    return {"count": len(plans), "plans": [p.dict() for p in plans]}
+
+@app.get("/api/ai/remediation/{resource_id}")
+def get_resource_remediation(resource_id: str):
+    planner = RemediationPlanner()
+    plans = planner.plan_for_resource(resource_id)
+    return {"resource": resource_id, "count": len(plans), "plans": [p.dict() for p in plans]}
 
 @app.post("/api/graph/cost-analysis")
 def cost_analysis(request: dict):

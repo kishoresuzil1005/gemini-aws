@@ -84,13 +84,15 @@ class AIRecommendationEngine:
                             estimated_impact="High Security Posture Improvement"
                         )
                     elif resource_type == "ALB":
+                        # ALB Internet-Facing is expected, but WAF/HTTPS are needed, so upgrade to MEDIUM
+                        rec_priority = "MEDIUM" if priority in ["INFO", "LOW"] else priority
                         rec = Recommendation(
                             issue_title=f"Public Exposure on {resource_type}",
                             resource_id=resource_id,
                             resource_type=resource_type,
                             reasons=reasons,
                             recommendation_text="Review whether the ALB should be internet-facing and ensure it is protected by WAF and appropriate security groups.",
-                            priority=priority,
+                            priority=rec_priority,
                             category="SECURITY",
                             estimated_impact="Reduces exposure risk"
                         )
@@ -193,9 +195,11 @@ class AIRecommendationEngine:
         # Sort by priority
         priority_map = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4, "GOOD": 5}
         
-        # Deduplicate globally
+        # Deduplicate globally and filter INFO/GOOD
         unique_recs = {}
         for r in all_recs:
+            if r.priority in ["INFO", "GOOD"]:
+                continue
             key = f"{r.resource_id}-{r.issue_title}"
             if key not in unique_recs:
                 unique_recs[key] = r

@@ -1,0 +1,6 @@
+Resources:
+  MyRDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: "{{ resource_id }}"
+      PubliclyAccessible: false

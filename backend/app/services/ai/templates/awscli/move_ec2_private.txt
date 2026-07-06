@@ -1,0 +1,11 @@
+# Step 1: Create a new private subnet (requires VPC ID)
+aws ec2 create-subnet --vpc-id <vpc-id> --cidr-block 10.0.1.0/24
+
+# Step 2: Create a snapshot and an AMI of {{ resource_id }}
+aws ec2 create-image --instance-id {{ resource_id }} --name "Private-Migration-{{ resource_id }}"
+
+# Step 3: Launch new instance in the private subnet
+aws ec2 run-instances --image-id <new-ami-id> --subnet-id <new-private-subnet-id> --instance-type <instance-type>
+
+# Step 4: Terminate the old public instance
+aws ec2 terminate-instances --instance-ids {{ resource_id }}

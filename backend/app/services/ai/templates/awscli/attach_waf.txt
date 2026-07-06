@@ -1,0 +1,3 @@
+aws wafv2 associate-web-acl \
+    --web-acl-arn <waf-arn> \
+    --resource-arn {{ resource_arn }}
