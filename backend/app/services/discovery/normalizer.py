@@ -19,7 +19,11 @@ class ResourceNormalizer:
                     logger.warning(f"Skipping invalid resource: {raw}")
                     continue
                 
-                # Base normalized object
+                # Capture everything else in metadata
+                raw_metadata = raw.get("metadata", {})
+                if not isinstance(raw_metadata, dict):
+                    raw_metadata = {"_raw_metadata": raw_metadata}
+                    
                 norm = {
                     "resource_id": str(resource_id),
                     "resource_type": str(resource_type),
@@ -29,17 +33,16 @@ class ResourceNormalizer:
                     "status": raw.get("status") or raw.get("state", ""),
                     
                     # Compute specific properties mapped up for querying ease
-                    "instance_type": raw.get("instance_type"),
-                    "instance_class": raw.get("instance_class"),
-                    "size_gb": raw.get("size_gb"),
-                    "memory_size": raw.get("memory_size"),
-                    "monthly_requests": raw.get("monthly_requests"),
-                    "avg_duration_ms": raw.get("avg_duration_ms"),
+                    "instance_type": raw.get("instance_type") or raw_metadata.get("instance_type"),
+                    "instance_class": raw.get("instance_class") or raw_metadata.get("instance_class"),
+                    "size_gb": raw.get("size_gb") or raw_metadata.get("size_gb"),
+                    "memory_size": raw.get("memory_size") or raw_metadata.get("memory_size"),
+                    "monthly_requests": raw.get("monthly_requests") or raw_metadata.get("monthly_requests"),
+                    "avg_duration_ms": raw.get("avg_duration_ms") or raw_metadata.get("avg_duration_ms"),
                     
-                    # Capture everything else in metadata
-                    "metadata": {},
+                    "metadata": raw_metadata.copy(),
                     
-                    # Retain dependencies temporarily if GraphBuilder uses them (or store in metadata)
+                    # Retain dependencies temporarily if GraphBuilder uses them
                     "dependencies": raw.get("dependencies", [])
                 }
                 
@@ -47,7 +50,7 @@ class ResourceNormalizer:
                 base_keys = {"id", "type", "resource_id", "resource_type", "provider", "name", 
                              "region", "status", "state", "instance_type", "instance_class", 
                              "size_gb", "memory_size", "monthly_requests", "avg_duration_ms", 
-                             "dependencies", "configuration_hint", "configurationHint"}
+                             "dependencies", "metadata", "configuration_hint", "configurationHint"}
                              
                 for key, value in raw.items():
                     if key not in base_keys:

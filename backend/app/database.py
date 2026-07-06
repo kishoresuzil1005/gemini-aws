@@ -32,6 +32,7 @@ def init_db():
             ("monthly_requests", "BIGINT"),
             ("avg_duration_ms", "DOUBLE PRECISION"),
             ("metadata", "JSONB"),
+            ("configuration_hint", "TEXT"),
             ("scan_id", "UUID"),
             ("resource_version", "INTEGER")
         ]

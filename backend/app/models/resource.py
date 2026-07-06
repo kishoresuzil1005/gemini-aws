@@ -24,6 +24,7 @@ class ResourceDB(Base):
     
     # Phase 4
     resource_metadata = Column("metadata", JSONB, nullable=True)
+    configuration_hint = Column(Text, nullable=True) # Retained for backward compatibility
     scan_id = Column(UUID(as_uuid=True), nullable=True)
     resource_version = Column(Integer, default=1)
 
