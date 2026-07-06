@@ -3,6 +3,17 @@ from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
+from datetime import datetime, date
+
+def make_json_safe(value):
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: make_json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [make_json_safe(v) for v in value]
+    return value
+
 class ResourceNormalizer:
     @staticmethod
     def normalize(resources: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -23,6 +34,8 @@ class ResourceNormalizer:
                 raw_metadata = raw.get("metadata", {})
                 if not isinstance(raw_metadata, dict):
                     raw_metadata = {"_raw_metadata": raw_metadata}
+                
+                raw_metadata = make_json_safe(raw_metadata)
                     
                 norm = {
                     "resource_id": str(resource_id),
@@ -54,7 +67,7 @@ class ResourceNormalizer:
                              
                 for key, value in raw.items():
                     if key not in base_keys:
-                        norm["metadata"][key] = value
+                        norm["metadata"][key] = make_json_safe(value)
                 
                 # If configuration_hint exists, merge it into metadata
                 config_hint = raw.get("configuration_hint") or raw.get("configurationHint")
