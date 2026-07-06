@@ -25,8 +25,10 @@ from .aws_scanner import (
 )
 from app.inventory.routes import router as inventory_router
 from app.services.graph.neo4j_service import Neo4jService
-from app.services.graph.graph_sync_service import GraphSyncService
-from app.services.graph.graph_analysis_service import GraphAnalysisService
+from app.services.graph.auto_sync import AutoGraphSync
+from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
+from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
+from app.services.graph.analysis.root_cause import RootCauseAnalyzer
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2164,27 +2166,31 @@ def graph_relationships():
 
 @app.get("/api/graph/downstream/{resource_id}")
 def downstream(resource_id: str):
-    service = GraphAnalysisService()
-    try:
-        return service.downstream_dependencies(resource_id)
-    finally:
-        service.close()
+    analyzer = DependencyAnalyzer()
+    return analyzer.get_downstream(resource_id)
 
 @app.get("/api/graph/upstream/{resource_id}")
 def upstream(resource_id: str):
-    service = GraphAnalysisService()
-    try:
-        return service.upstream_dependencies(resource_id)
-    finally:
-        service.close()
+    analyzer = DependencyAnalyzer()
+    return analyzer.get_upstream(resource_id)
+
+@app.get("/api/graph/dependencies/{resource_id}")
+def dependencies(resource_id: str):
+    analyzer = DependencyAnalyzer()
+    return analyzer.get_dependencies(resource_id)
 
 @app.get("/api/graph/blast-radius/{resource_id}")
 def blast_radius(resource_id: str):
-    service = GraphAnalysisService()
-    try:
-        return service.blast_radius(resource_id)
-    finally:
-        service.close()
+    analyzer = BlastRadiusAnalyzer()
+    return analyzer.analyze(resource_id)
+
+@app.post("/api/graph/root-cause")
+def root_cause(request: dict):
+    resource_id = request.get("resource_id")
+    if not resource_id:
+        return {"error": "resource_id is required"}
+    analyzer = RootCauseAnalyzer()
+    return analyzer.analyze(resource_id)
 
 @app.get("/api/graph/criticality/{resource_id}")
 def criticality(resource_id: str):
