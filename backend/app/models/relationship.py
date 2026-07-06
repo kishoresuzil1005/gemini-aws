@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from app.database import Base
 
 class ResourceEdgeDB(Base):
