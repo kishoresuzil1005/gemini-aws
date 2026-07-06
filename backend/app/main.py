@@ -26,6 +26,7 @@ from .aws_scanner import (
 from app.inventory.routes import router as inventory_router
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.auto_sync import AutoGraphSync
+from app.services.graph.graph_sync_service import GraphSyncService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
