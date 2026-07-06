@@ -10,6 +10,11 @@ def discover_resources(
     cloud_account_id: int,
     region: str | None = None
 ):
+    print("=" * 80)
+    print("DISCOVERY STARTED")
+    print("cloud_account_id =", cloud_account_id)
+    print("=" * 80)
+    
     account = (
         db.query(CloudAccountDB)
         .filter(
@@ -124,7 +129,14 @@ def discover_resources(
 
         except Exception as e:
             db.rollback()
-            raise Exception(f"AWS discovery failed: {e}")
+
+            import traceback
+            print("=" * 80)
+            print("DISCOVERY FAILED")
+            traceback.print_exc()
+            print("=" * 80)
+
+            raise
 
     else:
         raise Exception(f"Provider {account.provider} not supported")
