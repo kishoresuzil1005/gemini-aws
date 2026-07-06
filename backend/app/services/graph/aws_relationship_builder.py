@@ -7,6 +7,25 @@ from app.services.graph.builders.compute.ec2 import EC2GraphBuilder
 
 logger = logging.getLogger(__name__)
 
+RELATIONSHIP_MAP = {
+    "VPC": "IN_VPC",
+    "SUBNET": "IN_SUBNET",
+    "SECURITYGROUP": "USES_SG",
+    "SECURITY_GROUP": "USES_SG",
+    "SG": "USES_SG",
+    "EBS": "ATTACHED_TO",
+    "VOLUME": "ATTACHED_TO",
+    "IAM": "USES_ROLE",
+    "IAM_ROLE": "USES_ROLE",
+    "IAMUSER": "USES_ROLE",
+    "TARGETGROUP": "TARGETS",
+    "LOADBALANCER": "ATTACHED_TO",
+    "ALB": "ATTACHED_TO",
+    "LAMBDA": "INVOKES",
+    "S3": "USES_BUCKET",
+    "RDS": "CONNECTS_TO"
+}
+
 class AWSRelationshipBuilder:
     """
     Phase 4 Relationship Builder.
@@ -35,10 +54,14 @@ class AWSRelationshipBuilder:
                 if res.resource_metadata and "dependencies" in res.resource_metadata:
                     for dep in res.resource_metadata["dependencies"]:
                         if isinstance(dep, dict) and "type" in dep and "id" in dep:
+                            dep_type = dep["type"].upper()
                             relationships.append({
                                 "from": res.resource_id,
                                 "to": dep["id"],
-                                "type": f"USES_{dep['type'].upper()}",
+                                "type": RELATIONSHIP_MAP.get(
+                                    dep_type,
+                                    "DEPENDS_ON"
+                                ),
                                 "source_type": res.resource_type,
                                 "target_type": dep["type"]
                             })

@@ -11,6 +11,10 @@ class GraphSyncService:
         self.graph = Neo4jService()
 
     def sync_resources(self):
+        # Phase 4
+        # PostgreSQL is the single source of truth.
+        # Always rebuild the graph from inventory.
+        self.graph.clear_graph()
 
         # ── Merge BOTH tables to get all node types ──────────────────────────
         # ResourceDB has EC2, VPC, RDS, S3, Lambda, IAM, EBS ...
@@ -102,18 +106,6 @@ class GraphSyncService:
                     name=tgt_data.get("name") or rel["to"],
                     provider=tgt_data.get("provider", "AWS"),
                     region=tgt_data.get("region", "")
-                )
-
-                #
-                # Store in memory
-                #
-
-                from app.services.graph.neo4j_service import MemoryGraphStore
-
-                MemoryGraphStore.merge_edge(
-                    rel["from"],
-                    rel["to"],
-                    rel["type"]
                 )
 
                 #
