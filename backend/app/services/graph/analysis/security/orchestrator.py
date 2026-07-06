@@ -58,7 +58,11 @@ class SecurityImpactAnalyzer:
                 
         elif resource_type == "Lambda":
             findings.append({"type": "IAM_OVER_PRIVILEGED", "severity": "MEDIUM", "description": "Lambda function might have excessive permissions."})
-            findings.append({"type": "VPC_ATTACHMENT_MISSING", "severity": "LOW", "description": "Lambda is not attached to a VPC."})
+            
+            # Use exposure_result reasons to determine VPC attachment
+            reasons_str = " ".join(exposure_result.get("reason", []))
+            if "No VPC attachment" in reasons_str:
+                findings.append({"type": "VPC_ATTACHMENT_MISSING", "severity": "LOW", "description": "Lambda is not attached to a VPC."})
             
         elif resource_type == "ALB":
             if is_public:

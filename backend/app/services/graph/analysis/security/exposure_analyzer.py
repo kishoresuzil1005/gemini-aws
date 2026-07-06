@@ -8,6 +8,13 @@ class ExposureAnalyzer:
     def __init__(self, neo4j_service: Neo4jService):
         self.neo4j = neo4j_service
 
+    def lambda_api_gateways(self, resource_id: str):
+        query = """
+        MATCH (api:APIGateway)-[:INVOKES]->(l:Lambda {id:$resource_id})
+        RETURN api.id AS id, api.name AS name
+        """
+        return self.neo4j.query(query, resource_id=resource_id)
+
     def analyze(self, resource_id: str):
         """
         Determines whether a resource is reachable from the Internet.
@@ -77,18 +84,15 @@ class ExposureAnalyzer:
                     ])
 
             elif resource_type == "Lambda":
-                # Check for API Gateway triggers
-                api_query = """
-                MATCH (api:ApiGateway)-[:TRIGGERS]->(n {id:$resource_id})
-                RETURN count(api) as api_count
-                """
-                api_res = self.neo4j.query(api_query, resource_id=resource_id)
-                if api_res and api_res[0]["api_count"] > 0:
+                # Check for API Gateway triggers using the new helper
+                api_gateways = self.lambda_api_gateways(resource_id)
+                if api_gateways:
                     internet_accessible = True
                     exposure = "PUBLIC"
-                    reasons.append("API Gateway trigger")
+                    api_names = [api["name"] for api in api_gateways if api.get("name")]
+                    reasons.append(f"Lambda is exposed through API Gateway: {', '.join(api_names)}.")
                 else:
-                    reasons.append("No API Gateway triggers detected")
+                    reasons.append("No API Gateway triggers detected.")
                     
                 # Check VPC attachment
                 vpc_query = "MATCH (n {id:$resource_id})-[:IN_VPC]->(vpc) RETURN count(vpc) as vpc_count"
