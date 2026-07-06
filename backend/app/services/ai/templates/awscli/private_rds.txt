@@ -1,0 +1,4 @@
+aws rds modify-db-instance \
+    --db-instance-identifier {{ resource_id }} \
+    --no-publicly-accessible \
+    --apply-immediately

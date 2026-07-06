@@ -1,0 +1,3 @@
+aws lambda update-function-configuration \
+    --function-name {{ resource_id }} \
+    --vpc-config SubnetIds=<subnet-ids>,SecurityGroupIds=<sg-ids>

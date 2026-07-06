@@ -17,41 +17,47 @@ class RemediationPlanner:
         """
         Maps a recommendation's issue title to the underlying deterministic templates.
         """
-        # Very simple heuristic mapping based on issue_title from the recommendation engine
         if "Public Exposure on EC2" in issue_title:
             return {
                 "tf": "move_ec2_private.tf",
                 "cli": "move_ec2_private.txt",
-                "cfn": "",
+                "cfn": "move_ec2_private.yaml",
                 "play": "public_ec2.md"
             }
         elif "Public Exposure on RDS" in issue_title:
             return {
                 "tf": "private_rds.tf",
-                "cli": "",
+                "cli": "private_rds.txt",
                 "cfn": "private_rds.yaml",
                 "play": "public_rds.md"
             }
-        elif "Open Port" in issue_title:
+        elif "Open Port" in issue_title or "SSH" in issue_title:
             return {
-                "tf": "",
+                "tf": "restrict_ssh.tf",
                 "cli": "restrict_ssh.txt",
-                "cfn": "",
+                "cfn": "restrict_ssh.yaml",
                 "play": "open_ssh.md"
             }
-        elif "WAF Missing" in issue_title:
+        elif "WAF Missing" in issue_title or "WAF" in issue_title:
             return {
                 "tf": "attach_waf.tf",
                 "cli": "attach_waf.txt",
-                "cfn": "",
+                "cfn": "attach_waf.yaml",
                 "play": "waf_missing.md"
             }
         elif "Missing VPC Attachment" in issue_title:
             return {
-                "tf": "",
-                "cli": "",
-                "cfn": "",
+                "tf": "attach_lambda_vpc.tf",
+                "cli": "attach_lambda_vpc.txt",
+                "cfn": "attach_lambda_vpc.yaml",
                 "play": "vpc_missing.md"
+            }
+        elif "Over-privileged IAM" in issue_title:
+            return {
+                "tf": "least_privilege_iam.tf",
+                "cli": "least_privilege_iam.txt",
+                "cfn": "least_privilege_iam.yaml",
+                "play": "least_privilege_iam.md"
             }
             
         # Default mapping if none found

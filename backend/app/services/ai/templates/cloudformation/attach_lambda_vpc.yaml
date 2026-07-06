@@ -1,0 +1,10 @@
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: "{{ resource_id }}"
+      VpcConfig:
+        SecurityGroupIds: 
+          - "<sg-id>"
+        SubnetIds: 
+          - "<subnet-id>"

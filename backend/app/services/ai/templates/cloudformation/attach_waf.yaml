@@ -1,0 +1,6 @@
+Resources:
+  MyWebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: "{{ resource_arn }}"
+      WebACLArn: "<waf-arn>"

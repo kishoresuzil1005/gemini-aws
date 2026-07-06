@@ -1,0 +1,4 @@
+aws iam put-role-policy \
+    --role-name {{ resource_id }} \
+    --policy-name "LeastPrivilege" \
+    --policy-document file://policy.json

@@ -1,0 +1,6 @@
+Resources:
+  MyPrivateInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceId: "{{ resource_id }}"
+      SubnetId: "<private-subnet-id>"

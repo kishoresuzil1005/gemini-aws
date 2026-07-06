@@ -1,0 +1,9 @@
+Resources:
+  MyIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "{{ resource_id }}"
+      AssumeRolePolicyDocument: {} # Replace with actual
+      Policies:
+        - PolicyName: LeastPrivilege
+          PolicyDocument: {} # Replace with actual least privilege document
