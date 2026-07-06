@@ -27,15 +27,31 @@ class SecurityImpactAnalyzer:
         if not self.neo4j.node_exists(resource_id):
             raise HTTPException(status_code=404, detail="Resource not found")
             
+        # Determine resource type
+        resource_type = "Resource"
+        if self.neo4j.driver:
+            try:
+                res = self.neo4j.query("MATCH (n {id:$resource_id}) RETURN labels(n)[0] as type", resource_id=resource_id)
+                if res and res[0].get("type"):
+                    resource_type = res[0]["type"]
+            except Exception:
+                pass
+                
         findings = []
         
         # 1. Check Network Exposure
         exposure_result = self.exposure_analyzer.analyze(resource_id)
         if exposure_result.get("internet_accessible"):
+            description = f"{resource_type} is reachable from the Internet"
+            if resource_type == "RDS":
+                description = "RDS database is publicly exposed to the Internet (HIGH RISK)"
+            elif resource_type == "ALB":
+                description = "Load Balancer is Internet-facing"
+                
             findings.append({
                 "type": "PUBLIC_ACCESS",
                 "severity": "HIGH",
-                "description": "Instance is reachable from the Internet"
+                "description": description
             })
             
         # 2. Check Attack Paths
@@ -44,7 +60,7 @@ class SecurityImpactAnalyzer:
             findings.append({
                 "type": "ATTACK_PATH_DETECTED",
                 "severity": attack_result.get("risk_level", "HIGH"),
-                "description": f"Found {len(attack_result['paths'])} downstream paths to sensitive data."
+                "description": f"Found {len(attack_result['paths'])} downstream paths from this {resource_type} to sensitive data."
             })
             
         # Overall risk
