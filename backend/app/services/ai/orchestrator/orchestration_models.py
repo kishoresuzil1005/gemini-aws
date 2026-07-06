@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 class ExecutionStep(BaseModel):
     id: str
@@ -11,12 +11,12 @@ class ExecutionStep(BaseModel):
 
 class ApprovalRequirement(BaseModel):
     required: bool
-    approver_group: str
+    approver_group: Optional[str]
     reason: str
 
 class RollbackPlan(BaseModel):
     strategy: str
-    commands: List[str]
+    commands: List[ExecutionStep]
 
 class ValidationPlan(BaseModel):
     check_type: str
@@ -28,6 +28,10 @@ class ExecutionPackage(BaseModel):
     issue: str
     risk_level: str
     approval: ApprovalRequirement
+    estimated_duration: str
+    expected_downtime: str
+    automation_level: str
     execution_plan: List[ExecutionStep]
+    execution_graph: Dict[str, Any]
     rollback: RollbackPlan
     validation: ValidationPlan
