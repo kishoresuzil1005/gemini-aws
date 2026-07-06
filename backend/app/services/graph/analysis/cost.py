@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 
@@ -15,6 +16,9 @@ class CostAnalyzer:
         resources and aggregating their costs.
         Since cost data is not deeply integrated yet, this uses heuristics based on resource type.
         """
+        if not self.neo4j.node_exists(root_resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         downstream = self.dependency_analyzer.get_downstream(root_resource_id, depth=10)
         
         # Include the root resource itself

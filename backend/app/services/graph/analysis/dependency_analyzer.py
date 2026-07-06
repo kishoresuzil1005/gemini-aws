@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 
 logger = logging.getLogger(__name__)
@@ -12,6 +13,9 @@ class DependencyAnalyzer:
         Fetches upstream and downstream dependencies for a given resource
         up to the specified depth.
         """
+        if not self.neo4j.node_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         downstream = self.get_downstream(resource_id, depth)
         upstream = self.get_upstream(resource_id, depth)
         

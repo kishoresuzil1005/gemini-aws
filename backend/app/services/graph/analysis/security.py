@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 
@@ -15,6 +16,9 @@ class SecurityImpactAnalyzer:
         By traversing backwards (upstream), we can see what resources 
         are exposed if this specific resource is compromised.
         """
+        if not self.neo4j.node_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         # A Security Group sits in front of resources, so the resources
         # depend on the SG. This means the resources are upstream of the SG 
         # in our graph schema (e.g. EC2 -[USES_SG]-> SecurityGroup).

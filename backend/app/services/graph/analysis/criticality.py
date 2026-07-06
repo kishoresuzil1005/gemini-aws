@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 
@@ -15,6 +16,9 @@ class CriticalityAnalyzer:
         A higher score indicates the resource acts as a critical dependency 
         for many downstream services.
         """
+        if not self.neo4j.node_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         # A simple algorithm: base score of 10, plus 5 points for every downstream dependency.
         # This mirrors a localized Degree Centrality / Betweenness evaluation.
         downstream = self.dependency_analyzer.get_downstream(resource_id, depth=10)

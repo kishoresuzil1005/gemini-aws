@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 
@@ -14,6 +15,9 @@ class MigrationPlanner:
         Groups all upstream and downstream resources that need to be 
         migrated together to preserve the application functionality.
         """
+        if not self.neo4j.node_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         # A migration package involves everything that talks to the resource
         # and everything the resource talks to.
         upstream = self.dependency_analyzer.get_upstream(resource_id, depth=10)

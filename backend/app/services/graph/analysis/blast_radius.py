@@ -1,4 +1,5 @@
 import logging
+from fastapi import HTTPException
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 
@@ -14,6 +15,9 @@ class BlastRadiusAnalyzer:
         Determines the impact of a resource failure by finding all downstream
         services that depend on it directly or indirectly.
         """
+        if not self.neo4j.node_exists(resource_id):
+            raise HTTPException(status_code=404, detail="Resource not found")
+            
         downstream_nodes = self.dependency_analyzer.get_downstream(resource_id, depth=10)
         
         return {

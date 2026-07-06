@@ -92,6 +92,21 @@ class Neo4jService:
             except Exception as e:
                 logger.error(f"Error closing Neo4j driver: {e}")
 
+    def node_exists(self, resource_id: str) -> bool:
+        """
+        Checks if a node with the given resource_id exists in the graph.
+        """
+        if not self.driver:
+            # Check memory fallback graph
+            return resource_id in MemoryGraphStore.nodes
+
+        query = """
+        MATCH (n {id:$resource_id})
+        RETURN count(n) AS count
+        """
+        result = self.query(query, resource_id=resource_id)
+        return bool(result and result[0]["count"] > 0)
+
     # ---------------------------------------------------------
     # HEALTH
     # ---------------------------------------------------------
