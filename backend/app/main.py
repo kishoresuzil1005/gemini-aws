@@ -34,6 +34,8 @@ from app.services.graph.analysis.security import SecurityImpactAnalyzer
 from app.services.graph.analysis.cost import CostAnalyzer
 from app.services.graph.analysis.migration import MigrationPlanner
 from app.services.graph.analysis.architecture_review import ArchitectureReviewer
+from app.services.graph.analysis.ai_graph_agent import AIGraphAgent
+from app.services.graph.analysis.ai_query import NLQueryEngine
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2230,6 +2232,19 @@ def migration_analysis(request: dict):
 def architecture_review():
     analyzer = ArchitectureReviewer()
     return analyzer.analyze()
+
+@app.get("/api/graph/ai-recommendations")
+def ai_recommendations():
+    agent = AIGraphAgent()
+    return agent.generate_recommendations()
+
+@app.post("/api/graph/ai-query")
+def ai_query(request: dict):
+    query = request.get("query")
+    if not query:
+        return {"error": "query is required"}
+    engine = NLQueryEngine()
+    return engine.execute_query(query)
 
 @app.get("/api/graph/tree/{resource_id}")
 def dependency_tree(resource_id: str):
