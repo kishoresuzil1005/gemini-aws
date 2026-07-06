@@ -32,8 +32,7 @@ def discover_resources(
             # 1. Discover AWS
             print("BEFORE SCANNER")
             scan_result = AWSDiscoveryScanner.scan_all(region=region)
-            print("AFTER SCANNER")
-            print(scan_result)
+            print("POINT 2")
             
             print("=" * 80)
             print("SCAN RESULT")
@@ -44,6 +43,8 @@ def discover_resources(
             # 2. Normalize
             normalized_resources = ResourceNormalizer.normalize(scan_result.resources)
             
+            print("POINT 3")
+            
             print("=" * 80)
             print("NORMALIZED =", len(normalized_resources))
             if normalized_resources:
@@ -53,6 +54,7 @@ def discover_resources(
             scan_result.account_id = str(cloud_account_id)
 
             # 3. Save Inventory
+            print("POINT 4 - Saving inventory")
             for norm in normalized_resources:
                 print("Saving:", norm["resource_id"])
                 print("Metadata:", norm.get("metadata"))
@@ -82,6 +84,7 @@ def discover_resources(
                     ))
 
             # 4. Save Scan History
+            print("POINT 5 - Saving scan history")
             db.add(ScanHistoryDB(
                 id=uuid.UUID(scan_result.scan_id),
                 account_id=str(cloud_account_id),
@@ -95,6 +98,7 @@ def discover_resources(
             ))
 
             # 5. Save Dependencies to PostgreSQL
+            print("POINT 6 - Saving relationships")
             relationships = []
             for norm in normalized_resources:
                 source_id = norm["resource_id"]
@@ -124,9 +128,9 @@ def discover_resources(
             
             db.add_all(relationships)
 
-            print("ABOUT TO COMMIT")
+            print("POINT 7 - COMMIT")
             db.commit()
-            print("COMMIT DONE")
+            print("POINT 8 - DONE")
 
             # Phase 4 removes Neo4j syncing from here; GraphSyncService handles it offline
             return scan_result
