@@ -37,6 +37,13 @@ from app.services.graph.analysis.architecture_review import ArchitectureReviewer
 from app.services.graph.analysis.ai_graph_agent import AIGraphAgent
 from app.services.graph.analysis.ai_query import NLQueryEngine
 
+# Sprint 8.5 Security Modules
+from app.services.graph.analysis.security.exposure_analyzer import ExposureAnalyzer
+from app.services.graph.analysis.security.security_group_analyzer import SecurityGroupAnalyzer
+from app.services.graph.analysis.security.iam_analyzer import IAMAnalyzer
+from app.services.graph.analysis.security.network_analyzer import NetworkAnalyzer
+from app.services.graph.analysis.security.attack_path_analyzer import AttackPathAnalyzer
+
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
     description="FastAPI Backend for programmatically scanning multi-cloud systems & executing DevSecOps repairs.",
@@ -2210,6 +2217,31 @@ def security_group_analysis(request: dict):
     if not resource_id:
         return {"error": "resource_id is required"}
     analyzer = SecurityImpactAnalyzer()
+    return analyzer.analyze(resource_id)
+
+@app.get("/api/graph/security-group/{resource_id}")
+def analyze_security_group(resource_id: str):
+    analyzer = SecurityGroupAnalyzer(Neo4jService())
+    return analyzer.analyze(resource_id)
+
+@app.get("/api/graph/attack-path/{resource_id}")
+def analyze_attack_path(resource_id: str):
+    analyzer = AttackPathAnalyzer(Neo4jService())
+    return analyzer.analyze(resource_id)
+
+@app.get("/api/graph/exposure/{resource_id}")
+def analyze_exposure(resource_id: str):
+    analyzer = ExposureAnalyzer(Neo4jService())
+    return analyzer.analyze(resource_id)
+
+@app.get("/api/graph/iam-analysis/{role_id}")
+def analyze_iam(role_id: str):
+    analyzer = IAMAnalyzer(Neo4jService())
+    return analyzer.analyze(role_id)
+
+@app.get("/api/graph/network-analysis/{resource_id}")
+def analyze_network(resource_id: str):
+    analyzer = NetworkAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
 
 @app.post("/api/graph/cost-analysis")
