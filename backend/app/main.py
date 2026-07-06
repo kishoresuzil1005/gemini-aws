@@ -45,6 +45,9 @@ from app.services.graph.analysis.security.iam_analyzer import IAMAnalyzer
 from app.services.graph.analysis.security.network_analyzer import NetworkAnalyzer
 from app.services.graph.analysis.security.attack_path_analyzer import AttackPathAnalyzer
 
+# Sprint 9 AI Operations Engine
+from app.services.ai.recommendation_engine import AIRecommendationEngine
+
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
     description="FastAPI Backend for programmatically scanning multi-cloud systems & executing DevSecOps repairs.",
@@ -2244,6 +2247,18 @@ def analyze_iam(role_id: str):
 def analyze_network(resource_id: str):
     analyzer = NetworkAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
+
+@app.get("/api/ai/recommendations")
+def get_all_recommendations():
+    engine = AIRecommendationEngine()
+    recs = engine.analyze_environment()
+    return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
+
+@app.get("/api/ai/recommendations/{resource_id}")
+def get_resource_recommendations(resource_id: str):
+    engine = AIRecommendationEngine()
+    recs = engine.analyze_resource(resource_id)
+    return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
 @app.post("/api/graph/cost-analysis")
 def cost_analysis(request: dict):
