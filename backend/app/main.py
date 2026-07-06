@@ -31,6 +31,9 @@ from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
 from app.services.graph.analysis.criticality import CriticalityAnalyzer
 from app.services.graph.analysis.security import SecurityImpactAnalyzer
+from app.services.graph.analysis.cost import CostAnalyzer
+from app.services.graph.analysis.migration import MigrationPlanner
+from app.services.graph.analysis.architecture_review import ArchitectureReviewer
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2206,6 +2209,27 @@ def security_group_analysis(request: dict):
         return {"error": "resource_id is required"}
     analyzer = SecurityImpactAnalyzer()
     return analyzer.analyze(resource_id)
+
+@app.post("/api/graph/cost-analysis")
+def cost_analysis(request: dict):
+    resource_id = request.get("resource_id")
+    if not resource_id:
+        return {"error": "resource_id is required"}
+    analyzer = CostAnalyzer()
+    return analyzer.analyze(resource_id)
+
+@app.post("/api/graph/migration")
+def migration_analysis(request: dict):
+    resource_id = request.get("resource_id")
+    if not resource_id:
+        return {"error": "resource_id is required"}
+    analyzer = MigrationPlanner()
+    return analyzer.analyze(resource_id)
+
+@app.post("/api/graph/architecture-review")
+def architecture_review():
+    analyzer = ArchitectureReviewer()
+    return analyzer.analyze()
 
 @app.get("/api/graph/tree/{resource_id}")
 def dependency_tree(resource_id: str):
