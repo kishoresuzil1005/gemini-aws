@@ -29,6 +29,8 @@ from app.services.graph.auto_sync import AutoGraphSync
 from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
+from app.services.graph.analysis.criticality import CriticalityAnalyzer
+from app.services.graph.analysis.security import SecurityImpactAnalyzer
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2194,19 +2196,16 @@ def root_cause(request: dict):
 
 @app.get("/api/graph/criticality/{resource_id}")
 def criticality(resource_id: str):
-    service = GraphAnalysisService()
-    try:
-        return service.criticality_score(resource_id)
-    finally:
-        service.close()
+    analyzer = CriticalityAnalyzer()
+    return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/security-group/{sg_id}")
-def security_group_analysis(sg_id: str):
-    service = GraphAnalysisService()
-    try:
-        return service.security_group_exposure(sg_id)
-    finally:
-        service.close()
+@app.post("/api/graph/security-analysis")
+def security_group_analysis(request: dict):
+    resource_id = request.get("resource_id")
+    if not resource_id:
+        return {"error": "resource_id is required"}
+    analyzer = SecurityImpactAnalyzer()
+    return analyzer.analyze(resource_id)
 
 @app.get("/api/graph/tree/{resource_id}")
 def dependency_tree(resource_id: str):
