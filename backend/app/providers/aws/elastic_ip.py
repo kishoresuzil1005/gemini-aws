@@ -12,7 +12,7 @@ class ElasticIPDiscovery:
             elastic_ips = []
             for address in response.get('Addresses', []):
                 resource_id = address.get('AllocationId') or address.get('PublicIp')
-                elastic_ips.append({'resource_id': resource_id, 'resource_type': 'ElasticIP', 'region': region, 'name': address.get('PublicIp'), 'provider': 'AWS', 'metadata': {'public_ip': address.get('PublicIp'), 'private_ip': address.get('PrivateIpAddress'), 'allocation_id': address.get('AllocationId'), 'association_id': address.get('AssociationId'), 'instance_id': address.get('InstanceId'), 'network_interface_id': address.get('NetworkInterfaceId'), 'network_interface_owner': address.get('NetworkInterfaceOwnerId'), 'domain': address.get('Domain')}, 'dependencies': [{'type': 'NetworkInterface', 'id': eip.get('NetworkInterfaceId')}] if eip.get('NetworkInterfaceId') else []})
+                elastic_ips.append({'resource_id': resource_id, 'resource_type': 'ElasticIP', 'region': region, 'name': address.get('PublicIp'), 'provider': 'AWS', 'metadata': {'public_ip': address.get('PublicIp'), 'private_ip': address.get('PrivateIpAddress'), 'allocation_id': address.get('AllocationId'), 'association_id': address.get('AssociationId'), 'instance_id': address.get('InstanceId'), 'network_interface_id': address.get('NetworkInterfaceId'), 'network_interface_owner': address.get('NetworkInterfaceOwnerId'), 'domain': address.get('Domain')}, 'dependencies': [{'type': 'NetworkInterface', 'id': address.get('NetworkInterfaceId')}] if address.get('NetworkInterfaceId') else []})
             return elastic_ips
         except Exception:
             logger.exception('Elastic IP discovery failed for region %s', region)

@@ -13,7 +13,7 @@ class EBSDiscovery:
                 for att in vol.get('Attachments', []):
                     if 'InstanceId' in att:
                         attachments_list.append(att['InstanceId'])
-                volumes.append({'resource_id': vol['VolumeId'], 'resource_type': 'EBS', 'region': region, 'status': vol.get('State'), 'provider': 'AWS', 'metadata': {'size_gb': vol.get('Size'), 'attachments_list': attachments_list, 'attachments': len(vol.get('Attachments', []))}, 'dependencies': []})
+                volumes.append({'resource_id': vol['VolumeId'], 'resource_type': 'EBS', 'region': region, 'status': vol.get('State'), 'provider': 'AWS', 'metadata': {'size_gb': vol.get('Size'), 'attachments_list': attachments_list, 'attachments': len(vol.get('Attachments', []))}, 'dependencies': [{'type': 'EC2', 'id': attachment['InstanceId']} for attachment in vol.get('Attachments', []) if attachment.get('InstanceId')]})
             return volumes
         except Exception:
             return []
