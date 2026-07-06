@@ -30,10 +30,10 @@ from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
 from app.services.graph.analysis.criticality import CriticalityAnalyzer
-from app.services.graph.analysis.security import SecurityImpactAnalyzer
 from app.services.graph.analysis.cost import CostAnalyzer
 from app.services.graph.analysis.migration import MigrationPlanner
 from app.services.graph.analysis.architecture_review import ArchitectureReviewer
+from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
 from app.services.graph.analysis.ai_graph_agent import AIGraphAgent
 from app.services.graph.analysis.ai_query import NLQueryEngine
 
