@@ -1,5 +1,6 @@
+import uuid
 from sqlalchemy.orm import Session
-from app.models import ResourceDB, CloudAccountDB, ScanHistoryDB
+from app.models import ResourceDB, CloudAccountDB, ScanHistoryDB, ResourceRelationshipDB
 from app.services.discovery.scanner import AWSDiscoveryScanner
 from app.services.discovery.normalizer import ResourceNormalizer
 from datetime import datetime
@@ -38,7 +39,7 @@ def discover_resources(
                     existing.region = norm["region"]
                     existing.status = norm["status"]
                     existing.resource_metadata = norm["metadata"]
-                    existing.scan_id = scan_result.scan_id
+                    existing.scan_id = uuid.UUID(scan_result.scan_id)
                     existing.resource_version += 1
                 else:
                     db.add(ResourceDB(
@@ -50,13 +51,13 @@ def discover_resources(
                         region=norm["region"],
                         status=norm["status"],
                         resource_metadata=norm["metadata"],
-                        scan_id=scan_result.scan_id,
+                        scan_id=uuid.UUID(scan_result.scan_id),
                         resource_version=1
                     ))
 
             # 4. Save Scan History
             db.add(ScanHistoryDB(
-                id=scan_result.scan_id,
+                id=uuid.UUID(scan_result.scan_id),
                 account_id=str(cloud_account_id),
                 scan_start=scan_result.started_at,
                 scan_end=scan_result.finished_at,
@@ -67,19 +68,44 @@ def discover_resources(
                 warnings=len(scan_result.warnings)
             ))
 
+            # 5. Save Dependencies to PostgreSQL
+            relationships = []
+            for norm in normalized_resources:
+                source_id = norm["resource_id"]
+                for dep in norm.get("dependencies", []):
+                    rel_type = "DEPENDS_ON"
+                    dep_type = dep.get("type", "").upper()
+                    if dep_type == "VPC":
+                        rel_type = "IN_VPC"
+                    elif dep_type == "SUBNET":
+                        rel_type = "IN_SUBNET"
+                    elif dep_type in ("SECURITYGROUP", "SECURITY_GROUP"):
+                        rel_type = "USES_SG"
+                    elif dep_type == "EBS":
+                        rel_type = "ATTACHED_TO"
+                    elif dep_type in ("IAM", "IAM_ROLE", "IAM_USER"):
+                        rel_type = "USES_ROLE"
+                        
+                    relationships.append(ResourceRelationshipDB(
+                        source_resource_id=source_id,
+                        target_resource_id=dep["id"],
+                        relationship_type=rel_type
+                    ))
+
+            all_resource_ids = [r["resource_id"] for r in normalized_resources]
+            if all_resource_ids:
+                db.query(ResourceRelationshipDB).filter(ResourceRelationshipDB.source_resource_id.in_(all_resource_ids)).delete(synchronize_session=False)
+            
+            db.add_all(relationships)
+
             db.commit()
 
             # Phase 4 removes Neo4j syncing from here; GraphSyncService handles it offline
             return scan_result
 
         except Exception as e:
-
-            raise Exception(
-                f"AWS discovery failed: {e}"
-            )
+            db.rollback()
+            raise Exception(f"AWS discovery failed: {e}")
 
     else:
-
-        raise Exception(
-            f"Provider {account.provider} not supported"
-        )
+        raise Exception(f"Provider {account.provider} not supported")
