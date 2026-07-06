@@ -1,24 +1,49 @@
-from typing import List, Dict, Any
+from typing import List, Dict
 from app.models import ResourceDB
 
+
 class EventBridgeGraphBuilder:
+
     @staticmethod
-    def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
+    def build(resources: List[ResourceDB]) -> List[Dict]:
+
         relationships = []
-        for res in resources:
-            if res.resource_type == "EventBridgeRule" and res.resource_metadata:
-                metadata = res.resource_metadata
-                
-                # EventBridge Rule -> Lambda
-                target_arns = metadata.get("target_arns", [])
-                for target_arn in target_arns:
-                    if ":lambda:" in target_arn:
-                        relationships.append({
-                            "from": metadata.get("bus_arn", res.resource_id),
-                            "to": target_arn,
-                            "type": "TRIGGERS",
-                            "source_type": "EventBridgeBus",
-                            "target_type": "Lambda"
-                        })
-                    
+
+        lambda_lookup = {}
+
+        for resource in resources:
+            if resource.resource_type == "Lambda":
+                lambda_lookup[resource.resource_id] = resource
+
+        for rule in resources:
+
+            if rule.resource_type != "EventBridgeRule":
+                continue
+
+            metadata = rule.resource_metadata or {}
+
+            targets = metadata.get("targets", [])
+
+            for target in targets:
+
+                arn = target.get("arn")
+
+                if not arn:
+                    continue
+
+                lambda_name = arn.split(":")[-1]
+
+                if lambda_name not in lambda_lookup:
+                    continue
+
+                relationships.append(
+                    {
+                        "from": rule.resource_id,
+                        "to": lambda_name,
+                        "type": "TRIGGERS",
+                        "source_type": "EventBridgeRule",
+                        "target_type": "Lambda",
+                    }
+                )
+
         return relationships
