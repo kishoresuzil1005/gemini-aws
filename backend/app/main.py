@@ -49,6 +49,11 @@ from app.services.graph.analysis.security.attack_path_analyzer import AttackPath
 from app.services.ai.recommendation_engine import AIRecommendationEngine
 from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
+from app.services.ai.assistant.memory_manager import MemoryManager
+from app.services.ai.assistant.graph_assistant import GraphAssistant
+
+# Global memory instance (in-memory for now)
+ai_memory = MemoryManager()
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
@@ -2287,6 +2292,26 @@ def get_resource_orchestration(resource_id: str):
     orchestrator = RemediationOrchestrator()
     packages = orchestrator.build_package(resource_id)
     return {"resource": resource_id, "count": len(packages), "packages": [p.dict() for p in packages]}
+
+@app.post("/api/ai/chat")
+def ai_chat(request: dict):
+    message = request.get("message")
+    session_id = request.get("session_id", "default_session")
+    if not message:
+        return {"error": "Message is required."}
+    
+    assistant = GraphAssistant(ai_memory)
+    return assistant.chat(session_id, message)
+
+@app.get("/api/ai/chat/history")
+def get_ai_chat_history(session_id: str = "default_session"):
+    return {"session_id": session_id, "history": ai_memory.get_history(session_id)}
+
+@app.post("/api/ai/chat/reset")
+def reset_ai_chat(request: dict):
+    session_id = request.get("session_id", "default_session")
+    ai_memory.clear_history(session_id)
+    return {"status": "success", "message": f"Conversation {session_id} reset."}
 
 @app.post("/api/graph/cost-analysis")
 def cost_analysis(request: dict):
