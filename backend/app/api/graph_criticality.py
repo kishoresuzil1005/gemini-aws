@@ -8,6 +8,8 @@ criticality_service = CriticalityService()
 def get_criticality(resource_id: str):
     try:
         return criticality_service.calculate(resource_id)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
