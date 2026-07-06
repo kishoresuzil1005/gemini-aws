@@ -8,13 +8,6 @@ from app.services.graph.builders.compute.lambda_builder import LambdaGraphBuilde
 from app.services.graph.builders.database.rds import RDSGraphBuilder
 from app.services.graph.builders.storage.s3 import S3GraphBuilder
 from app.services.graph.builders.network.vpc import VPCGraphBuilder
-from app.services.graph.builders.network.subnet import SubnetGraphBuilder
-from app.services.graph.builders.network.route_table import RouteTableGraphBuilder
-from app.services.graph.builders.network.igw import InternetGatewayGraphBuilder
-from app.services.graph.builders.network.nat_gateway import NatGatewayGraphBuilder
-from app.services.graph.builders.network.security_group import SecurityGroupGraphBuilder
-from app.services.graph.builders.network.eni import ENIGraphBuilder
-from app.services.graph.builders.network.elastic_ip import ElasticIPGraphBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -59,13 +52,6 @@ class AWSRelationshipBuilder:
             
             # Networking
             relationships.extend(VPCGraphBuilder.build(resources))
-            relationships.extend(SubnetGraphBuilder.build(resources))
-            relationships.extend(RouteTableGraphBuilder.build(resources))
-            relationships.extend(InternetGatewayGraphBuilder.build(resources))
-            relationships.extend(NatGatewayGraphBuilder.build(resources))
-            relationships.extend(SecurityGroupGraphBuilder.build(resources))
-            relationships.extend(ENIGraphBuilder.build(resources))
-            relationships.extend(ElasticIPGraphBuilder.build(resources))
         except Exception as e:
             logger.error(f"Error building graph from inventory: {e}")
             
