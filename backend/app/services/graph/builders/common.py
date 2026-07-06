@@ -14,5 +14,12 @@ RELATIONSHIP_MAP = {
     "ALB": "ATTACHED_TO",
     "LAMBDA": "INVOKES",
     "S3": "USES_BUCKET",
-    "RDS": "CONNECTS_TO"
+    "RDS": "CONNECTS_TO",
+    
+    # Sprint 1 Networking additions
+    "INTERNETGATEWAY": "ROUTES_TO",
+    "NATGATEWAY": "ROUTES_TO",
+    "ROUTETABLE": "HAS_ROUTE",
+    "NETWORKINTERFACE": "ATTACHED_TO",
+    "ELASTICIP": "ATTACHED_TO"
 }
