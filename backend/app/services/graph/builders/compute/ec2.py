@@ -28,4 +28,35 @@ class EC2GraphBuilder:
                         "source_type": "EC2",
                         "target_type": "Subnet"
                     })
+                # EC2 -> SecurityGroups
+                for sg_id in metadata.get("security_groups", []):
+                    relationships.append({
+                        "from": res.resource_id,
+                        "to": sg_id,
+                        "type": "USES_SG",
+                        "source_type": "EC2",
+                        "target_type": "SecurityGroup"
+                    })
+
+                # EC2 -> IAM
+                iam_arn = metadata.get("iam_instance_profile")
+                if iam_arn:
+                    relationships.append({
+                        "from": res.resource_id,
+                        "to": iam_arn,
+                        "type": "USES_ROLE",
+                        "source_type": "EC2",
+                        "target_type": "IAM_ROLE"
+                    })
+
+                # EC2 -> EBS
+                for vol in metadata.get("ebs_volumes", []):
+                    relationships.append({
+                        "from": res.resource_id,
+                        "to": vol,
+                        "type": "ATTACHED_TO",
+                        "source_type": "EC2",
+                        "target_type": "EBS"
+                    })
+
         return relationships

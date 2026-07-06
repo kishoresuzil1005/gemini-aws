@@ -4,6 +4,9 @@ from app.models import ResourceDB
 from typing import List, Dict, Any
 
 from app.services.graph.builders.compute.ec2 import EC2GraphBuilder
+from app.services.graph.builders.compute.autoscaling import AutoScalingGraphBuilder
+from app.services.graph.builders.compute.target_group import TargetGroupGraphBuilder
+from app.services.graph.builders.compute.alb import ALBGraphBuilder
 from app.services.graph.builders.compute.lambda_builder import LambdaGraphBuilder
 from app.services.graph.builders.database.rds import RDSGraphBuilder
 from app.services.graph.builders.storage.s3 import S3GraphBuilder
@@ -45,7 +48,11 @@ class AWSRelationshipBuilder:
         relationships = []
         
         try:
+            # Compute
             relationships.extend(EC2GraphBuilder.build(resources))
+            relationships.extend(AutoScalingGraphBuilder.build(resources))
+            relationships.extend(TargetGroupGraphBuilder.build(resources))
+            relationships.extend(ALBGraphBuilder.build(resources))
             relationships.extend(LambdaGraphBuilder.build(resources))
             relationships.extend(RDSGraphBuilder.build(resources))
             relationships.extend(S3GraphBuilder.build(resources))
