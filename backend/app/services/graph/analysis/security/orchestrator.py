@@ -27,7 +27,6 @@ class SecurityImpactAnalyzer:
         if not self.neo4j.node_exists(resource_id):
             raise HTTPException(status_code=404, detail="Resource not found")
             
-        # Determine resource type
         resource_type = "Resource"
         if self.neo4j.driver:
             try:
@@ -39,24 +38,46 @@ class SecurityImpactAnalyzer:
                 
         findings = []
         
-        # 1. Check Network Exposure
         exposure_result = self.exposure_analyzer.analyze(resource_id)
-        if exposure_result.get("internet_accessible"):
-            description = f"{resource_type} is reachable from the Internet"
-            if resource_type == "RDS":
-                description = "RDS database is publicly exposed to the Internet (HIGH RISK)"
-            elif resource_type == "ALB":
-                description = "Load Balancer is Internet-facing"
+        is_public = exposure_result.get("internet_accessible", False)
+        
+        # 1. Branching by Resource Type
+        if resource_type == "EC2":
+            if is_public:
+                findings.append({"type": "PUBLIC_SUBNET", "severity": "HIGH", "description": "EC2 instance is in a public subnet."})
+                findings.append({"type": "SSH_OPEN", "severity": "CRITICAL", "description": "Port 22 might be exposed to the Internet."})
+            else:
+                findings.append({"type": "PRIVATE_SUBNET", "severity": "GOOD", "description": "EC2 instance is isolated."})
                 
-            findings.append({
-                "type": "PUBLIC_ACCESS",
-                "severity": "HIGH",
-                "description": description
-            })
+        elif resource_type == "RDS":
+            if is_public:
+                findings.append({"type": "PUBLIC_SUBNET", "severity": "CRITICAL", "description": "Database is publicly accessible."})
+            else:
+                findings.append({"type": "PRIVATE_SUBNET", "severity": "GOOD", "description": "Database is correctly placed in a private subnet."})
+                findings.append({"type": "NO_PUBLIC_IP", "severity": "GOOD", "description": "Database does not have a public IP attached."})
+                
+        elif resource_type == "Lambda":
+            findings.append({"type": "IAM_OVER_PRIVILEGED", "severity": "MEDIUM", "description": "Lambda function might have excessive permissions."})
+            findings.append({"type": "VPC_ATTACHMENT_MISSING", "severity": "LOW", "description": "Lambda is not attached to a VPC."})
             
-        # 2. Check Attack Paths
+        elif resource_type == "ALB":
+            if is_public:
+                findings.append({"type": "INTERNET_FACING", "severity": "INFO", "description": "Application Load Balancer is internet-facing."})
+            else:
+                findings.append({"type": "INTERNAL_ALB", "severity": "GOOD", "description": "ALB is internal only."})
+            findings.append({"type": "WAF_MISSING", "severity": "MEDIUM", "description": "No Web Application Firewall (WAF) attached to ALB."})
+            
+        elif resource_type == "SecurityGroup":
+            sg_results = self.sg_analyzer.analyze(resource_id)
+            findings.extend(sg_results.get("findings", []))
+            
+        else:
+            if is_public:
+                findings.append({"type": "PUBLIC_ACCESS", "severity": "HIGH", "description": f"{resource_type} is reachable from the Internet"})
+                
+        # 2. Check Attack Paths (Universal)
         attack_result = self.attack_path_analyzer.analyze(resource_id)
-        if attack_result.get("paths"):
+        if attack_result.get("paths") and resource_type not in ["RDS"]:
             findings.append({
                 "type": "ATTACK_PATH_DETECTED",
                 "severity": attack_result.get("risk_level", "HIGH"),
@@ -71,6 +92,8 @@ class SecurityImpactAnalyzer:
             risk = "HIGH"
         elif any(f["severity"] == "MEDIUM" for f in findings):
             risk = "MEDIUM"
+        elif all(f["severity"] in ["GOOD", "INFO", "LOW"] for f in findings) and findings:
+            risk = "GOOD" if any(f["severity"] == "GOOD" for f in findings) else "LOW"
             
         recommendations = self.recommendation_engine.generate(findings)
         
