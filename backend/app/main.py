@@ -2249,9 +2249,11 @@ def analyze_network(resource_id: str):
     return analyzer.analyze(resource_id)
 
 @app.get("/api/ai/recommendations")
-def get_all_recommendations():
+def get_all_recommendations(category: Optional[str] = None):
     engine = AIRecommendationEngine()
     recs = engine.analyze_environment()
+    if category:
+        recs = [r for r in recs if r.category == category.upper()]
     return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
 @app.get("/api/ai/recommendations/{resource_id}")
