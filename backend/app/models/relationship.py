@@ -11,6 +11,6 @@ class ResourceEdgeDB(Base):
 class ResourceRelationshipDB(Base):
     __tablename__ = "resource_relationships"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    source_resource_id = Column(String(255), nullable=False)
-    target_resource_id = Column(String(255), nullable=False)
+    source_resource_id = Column(Text, nullable=False)
+    target_resource_id = Column(Text, nullable=False)
     relationship_type = Column(String(100), nullable=False)

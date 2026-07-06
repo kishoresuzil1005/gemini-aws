@@ -129,6 +129,22 @@ def discover_resources(
             db.add_all(relationships)
 
             print("POINT 7 - COMMIT")
+            for norm in normalized_resources:
+                for field in [
+                    "provider",
+                    "resource_type",
+                    "resource_id",
+                    "region",
+                    "status",
+                    "instance_type",
+                    "instance_class",
+                    "name",
+                ]:
+                    value = str(norm.get(field, ""))
+                    if len(value) > 100:
+                        print(f"{field} length={len(value)}")
+                        print(value)
+            
             db.commit()
             print("POINT 8 - DONE")
 

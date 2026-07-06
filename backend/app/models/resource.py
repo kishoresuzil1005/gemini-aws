@@ -9,7 +9,7 @@ class ResourceDB(Base):
     cloud_account_id = Column(Integer, nullable=True)
     provider = Column(String(50), nullable=False)
     resource_type = Column(String(100), nullable=False)
-    resource_id = Column(String(100), index=True, nullable=False)
+    resource_id = Column(Text, index=True, nullable=False)
     name = Column(String(255), nullable=True)
     region = Column(String(100), nullable=True)
     status = Column(String(50), nullable=True)
@@ -31,7 +31,7 @@ class ResourceDB(Base):
 class ResourceNodeDB(Base):
     __tablename__ = "resource_nodes"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    resource_id = Column(String(100), index=True, nullable=False, unique=True)
+    resource_id = Column(Text, index=True, nullable=False, unique=True)
     resource_type = Column(String(100), nullable=False)
     name = Column(String(255), nullable=True)
     provider = Column(String(50), nullable=False)
