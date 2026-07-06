@@ -11,8 +11,9 @@ def discover_resources(
     region: str | None = None
 ):
     print("=" * 80)
-    print("DISCOVERY STARTED")
+    print("HELLO FROM DISCOVERY")
     print("cloud_account_id =", cloud_account_id)
+    print("region =", region)
     print("=" * 80)
     
     account = (
@@ -29,7 +30,10 @@ def discover_resources(
     if account.provider == "AWS":
         try:
             # 1. Discover AWS
+            print("BEFORE SCANNER")
             scan_result = AWSDiscoveryScanner.scan_all(region=region)
+            print("AFTER SCANNER")
+            print(scan_result)
             
             print("=" * 80)
             print("SCAN RESULT")

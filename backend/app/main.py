@@ -1506,20 +1506,27 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == provider).all()
 
         print("STEP F")
-        print(accounts)
+        print("Account count:", len(accounts))
+        for account in accounts:
+            print("ACCOUNT:", account.id, account.provider)
 
         job.progress = 0.4
         db.commit()
 
         print("Accounts found:", len(accounts))
         for account in accounts:
+            print("=" * 80)
+            print("CALLING discover_resources()")
+            print("Account:", account.id)
+            print("=" * 80)
             try:
                 discover_resources(db, account.id, region=region)
-            except Exception:
-                print(f"\n========== DISCOVERY FAILED ==========")
-                print(f"Account: {account.id}")
+                print("DISCOVERY FINISHED")
+            except Exception as e:
+                print("DISCOVERY FAILED")
+                print(e)
+                import traceback
                 traceback.print_exc()
-                print("======================================\n")
 
         try:
             from app.services.graph.auto_sync import AutoGraphSync
