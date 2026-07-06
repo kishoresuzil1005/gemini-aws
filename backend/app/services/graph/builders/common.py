@@ -25,5 +25,11 @@ RELATIONSHIP_MAP = {
     
     # Sprint 5 Compute additions
     "AUTOSCALINGGROUP": "MANAGES",
-    "TARGETGROUP": "TARGETS"
+    "TARGETGROUP": "TARGETS",
+    
+    # Sprint 6 Database additions
+    "RDS": "USES_DATABASE",
+    "DYNAMODB": "USES_DATABASE",
+    "ELASTICACHE": "USES_CACHE",
+    "OPENSEARCH": "USES_SEARCH"
 }

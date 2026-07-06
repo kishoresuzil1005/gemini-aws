@@ -9,6 +9,9 @@ from app.services.graph.builders.compute.target_group import TargetGroupGraphBui
 from app.services.graph.builders.compute.alb import ALBGraphBuilder
 from app.services.graph.builders.compute.lambda_builder import LambdaGraphBuilder
 from app.services.graph.builders.database.rds import RDSGraphBuilder
+from app.services.graph.builders.database.dynamodb import DynamoDBGraphBuilder
+from app.services.graph.builders.database.elasticache import ElastiCacheGraphBuilder
+from app.services.graph.builders.database.opensearch import OpenSearchGraphBuilder
 from app.services.graph.builders.storage.s3 import S3GraphBuilder
 from app.services.graph.builders.network.vpc import VPCGraphBuilder
 
@@ -54,7 +57,13 @@ class AWSRelationshipBuilder:
             relationships.extend(TargetGroupGraphBuilder.build(resources))
             relationships.extend(ALBGraphBuilder.build(resources))
             relationships.extend(LambdaGraphBuilder.build(resources))
+            # Database
             relationships.extend(RDSGraphBuilder.build(resources))
+            relationships.extend(DynamoDBGraphBuilder.build(resources))
+            relationships.extend(ElastiCacheGraphBuilder.build(resources))
+            relationships.extend(OpenSearchGraphBuilder.build(resources))
+            
+            # Storage
             relationships.extend(S3GraphBuilder.build(resources))
             
             # Networking
