@@ -1472,6 +1472,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
     print("STEP A")
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
     print("STEP B")
+    print("JOB =", job)
 
     if not job:
         print("JOB NOT FOUND")
@@ -1518,13 +1519,19 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         job.progress = 1.0
         job.status = "COMPLETED"
         db.commit()
-    except Exception:
-        print("\n========== WORKER FAILED ==========")
+    except Exception as e:
+        print("=" * 80)
+        print("WORKER FAILED")
+        print("Exception Type:", type(e))
+        print("Exception:", e)
         traceback.print_exc()
-        print("===================================\n")
+        print("=" * 80)
 
-        job.status = "FAILED"
-        db.commit()
+        if job:
+            job.status = "FAILED"
+            db.commit()
+
+        raise
     finally:
         db.close()
 
