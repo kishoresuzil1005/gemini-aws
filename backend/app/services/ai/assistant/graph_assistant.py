@@ -5,20 +5,26 @@ from app.services.ai.assistant.intent_classifier import IntentClassifier
 from app.services.ai.assistant.tool_router import ToolRouter
 from app.services.ai.assistant.context_builder import ContextBuilder
 from app.services.ai.assistant.response_generator import ResponseGenerator
-from app.services.ai.assistant.ollama_provider import OllamaProvider
+from app.services.ai.assistant.llm.base_provider import BaseProvider
+from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
+from app.services.ai.assistant.llm.config import settings
+import uuid
 from app.services.ai.assistant.assistant_models import ChatResponse, ChatRequest
 
 class GraphAssistant:
-    def __init__(self, memory_manager: MemoryManager):
+    def __init__(self, memory_manager: MemoryManager, provider: BaseProvider = None):
         self.memory = memory_manager
         self.conversation = ConversationManager(memory_manager)
         self.classifier = IntentClassifier()
         self.tool_router = ToolRouter()
         self.context_builder = ContextBuilder()
-        self.provider = OllamaProvider()
+        self.provider = provider or OllamaProvider(settings)
         self.generator = ResponseGenerator(self.provider)
 
     def chat(self, request: ChatRequest, stream: bool = False) -> ChatResponse:
+        request_id = str(uuid.uuid4())
+        print(f"[Req: {request_id}] Starting AI Chat for Conversation: {request.conversation_id}")
+        
         # 1. Add to Memory
         self.memory.add_message(request.conversation_id, "user", request.message)
         
@@ -50,6 +56,7 @@ class GraphAssistant:
             intent=ctx.current_intent,
             target=ctx.current_resource,
             tool_responses=tool_responses,
+            request_id=request_id,
             stream=stream
         )
         

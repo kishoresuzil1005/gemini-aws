@@ -37,7 +37,7 @@ class ToolRouter:
                 tool = self.registry.get_tool("RECOMMENDATION")
                 
         if tool:
-            return tool.execute(resource_id=resource_id, **kwargs)
+            return self.registry.execute_tool(name=tool.name, resource_id=resource_id, **kwargs)
             
         return ToolResponse(
             tool_name="UNKNOWN",

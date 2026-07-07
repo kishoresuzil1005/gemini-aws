@@ -52,7 +52,9 @@ from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrc
 from app.services.ai.assistant.memory_manager import MemoryManager
 from app.services.ai.assistant.graph_assistant import GraphAssistant
 from app.services.ai.assistant.assistant_models import ChatRequest
-from app.services.ai.assistant.ollama_provider import OllamaProvider
+from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
+from app.services.ai.assistant.llm.models import StandardLlmResponse
+from fastapi.responses import StreamingResponse
 
 # Global memory instance (in-memory for now)
 ai_memory = MemoryManager()
@@ -2297,9 +2299,22 @@ def get_resource_orchestration(resource_id: str):
 
 @app.post("/api/ai/chat")
 def ai_chat(request: ChatRequest, stream: bool = False):
-    assistant = GraphAssistant(ai_memory)
-    response = assistant.chat(request, stream=stream)
-    return response.dict()
+    try:
+        assistant = GraphAssistant(ai_memory)
+        response = assistant.chat(request, stream=stream)
+        return StandardLlmResponse.success(content=response.answer, metadata={"intent": response.intent, "sources": response.sources}).dict()
+    except Exception as e:
+        return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
+
+@app.post("/api/ai/chat/stream")
+def ai_chat_stream(request: ChatRequest):
+    try:
+        assistant = GraphAssistant(ai_memory)
+        # Assuming the assistant returns a generator when stream=True
+        response = assistant.chat(request, stream=True)
+        return StreamingResponse(response.answer, media_type="text/event-stream")
+    except Exception as e:
+        return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
 
 @app.get("/api/ai/chat/history")
 def get_ai_chat_history(conversation_id: str = "default_session"):
@@ -2313,7 +2328,8 @@ def reset_ai_chat(conversation_id: str = "default_session"):
 
 @app.get("/api/ai/chat/health")
 def ai_chat_health():
-    provider = OllamaProvider()
+    from app.services.ai.assistant.llm.config import settings
+    provider = OllamaProvider(settings)
     is_healthy = provider.health_check()
     return {"ollama_available": is_healthy, "status": "ok" if is_healthy else "unavailable"}
 
