@@ -19,12 +19,12 @@ class ContextBuilder:
             graph_data = self.graph_retriever.get_resource_context(ctx.current_resource)
             if graph_data:
                 sections.append("### Neo4j Graph Properties ###")
-                sections.append(json.dumps(graph_data, indent=2))
+                sections.append(json.dumps(graph_data, indent=2, default=str))
         
         # 2. Tool Sections
         for response in tool_responses:
             sections.append(f"### {response.tool_name} Output ###")
-            sections.append(json.dumps(response.context, indent=2))
+            sections.append(json.dumps(response.context, indent=2, default=str))
             
         if not sections:
             sections.append("No specific resource target identified in the query. Provide general CloudOps assistance.")
