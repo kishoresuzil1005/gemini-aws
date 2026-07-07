@@ -6,13 +6,15 @@ from app.services.ai.assistant.llm_provider import LLMProvider
 class OllamaProvider(LLMProvider):
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
-        self.model = "llama3" # or whichever model is running
+        import os
+        self.model = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
     def health_check(self) -> bool:
         try:
-            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
+            response = requests.get(f"{self.base_url}/api/version", timeout=10)
             return response.status_code == 200
-        except Exception:
+        except Exception as e:
+            print("OLLAMA ERROR:", e)
             return False
 
     def generate_response(self, messages: List[Dict[str, str]], stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
