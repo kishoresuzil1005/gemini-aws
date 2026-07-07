@@ -1,14 +1,12 @@
-from pydantic_settings import BaseSettings
+import os
 
-class AISettings(BaseSettings):
-    ollama_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen2.5:1.5b"
-    timeout: int = 15
-    max_retries: int = 3
-    health_cache_seconds: int = 60
-    stream_enabled: bool = False
-
-    class Config:
-        env_prefix = "AI_"
+class AISettings:
+    def __init__(self):
+        self.ollama_url: str = os.getenv("AI_OLLAMA_URL", "http://localhost:11434")
+        self.ollama_model: str = os.getenv("AI_OLLAMA_MODEL", "qwen2.5:1.5b")
+        self.timeout: int = int(os.getenv("AI_TIMEOUT", "15"))
+        self.max_retries: int = int(os.getenv("AI_MAX_RETRIES", "3"))
+        self.health_cache_seconds: int = int(os.getenv("AI_HEALTH_CACHE_SECONDS", "60"))
+        self.stream_enabled: bool = os.getenv("AI_STREAM_ENABLED", "false").lower() == "true"
 
 settings = AISettings()
