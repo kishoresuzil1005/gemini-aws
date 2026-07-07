@@ -51,6 +51,8 @@ from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
 from app.services.ai.assistant.memory_manager import MemoryManager
 from app.services.ai.assistant.graph_assistant import GraphAssistant
+from app.services.ai.assistant.assistant_models import ChatRequest
+from app.services.ai.assistant.ollama_provider import OllamaProvider
 
 # Global memory instance (in-memory for now)
 ai_memory = MemoryManager()
@@ -2294,24 +2296,33 @@ def get_resource_orchestration(resource_id: str):
     return {"resource": resource_id, "count": len(packages), "packages": [p.dict() for p in packages]}
 
 @app.post("/api/ai/chat")
-def ai_chat(request: dict):
-    message = request.get("message")
-    session_id = request.get("session_id", "default_session")
-    if not message:
-        return {"error": "Message is required."}
-    
+def ai_chat(request: ChatRequest, stream: bool = False):
     assistant = GraphAssistant(ai_memory)
-    return assistant.chat(session_id, message)
+    response = assistant.chat(request, stream=stream)
+    return response.dict()
 
 @app.get("/api/ai/chat/history")
-def get_ai_chat_history(session_id: str = "default_session"):
-    return {"session_id": session_id, "history": ai_memory.get_history(session_id)}
+def get_ai_chat_history(conversation_id: str = "default_session"):
+    history = ai_memory.get_history(conversation_id)
+    return {"conversation_id": conversation_id, "history": [m.dict() for m in history]}
 
 @app.post("/api/ai/chat/reset")
 def reset_ai_chat(request: dict):
-    session_id = request.get("session_id", "default_session")
-    ai_memory.clear_history(session_id)
-    return {"status": "success", "message": f"Conversation {session_id} reset."}
+    conversation_id = request.get("conversation_id", "default_session")
+    ai_memory.clear_history(conversation_id)
+    return {"status": "success", "message": f"Conversation {conversation_id} reset."}
+
+@app.get("/api/ai/chat/health")
+def ai_chat_health():
+    provider = OllamaProvider()
+    is_healthy = provider.health_check()
+    return {"ollama_available": is_healthy, "status": "ok" if is_healthy else "unavailable"}
+
+@app.get("/api/ai/chat/tools")
+def ai_chat_tools():
+    assistant = GraphAssistant(ai_memory)
+    tools = assistant.tool_router.registry.list_tools()
+    return {"count": len(tools), "tools": tools}
 
 @app.post("/api/graph/cost-analysis")
 def cost_analysis(request: dict):

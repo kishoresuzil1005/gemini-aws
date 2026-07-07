@@ -1,29 +1,32 @@
 from typing import List, Dict
+from app.services.ai.assistant.assistant_models import ConversationContext, Message
 
 class MemoryManager:
     def __init__(self):
-        # In a real system, this would be backed by Redis or a DB keyed by session_id
-        self._history: Dict[str, List[Dict[str, str]]] = {}
-        self._context: Dict[str, Dict[str, str]] = {}
+        self._history: Dict[str, List[Message]] = {}
+        self._contexts: Dict[str, ConversationContext] = {}
 
-    def add_message(self, session_id: str, role: str, content: str):
-        if session_id not in self._history:
-            self._history[session_id] = []
-        self._history[session_id].append({"role": role, "content": content})
+    def add_message(self, conversation_id: str, role: str, content: str):
+        if conversation_id not in self._history:
+            self._history[conversation_id] = []
+        self._history[conversation_id].append(Message(role=role, content=content))
 
-    def get_history(self, session_id: str) -> List[Dict[str, str]]:
-        return self._history.get(session_id, [])
+    def get_history(self, conversation_id: str) -> List[Message]:
+        return self._history.get(conversation_id, [])
 
-    def clear_history(self, session_id: str):
-        if session_id in self._history:
-            self._history[session_id] = []
-        if session_id in self._context:
-            self._context[session_id] = {}
+    def clear_history(self, conversation_id: str):
+        if conversation_id in self._history:
+            self._history[conversation_id] = []
+        if conversation_id in self._contexts:
+            self._contexts[conversation_id] = ConversationContext(conversation_id=conversation_id)
 
-    def update_context(self, session_id: str, key: str, value: str):
-        if session_id not in self._context:
-            self._context[session_id] = {}
-        self._context[session_id][key] = value
-
-    def get_context(self, session_id: str) -> Dict[str, str]:
-        return self._context.get(session_id, {})
+    def get_context(self, conversation_id: str) -> ConversationContext:
+        if conversation_id not in self._contexts:
+            self._contexts[conversation_id] = ConversationContext(conversation_id=conversation_id)
+        return self._contexts[conversation_id]
+        
+    def update_context(self, conversation_id: str, updates: Dict[str, str]):
+        ctx = self.get_context(conversation_id)
+        for key, value in updates.items():
+            if hasattr(ctx, key) and value is not None:
+                setattr(ctx, key, value)

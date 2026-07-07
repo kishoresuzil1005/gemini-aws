@@ -1,48 +1,59 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from app.services.ai.assistant.memory_manager import MemoryManager
+from app.services.ai.assistant.conversation_manager import ConversationManager
 from app.services.ai.assistant.intent_classifier import IntentClassifier
+from app.services.ai.assistant.tool_router import ToolRouter
 from app.services.ai.assistant.context_builder import ContextBuilder
 from app.services.ai.assistant.response_generator import ResponseGenerator
-from app.services.ai.assistant.llm_provider import MockLLMProvider
+from app.services.ai.assistant.ollama_provider import OllamaProvider
+from app.services.ai.assistant.assistant_models import ChatResponse, ChatRequest
 
 class GraphAssistant:
     def __init__(self, memory_manager: MemoryManager):
         self.memory = memory_manager
+        self.conversation = ConversationManager(memory_manager)
         self.classifier = IntentClassifier()
+        self.tool_router = ToolRouter()
         self.context_builder = ContextBuilder()
-        self.generator = ResponseGenerator(MockLLMProvider())
+        self.provider = OllamaProvider()
+        self.generator = ResponseGenerator(self.provider)
 
-    def chat(self, session_id: str, message: str) -> Dict[str, Any]:
+    def chat(self, request: ChatRequest, stream: bool = False) -> ChatResponse:
         # 1. Add to Memory
-        self.memory.add_message(session_id, "user", message)
+        self.memory.add_message(request.conversation_id, "user", request.message)
         
-        # 2. Intent Detection
-        intent_data = self.classifier.classify(message)
+        # 2. Intent Classification
+        intent_data = self.classifier.classify(request.message)
         
-        # Resolve target resource from context if missing
-        if not intent_data.get("target_resource"):
-            saved_target = self.memory.get_context(session_id).get("target_resource")
-            if saved_target:
-                intent_data["target_resource"] = saved_target
-        elif intent_data.get("target_resource"):
-            self.memory.update_context(session_id, "target_resource", intent_data["target_resource"])
+        # 3. Conversation Context Processing
+        ctx = self.conversation.process_turn(request.conversation_id, intent_data)
+        
+        # 4. Tool Execution
+        tool_responses = []
+        if ctx.current_intent != "UNKNOWN":
+            tr = self.tool_router.route(ctx.current_intent, ctx.current_resource)
+            tool_responses.append(tr)
             
-        # 3. Context Building
-        context_str = self.context_builder.build_context(intent_data)
+        # 5. Context Building
+        context_str = self.context_builder.build_structured_context(ctx, tool_responses)
         
-        # 4. History formatting
-        history = self.memory.get_history(session_id)
-        # Convert history to simple string for prompt
-        history_str = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in history[-5:]]) # last 5 turns
+        # 6. History formatting
+        history = self.memory.get_history(request.conversation_id)
+        # Avoid passing the last message again as it is passed as the current question
+        history_str = "\n".join([f"{msg.role.capitalize()}: {msg.content}" for msg in history[-6:-1]]) 
         
-        # 5. Response Generation
-        response_text = self.generator.generate(message, history_str, context_str)
+        # 7. Response Generation
+        chat_response = self.generator.generate(
+            question=request.message,
+            history_str=history_str,
+            context_str=context_str,
+            intent=ctx.current_intent,
+            target=ctx.current_resource,
+            tool_responses=tool_responses,
+            stream=stream
+        )
         
-        # 6. Save assistant response
-        self.memory.add_message(session_id, "assistant", response_text)
+        # 8. Save assistant response
+        self.memory.add_message(request.conversation_id, "assistant", chat_response.answer)
         
-        return {
-            "response": response_text,
-            "intent": intent_data.get("intent"),
-            "target": intent_data.get("target_resource")
-        }
+        return chat_response

@@ -1,50 +1,46 @@
 from typing import Dict, Any
-from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
-from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
-from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
-from app.services.graph.analysis.root_cause import RootCauseAnalyzer
-from app.services.ai.recommendation_engine import AIRecommendationEngine
-from app.services.ai.remediation_planner import RemediationPlanner
-from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
+from app.services.ai.assistant.assistant_models import ToolResponse
+from app.services.ai.assistant.tool_registry import ToolRegistry
+from app.services.ai.assistant.tools.security_tool import SecurityTool
+from app.services.ai.assistant.tools.dependency_tool import DependencyTool
+from app.services.ai.assistant.tools.blast_radius_tool import BlastRadiusTool
+from app.services.ai.assistant.tools.root_cause_tool import RootCauseTool
+from app.services.ai.assistant.tools.recommendation_tool import RecommendationTool
+from app.services.ai.assistant.tools.remediation_tool import RemediationTool
+from app.services.ai.assistant.tools.orchestration_tool import OrchestrationTool
+from app.services.ai.assistant.tools.inventory_tool import InventoryTool
+from app.services.ai.assistant.tools.documentation_tool import DocumentationTool
 
 class ToolRouter:
     def __init__(self):
-        self.security_analyzer = SecurityImpactAnalyzer()
-        self.dependency_analyzer = DependencyAnalyzer()
-        self.blast_analyzer = BlastRadiusAnalyzer()
-        self.root_cause_analyzer = RootCauseAnalyzer()
-        self.recommendation_engine = AIRecommendationEngine()
-        self.remediation_planner = RemediationPlanner()
-        self.orchestrator = RemediationOrchestrator()
+        self.registry = ToolRegistry()
+        self.registry.register(SecurityTool())
+        self.registry.register(DependencyTool())
+        self.registry.register(BlastRadiusTool())
+        self.registry.register(RootCauseTool())
+        self.registry.register(RecommendationTool())
+        self.registry.register(RemediationTool())
+        self.registry.register(OrchestrationTool())
+        self.registry.register(InventoryTool())
+        self.registry.register(DocumentationTool())
 
-    def route(self, intent: str, resource_id: str) -> Dict[str, Any]:
+    def route(self, intent: str, resource_id: str, **kwargs) -> ToolResponse:
         """
-        Routes the classified intent to the appropriate backend tool.
+        Routes the classified intent to the appropriate registered tool.
         """
-        if not resource_id:
-            return {"error": "No specific resource identified in the query."}
-            
-        result = {}
-        try:
-            if intent == "SECURITY_ANALYSIS":
-                result["security"] = self.security_analyzer.analyze(resource_id)
-                result["recommendations"] = [r.dict() for r in self.recommendation_engine.analyze_resource(resource_id)]
-            elif intent == "ROOT_CAUSE":
-                result["root_cause"] = self.root_cause_analyzer.analyze(resource_id)
-                result["security"] = self.security_analyzer.analyze(resource_id)
-                result["recommendations"] = [r.dict() for r in self.recommendation_engine.analyze_resource(resource_id)]
-            elif intent == "DEPENDENCY_ANALYSIS":
-                result["dependencies"] = self.dependency_analyzer.analyze(resource_id)
-            elif intent == "BLAST_RADIUS":
-                result["blast_radius"] = self.blast_analyzer.analyze(resource_id)
-            elif intent == "REMEDIATION":
-                result["remediation"] = [p.dict() for p in self.remediation_planner.plan_for_resource(resource_id)]
-            elif intent == "ORCHESTRATION":
-                result["orchestration"] = [p.dict() for p in self.orchestrator.build_package(resource_id)]
+        tool = self.registry.get_tool(intent)
+        if not tool:
+            # Fallback to recommendation or documentation if tool not found
+            if not resource_id:
+                tool = self.registry.get_tool("DOCUMENTATION")
             else:
-                # Default context pull
-                result["recommendations"] = [r.dict() for r in self.recommendation_engine.analyze_resource(resource_id)]
-        except Exception as e:
-            result["error"] = str(e)
+                tool = self.registry.get_tool("RECOMMENDATION")
+                
+        if tool:
+            return tool.execute(resource_id=resource_id, **kwargs)
             
-        return result
+        return ToolResponse(
+            tool_name="UNKNOWN",
+            status="ERROR",
+            context={"error": f"No tool registered for intent {intent}"}
+        )
