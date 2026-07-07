@@ -17,8 +17,8 @@ class ConversationContext(BaseModel):
     current_resource_type: Optional[str] = None
 
 class ChatRequest(BaseModel):
-    conversation_id: str
     message: str
+    conversation_id: str = "default_session"
 
 class ChatResponse(BaseModel):
     answer: str

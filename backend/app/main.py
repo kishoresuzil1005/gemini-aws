@@ -1221,7 +1221,7 @@ app.include_router(
 
 # from app.api.ai import router as ollama_ai_router
 from app.api.doctor import router as doctor_router
-from app.api.ai_chat import router as ai_router
+# from app.api.ai_chat import router as ai_router
 
 # app.include_router(
 #     ollama_ai_router,
@@ -1235,11 +1235,11 @@ app.include_router(
     tags=["AI Doctor"]
 )
 
-app.include_router(
-    ai_router,
-    prefix="/api/ai",
-    tags=["AI Chat"]
-)
+# app.include_router(
+#     ai_router,
+#     prefix="/api/ai",
+#     tags=["AI Chat"]
+# )
 
 from app.ai.router import router as llm_orchestrator_router
 app.include_router(
@@ -2307,8 +2307,7 @@ def get_ai_chat_history(conversation_id: str = "default_session"):
     return {"conversation_id": conversation_id, "history": [m.dict() for m in history]}
 
 @app.post("/api/ai/chat/reset")
-def reset_ai_chat(request: dict):
-    conversation_id = request.get("conversation_id", "default_session")
+def reset_ai_chat(conversation_id: str = "default_session"):
     ai_memory.clear_history(conversation_id)
     return {"status": "success", "message": f"Conversation {conversation_id} reset."}
 
