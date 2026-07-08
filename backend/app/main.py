@@ -2302,38 +2302,28 @@ def get_resource_orchestration(resource_id: str):
 @app.post("/api/ai/chat")
 def ai_chat(request: ChatRequest, stream: bool = False):
     try:
-        from app.services.ai.assistant.resource_validator import ResourceNotFoundError
         assistant = GraphAssistant(ai_memory)
         response = assistant.chat(request, stream=stream)
-        return StandardLlmResponse.success(content=response.answer, metadata={"intent": response.intent, "sources": response.sources}).dict()
+        
+        if response.status == "error":
+            return response.dict(exclude_none=True)
+            
+        return StandardLlmResponse.success(content=response.answer, metadata={"intent": response.intent, "sources": response.sources or []}).dict()
     except Exception as e:
-        if type(e).__name__ == 'ResourceNotFoundError':
-            return {
-                "status": "error",
-                "code": "RESOURCE_NOT_FOUND",
-                "message": str(e),
-                "resource": e.resource_id,
-                "did_you_mean": e.suggestions
-            }
         return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
 
 @app.post("/api/ai/chat/stream")
 def ai_chat_stream(request: ChatRequest):
     try:
-        from app.services.ai.assistant.resource_validator import ResourceNotFoundError
         assistant = GraphAssistant(ai_memory)
         # Assuming the assistant returns a generator when stream=True
         response = assistant.chat(request, stream=True)
+        
+        if hasattr(response, "status") and response.status == "error":
+            return response.dict(exclude_none=True)
+            
         return StreamingResponse(response.answer, media_type="text/event-stream")
     except Exception as e:
-        if type(e).__name__ == 'ResourceNotFoundError':
-            return {
-                "status": "error",
-                "code": "RESOURCE_NOT_FOUND",
-                "message": str(e),
-                "resource": e.resource_id,
-                "did_you_mean": e.suggestions
-            }
         return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
 
 @app.get("/api/ai/chat/history")

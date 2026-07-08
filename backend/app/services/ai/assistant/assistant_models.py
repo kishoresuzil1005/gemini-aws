@@ -21,13 +21,16 @@ class ChatRequest(BaseModel):
     conversation_id: str = "default_session"
 
 class ChatResponse(BaseModel):
-    answer: str
+    status: str = "success"
+    answer: Optional[str] = None
     intent: Optional[str] = None
     resource: Optional[str] = None
-    sources: List[str] = []
+    sources: Optional[List[Any]] = None
     confidence: Optional[int] = None
-    evidence: List[str] = []
-    tools_used: List[str] = []
+    evidence: Optional[List[str]] = None
+    tools_used: Optional[List[str]] = None
+    errors: Optional[List[Dict[str, Any]]] = None
+    data: Optional[Any] = None
 
 class ToolResponse(BaseModel):
     tool_name: str

@@ -24,23 +24,37 @@ class ToolRouter:
         self.registry.register(InventoryTool())
         self.registry.register(DocumentationTool())
 
-    def route(self, intent: str, resource_id: str, **kwargs) -> ToolResponse:
+    def route(self, intent: str, resource_id: str, **kwargs) -> List[ToolResponse]:
         """
-        Routes the classified intent to the appropriate registered tool.
+        Routes the classified intent to the appropriate registered tool(s).
         """
-        tool = self.registry.get_tool(intent)
-        if not tool:
-            # Fallback to recommendation or documentation if tool not found
-            if not resource_id:
-                tool = self.registry.get_tool("DOCUMENTATION")
-            else:
-                tool = self.registry.get_tool("RECOMMENDATION")
-                
-        if tool:
-            return self.registry.execute_tool(name=tool.name, resource_id=resource_id, **kwargs)
+        responses = []
+        
+        # Fix 6: Use real analyzer data for SECURITY
+        if intent == "SECURITY":
+            sec_tool = self.registry.get_tool("SECURITY")
+            rec_tool = self.registry.get_tool("RECOMMENDATION")
             
-        return ToolResponse(
-            tool_name="UNKNOWN",
-            status="ERROR",
-            context={"error": f"No tool registered for intent {intent}"}
-        )
+            if sec_tool:
+                responses.append(self.registry.execute_tool("SECURITY", resource_id, **kwargs))
+            if rec_tool:
+                responses.append(self.registry.execute_tool("RECOMMENDATION", resource_id, **kwargs))
+                
+            return responses
+
+        # Standard single-tool routing
+        tool = self.registry.get_tool(intent)
+        
+        # Fix 5: Remove dangerous fallback
+        if not tool:
+            return [ToolResponse(
+                tool_name="UNKNOWN",
+                status="ERROR",
+                context={
+                    "code": "UNKNOWN_INTENT",
+                    "message": f"No tool available for '{intent}'"
+                }
+            )]
+            
+        responses.append(self.registry.execute_tool(name=tool.name, resource_id=resource_id, **kwargs))
+        return responses

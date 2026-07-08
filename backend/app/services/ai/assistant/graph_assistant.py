@@ -11,6 +11,7 @@ from app.services.ai.assistant.response.response_generator import ResponseGenera
 from app.services.ai.assistant.llm.base_provider import BaseProvider
 from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
 from app.services.ai.assistant.llm.config import settings
+from app.services.ai.assistant.resource_validator import ResourceValidator
 import uuid
 from app.services.ai.assistant.assistant_models import ChatResponse, ChatRequest
 
@@ -30,25 +31,44 @@ class GraphAssistant:
         self.context_builder = ContextBuilder()
         self.provider = provider or OllamaProvider(settings)
         self.generator = ResponseGenerator(self.provider)
+        self.validator = ResourceValidator()
 
     def chat(self, request: ChatRequest, stream: bool = False) -> ChatResponse:
         request_id = str(uuid.uuid4())
         print(f"[Req: {request_id}] Starting AI Chat for Conversation: {request.conversation_id}")
         
-        # 1. Add to Memory
-        self.memory.add_message(request.conversation_id, "user", request.message)
-        
-        # 2. Intent Classification
+        # 1. Intent Classification
         intent_data = self.classifier.classify(request.message)
         
-        # 3. Conversation Context Processing
+        # 2. Conversation Context Processing
         ctx = self.conversation.process_turn(request.conversation_id, intent_data)
         
-        # 4. Tool Execution
+        # 3. Validate Resource Before Routing
+        resource = ctx.current_resource
+        if resource and ctx.current_intent not in ["DOCUMENTATION", "UNKNOWN"]:
+            if not self.validator.exists(resource):
+                suggestions = self.validator.search(resource)
+                return ChatResponse(
+                    status="error",
+                    data=None,
+                    errors=[
+                        {
+                            "code": "RESOURCE_NOT_FOUND",
+                            "message": f"Resource '{resource}' was not found.",
+                            "resource": resource,
+                            "did_you_mean": suggestions,
+                        }
+                    ],
+                )
+                
+        # 4. Add to Memory (Only if Valid!)
+        self.memory.add_message(request.conversation_id, "user", request.message)
+        
+        # 5. Tool Execution
         tool_responses = []
         if ctx.current_intent != "UNKNOWN":
-            tr = self.tool_router.route(ctx.current_intent, ctx.current_resource)
-            tool_responses.append(tr)
+            trs = self.tool_router.route(ctx.current_intent, ctx.current_resource)
+            tool_responses.extend(trs)
             
         # 5. Context Building
         context_str = self.context_builder.build_structured_context(ctx, tool_responses)
