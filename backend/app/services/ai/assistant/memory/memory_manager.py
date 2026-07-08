@@ -32,3 +32,9 @@ class MemoryManager:
     def summarize_memory(self, session_id: str) -> str:
         messages = self.store.get_messages(session_id)
         return self.summarizer.summarize_conversation(messages)
+
+    def clear_history(self, session_id: str):
+        self.store.clear(session_id)
+
+    def get_history(self, session_id: str) -> List[Message]:
+        return self.store.get_messages(session_id)

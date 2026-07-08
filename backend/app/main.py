@@ -2325,8 +2325,18 @@ def get_ai_chat_history(conversation_id: str = "default_session"):
 
 @app.post("/api/ai/chat/reset")
 def reset_ai_chat(conversation_id: str = "default_session"):
-    ai_memory.clear_history(conversation_id)
-    return {"status": "success", "message": f"Conversation {conversation_id} reset."}
+    try:
+        ai_memory.clear_history(conversation_id)
+        return {
+            "status": "success",
+            "conversation_id": conversation_id,
+            "history_cleared": True
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 @app.get("/api/ai/chat/health")
 def ai_chat_health():
