@@ -4,8 +4,9 @@ from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.graph_validation import GraphValidation
+from app.services.graph.helpers.base_builder import BaseGraphBuilder
 
-class EC2GraphBuilder:
+class EC2GraphBuilder(BaseGraphBuilder):
     @staticmethod
     def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
         raw_edges = []
