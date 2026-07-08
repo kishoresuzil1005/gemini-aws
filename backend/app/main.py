@@ -49,7 +49,7 @@ from app.services.graph.analysis.security.attack_path_analyzer import AttackPath
 from app.services.ai.recommendation_engine import AIRecommendationEngine
 from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
-from app.services.ai.assistant.memory_manager import MemoryManager
+from app.services.ai.assistant.memory.memory_manager import MemoryManager
 from app.services.ai.assistant.graph_assistant import GraphAssistant
 from app.services.ai.assistant.assistant_models import ChatRequest
 from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
