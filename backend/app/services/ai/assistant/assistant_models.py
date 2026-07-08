@@ -25,6 +25,9 @@ class ChatResponse(BaseModel):
     intent: Optional[str] = None
     resource: Optional[str] = None
     sources: List[str] = []
+    confidence: Optional[int] = None
+    evidence: List[str] = []
+    tools_used: List[str] = []
 
 class ToolResponse(BaseModel):
     tool_name: str

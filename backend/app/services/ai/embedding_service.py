@@ -9,7 +9,7 @@ class EmbeddingService:
         self.dimension = 768
         self.ollama_url = os.getenv(
             "OLLAMA_URL",
-            "http://localhost:11434"
+            "http://ollama:11434"
         )
         self.session = requests.Session()
 

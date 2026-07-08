@@ -2329,9 +2329,11 @@ def reset_ai_chat(conversation_id: str = "default_session"):
 @app.get("/api/ai/chat/health")
 def ai_chat_health():
     from app.services.ai.assistant.llm.config import settings
-    provider = OllamaProvider(settings)
-    is_healthy = provider.health_check()
-    return {"ollama_available": is_healthy, "status": "ok" if is_healthy else "unavailable"}
+    from app.services.ai.assistant.llm.health import HealthManager
+    from app.services.ai.assistant.llm.connection_pool import ConnectionPool
+    session = ConnectionPool.get_session()
+    status = HealthManager.get_health_status(session)
+    return status
 
 @app.get("/api/ai/chat/tools")
 def ai_chat_tools():

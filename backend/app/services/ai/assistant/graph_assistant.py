@@ -1,10 +1,13 @@
 from typing import Dict, Any, List
-from app.services.ai.assistant.memory_manager import MemoryManager
-from app.services.ai.assistant.conversation_manager import ConversationManager
+from app.services.ai.assistant.memory.memory_manager import MemoryManager
+from app.services.ai.assistant.memory.memory_store import MemoryStore
+from app.services.ai.assistant.memory.session_manager import SessionManager
+from app.services.ai.assistant.history.history_manager import HistoryManager
+from app.services.ai.assistant.conversation.conversation_manager import ConversationManager
 from app.services.ai.assistant.intent_classifier import IntentClassifier
 from app.services.ai.assistant.tool_router import ToolRouter
-from app.services.ai.assistant.context_builder import ContextBuilder
-from app.services.ai.assistant.response_generator import ResponseGenerator
+from app.services.ai.assistant.context.context_builder import ContextBuilder
+from app.services.ai.assistant.response.response_generator import ResponseGenerator
 from app.services.ai.assistant.llm.base_provider import BaseProvider
 from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
 from app.services.ai.assistant.llm.config import settings
@@ -12,9 +15,16 @@ import uuid
 from app.services.ai.assistant.assistant_models import ChatResponse, ChatRequest
 
 class GraphAssistant:
-    def __init__(self, memory_manager: MemoryManager, provider: BaseProvider = None):
+    def __init__(self, memory_manager: MemoryManager = None, provider: BaseProvider = None):
+        if not memory_manager:
+            memory_store = MemoryStore()
+            memory_manager = MemoryManager(memory_store)
         self.memory = memory_manager
-        self.conversation = ConversationManager(memory_manager)
+        
+        self.session_manager = SessionManager()
+        self.history_manager = HistoryManager(self.memory.store)
+        self.conversation = ConversationManager(self.memory, self.session_manager, self.history_manager)
+        
         self.classifier = IntentClassifier()
         self.tool_router = ToolRouter()
         self.context_builder = ContextBuilder()
@@ -44,9 +54,11 @@ class GraphAssistant:
         context_str = self.context_builder.build_structured_context(ctx, tool_responses)
         
         # 6. History formatting
-        history = self.memory.get_history(request.conversation_id)
-        # Avoid passing the last message again as it is passed as the current question
-        history_str = "\n".join([f"{msg.role.capitalize()}: {msg.content}" for msg in history[-6:-1]]) 
+        history_str = self.conversation.get_formatted_history(request.conversation_id, limit=5)
+        
+        # Memory summary integration (Phase 4)
+        memory_summary = self.memory.summarize_memory(request.conversation_id)
+        context_str = self.context_builder.build_structured_context(ctx, tool_responses, memory_context=memory_summary)
         
         # 7. Response Generation
         chat_response = self.generator.generate(
