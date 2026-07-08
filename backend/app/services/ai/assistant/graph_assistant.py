@@ -60,7 +60,30 @@ class GraphAssistant:
         memory_summary = self.memory.summarize_memory(request.conversation_id)
         context_str = self.context_builder.build_structured_context(ctx, tool_responses, memory_context=memory_summary)
         
-        # 7. Response Generation
+        # 7. Structured Logging (Phase 9/10)
+        import time
+        import logging
+        logger = logging.getLogger("GraphAssistant")
+        if not logger.handlers:
+            ch = logging.StreamHandler()
+            ch.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+            logger.addHandler(ch)
+            logger.setLevel(logging.INFO)
+            
+        used_tools = [tr.tool_name for tr in tool_responses]
+        prompt_len = len(request.message)
+        context_len = len(context_str)
+        
+        logger.info(f"Intent: {ctx.current_intent}")
+        logger.info(f"Resource: {ctx.current_resource}")
+        logger.info(f"Tool: {', '.join(used_tools) if used_tools else 'None'}")
+        logger.info(f"Prompt: {prompt_len} chars")
+        logger.info(f"Context: {context_len} chars")
+        logger.info(f"Model: {settings.ollama_model}")
+        
+        gen_start_time = time.time()
+        
+        # 8. Response Generation
         chat_response = self.generator.generate(
             question=request.message,
             history_str=history_str,
@@ -72,7 +95,10 @@ class GraphAssistant:
             stream=stream
         )
         
-        # 8. Save assistant response
+        gen_elapsed = time.time() - gen_start_time
+        logger.info(f"Time: {gen_elapsed:.2f} sec")
+        
+        # 9. Save assistant response
         self.memory.add_message(request.conversation_id, "assistant", chat_response.answer)
         
         return chat_response
