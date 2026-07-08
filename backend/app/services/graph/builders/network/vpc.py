@@ -1,15 +1,14 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.builders.common import GraphBuilderHelper
+from app.services.graph.helpers.graph_relationship import GraphRelationship
+from app.services.graph.helpers.relationship_types import RelationshipType
+from app.services.graph.helpers.base_builder import BaseGraphBuilder
 
-class VPCGraphBuilder:
-    @staticmethod
-    def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        edges = []
-        resource_lookup = {r.resource_id: r.resource_type for r in resources}
-        
-        for res in resources:
-            if res.resource_type == "VPC":
-                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
-                
-        return edges
+class VPCGraphBuilder(BaseGraphBuilder):
+    RESOURCE_TYPE = "VPC"
+
+    @classmethod
+    def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
+        # VPCs are top-level constructs, usually Subnets connect TO VPCs.
+        # But if we need VPC -> DHCP or Peering, it goes here.
+        return []

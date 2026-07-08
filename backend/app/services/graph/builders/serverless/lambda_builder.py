@@ -1,87 +1,61 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
+from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.graph_relationship import GraphRelationship
+from app.services.graph.helpers.relationship_types import RelationshipType
+from app.services.graph.helpers.base_builder import BaseGraphBuilder
 
+class LambdaGraphBuilder(BaseGraphBuilder):
+    RESOURCE_TYPE = "Lambda"
 
-class LambdaGraphBuilder:
-
-    @staticmethod
-    def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-
-        relationships = []
-
-        for res in resources:
-
-            if res.resource_type != "Lambda":
-                continue
-
-            metadata = res.resource_metadata or {}
-
-            # ------------------------
-            # Lambda -> IAM Role
-            # ------------------------
-
-            role = metadata.get("role")
-
-            if role:
-                relationships.append({
-                    "from": res.resource_id,
-                    "to": role,
-                    "type": "USES_ROLE",
-                    "source_type": "Lambda",
-                    "target_type": "IAM"
-                })
-
-            # ------------------------
-            # Lambda -> Networking
-            # ------------------------
-
-            vpc_config = metadata.get("vpc_config", {})
-
-            if not isinstance(vpc_config, dict):
-                continue
-
-            vpc_id = (
-                vpc_config.get("VpcId")
-                or vpc_config.get("VpcID")
-                or vpc_config.get("vpc_id")
+    @classmethod
+    def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
+        edges = []
+        
+        # Lambda -> IAM Role
+        role = GraphMetadataHelper.get_iam_profile_or_role(resource)
+        if role:
+            edge = GraphRelationship.create(
+                source=resource.resource_id,
+                target=role,
+                relationship=RelationshipType.USES_ROLE,
+                source_type="Lambda",
+                target_type="IAM"
             )
-
-            if vpc_id:
-
-                relationships.append({
-                    "from": res.resource_id,
-                    "to": vpc_id,
-                    "type": "IN_VPC",
-                    "source_type": "Lambda",
-                    "target_type": "VPC"
-                })
-
-            for subnet in (
-                vpc_config.get("SubnetIds")
-                or vpc_config.get("subnet_ids")
-                or []
-            ):
-
-                relationships.append({
-                    "from": res.resource_id,
-                    "to": subnet,
-                    "type": "IN_SUBNET",
-                    "source_type": "Lambda",
-                    "target_type": "Subnet"
-                })
-
-            for sg in (
-                vpc_config.get("SecurityGroupIds")
-                or vpc_config.get("security_group_ids")
-                or []
-            ):
-
-                relationships.append({
-                    "from": res.resource_id,
-                    "to": sg,
-                    "type": "USES_SG",
-                    "source_type": "Lambda",
-                    "target_type": "SecurityGroup"
-                })
-
-        return relationships
+            if edge: edges.append(edge)
+            
+        # Lambda -> VPC
+        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        if vpc_id:
+            edge = GraphRelationship.create(
+                source=resource.resource_id,
+                target=vpc_id,
+                relationship=RelationshipType.IN_VPC,
+                source_type="Lambda",
+                target_type="VPC"
+            )
+            if edge: edges.append(edge)
+            
+        # Lambda -> Subnets
+        for subnet_id in GraphMetadataHelper.get_subnet_ids(resource):
+            edge = GraphRelationship.create(
+                source=resource.resource_id,
+                target=subnet_id,
+                relationship=RelationshipType.IN_SUBNET,
+                source_type="Lambda",
+                target_type="Subnet"
+            )
+            if edge: edges.append(edge)
+            
+        # Lambda -> Security Groups
+        for sg_id in GraphMetadataHelper.get_security_groups(resource):
+            edge = GraphRelationship.create(
+                source=resource.resource_id,
+                target=sg_id,
+                relationship=RelationshipType.USES_SG,
+                source_type="Lambda",
+                target_type="SecurityGroup"
+            )
+            if edge: edges.append(edge)
+            
+        return edges
