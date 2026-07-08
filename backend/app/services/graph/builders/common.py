@@ -1,87 +1,58 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.models import ResourceDB
 
-RELATIONSHIP_MAP = {
-    "VPC": "IN_VPC",
-    "SUBNET": "IN_SUBNET",
-    "Subnet": "IN_SUBNET",
-    "SECURITYGROUP": "USES_SG",
-    "SecurityGroup": "USES_SG",
-    "EBS": "ATTACHED_TO",
-    "IAM": "USES_ROLE",
-    "IAM_ROLE": "USES_ROLE",
-    "IAMRole": "USES_ROLE",
-    "TARGETGROUP": "TARGETS",
-    "TargetGroup": "TARGETS",
-    "ALB": "ATTACHED_TO",
-    "LAMBDA": "INVOKES",
-    "Lambda": "INVOKES",
-    "S3": "USES_BUCKET",
-    "S3Bucket": "USES_BUCKET",
-    "RDS": "CONNECTS_TO",
-    "DynamoDBTable": "CONNECTS_TO",
-    "ElastiCacheRedis": "USES_CACHE",
-    "ElastiCacheMemcached": "USES_CACHE",
-    "ElastiCacheCluster": "USES_CACHE",
-    "OpenSearchDomain": "USES_SEARCH",
-    "SNSTopic": "SUBSCRIBED_TO",
-    "SQSQueue": "CONNECTS_TO",
-    "EventBridgeBus": "TRIGGERS",
-    "EventBridgeRule": "TRIGGERS",
-    "APIGateway": "INVOKES",
-    "APIGatewayStage": "HOSTED_ON",
-    "CloudFrontDistribution": "ROUTES_TO",
-    "WAFWebACL": "PROTECTED_BY",
-    "KMSKey": "ENCRYPTED_BY",
-    "CloudWatchAlarm": "MONITORS",
-    "CloudWatchLogGroup": "LOGS_TO",
-    "ACMCertificate": "SECURED_BY",
-    "RouteTable": "HAS_ROUTE",
-    "InternetGateway": "ROUTES_TO",
-    "NatGateway": "ROUTES_TO",
-    "ElasticIP": "ATTACHED_TO",
-    "NetworkInterface": "ATTACHED_TO",
-    "AutoScalingGroup": "MANAGES",
-    "EC2": "HOSTS",
-    "ECSCluster": "HOSTS",
-    "EKSCluster": "HOSTS",
-    "StepFunction": "TRIGGERS",
-    "SecretsManagerSecret": "USES_SECRET"
-}
+class GraphMetadataHelper:
+    """Helper to safely extract metadata directly from ResourceDB JSONB column."""
+    
+    @staticmethod
+    def get_configuration(resource: ResourceDB) -> Dict[str, Any]:
+        metadata = resource.resource_metadata or {}
+        return metadata.get("configuration", {})
+
+    @staticmethod
+    def get_security(resource: ResourceDB) -> Dict[str, Any]:
+        metadata = resource.resource_metadata or {}
+        return metadata.get("security", {})
+        
+    @staticmethod
+    def get_tags(resource: ResourceDB) -> Dict[str, Any]:
+        metadata = resource.resource_metadata or {}
+        return metadata.get("tags", {})
+        
+    @staticmethod
+    def get_metadata(resource: ResourceDB) -> Dict[str, Any]:
+        metadata = resource.resource_metadata or {}
+        return metadata.get("metadata", {})
+
+class GraphRelationship:
+    """Helper to consistently build edge dictionaries."""
+    
+    @staticmethod
+    def create(source: str, target: str, relationship: str, source_type: str, target_type: str) -> Optional[Dict[str, Any]]:
+        if not source or not target:
+            return None
+        return {
+            "from": source,
+            "to": target,
+            "type": relationship,
+            "source_type": source_type,
+            "target_type": target_type
+        }
 
 class GraphBuilderHelper:
+    """Legacy helper for builders not yet migrated to V2."""
     @staticmethod
-    def build_edges(source: ResourceDB, resource_lookup: Dict[str, str]) -> List[Dict[str, Any]]:
-        """
-        Safely builds edges from a ResourceDB instance based on Phase 1 dependencies.
-        Ensures target resources exist in the database (via resource_lookup).
-        """
+    def build_edges(resource: ResourceDB, resource_lookup: Dict[str, str]) -> List[Dict[str, Any]]:
         edges = []
-        metadata = source.resource_metadata or {}
-        dependencies = metadata.get("dependencies", [])
-        
-        for dep in dependencies:
+        metadata = resource.resource_metadata or {}
+        for dep in metadata.get("dependencies", []):
             target_id = dep.get("id")
-            target_type = dep.get("type")
-            
-            if not target_id or not target_type:
-                continue
-                
-            # Rule 4: Never create relationships if the target resource does not exist.
-            # Special case for some broad arns that might mismatch exactly, but we try exact match.
-            actual_target_type = resource_lookup.get(target_id)
-            if not actual_target_type:
-                continue
-                
-            rel_type = RELATIONSHIP_MAP.get(target_type, "CONNECTS_TO")
-            
-            edges.append({
-                "from": source.resource_id,
-                "to": target_id,
-                "type": rel_type,
-                "source_type": source.resource_type,
-                "target_type": actual_target_type,
-                "metadata": {}
-            })
-            
+            if target_id in resource_lookup:
+                edges.append({
+                    "from": resource.resource_id,
+                    "to": target_id,
+                    "type": "DEPENDS_ON", # generic fallback
+                    "source_type": resource.resource_type,
+                    "target_type": resource_lookup[target_id]
+                })
         return edges
