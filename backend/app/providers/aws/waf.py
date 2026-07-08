@@ -1,9 +1,10 @@
 import boto3
 import logging
+from app.providers.aws.models import NormalizedResource, ResourceDependency
+
 logger = logging.getLogger(__name__)
 
 class WAFDiscovery:
-
     @staticmethod
     def discover(region: str) -> list[dict]:
         resources = []
@@ -21,24 +22,64 @@ class WAFDiscovery:
                             acl_id = acl['Id']
                             acl_arn = acl['ARN']
                             acl_name = acl['Name']
+                            
+                            tags = {}
+                            try:
+                                tags_resp = client.list_tags_for_resource(ResourceARN=acl_arn)
+                                tags = {t['Key']: t['Value'] for t in tags_resp.get('TagInfoForResource', {}).get('TagList', [])}
+                            except Exception: pass
+                            
                             rule_count = 0
+                            capacity = 0
+                            managed_by = False
+                            default_action = {}
                             try:
                                 detail = client.get_web_acl(Name=acl_name, Scope=scope, Id=acl_id)
-                                rule_count = len(detail.get('WebACL', {}).get('Rules', []))
-                                capacity = detail.get('WebACL', {}).get('Capacity', 0)
-                                managed_by = detail.get('WebACL', {}).get('ManagedByFirewallManager', False)
-                            except Exception:
-                                capacity = 0
-                                managed_by = False
-                            associations = []
-                            try:
-                                assoc_resp = client.list_resources_for_web_acl(WebACLArn=acl_arn, ResourceType='APPLICATION_LOAD_BALANCER')
-                                associations.extend(assoc_resp.get('ResourceArns', []))
-                                assoc_resp_cf = client.list_resources_for_web_acl(WebACLArn=acl_arn, ResourceType='API_GATEWAY')
-                                associations.extend(assoc_resp_cf.get('ResourceArns', []))
+                                web_acl = detail.get('WebACL', {})
+                                rule_count = len(web_acl.get('Rules', []))
+                                capacity = web_acl.get('Capacity', 0)
+                                managed_by = web_acl.get('ManagedByFirewallManager', False)
+                                default_action = web_acl.get('DefaultAction', {})
                             except Exception:
                                 pass
-                            resources.append({'resource_id': acl_arn, 'resource_type': 'WAFWebACL', 'region': 'global' if scope == 'CLOUDFRONT' else region, 'name': acl_name, 'provider': 'AWS', 'metadata': {'arn': acl_arn, 'scope': scope, 'rule_count': rule_count, 'capacity': capacity, 'managed_by_firewall_manager': managed_by, 'associated_resources': associations}, 'dependencies': []})
+                                
+                            associations = []
+                            dependencies = []
+                            try:
+                                assoc_resp = client.list_resources_for_web_acl(WebACLArn=acl_arn, ResourceType='APPLICATION_LOAD_BALANCER')
+                                for r in assoc_resp.get('ResourceArns', []):
+                                    associations.append(r)
+                                    dependencies.append(ResourceDependency(type='ALB', id=r))
+                                    
+                                assoc_resp_cf = client.list_resources_for_web_acl(WebACLArn=acl_arn, ResourceType='API_GATEWAY')
+                                for r in assoc_resp_cf.get('ResourceArns', []):
+                                    associations.append(r)
+                                    dependencies.append(ResourceDependency(type='ApiGateway', id=r))
+                            except Exception:
+                                pass
+                                
+                            res = NormalizedResource(
+                                resource_id=acl_arn,
+                                resource_type='WAFWebACL',
+                                region='global' if scope == 'CLOUDFRONT' else region,
+                                name=acl_name,
+                                status='Active',
+                                metadata={
+                                    'arn': acl_arn,
+                                    'scope': scope,
+                                    'rule_count': rule_count,
+                                    'capacity': capacity,
+                                    'managed_by_firewall_manager': managed_by,
+                                    'default_action': default_action
+                                },
+                                configuration={
+                                    'associated_resources': associations
+                                },
+                                tags=tags,
+                                dependencies=dependencies
+                            )
+                            resources.append(res.dict())
+                            
                         next_marker = response.get('NextMarker')
                         if not next_marker:
                             break

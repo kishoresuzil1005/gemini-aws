@@ -1,11 +1,12 @@
 import boto3
 import logging
+from app.providers.aws.models import NormalizedResource, ResourceDependency
+
 logger = logging.getLogger(__name__)
 
 class RouteTableDiscovery:
-
     @staticmethod
-    def discover(region):
+    def discover(region: str):
         try:
             client = boto3.client('ec2', region_name=region)
             
@@ -23,7 +24,6 @@ class RouteTableDiscovery:
                 logger.error(f"Failed to fetch subnets for implicit route associations: {e}")
 
             paginator = client.get_paginator('describe_route_tables')
-            route_tables_data = []
             
             # First pass: collect all explicit associations to know which subnets are covered
             explicitly_associated_subnets = set()
@@ -58,28 +58,41 @@ class RouteTableDiscovery:
                         gateways.append(route['GatewayId'])
                     if route.get('NatGatewayId'):
                         nat_gateways.append(route['NatGatewayId'])
+                
+                dependencies = []
+                if vpc_id:
+                    dependencies.append(ResourceDependency(type='VPC', id=vpc_id))
+                for s in associations:
+                    dependencies.append(ResourceDependency(type='Subnet', id=s))
+                for g in gateways:
+                    dependencies.append(ResourceDependency(type='InternetGateway', id=g))
+                for n in nat_gateways:
+                    dependencies.append(ResourceDependency(type='NatGateway', id=n))
+                
+                tags = {t['Key']: t['Value'] for t in rt.get('Tags', [])}
+                name = tags.get('Name', rt['RouteTableId'])
                         
-                route_tables.append({
-                    'resource_id': rt['RouteTableId'], 
-                    'resource_type': 'RouteTable', 
-                    'region': region, 
-                    'name': rt['RouteTableId'], 
-                    'provider': 'AWS', 
-                    'metadata': {
-                        'vpc_id': vpc_id, 
+                res = NormalizedResource(
+                    resource_id=rt['RouteTableId'], 
+                    resource_type='RouteTable', 
+                    region=region, 
+                    name=name,
+                    status='Active',
+                    metadata={
+                        'route_count': len(rt.get('Routes', []))
+                    }, 
+                    configuration={
+                        'vpc_id': vpc_id,
+                        'is_main': is_main,
                         'subnets': associations, 
                         'internet_gateways': gateways, 
                         'nat_gateways': nat_gateways, 
-                        'route_count': len(rt.get('Routes', [])),
-                        'is_main': is_main
-                    }, 
-                    'dependencies': (
-                        ([{'type': 'VPC', 'id': vpc_id}] if vpc_id else []) + 
-                        [{'type': 'Subnet', 'id': s} for s in associations] + 
-                        [{'type': 'InternetGateway', 'id': g} for g in gateways] + 
-                        [{'type': 'NatGateway', 'id': n} for n in nat_gateways]
-                    )
-                })
+                    },
+                    tags=tags,
+                    dependencies=dependencies
+                )
+                route_tables.append(res.dict())
+                
             return route_tables
         except Exception:
             logger.exception('Route Table discovery failed for region %s', region)
