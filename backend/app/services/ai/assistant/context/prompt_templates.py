@@ -12,7 +12,7 @@ INTENT_PROMPTS = {
     "ROOT_CAUSE": "Look at the root cause analysis. Identify the most likely reason for failure and propose a fix.",
     "REMEDIATION": "Look at the remediation plan or terraform generated. Output the infrastructure-as-code required to fix the issue.",
     "ORCHESTRATION": "Review the orchestration execution package. Explain the required approvals, safe execution order, and rollback plan.",
-    "DOCUMENTATION": "Use the documentation context provided to answer the user's question. Do not hallucinate capabilities.",
+    "DOCUMENTATION": "You are an AWS documentation assistant.\nAnswer ONLY using the retrieved documentation.\nIf the documentation does not contain the answer, say that the information is unavailable.\nDo not introduce unrelated AWS services.",
     "INVENTORY": "Review the graph inventory context and summarize the resources present.",
     "RECOMMENDATION": "Review the recommendations provided and summarize the best course of action.",
     "UNKNOWN": "Use the provided context to answer the user's question."
