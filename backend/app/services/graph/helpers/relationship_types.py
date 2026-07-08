@@ -1,0 +1,15 @@
+from enum import Enum
+
+class RelationshipType(str, Enum):
+    IN_VPC = "IN_VPC"
+    IN_SUBNET = "IN_SUBNET"
+    USES_ROLE = "USES_ROLE"
+    USES_SG = "USES_SG"
+    ATTACHED_TO = "ATTACHED_TO"
+    ROUTES_TO = "ROUTES_TO"
+    TARGETS = "TARGETS"
+    MONITORS = "MONITORS"
+    INVOKES = "INVOKES"
+    TRIGGERS = "TRIGGERS"
+    ENCRYPTED_WITH = "ENCRYPTED_WITH"
+    DEPENDS_ON = "DEPENDS_ON"
