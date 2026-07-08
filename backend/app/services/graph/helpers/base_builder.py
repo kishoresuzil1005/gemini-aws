@@ -2,12 +2,16 @@ from typing import List, Dict, Any
 from app.models import ResourceDB
 
 class BaseGraphBuilder:
-    """Base interface for all AWS graph builders."""
-    
-    @staticmethod
-    def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        """
-        Parses resources and returns a list of relationship edges.
-        Must be implemented by every graph builder.
-        """
-        raise NotImplementedError("Each graph builder must implement the build() method.")
+    RESOURCE_TYPE = None
+
+    @classmethod
+    def build(cls, resources: List[ResourceDB]) -> List[Dict[str, Any]]:
+        edges = []
+        for res in resources:
+            if res.resource_type == cls.RESOURCE_TYPE:
+                edges.extend(cls.build_resource_edges(res))
+        return edges
+
+    @classmethod
+    def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
+        raise NotImplementedError("Each builder must implement build_resource_edges")

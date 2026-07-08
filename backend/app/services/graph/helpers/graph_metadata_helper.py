@@ -1,47 +1,30 @@
-from typing import Dict, Any
+from typing import List, Any
 from app.models import ResourceDB
 
 class GraphMetadataHelper:
-    """Helper to safely extract domain-specific metadata from ResourceDB JSONB column."""
-    
-    @staticmethod
-    def get_network(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns network-related configuration like vpc_id, subnet_id, enis."""
-        metadata = resource.resource_metadata or {}
-        return metadata.get("configuration", {})
+    """Extracts flat properties from Metadata V2."""
 
     @staticmethod
-    def get_security(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns security-related configuration like security_groups, iam roles, kms keys."""
+    def get_vpc_id(resource: ResourceDB) -> str:
         metadata = resource.resource_metadata or {}
-        return metadata.get("security", {})
-        
-    @staticmethod
-    def get_storage(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns storage-related configuration like ebs_volumes."""
-        metadata = resource.resource_metadata or {}
-        return metadata.get("configuration", {})
+        return metadata.get("vpc_id")
 
     @staticmethod
-    def get_compute(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns compute-related configurations."""
+    def get_subnet_id(resource: ResourceDB) -> str:
         metadata = resource.resource_metadata or {}
-        return metadata.get("configuration", {})
+        return metadata.get("subnet_id")
 
     @staticmethod
-    def get_database(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns database-related configurations."""
+    def get_security_groups(resource: ResourceDB) -> List[str]:
         metadata = resource.resource_metadata or {}
-        return metadata.get("configuration", {})
-        
+        return metadata.get("security_groups", [])
+
     @staticmethod
-    def get_tags(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns AWS tags."""
+    def get_ebs_volumes(resource: ResourceDB) -> List[str]:
         metadata = resource.resource_metadata or {}
-        return metadata.get("tags", {})
-        
+        return metadata.get("ebs_volumes", [])
+
     @staticmethod
-    def get_configuration(resource: ResourceDB) -> Dict[str, Any]:
-        """Returns general configurations."""
+    def get_iam_profile(resource: ResourceDB) -> str:
         metadata = resource.resource_metadata or {}
-        return metadata.get("configuration", {})
+        return metadata.get("iam_instance_profile")
