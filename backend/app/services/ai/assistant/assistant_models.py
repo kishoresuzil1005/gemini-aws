@@ -5,6 +5,14 @@ class Message(BaseModel):
     role: str
     content: str
 
+class ResourceMatch(BaseModel):
+    resource_id: Optional[str] = None
+    resource_name: Optional[str] = None
+    resource_type: Optional[str] = None
+    confidence: float = 0.0
+    source: str = "none"
+    suggestions: List[str] = []
+
 class ConversationContext(BaseModel):
     conversation_id: str
     current_resource: Optional[str] = None
@@ -16,6 +24,7 @@ class ConversationContext(BaseModel):
     current_intent: Optional[str] = None
     last_intent: Optional[str] = None
     current_resource_type: Optional[str] = None
+    current_resource_confidence: float = 0.0
 
 class ChatRequest(BaseModel):
     message: str

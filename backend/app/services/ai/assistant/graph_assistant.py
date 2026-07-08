@@ -39,33 +39,37 @@ class GraphAssistant:
         request_id = str(uuid.uuid4())
         print(f"[Req: {request_id}] Starting AI Chat for Conversation: {request.conversation_id}")
         
-        # 1. Intent Classification & Resource Extraction
+        # 1. Intent Classification & Candidate Extraction
         intent_data = self.classifier.classify(request.message)
-        extracted_resource = self.extractor.extract(request.message)
-        intent_data["target_resource"] = extracted_resource
+        candidate = self.extractor.extract(request.message)
         
-        # 2. Conversation Context Processing
+        # 2. Resource Resolution
+        resolved = self.validator.resolve(candidate, request.conversation_id)
+        
+        # 3. Short-circuit on missing resources
+        if candidate and resolved.confidence < 1.0 and intent_data.get("intent") not in ["DOCUMENTATION", "UNKNOWN"]:
+            return ChatResponse(
+                status="error",
+                data=None,
+                errors=[
+                    {
+                        "code": "RESOURCE_NOT_FOUND",
+                        "message": f"Resource '{candidate}' was not found.",
+                        "resource": candidate,
+                        "did_you_mean": resolved.suggestions,
+                    }
+                ],
+            )
+            
+        # 4. Bind validated context
+        intent_data["target_resource"] = resolved.resource_id
+        
+        # 5. Conversation Context Processing
         ctx = self.conversation.process_turn(request.conversation_id, intent_data)
+        ctx.current_resource_type = resolved.resource_type
+        ctx.current_resource_confidence = resolved.confidence
         
-        # 3. Validate Resource Before Routing
-        resource = ctx.current_resource
-        if resource and ctx.current_intent not in ["DOCUMENTATION", "UNKNOWN"]:
-            if not self.validator.exists(resource):
-                suggestions = self.validator.search(resource)
-                return ChatResponse(
-                    status="error",
-                    data=None,
-                    errors=[
-                        {
-                            "code": "RESOURCE_NOT_FOUND",
-                            "message": f"Resource '{resource}' was not found.",
-                            "resource": resource,
-                            "did_you_mean": suggestions,
-                        }
-                    ],
-                )
-                
-        # 4. Add to Memory (Only if Valid!)
+        # 6. Add to Memory (Only if Valid!)
         self.memory.add_message(request.conversation_id, "user", request.message)
         
         # 5. Tool Execution

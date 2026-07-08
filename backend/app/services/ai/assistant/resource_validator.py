@@ -1,9 +1,11 @@
 import difflib
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.database import SessionLocal
 from app.models.resource import ResourceDB
 from app.services.graph.neo4j_service import Neo4jService
+from app.services.ai.assistant.assistant_models import ResourceMatch
 
 class ResourceNotFoundError(Exception):
     def __init__(self, resource_id: str, suggestions: List[str]):
@@ -15,59 +17,68 @@ class ResourceValidator:
     def __init__(self):
         self.neo4j = Neo4jService()
 
-    def exists(self, resource_id: str) -> bool:
+    def resolve(self, candidate: Optional[str], session_id: str = None) -> ResourceMatch:
         """
-        Check if a resource exists in PostgreSQL or Neo4j.
+        Validates a candidate string against PostgreSQL and Neo4j,
+        returning a standardized ResourceMatch object with confidence scores.
         """
-        if not resource_id:
-            return False
+        match = ResourceMatch()
+        
+        if not candidate and session_id:
+            # Fallback to Conversation Memory
+            from app.services.ai.assistant.memory.memory_manager import MemoryManager
+            from app.services.ai.assistant.memory.memory_store import MemoryStore
+            mm = MemoryManager(MemoryStore())
+            ctx = mm.get_context(session_id)
+            if ctx and ctx.current_resource:
+                candidate = ctx.current_resource
+        
+        if not candidate:
+            return match
             
-        # 1. Check PostgreSQL first
         db: Session = SessionLocal()
         try:
-            resource = db.query(ResourceDB).filter(ResourceDB.resource_id == resource_id).first()
+            # 1. PostgreSQL Lookup
+            resource = db.query(ResourceDB).filter(
+                or_(ResourceDB.resource_id == candidate, ResourceDB.name == candidate)
+            ).first()
+            
             if resource:
-                return True
-        except Exception as e:
-            print(f"[ResourceValidator] PostgreSQL check failed for {resource_id}: {e}")
-        finally:
-            db.close()
-            
-        # 2. Fallback check in Neo4j
-        try:
-            node = self.neo4j.get_node(resource_id=resource_id)
+                match.resource_id = resource.resource_id
+                match.resource_name = resource.name
+                match.resource_type = resource.resource_type
+                match.confidence = 1.0
+                match.source = "postgres"
+                return match
+                
+            # 2. Neo4j Lookup
+            node = self.neo4j.get_node(resource_id=candidate)
             if node:
-                return True
-        except Exception as e:
-            print(f"[ResourceValidator] Neo4j check failed for {resource_id}: {e}")
-            
-        return False
-
-    def search(self, resource_id: str, limit: int = 3) -> List[str]:
-        """
-        Attempt to find a similar resource ID if the user made a typo.
-        """
-        if not resource_id:
-            return []
-            
-        db: Session = SessionLocal()
-        try:
-            # Simple ILIKE match for partial substrings
+                match.resource_id = node.get("id")
+                match.resource_name = node.get("name")
+                match.resource_type = node.get("type", "Unknown")
+                match.confidence = 1.0
+                match.source = "neo4j"
+                return match
+                
+            # 3. Fuzzy Search (Suggestions)
             like_matches = db.query(ResourceDB.resource_id).filter(
-                ResourceDB.resource_id.ilike(f"%{resource_id}%")
-            ).limit(limit).all()
+                ResourceDB.resource_id.ilike(f"%{candidate}%")
+            ).limit(3).all()
             
             matches = [m[0] for m in like_matches]
             
-            # If nothing found, try difflib on a larger subset
             if not matches:
                 all_resources = db.query(ResourceDB.resource_id).limit(1000).all()
                 all_ids = [m[0] for m in all_resources]
-                matches = difflib.get_close_matches(resource_id, all_ids, n=limit, cutoff=0.4)
+                matches = difflib.get_close_matches(candidate, all_ids, n=3, cutoff=0.4)
                 
-            return matches
+            match.suggestions = matches
+            match.confidence = 0.0
+            
         except Exception as e:
-            print(f"[ResourceValidator] Search failed: {e}")
-            return []
+            print(f"[ResourceValidator] Resolve failed for {candidate}: {e}")
         finally:
             db.close()
+            
+        return match
