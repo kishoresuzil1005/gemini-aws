@@ -24,6 +24,17 @@ class ConversationManager:
         # Resolve 'it' or carry over resource
         new_resource = current_intent_data.get("target_resource")
         if new_resource:
+            from app.services.ai.assistant.resource_validator import ResourceValidator, ResourceNotFoundError
+            import logging
+            logger = logging.getLogger("GraphAssistant")
+            
+            validator = ResourceValidator()
+            if not validator.exists(new_resource):
+                logger.info(f"Resource Validation -> {new_resource} -> Missing -> Abort")
+                suggestions = validator.search(new_resource)
+                raise ResourceNotFoundError(new_resource, suggestions)
+            
+            logger.info(f"Resource Validation -> {new_resource} -> Exists -> Continue")
             self.memory.update_context(session_id, {"current_resource": new_resource})
         else:
             current_intent_data["target_resource"] = ctx.current_resource
