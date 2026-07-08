@@ -12,6 +12,7 @@ from app.services.ai.assistant.llm.base_provider import BaseProvider
 from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
 from app.services.ai.assistant.llm.config import settings
 from app.services.ai.assistant.resource_validator import ResourceValidator
+from app.services.ai.assistant.resource_extractor import ResourceExtractor
 import uuid
 from app.services.ai.assistant.assistant_models import ChatResponse, ChatRequest
 
@@ -27,6 +28,7 @@ class GraphAssistant:
         self.conversation = ConversationManager(self.memory, self.session_manager, self.history_manager)
         
         self.classifier = IntentClassifier()
+        self.extractor = ResourceExtractor()
         self.tool_router = ToolRouter()
         self.context_builder = ContextBuilder()
         self.provider = provider or OllamaProvider(settings)
@@ -37,8 +39,10 @@ class GraphAssistant:
         request_id = str(uuid.uuid4())
         print(f"[Req: {request_id}] Starting AI Chat for Conversation: {request.conversation_id}")
         
-        # 1. Intent Classification
+        # 1. Intent Classification & Resource Extraction
         intent_data = self.classifier.classify(request.message)
+        extracted_resource = self.extractor.extract(request.message)
+        intent_data["target_resource"] = extracted_resource
         
         # 2. Conversation Context Processing
         ctx = self.conversation.process_turn(request.conversation_id, intent_data)

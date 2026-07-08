@@ -1,40 +1,63 @@
-import re
 from typing import Dict, Any
 
 class IntentClassifier:
+    """
+    Production-ready intent classifier.
+    Detects user intent using keyword groups and returns a confidence score.
+    """
+
+    INTENT_KEYWORDS = {
+        "SECURITY": [
+            "security", "secure", "insecure", "analyze", "analyse",
+            "inspect", "review", "audit", "check", "vulnerability", "risk"
+        ],
+        "DEPENDENCY": [
+            "dependency", "dependencies", "depends", "connected",
+            "relationship", "upstream", "downstream"
+        ],
+        "BLAST_RADIUS": [
+            "blast radius", "what happens if", "delete", "remove",
+            "terminate", "destroy"
+        ],
+        "ROOT_CAUSE": [
+            "root cause", "why", "failing", "failure", "broken",
+            "error", "incident"
+        ],
+        "RECOMMENDATION": [
+            "recommend", "recommendation", "how do i", "best practice", "improve"
+        ],
+        "REMEDIATION": [
+            "terraform", "cloudformation", "aws cli", "fix", "repair",
+            "remediate", "generate terraform", "generate cloudformation"
+        ],
+        "ORCHESTRATION": [
+            "execute", "run", "automation", "automate", "orchestrate",
+            "safely execute", "rollback"
+        ],
+        "DOCUMENTATION": [
+            "what is", "tell me about", "documentation", "explain",
+            "describe", "guide"
+        ],
+        "INVENTORY": [
+            "inventory", "list", "show", "display", "resources", "compare"
+        ]
+    }
+
     def classify(self, message: str) -> Dict[str, Any]:
-        msg_lower = message.lower()
-        
-        intent = "UNKNOWN"
-        target_resource = None
-        
-        # Simple extraction of a resource id
-        words = message.split()
-        for word in words:
-            word_clean = re.sub(r'[^a-zA-Z0-9-]', '', word)
-            if word_clean in ["hello-api", "cloudops-db"] or word_clean.startswith("i-") or word_clean.startswith("subnet-") or word_clean.startswith("rtb-"):
-                target_resource = word_clean
-                
-        if "insecure" in msg_lower or "public" in msg_lower or "security" in msg_lower or "secure" in msg_lower:
-            intent = "SECURITY"
-        elif "failing" in msg_lower or "why" in msg_lower or "root cause" in msg_lower:
-            intent = "ROOT_CAUSE"
-        elif "depends" in msg_lower or "dependencies" in msg_lower:
-            intent = "DEPENDENCY"
-        elif "blast radius" in msg_lower or "what happens if" in msg_lower:
-            intent = "BLAST_RADIUS"
-        elif "terraform" in msg_lower or "remediate" in msg_lower or "fix" in msg_lower:
-            intent = "REMEDIATION"
-        elif "automate" in msg_lower or "execute" in msg_lower or "safely" in msg_lower:
-            intent = "ORCHESTRATION"
-        elif "recommend" in msg_lower or "how do i" in msg_lower:
-            intent = "RECOMMENDATION"
-        elif "what is" in msg_lower or "documentation" in msg_lower:
-            intent = "DOCUMENTATION"
-        elif "inventory" in msg_lower or "compare" in msg_lower or "show" in msg_lower:
-            intent = "INVENTORY"
-            
+        msg = message.lower()
+        detected_intent = "UNKNOWN"
+        confidence = 0.0
+
+        for intent, keywords in self.INTENT_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword in msg:
+                    detected_intent = intent
+                    confidence = 0.95
+                    break
+            if detected_intent != "UNKNOWN":
+                break
+
         return {
-            "intent": intent,
-            "target_resource": target_resource
+            "intent": detected_intent,
+            "confidence": confidence
         }

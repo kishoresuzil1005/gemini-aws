@@ -14,6 +14,7 @@ class ConversationContext(BaseModel):
     current_workflow: Optional[str] = None
     current_recommendation: Optional[str] = None
     current_intent: Optional[str] = None
+    last_intent: Optional[str] = None
     current_resource_type: Optional[str] = None
 
 class ChatRequest(BaseModel):

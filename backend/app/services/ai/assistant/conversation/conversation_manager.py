@@ -30,7 +30,10 @@ class ConversationManager:
             
         new_intent = current_intent_data.get("intent")
         if new_intent and new_intent != "UNKNOWN":
-            self.memory.update_context(session_id, {"current_intent": new_intent})
+            self.memory.update_context(session_id, {
+                "current_intent": new_intent,
+                "last_intent": ctx.current_intent if ctx.current_intent else "UNKNOWN"
+            })
         else:
             current_intent_data["intent"] = ctx.current_intent if ctx.current_intent else "UNKNOWN"
             
