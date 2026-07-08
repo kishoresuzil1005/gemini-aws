@@ -9,14 +9,7 @@ class RDSGraphBuilder:
         resource_lookup = {r.resource_id: r.resource_type for r in resources}
         
         for res in resources:
-                    sg_id = sg.get("VpcSecurityGroupId")
-                    if sg_id:
-                        relationships.append({
-                            "from": res.resource_id,
-                            "to": sg_id,
-                            "type": "USES_SG",
-                            "source_type": "RDS",
-                            "target_type": "SecurityGroup"
-                        })
-
-        return relationships
+            if res.resource_type in ("RDS", "RDSInstance"):
+                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
+                
+        return edges

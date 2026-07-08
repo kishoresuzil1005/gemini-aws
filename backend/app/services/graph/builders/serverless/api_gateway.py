@@ -12,9 +12,4 @@ class APIGatewayGraphBuilder:
             if res.resource_type in ("APIGateway", "APIGatewayRestAPI", "APIGatewayHTTPAPI"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-                            "type": "INVOKES",
-                            "source_type": "APIGateway",
-                            "target_type": "Lambda"
-                        })
-
-        return relationships
+        return edges
