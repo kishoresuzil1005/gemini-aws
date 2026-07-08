@@ -50,6 +50,7 @@ from app.services.ai.recommendation_engine import AIRecommendationEngine
 from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
 from app.services.ai.assistant.memory.memory_manager import MemoryManager
+from app.services.ai.assistant.memory.memory_store import MemoryStore
 from app.services.ai.assistant.graph_assistant import GraphAssistant
 from app.services.ai.assistant.assistant_models import ChatRequest
 from app.services.ai.assistant.llm.ollama_provider import OllamaProvider
@@ -57,7 +58,8 @@ from app.services.ai.assistant.llm.models import StandardLlmResponse
 from fastapi.responses import StreamingResponse
 
 # Global memory instance (in-memory for now)
-ai_memory = MemoryManager()
+ai_memory_store = MemoryStore()
+ai_memory = MemoryManager(ai_memory_store)
 
 app = FastAPI(
     title="CloudOps SRE Intelligence Center",
