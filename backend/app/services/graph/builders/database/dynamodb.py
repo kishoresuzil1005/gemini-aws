@@ -1,11 +1,15 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
+from app.services.graph.builders.common import GraphBuilderHelper
 
 class DynamoDBGraphBuilder:
     @staticmethod
     def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        relationships = []
-        # Future-proofing: When Lambda/EC2 application layer discovery is added, 
-        # DynamoDB table connections will be mapped here.
-        # Currently, DynamoDB doesn't natively reside in a VPC.
-        return relationships
+        edges = []
+        resource_lookup = {r.resource_id: r.resource_type for r in resources}
+        
+        for res in resources:
+            if res.resource_type in ("DynamoDB", "DynamoDBTable"):
+                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
+                
+        return edges

@@ -1,23 +1,15 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
+from app.services.graph.builders.common import GraphBuilderHelper
 
 class ALBGraphBuilder:
     @staticmethod
     def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        relationships = []
+        edges = []
+        resource_lookup = {r.resource_id: r.resource_type for r in resources}
+        
         for res in resources:
-            if res.resource_type == "ALB" and res.resource_metadata:
-                metadata = res.resource_metadata
+            if res.resource_type == "ALB":
+                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-                # ALB -> VPC
-                vpc_id = metadata.get("vpc_id")
-                if vpc_id:
-                    relationships.append({
-                        "from": res.resource_id,
-                        "to": vpc_id,
-                        "type": "IN_VPC",
-                        "source_type": "ALB",
-                        "target_type": "VPC"
-                    })
-
-        return relationships
+        return edges

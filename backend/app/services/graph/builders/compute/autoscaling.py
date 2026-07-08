@@ -1,32 +1,15 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
+from app.services.graph.builders.common import GraphBuilderHelper
 
 class AutoScalingGraphBuilder:
     @staticmethod
     def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        relationships = []
+        edges = []
+        resource_lookup = {r.resource_id: r.resource_type for r in resources}
+        
         for res in resources:
-            if res.resource_type == "AutoScalingGroup" and res.resource_metadata:
-                metadata = res.resource_metadata
+            if res.resource_type == "AutoScalingGroup":
+                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-                # AutoScalingGroup -> EC2
-                for instance_id in metadata.get("instances", []):
-                    relationships.append({
-                        "from": res.resource_id,
-                        "to": instance_id,
-                        "type": "MANAGES",
-                        "source_type": "AutoScalingGroup",
-                        "target_type": "EC2"
-                    })
-                
-                # AutoScalingGroup -> TargetGroup
-                for tg_arn in metadata.get("target_groups", []):
-                    relationships.append({
-                        "from": res.resource_id,
-                        "to": tg_arn,
-                        "type": "ATTACHED_TO",
-                        "source_type": "AutoScalingGroup",
-                        "target_type": "TargetGroup"
-                    })
-
-        return relationships
+        return edges

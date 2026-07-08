@@ -19,11 +19,12 @@ class InventoryManager:
             db_resources.append(ResourceDB(
                 cloud_account_id=cloud_account_id,
                 provider=account.provider,
-                resource_type=r["type"],
-                resource_id=r["id"],
-                name=r["name"],
-                region=r["region"],
-                status=r["status"]
+                resource_type=r.get("resource_type") or r.get("type"),
+                resource_id=r.get("resource_id") or r.get("id"),
+                name=r.get("name"),
+                region=r.get("region"),
+                status=r.get("status"),
+                resource_metadata=r  # Save the full NormalizedResource payload (metadata, dependencies, etc.)
             ))
 
         # Atomic transaction: delete old resource definitions for this distinct account and overwrite

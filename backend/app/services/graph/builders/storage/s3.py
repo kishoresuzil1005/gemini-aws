@@ -1,22 +1,15 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.builders.common import RELATIONSHIP_MAP
+from app.services.graph.builders.common import GraphBuilderHelper
 
 class S3GraphBuilder:
     @staticmethod
     def build(resources: List[ResourceDB]) -> List[Dict[str, Any]]:
-        relationships = []
+        edges = []
+        resource_lookup = {r.resource_id: r.resource_type for r in resources}
+        
         for res in resources:
-            if res.resource_type != "S3":
-                continue
-            metadata = res.resource_metadata or {}
-            for dep in metadata.get("dependencies", []):
-                dep_type = dep.get("type", "").upper()
-                relationships.append({
-                    "from": res.resource_id,
-                    "to": dep["id"],
-                    "type": RELATIONSHIP_MAP.get(dep_type, "DEPENDS_ON"),
-                    "source_type": "S3",
-                    "target_type": dep.get("type", "")
-                })
-        return relationships
+            if res.resource_type in ("S3Bucket", "S3"):
+                edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
+                
+        return edges
