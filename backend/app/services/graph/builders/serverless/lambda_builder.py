@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.metadata.lambda_metadata import LambdaMetadata
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.base_builder import BaseGraphBuilder
@@ -13,7 +13,7 @@ class LambdaGraphBuilder(BaseGraphBuilder):
         edges = []
         
         # Lambda -> IAM Role
-        role = GraphMetadataHelper.get_iam_profile_or_role(resource)
+        role = LambdaMetadata.get_role(resource)
         if role:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -25,7 +25,7 @@ class LambdaGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # Lambda -> VPC
-        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        vpc_id = LambdaMetadata.get_vpc_id(resource)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -37,7 +37,7 @@ class LambdaGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # Lambda -> Subnets
-        for subnet_id in GraphMetadataHelper.get_subnet_ids(resource):
+        for subnet_id in LambdaMetadata.get_subnet_ids(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=subnet_id,
@@ -48,7 +48,7 @@ class LambdaGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # Lambda -> Security Groups
-        for sg_id in GraphMetadataHelper.get_security_groups(resource):
+        for sg_id in LambdaMetadata.get_security_group_ids(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=sg_id,

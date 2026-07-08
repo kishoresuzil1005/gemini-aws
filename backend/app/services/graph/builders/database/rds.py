@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.metadata.rds_metadata import RDSMetadata
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.base_builder import BaseGraphBuilder
@@ -13,7 +13,7 @@ class RDSGraphBuilder(BaseGraphBuilder):
         edges = []
         
         # RDS -> VPC
-        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        vpc_id = RDSMetadata.get_vpc_id(resource)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -25,7 +25,7 @@ class RDSGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # RDS -> Security Groups
-        for sg_id in GraphMetadataHelper.get_security_groups(resource):
+        for sg_id in RDSMetadata.get_security_groups(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=sg_id,

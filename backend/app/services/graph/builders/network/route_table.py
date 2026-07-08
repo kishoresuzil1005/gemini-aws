@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.metadata.network_metadata import NetworkMetadata
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.base_builder import BaseGraphBuilder
@@ -13,7 +13,7 @@ class RouteTableGraphBuilder(BaseGraphBuilder):
         edges = []
         
         # RouteTable -> VPC
-        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        vpc_id = NetworkMetadata.get_vpc_id(resource)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -24,19 +24,19 @@ class RouteTableGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        # RouteTable -> Subnets
-        for subnet_id in GraphMetadataHelper.get_route_table_subnets(resource):
+        # RouteTable -> Subnets (Associations)
+        for subnet_id in NetworkMetadata.get_route_table_subnets(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=subnet_id,
-                relationship=RelationshipType.IN_SUBNET,
+                relationship=RelationshipType.ASSOCIATED_WITH,
                 source_type="RouteTable",
                 target_type="Subnet"
             )
             if edge: edges.append(edge)
             
-        # RouteTable -> InternetGateways
-        for igw_id in GraphMetadataHelper.get_route_table_igws(resource):
+        # RouteTable -> IGW (Routes)
+        for igw_id in NetworkMetadata.get_route_table_igws(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=igw_id,
@@ -46,8 +46,8 @@ class RouteTableGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        # RouteTable -> NATGateways
-        for nat_id in GraphMetadataHelper.get_route_table_nat_gateways(resource):
+        # RouteTable -> NAT Gateway (Routes)
+        for nat_id in NetworkMetadata.get_route_table_nat_gateways(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=nat_id,

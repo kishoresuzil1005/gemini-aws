@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.metadata.alb_metadata import ALBMetadata
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.base_builder import BaseGraphBuilder
@@ -13,7 +13,7 @@ class TargetGroupGraphBuilder(BaseGraphBuilder):
         edges = []
         
         # TargetGroup -> VPC
-        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        vpc_id = ALBMetadata.get_vpc_id(resource)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -25,7 +25,7 @@ class TargetGroupGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # TargetGroup -> ALB (Actually ALB -> TargetGroup is more common, but let's do both or just TG -> ALB based on ALB dependency)
-        for alb_id in GraphMetadataHelper.get_load_balancers(resource):
+        for alb_id in ALBMetadata.get_load_balancers(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=alb_id,
@@ -36,7 +36,7 @@ class TargetGroupGraphBuilder(BaseGraphBuilder):
             if edge: edges.append(edge)
             
         # TargetGroup -> Targets (EC2 or Lambda)
-        for target in GraphMetadataHelper.get_targets(resource):
+        for target in ALBMetadata.get_targets(resource):
             target_id = target.get("id")
             if target_id:
                 # We can deduce type somewhat heuristically, or default to generic DEPENDS_ON / TARGETS

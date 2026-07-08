@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from app.models import ResourceDB
-from app.services.graph.helpers.graph_metadata_helper import GraphMetadataHelper
+from app.services.graph.helpers.metadata.network_metadata import NetworkMetadata
 from app.services.graph.helpers.graph_relationship import GraphRelationship
 from app.services.graph.helpers.relationship_types import RelationshipType
 from app.services.graph.helpers.base_builder import BaseGraphBuilder
@@ -13,7 +13,7 @@ class SecurityGroupGraphBuilder(BaseGraphBuilder):
         edges = []
         
         # SecurityGroup -> VPC
-        vpc_id = GraphMetadataHelper.get_vpc_id(resource)
+        vpc_id = NetworkMetadata.get_vpc_id(resource)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -24,8 +24,8 @@ class SecurityGroupGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        # SecurityGroup -> Referenced Security Groups
-        for sg_id in GraphMetadataHelper.get_referenced_security_groups(resource):
+        # SecurityGroup -> Other SecurityGroups (Ingress/Egress rules)
+        for sg_id in NetworkMetadata.get_referenced_security_groups(resource):
             edge = GraphRelationship.create(
                 source=resource.resource_id,
                 target=sg_id,
