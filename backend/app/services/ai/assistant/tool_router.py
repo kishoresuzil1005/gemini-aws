@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from app.services.ai.assistant.assistant_models import ToolResponse
 from app.services.ai.assistant.tool_registry import ToolRegistry
 from app.services.ai.assistant.tools.security_tool import SecurityTool
