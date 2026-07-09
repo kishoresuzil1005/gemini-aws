@@ -1226,10 +1226,7 @@ app.include_router(
 #     tags=["AI Chat"]
 # )
 
-app.include_router(
-    prefix="/api/v1/ai",
-    tags=["AI Orchestrator"]
-)
+
 
 from app.api.ai_architect import router as ai_architect_router
 app.include_router(
