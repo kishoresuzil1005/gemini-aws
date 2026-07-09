@@ -1,12 +1,14 @@
 import time
 from app.services.ai.assistant.tool_registry import BaseTool
 from app.services.ai.assistant.assistant_models import ToolResponse
-from app.services.ai.core.context.document_retriever import DocumentRetriever
+from app.services.ai.embedding_service import EmbeddingService
+from app.services.ai.qdrant_service import QdrantService
 
 class DocumentationTool(BaseTool):
     def __init__(self):
         super().__init__()
-        self.retriever = DocumentRetriever()
+        self.embedding = EmbeddingService()
+        self.qdrant = QdrantService("cloud_docs")
 
     @property
     def name(self) -> str:
@@ -17,8 +19,9 @@ class DocumentationTool(BaseTool):
         
         query = kwargs.get("query") or resource_id or "AWS Documentation"
         
-        # 1. & 2. Get top 3 chunks, and filter in logic (if threshold > 0.8)
-        raw_results = self.retriever.search(query, limit=3)
+        # 1. & 2. Get top chunks
+        query_vector = self.embedding.get_embedding(query)
+        raw_results = self.qdrant.search_similar(query_vector, limit=3)
         
         filtered_results = [r for r in raw_results if r.get("score", 0) > 0.80]
         
