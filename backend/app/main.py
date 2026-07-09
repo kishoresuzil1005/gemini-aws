@@ -16,7 +16,7 @@ from .models import (
     SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB, ResourceDB,
     ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB
 )
-from app.cloud.models import AwsAccount
+
 from .services.session_manager import (
     assume_target_aws_role, connect_azure_tenant, connect_gcp_project
 )
