@@ -21,7 +21,7 @@ from app.services.remediation.approval import ApprovalService
 from app.services.remediation.executor import RemediationExecutor
 
 router = APIRouter(
-    prefix="/operations",
+    prefix="/api/v1/operations",
     tags=["Operations"]
 )
 

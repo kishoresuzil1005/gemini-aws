@@ -19,31 +19,6 @@ router = APIRouter(
     tags=["Cloud"]
 )
 
-@router.post("/aws/connect")
-def connect_aws(request: AwsConnectRequest):
-    db: Session = SessionLocal()
-    try:
-        account = CloudAccountDB(
-            name=request.account_name,
-            provider="AWS",
-            region="us-east-1",
-            account_id=request.account_id,
-            role_arn=request.role_arn,
-            credentials_hint=f"External ID: {request.external_id}" if getattr(request, 'external_id', None) else ""
-        )
-        db.add(account)
-        db.commit()
-        db.refresh(account)
-        return {
-            "success": True,
-            "account_id": account.id
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database insertion failed: {str(e)}")
-    finally:
-        db.close()
-
 @router.get("/accounts/{account_id}/regions")
 def get_regions(account_id: int):
     db: Session = SessionLocal()

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List
 
-router = APIRouter(prefix="/api/v1/ai/production", tags=["AI Production Readiness"])
+router = APIRouter(prefix="/api/v1/ai/analysis/production", tags=["AI Production Readiness"])
 
 class ProductionReviewRequest(BaseModel):
     provider: str = "aws"

@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.database import engine
 
 router = APIRouter(
-    prefix="/api",
+    prefix="/api/v1/regions",
     tags=["Regions"]
 )
 

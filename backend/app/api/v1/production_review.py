@@ -5,7 +5,7 @@ from app.services.ai.production_review import ProductionReviewService
 
 router = APIRouter(
 
-    prefix="/api/v1/ai/production",
+    prefix="/api/v1/ai/analysis/production",
 
     tags=["Production Review"]
 

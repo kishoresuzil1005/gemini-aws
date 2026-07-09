@@ -505,7 +505,7 @@ def startup_event():
 
 # --- Account API Endpoints ---
 
-@app.get("/api/accounts", response_model=List[CloudAccountSchema])
+@app.get("/api/v1/accounts", response_model=List[CloudAccountSchema])
 def get_accounts(db: Session = Depends(get_db)):
     accts = db.query(CloudAccountDB).order_by(CloudAccountDB.created_at.desc()).all()
     # map to camelcase output schema safely
@@ -519,7 +519,7 @@ def get_accounts(db: Session = Depends(get_db)):
         ) for a in accts
     ]
 
-@app.post("/api/accounts", response_model=CloudAccountSchema)
+@app.post("/api/v1/accounts", response_model=CloudAccountSchema)
 def add_account(account: CloudAccountSchema, db: Session = Depends(get_db)):
     db_acct = CloudAccountDB(
         provider=account.provider,
@@ -538,7 +538,7 @@ def add_account(account: CloudAccountSchema, db: Session = Depends(get_db)):
         region=db_acct.region
     )
 
-@app.delete("/api/accounts/{account_id}")
+@app.delete("/api/v1/accounts/{account_id}")
 def delete_account(account_id: int, db: Session = Depends(get_db)):
     db_acct = db.query(CloudAccountDB).filter(CloudAccountDB.id == account_id).first()
     if not db_acct:
@@ -753,7 +753,7 @@ def get_scan_history(db: Session = Depends(get_db)):
     return history
 
 
-@app.get("/api/relationships", response_model=List[ResourceRelationshipSchema])
+@app.get("/api/v1/inventory/relationships", response_model=List[ResourceRelationshipSchema])
 def get_relationships_endpoint(db: Session = Depends(get_db)):
     rels = db.query(ResourceRelationshipDB).all()
     if not rels:
@@ -783,7 +783,7 @@ def get_topology_summary(db: Session = Depends(get_db)):
         for c in categories
     ]
 
-@app.get("/api/dependencies/resource/{resource_id}", response_model=TopologyLevel3Response)
+@app.get("/api/v1/dependencies/resource/{resource_id}", response_model=TopologyLevel3Response)
 def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
     data = DependencyService(db).get_resource_dependencies(resource_id)
     if not data:
@@ -840,7 +840,7 @@ def get_topology_level_2(category: str, db: Session = Depends(get_db)):
         for r in resources
     ]
 
-@app.get("/api/graph", response_model=GraphResponseSchema)
+@app.get("/api/v1/graph", response_model=GraphResponseSchema)
 def get_graph_topology(db: Session = Depends(get_db)):
     """
     Retrieves the entire connected cloud topology map from Neo4j (Phase 3).
@@ -1042,7 +1042,7 @@ def get_cost_summary(
     return response
 
 
-@app.post("/api/cost/refresh", response_model=CloudCostSummarySchema)
+@app.post("/api/v1/cost/refresh", response_model=CloudCostSummarySchema)
 def refresh_cost_summary(db: Session = Depends(get_db)):
     from app.services.cost.cache import CostSummaryCache
     print("[COST CACHE] Clearing cache and refreshing from AWS Cost Explorer")
@@ -1050,14 +1050,14 @@ def refresh_cost_summary(db: Session = Depends(get_db)):
     return get_cost_summary(db=db)
 
 
-@app.get("/api/cost/cache")
+@app.get("/api/v1/cost/cache")
 def cost_cache_status():
     from app.services.cost.cache import CostSummaryCache
     return CostSummaryCache.status()
 
 
 
-@app.get("/api/cost/estimate", response_model=CostEstimateResponseSchema)
+@app.get("/api/v1/cost/estimate", response_model=CostEstimateResponseSchema)
 def get_cost_estimate(db: Session = Depends(get_db)):
     """
     Computes precise instantaneous monthly cloud running rates from localized live inventory DB records (Phase 4).
@@ -1078,7 +1078,7 @@ def get_cost_estimate(db: Session = Depends(get_db)):
     )
 
 
-@app.get("/api/cost/comparison", response_model=CostComparisonResponseSchema)
+@app.get("/api/v1/cost/comparison", response_model=CostComparisonResponseSchema)
 def get_cost_comparison(db: Session = Depends(get_db)):
 
     totals = CostAggregator.calculate_account_monthly(
@@ -1121,7 +1121,7 @@ def get_cost_comparison(db: Session = Depends(get_db)):
 from app.services.billing_service import BillingService
 from typing import Dict
 
-@app.get("/api/billing/summary", response_model=BillingSummaryResponseSchema)
+@app.get("/api/v1/billing/summary", response_model=BillingSummaryResponseSchema)
 def get_billing_summary(db: Session = Depends(get_db)):
     """
     Returns actual month-to-date and forecasted unblended actual billing summaries from Cost Explorer (Phase 5).
@@ -1133,7 +1133,7 @@ def get_billing_summary(db: Session = Depends(get_db)):
         forecast=summary.get("forecast", 0.0)
     )
 
-@app.get("/api/billing/services", response_model=Dict[str, float])
+@app.get("/api/v1/billing/services", response_model=Dict[str, float])
 def get_billing_services(db: Session = Depends(get_db)):
     """
     Returns actual unblended service-level expenditure details grouped by provider namespace (Phase 5).
@@ -1141,7 +1141,7 @@ def get_billing_services(db: Session = Depends(get_db)):
     service = BillingService(db)
     return service.get_cost_by_service()
 
-@app.get("/api/billing/forecast", response_model=BillingForecastResponseSchema)
+@app.get("/api/v1/billing/forecast", response_model=BillingForecastResponseSchema)
 def get_billing_forecast(db: Session = Depends(get_db)):
     """
     Calculates expected monthly final runrates according to historical trends and forecast metrics (Phase 5).
@@ -1166,7 +1166,7 @@ app.include_router(
 from app.api.graph_criticality import router as graph_criticality_router
 app.include_router(
     graph_criticality_router,
-    prefix="/api/graph",
+    prefix="/api/v1/graph",
     tags=["Graph Criticality"]
 )
 
@@ -1305,17 +1305,11 @@ from app.api.routes import terminal
 
 app.include_router(
     terminal.router,
-    prefix="/api/terminal",
+    prefix="/api/v1/terminal",
     tags=["Terminal"]
 )
 
-from app.api.routes import aws_credentials
 
-app.include_router(
-    aws_credentials.router,
-    prefix="/api/aws",
-    tags=["AWS Credentials"]
-)
 
 from app.api.health import router as health_router
 app.include_router(health_router)
@@ -1389,7 +1383,7 @@ app.include_router(
 from app.services.incident.incident_engine import IncidentEngine
 import time
 
-@app.get("/api/incidents", response_model=List[CloudIncidentSchema])
+@app.get("/api/v1/incidents", response_model=List[CloudIncidentSchema])
 def get_incidents(db: Session = Depends(get_db)):
     # Run Incident Engine offline evaluation
     engine = IncidentEngine(db=db)
@@ -1428,7 +1422,7 @@ def get_incidents(db: Session = Depends(get_db)):
         for i in incidents
     ]
 
-@app.post("/api/incidents/self-heal/{incident_id}")
+@app.post("/api/v1/incidents/self-heal/{incident_id}")
 def self_heal_incident(incident_id: str, db: Session = Depends(get_db)):
     inc = db.query(CloudIncidentDB).filter(CloudIncidentDB.id == incident_id).first()
     if not inc:
@@ -1471,7 +1465,7 @@ def self_heal_incident(incident_id: str, db: Session = Depends(get_db)):
         "logs": logs
     }
 
-@app.post("/api/incidents/reset")
+@app.post("/api/v1/incidents/reset")
 def reset_incidents(db: Session = Depends(get_db)):
     db.query(CloudIncidentDB).delete()
     db.commit()
@@ -1622,7 +1616,7 @@ def trigger_discovery(
         timestamp=db_job.timestamp
     )
 
-@app.get("/api/jobs", response_model=List[BackgroundJobSchema])
+@app.get("/api/v1/jobs", response_model=List[BackgroundJobSchema])
 def list_jobs(db: Session = Depends(get_db)):
     jobs = db.query(BackgroundJobDB).order_by(BackgroundJobDB.timestamp.desc()).all()
     return [
@@ -1635,7 +1629,7 @@ def list_jobs(db: Session = Depends(get_db)):
         ) for j in jobs
     ]
 
-@app.get("/api/jobs/{job_id}", response_model=BackgroundJobSchema)
+@app.get("/api/v1/jobs/{job_id}", response_model=BackgroundJobSchema)
 def get_job_details(job_id: str, db: Session = Depends(get_db)):
     job = db.query(BackgroundJobDB).filter(BackgroundJobDB.id == job_id).first()
     if not job:
@@ -1651,7 +1645,7 @@ def get_job_details(job_id: str, db: Session = Depends(get_db)):
 
 # --- HCL Migrations API ---
 
-@app.get("/api/migrations", response_model=List[SavedMigrationSchema])
+@app.get("/api/v1/migrations", response_model=List[SavedMigrationSchema])
 def list_migrations(db: Session = Depends(get_db)):
     migrations = db.query(SavedMigrationDB).order_by(SavedMigrationDB.created_at.desc()).all()
     return [
@@ -1665,7 +1659,7 @@ def list_migrations(db: Session = Depends(get_db)):
         ) for m in migrations
     ]
 
-@app.post("/api/migrations", response_model=SavedMigrationSchema)
+@app.post("/api/v1/migrations", response_model=SavedMigrationSchema)
 def save_migration(item: SavedMigrationSchema, db: Session = Depends(get_db)):
     db_mig = SavedMigrationDB(
         title=item.title,
@@ -1686,7 +1680,7 @@ def save_migration(item: SavedMigrationSchema, db: Session = Depends(get_db)):
         terraformCode=db_mig.terraform_code
     )
 
-@app.delete("/api/migrations/{migration_id}")
+@app.delete("/api/v1/migrations/{migration_id}")
 def delete_migration(migration_id: int, db: Session = Depends(get_db)):
     db_mig = db.query(SavedMigrationDB).filter(SavedMigrationDB.id == migration_id).first()
     if not db_mig:
@@ -1957,7 +1951,7 @@ def connect_gcp(payload: GcpConnectPayload, db: Session = Depends(get_db)):
         "session": session
     }
 
-@app.get("/api/cloud/credentials/{account_id}")
+@app.get("/api/v1/cloud/credentials/{account_id}")
 def get_temporary_credentials(account_id: int, db: Session = Depends(get_db)):
     acct = db.query(CloudAccountDB).filter(CloudAccountDB.id == account_id).first()
     if not acct:
@@ -2032,7 +2026,7 @@ def sync_graph(
         if sync_service:
             sync_service.close()
 
-@app.get("/api/graph")
+@app.get("/api/v1/graph")
 def get_graph():
     graph = None
     try:
@@ -2042,7 +2036,7 @@ def get_graph():
         if graph:
             graph.close()
 
-@app.delete("/api/graph")
+@app.delete("/api/v1/graph")
 def clear_graph():
     graph = None
     try:
