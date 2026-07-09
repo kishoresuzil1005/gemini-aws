@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from app.cloud.models import AwsAccount
+from app.models.core import CloudAccountDB
 from app.cloud.schemas import AwsConnectRequest
 from app.cloud.aws_service import AwsService
-from app.cloud.region_service import RegionService
+from app.services.aws.region_service import AWSRegionService
 
 try:
     from app.database import SessionLocal, get_db
@@ -23,11 +23,13 @@ router = APIRouter(
 def connect_aws(request: AwsConnectRequest):
     db: Session = SessionLocal()
     try:
-        account = AwsAccount(
-            account_name=request.account_name,
+        account = CloudAccountDB(
+            name=request.account_name,
+            provider="AWS",
+            region="us-east-1",
             account_id=request.account_id,
             role_arn=request.role_arn,
-            external_id=request.external_id
+            credentials_hint=f"External ID: {request.external_id}" if getattr(request, 'external_id', None) else ""
         )
         db.add(account)
         db.commit()
@@ -46,15 +48,15 @@ def connect_aws(request: AwsConnectRequest):
 def get_regions(account_id: int):
     db: Session = SessionLocal()
     try:
-        account = db.query(AwsAccount).filter(AwsAccount.id == account_id).first()
+        account = db.query(CloudAccountDB).filter(CloudAccountDB.id == account_id).first()
         if not account:
             raise HTTPException(status_code=404, detail="AWS Account not found")
         
         credentials = AwsService.assume_role(
             role_arn=account.role_arn,
-            external_id=account.external_id
+            external_id=None # CloudAccountDB does not directly store external_id in a separate column
         )
-        regions = RegionService.get_regions(credentials)
+        regions = AWSRegionService.get_regions(credentials)
         return {
             "success": True,
             "regions": regions

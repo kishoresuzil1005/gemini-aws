@@ -72,6 +72,7 @@ class ALBDiscovery:
                         configuration={
                             'vpc_id': vpc_id,
                             'availability_zones': [az.get('ZoneName') for az in lb.get('AvailabilityZones', [])],
+                            'subnets': [az.get('SubnetId') for az in lb.get('AvailabilityZones', []) if az.get('SubnetId')],
                             'listeners': listeners,
                             'attributes': attributes
                         },

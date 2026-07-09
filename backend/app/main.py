@@ -1166,7 +1166,7 @@ def get_billing_forecast(db: Session = Depends(get_db)):
     )
 
 
-from app.routes.optimization import router as optimization_router
+from app.api.v1.optimization import router as optimization_router
 from app.api.topology import router as topology_router
 
 app.include_router(
@@ -1184,7 +1184,7 @@ app.include_router(
     tags=["Graph Criticality"]
 )
 
-from app.routes.ec2_summary import (
+from app.api.v1.ec2_summary import (
     router as ec2_summary_router
 )
 
@@ -1192,7 +1192,7 @@ app.include_router(
     ec2_summary_router
 )
 
-from app.routes.ec2_extended import (
+from app.api.v1.ec2_extended import (
     router as ec2_extended_router
 )
 
@@ -1200,7 +1200,7 @@ app.include_router(
     ec2_extended_router
 )
 
-from app.routes.ec2_refresh import (
+from app.api.v1.ec2_refresh import (
     router as ec2_refresh_router
 )
 
@@ -1208,7 +1208,7 @@ app.include_router(
     ec2_refresh_router
 )
 
-from app.routes.ec2_actions import router as ec2_actions_router
+from app.api.v1.ec2_actions import router as ec2_actions_router
 
 app.include_router(
     ec2_actions_router
@@ -1216,7 +1216,7 @@ app.include_router(
 
 
 # Commented out to prevent conflict with modern Ollama AI chat router:
-# from app.routes.ai import router as ai_router
+# from app.api.v1.ai import router as ai_router
 
 # app.include_router(
 #     ai_router
@@ -1245,7 +1245,7 @@ app.include_router(
 #     tags=["AI Chat"]
 # )
 
-from app.ai.router import router as llm_orchestrator_router
+from app.services.ai.core.router import router as llm_orchestrator_router
 app.include_router(
     llm_orchestrator_router,
     prefix="/api/ai/v2",
@@ -1261,58 +1261,58 @@ app.include_router(
 from app.api.ai.architecture_diagram import router as architecture_diagram_router
 app.include_router(architecture_diagram_router)
 
-from app.routes.architecture_review import router as architecture_review_router
+from app.api.v1.architecture_review import router as architecture_review_router
 app.include_router(architecture_review_router)
 
-from app.routes.architecture_score import router as architecture_score_router
+from app.api.v1.architecture_score import router as architecture_score_router
 app.include_router(architecture_score_router)
 
-from app.routes.architecture_recommendation import router as architecture_recommendation_router
+from app.api.v1.architecture_recommendation import router as architecture_recommendation_router
 app.include_router(architecture_recommendation_router)
 
-from app.routes.failure_analysis import router as failure_analysis_router
+from app.api.v1.failure_analysis import router as failure_analysis_router
 app.include_router(failure_analysis_router)
 
-from app.routes.production_review import router as production_review_router
+from app.api.v1.production_review import router as production_review_router
 app.include_router(production_review_router)
 
-from app.routes.production_checklist import router as production_checklist_router
+from app.api.v1.production_checklist import router as production_checklist_router
 app.include_router(production_checklist_router)
 
-from app.routes.well_architected_review import router as well_architected_router
+from app.api.v1.well_architected_review import router as well_architected_router
 app.include_router(well_architected_router)
 
-from app.routes.graph_parser import router as graph_parser_router
+from app.api.v1.graph_parser import router as graph_parser_router
 app.include_router(graph_parser_router)
 
-from app.routes.resource_aggregator import router as resource_aggregator_router
+from app.api.v1.resource_aggregator import router as resource_aggregator_router
 app.include_router(resource_aggregator_router)
 
-from app.routes.architecture_model import router as architecture_model_router
+from app.api.v1.architecture_model import router as architecture_model_router
 app.include_router(architecture_model_router)
 
-from app.routes.layer_builder import router as layer_builder_router
+from app.api.v1.layer_builder import router as layer_builder_router
 app.include_router(layer_builder_router)
 
-from app.routes.icon_mapper import router as icon_mapper_router
+from app.api.v1.icon_mapper import router as icon_mapper_router
 app.include_router(icon_mapper_router)
 
-from app.routes.layout import router as layout_router
+from app.api.v1.layout import router as layout_router
 app.include_router(layout_router)
 
-from app.routes.svg import router as svg_router
+from app.api.v1.svg import router as svg_router
 app.include_router(svg_router)
 
-from app.routes.drawio import router as drawio_router
+from app.api.v1.drawio import router as drawio_router
 app.include_router(drawio_router)
 
-from app.routes.relationship import router as relationship_router
+from app.api.v1.relationship import router as relationship_router
 app.include_router(relationship_router)
 
-from app.routes.vpc_az import router as vpc_router
+from app.api.v1.vpc_az import router as vpc_router
 app.include_router(vpc_router)
 
-from app.routes.smart_layout import router as smart_layout_router
+from app.api.v1.smart_layout import router as smart_layout_router
 app.include_router(smart_layout_router)
 
 from app.api.routes import terminal
@@ -1341,28 +1341,28 @@ app.include_router(
 )
 
 
-from app.routes.operations import router as operations_router
+from app.api.v1.operations import router as operations_router
 
 app.include_router(
     operations_router
 )
 
 
-from app.routes.metrics import router as metrics_router
+from app.api.v1.metrics import router as metrics_router
 
 app.include_router(
     metrics_router
 )
 
 
-from app.routes.regions import router as region_router
+from app.api.v1.regions import router as region_router
 
 app.include_router(
     region_router
 )
 
 
-from app.routes.regions_dashboard import (
+from app.api.v1.regions_dashboard import (
     router as regions_dashboard_router
 )
 
@@ -1371,14 +1371,14 @@ app.include_router(
 )
 
 
-from app.routes.aws_logs import router as aws_logs_router
+from app.api.v1.aws_logs import router as aws_logs_router
 
 app.include_router(
     aws_logs_router
 )
 
 
-from app.routes.dashboard import (
+from app.api.v1.dashboard import (
     router as dashboard_router
 )
 

@@ -1,8 +1,8 @@
 import time
 from typing import Dict
 
-from app.ai.context.context_builder import ContextBuilder
-from app.ai.prompt.prompt_builder import PromptBuilder
+from app.services.ai.core.context.context_builder import ContextBuilder
+from app.services.ai.core.prompt.prompt_builder import PromptBuilder
 from app.services.ai.ollama_service import OllamaService
 
 

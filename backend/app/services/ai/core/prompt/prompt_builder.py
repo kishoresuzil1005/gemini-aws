@@ -1,8 +1,8 @@
 import json
 
-from app.ai.prompt.system_prompt import SYSTEM_PROMPT
+from app.services.ai.core.prompt.system_prompt import SYSTEM_PROMPT
 
-from app.ai.prompt.templates import (
+from app.services.ai.core.prompt.templates import (
     DIAGNOSIS_TEMPLATE,
     MIGRATION_TEMPLATE,
 )

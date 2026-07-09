@@ -1,10 +1,10 @@
 import json
 from typing import Dict, Any
 
-from app.ai.context.intent_classifier import IntentClassifier
-from app.ai.context.graph_retriever import GraphRetriever
-from app.ai.context.metadata_retriever import MetadataRetriever
-from app.ai.context.document_retriever import DocumentRetriever
+from app.services.ai.core.context.intent_classifier import IntentClassifier
+from app.services.ai.core.context.graph_retriever import GraphRetriever
+from app.services.ai.core.context.metadata_retriever import MetadataRetriever
+from app.services.ai.core.context.document_retriever import DocumentRetriever
 
 
 class ContextBuilder:

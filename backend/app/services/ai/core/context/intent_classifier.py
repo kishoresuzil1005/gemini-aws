@@ -14,14 +14,14 @@ from __future__ import annotations
 import re
 from typing import List
 
-from app.ai.intents import Intent
-from app.ai.context.models import (
+from app.services.ai.core.intents import Intent
+from app.services.ai.core.context.models import (
     IntentResult,
     CloudResource,
     ResourceType,
 )
 
-from app.ai.context.patterns import (
+from app.services.ai.core.context.patterns import (
     INTENT_PATTERNS,
     RESOURCE_PATTERNS,
     ACTION_PATTERNS,

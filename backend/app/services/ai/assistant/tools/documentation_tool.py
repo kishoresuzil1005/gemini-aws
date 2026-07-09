@@ -1,7 +1,7 @@
 import time
 from app.services.ai.assistant.tool_registry import BaseTool
 from app.services.ai.assistant.assistant_models import ToolResponse
-from app.ai.context.document_retriever import DocumentRetriever
+from app.services.ai.core.context.document_retriever import DocumentRetriever
 
 class DocumentationTool(BaseTool):
     def __init__(self):

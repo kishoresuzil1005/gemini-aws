@@ -1,10 +1,10 @@
 from typing import Dict
 
-from app.ai.context.intent_classifier import IntentClassifier
-from app.ai.context.inventory_context import InventoryContext
-from app.ai.context.graph_context import GraphContext
-from app.ai.context.monitoring_context import MonitoringContext
-from app.ai.context.document_retriever import DocumentRetriever
+from app.services.ai.core.context.intent_classifier import IntentClassifier
+from app.services.ai.core.context.inventory_context import InventoryContext
+from app.services.ai.core.context.graph_context import GraphContext
+from app.services.ai.core.context.monitoring_context import MonitoringContext
+from app.services.ai.core.context.document_retriever import DocumentRetriever
 
 
 class CloudContextBuilder:

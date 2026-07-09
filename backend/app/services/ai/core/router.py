@@ -8,7 +8,7 @@ from fastapi import APIRouter
 
 from pydantic import BaseModel
 
-from app.ai.orchestrator.llm_orchestrator import LLMOrchestrator
+from app.services.ai.core.orchestrator.llm_orchestrator import LLMOrchestrator
 
 
 router = APIRouter()
