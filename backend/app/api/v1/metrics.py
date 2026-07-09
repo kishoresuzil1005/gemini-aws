@@ -7,7 +7,6 @@ router = APIRouter(
 )
 
 
-@router.get("/metrics/cpu/{resource_id}")
 @router.get("/api/metrics/cpu/{resource_id}")
 def cpu_metrics(
     resource_id: str

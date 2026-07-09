@@ -664,12 +664,10 @@ def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
 
 # --- Extra Modular Resource Discovery API Endpoints (Phase 2 & Phase 3) ---
 
-@app.get("/resources", response_model=List[DiscoveryResourceSchema])
 @app.get("/api/resources", response_model=List[DiscoveryResourceSchema])
 def get_resources_double_route(region: Optional[str] = None, db: Session = Depends(get_db)):
     return get_resources(region=region, db=db)
 
-@app.get("/resources/summary", response_model=ResourceSummarySchema)
 @app.get("/api/resources/summary", response_model=ResourceSummarySchema)
 def get_resources_summary(region: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(ResourceDB)
@@ -701,7 +699,6 @@ def get_resources_summary(region: Optional[str] = None, db: Session = Depends(ge
         countsByType=counts
     )
 
-@app.get("/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 @app.get("/api/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
     res = db.query(ResourceDB).filter(ResourceDB.resource_id == resource_id).first()
@@ -731,7 +728,6 @@ def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
         dependenciesString=""
     )
 
-@app.get("/scan/history", response_model=List[ScanHistorySchema])
 @app.get("/api/scan/history", response_model=List[ScanHistorySchema])
 def get_scan_history(db: Session = Depends(get_db)):
     try:
@@ -760,7 +756,6 @@ def get_scan_history(db: Session = Depends(get_db)):
     return history
 
 
-@app.get("/relationships", response_model=List[ResourceRelationshipSchema])
 @app.get("/api/relationships", response_model=List[ResourceRelationshipSchema])
 def get_relationships_endpoint(db: Session = Depends(get_db)):
     rels = db.query(ResourceRelationshipDB).all()
@@ -848,7 +843,6 @@ def get_topology_level_2(category: str, db: Session = Depends(get_db)):
         for r in resources
     ]
 
-@app.get("/graph", response_model=GraphResponseSchema)
 @app.get("/api/graph", response_model=GraphResponseSchema)
 def get_graph_topology(db: Session = Depends(get_db)):
     """
@@ -1066,7 +1060,6 @@ def cost_cache_status():
 
 
 
-@app.get("/cost/estimate", response_model=CostEstimateResponseSchema)
 @app.get("/api/cost/estimate", response_model=CostEstimateResponseSchema)
 def get_cost_estimate(db: Session = Depends(get_db)):
     """
@@ -1088,7 +1081,6 @@ def get_cost_estimate(db: Session = Depends(get_db)):
     )
 
 
-@app.get("/cost/comparison", response_model=CostComparisonResponseSchema)
 @app.get("/api/cost/comparison", response_model=CostComparisonResponseSchema)
 def get_cost_comparison(db: Session = Depends(get_db)):
 
@@ -1132,7 +1124,6 @@ def get_cost_comparison(db: Session = Depends(get_db)):
 from app.services.billing_service import BillingService
 from typing import Dict
 
-@app.get("/billing/summary", response_model=BillingSummaryResponseSchema)
 @app.get("/api/billing/summary", response_model=BillingSummaryResponseSchema)
 def get_billing_summary(db: Session = Depends(get_db)):
     """
@@ -1145,7 +1136,6 @@ def get_billing_summary(db: Session = Depends(get_db)):
         forecast=summary.get("forecast", 0.0)
     )
 
-@app.get("/billing/services", response_model=Dict[str, float])
 @app.get("/api/billing/services", response_model=Dict[str, float])
 def get_billing_services(db: Session = Depends(get_db)):
     """
@@ -1154,7 +1144,6 @@ def get_billing_services(db: Session = Depends(get_db)):
     service = BillingService(db)
     return service.get_cost_by_service()
 
-@app.get("/billing/forecast", response_model=BillingForecastResponseSchema)
 @app.get("/api/billing/forecast", response_model=BillingForecastResponseSchema)
 def get_billing_forecast(db: Session = Depends(get_db)):
     """
@@ -1748,7 +1737,6 @@ import hashlib
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-@app.post("/api/auth/register", response_model=AuthTokenResponse)
 @app.post("/api/v1/auth/register", response_model=AuthTokenResponse)
 def auth_register(payload: UserRegisterSchema, db: Session = Depends(get_db)):
     # Check if user already exists
@@ -1789,7 +1777,6 @@ def auth_register(payload: UserRegisterSchema, db: Session = Depends(get_db)):
         role=new_user.role
     )
 
-@app.post("/api/auth/login", response_model=AuthTokenResponse)
 @app.post("/api/v1/auth/login", response_model=AuthTokenResponse)
 def auth_login(payload: UserLoginSchema, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.email == payload.email).first()
@@ -1819,7 +1806,6 @@ def auth_login(payload: UserLoginSchema, db: Session = Depends(get_db)):
     )
 
 @app.post("/api/v1/auth/logout")
-@app.post("/api/auth/logout")
 def auth_logout():
     return {"status": "SUCCESS", "message": "Sign out sequence complete. Tokens blacklisted locally."}
 
@@ -1855,7 +1841,6 @@ def auth_refresh(authorization: Optional[str] = Header(None), db: Session = Depe
         raise HTTPException(status_code=401, detail="Invalid token state.")
 
 @app.get("/api/v1/auth/me", response_model=AuthTokenResponse)
-@app.get("/api/auth/me", response_model=AuthTokenResponse)
 def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authentication token header.")
