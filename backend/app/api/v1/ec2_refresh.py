@@ -5,7 +5,7 @@ from app.services.cache.ec2_cache import EC2Cache
 router = APIRouter()
 
 
-@router.post("/api/ec2/refresh")
+@router.post("/api/v1/ec2/refresh")
 def refresh_ec2(
     region: str = "ap-south-1"
 ):

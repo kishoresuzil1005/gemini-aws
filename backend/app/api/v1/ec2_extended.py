@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["EC2-Extended"])
 
 
-@router.get("/api/ec2/extended")
+@router.get("/api/v1/ec2/extended")
 def ec2_extended(
     region: str = "ap-south-1"
 ):
@@ -24,7 +24,7 @@ def ec2_extended(
     return data
 
 
-@router.get("/api/ec2/launch_templates")
+@router.get("/api/v1/ec2/launch_templates")
 def get_launch_templates(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -34,7 +34,7 @@ def get_launch_templates(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/spot_requests")
+@router.get("/api/v1/ec2/spot_requests")
 def get_spot_requests(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -44,7 +44,7 @@ def get_spot_requests(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/savings_plans")
+@router.get("/api/v1/ec2/savings_plans")
 def get_savings_plans(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -54,7 +54,7 @@ def get_savings_plans(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/reserved_instances")
+@router.get("/api/v1/ec2/reserved_instances")
 def get_reserved_instances(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -64,7 +64,7 @@ def get_reserved_instances(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/dedicated_hosts")
+@router.get("/api/v1/ec2/dedicated_hosts")
 def get_dedicated_hosts(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -74,7 +74,7 @@ def get_dedicated_hosts(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/dedicated_hosts/reservations")
+@router.get("/api/v1/ec2/dedicated_hosts/reservations")
 def get_dedicated_host_reservations(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -84,7 +84,7 @@ def get_dedicated_host_reservations(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/amis")
+@router.get("/api/v1/ec2/amis")
 def get_amis(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -94,7 +94,7 @@ def get_amis(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/ami_catalog")
+@router.get("/api/v1/ec2/ami_catalog")
 def get_ami_catalog(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -104,7 +104,7 @@ def get_ami_catalog(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/volumes")
+@router.get("/api/v1/ec2/volumes")
 def get_volumes(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -114,7 +114,7 @@ def get_volumes(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/snapshots")
+@router.get("/api/v1/ec2/snapshots")
 def get_snapshots(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -124,7 +124,7 @@ def get_snapshots(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/security_groups")
+@router.get("/api/v1/ec2/security_groups")
 def get_security_groups(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -134,7 +134,7 @@ def get_security_groups(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/elastic_ips")
+@router.get("/api/v1/ec2/elastic_ips")
 def get_elastic_ips(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -144,7 +144,7 @@ def get_elastic_ips(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/placement_groups")
+@router.get("/api/v1/ec2/placement_groups")
 def get_placement_groups(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -154,7 +154,7 @@ def get_placement_groups(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/key_pairs")
+@router.get("/api/v1/ec2/key_pairs")
 def get_key_pairs(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -164,7 +164,7 @@ def get_key_pairs(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/network_interfaces")
+@router.get("/api/v1/ec2/network_interfaces")
 def get_network_interfaces(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -174,7 +174,7 @@ def get_network_interfaces(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/load_balancers")
+@router.get("/api/v1/ec2/load_balancers")
 def get_load_balancers(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -184,7 +184,7 @@ def get_load_balancers(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/target_groups")
+@router.get("/api/v1/ec2/target_groups")
 def get_target_groups(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)
@@ -194,7 +194,7 @@ def get_target_groups(region: str = "ap-south-1"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ec2/trust_stores")
+@router.get("/api/v1/ec2/trust_stores")
 def get_trust_stores(region: str = "ap-south-1"):
     try:
         service = EC2ExtendedService(region)

@@ -15,7 +15,7 @@ except ImportError:
         from ..database import SessionLocal, get_db
 
 router = APIRouter(
-    prefix="/api/cloud",
+    prefix="/api/v1/cloud",
     tags=["Cloud"]
 )
 

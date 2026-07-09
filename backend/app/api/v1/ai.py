@@ -48,7 +48,7 @@ class AnalyzeResponse(BaseModel):
 
 
 @router.post(
-    "/api/ai/analyze",
+    "/api/v1/ai/analysis/analyze",
     response_model=AnalyzeResponse
 )
 def analyze_resource(

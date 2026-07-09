@@ -943,7 +943,7 @@ from app.services.cost.aggregator import CostAggregator
 from app.services.cost.forecast import CostForecastEngine
 
 @app.get(
-    "/api/cost/summary",
+    "/api/v1/cost/summary",
     response_model=CloudCostSummarySchema
 )
 def get_cost_summary(
@@ -1234,7 +1234,7 @@ app.include_router(
 from app.services.ai.core.router import router as llm_orchestrator_router
 app.include_router(
     llm_orchestrator_router,
-    prefix="/api/ai/v2",
+    prefix="/api/v1/ai",
     tags=["AI Orchestrator"]
 )
 
@@ -1331,7 +1331,9 @@ app.include_router(
 from app.api.v1.metrics import router as metrics_router
 
 app.include_router(
-    metrics_router
+    metrics_router,
+    prefix="/api/v1/metrics",
+    tags=["Metrics"]
 )
 
 

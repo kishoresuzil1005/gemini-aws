@@ -8,7 +8,7 @@ from app.core.aws_logger import log_aws_call
 router = APIRouter()
 
 
-@router.get("/api/ec2/instances")
+@router.get("/api/v1/ec2/instances")
 def get_ec2_instances(
     region: str
 ):
@@ -21,7 +21,7 @@ class EC2ActionRequest(BaseModel):
     account_id: int = 1
 
 
-@router.post("/api/ec2/start")
+@router.post("/api/v1/ec2/start")
 def start_ec2(payload: EC2ActionRequest):
 
     log_aws_call("ec2", "start_instances", "ap-south-1", "SUCCESS", f"Triggered instance START for {payload.instance_id}")
@@ -37,7 +37,7 @@ def start_ec2(payload: EC2ActionRequest):
     }
 
 
-@router.post("/api/ec2/stop")
+@router.post("/api/v1/ec2/stop")
 def stop_ec2(payload: EC2ActionRequest):
 
     log_aws_call("ec2", "stop_instances", "ap-south-1", "SUCCESS", f"Triggered instance STOP for {payload.instance_id}")
@@ -53,7 +53,7 @@ def stop_ec2(payload: EC2ActionRequest):
     }
 
 
-@router.post("/api/ec2/reboot")
+@router.post("/api/v1/ec2/reboot")
 def reboot_ec2(payload: EC2ActionRequest):
 
     log_aws_call("ec2", "reboot_instances", "ap-south-1", "SUCCESS", f"Triggered instance REBOOT for {payload.instance_id}")

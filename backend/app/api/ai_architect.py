@@ -4,7 +4,7 @@ from app.services.ai.architect_service import ArchitectService
 router = APIRouter()
 
 @router.post(
-    "/api/ai/architect/analyze/{resource_id}"
+    "/api/v1/ai/architecture/analyze/{resource_id}"
 )
 def analyze_resource(resource_id: str):
 

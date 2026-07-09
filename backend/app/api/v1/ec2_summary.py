@@ -27,7 +27,7 @@ class InstanceTypeAdviceRequest(BaseModel):
     priority: str
     cpuManufacturer: str
 
-@router.get("/api/ec2/summary")
+@router.get("/api/v1/ec2/summary")
 def ec2_summary(
     region: str
 ):
@@ -79,7 +79,7 @@ def ec2_summary(
         )
 
 
-@router.get("/api/ec2/instances")
+@router.get("/api/v1/ec2/instances")
 def ec2_instances(
     region: str
 ):
@@ -99,7 +99,7 @@ def ec2_instances(
             detail=str(e)
         )
 
-@router.get("/api/ec2/instance_types")
+@router.get("/api/v1/ec2/instance_types")
 def ec2_instance_types(
     region: str = "ap-south-1"
 ):
@@ -114,7 +114,7 @@ def ec2_instance_types(
         )
 
 
-@router.post("/api/ec2/instance_types/advice")
+@router.post("/api/v1/ec2/instance_types/advice")
 def ec2_instance_types_advice(
     payload: InstanceTypeAdviceRequest,
     region: str = "ap-south-1"

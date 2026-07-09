@@ -10,10 +10,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/optimization/recommendations"
-)
-@router.get(
-    "/api/optimization/recommendations"
+    "/api/v1/finops/recommendations"
 )
 def recommendations():
 
@@ -30,10 +27,7 @@ def recommendations():
 
 
 @router.get(
-    "/optimization/savings"
-)
-@router.get(
-    "/api/optimization/savings"
+    "/api/v1/finops/savings"
 )
 def savings():
 

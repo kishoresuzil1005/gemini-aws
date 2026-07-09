@@ -5,7 +5,7 @@ router = APIRouter(
     tags=["AWS Logs"]
 )
 
-@router.get("/api/aws/logs")
+@router.get("/api/v1/cloud/logs")
 def fetch_aws_logs():
     # Write a quick access audit log
     log_aws_call("logs_api", "fetch_aws_logs", "local", "SUCCESS", "Requested active telemetry stream")
