@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.services.ai.architecture_review import ArchitectureReviewService
 
 router = APIRouter(
-    prefix="/api/ai/architecture",
+    prefix="/api/v1/architecture/reviews",
     tags=["Architecture Review"]
 )
 

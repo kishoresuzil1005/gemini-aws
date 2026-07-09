@@ -6,7 +6,7 @@ from app.services.diagram.relationship_analyzer import (
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Architecture Diagram"]
 

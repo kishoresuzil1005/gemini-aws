@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Dict, Any, List
 from app.services.ai.rag_service import RAGService
 
-router = APIRouter(prefix="/api/ai/architecture", tags=["AI Architecture"])
+router = APIRouter(prefix="/api/v1/architecture/reviews", tags=["AI Architecture"])
 rag_service = RAGService()
 
 class ReviewRequest(BaseModel):

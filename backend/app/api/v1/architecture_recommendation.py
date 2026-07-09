@@ -5,7 +5,7 @@ from app.services.ai.architecture_recommendation import (
 )
 
 router = APIRouter(
-    prefix="/api/ai/architecture",
+    prefix="/api/v1/architecture/reviews",
     tags=["Architecture Recommendation"]
 )
 

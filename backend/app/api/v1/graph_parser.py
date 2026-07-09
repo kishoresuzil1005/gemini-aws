@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.services.diagram.graph_parser import GraphParser
 
 router = APIRouter(
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
     tags=["Diagram"]
 )
 

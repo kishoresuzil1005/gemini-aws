@@ -6,7 +6,7 @@ from app.services.diagram.smart_layout_engine import (
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Architecture Diagram"]
 

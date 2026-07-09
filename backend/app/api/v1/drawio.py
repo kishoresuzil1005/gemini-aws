@@ -5,7 +5,7 @@ from app.services.diagram.drawio_generator import DrawIOGenerator
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Architecture Diagram"]
 

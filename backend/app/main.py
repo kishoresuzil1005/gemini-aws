@@ -552,7 +552,7 @@ def delete_account(account_id: int, db: Session = Depends(get_db)):
 
 from app.providers.aws.ce import CEAdapter
 
-@app.get("/api/resources", response_model=List[DiscoveryResourceSchema])
+@app.get("/api/v1/inventory/resources", response_model=List[DiscoveryResourceSchema])
 def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
     # Fetch real resources
     query = db.query(ResourceDB)
@@ -664,11 +664,8 @@ def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
 
 # --- Extra Modular Resource Discovery API Endpoints (Phase 2 & Phase 3) ---
 
-@app.get("/api/resources", response_model=List[DiscoveryResourceSchema])
-def get_resources_double_route(region: Optional[str] = None, db: Session = Depends(get_db)):
-    return get_resources(region=region, db=db)
 
-@app.get("/api/resources/summary", response_model=ResourceSummarySchema)
+@app.get("/api/v1/inventory/resources/summary", response_model=ResourceSummarySchema)
 def get_resources_summary(region: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(ResourceDB)
     if region and region.lower() != "all":
@@ -699,7 +696,7 @@ def get_resources_summary(region: Optional[str] = None, db: Session = Depends(ge
         countsByType=counts
     )
 
-@app.get("/api/resources/{resource_id}", response_model=DiscoveryResourceSchema)
+@app.get("/api/v1/inventory/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
     res = db.query(ResourceDB).filter(ResourceDB.resource_id == resource_id).first()
     if not res:
@@ -728,7 +725,7 @@ def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
         dependenciesString=""
     )
 
-@app.get("/api/scan/history", response_model=List[ScanHistorySchema])
+@app.get("/api/v1/inventory/scan/history", response_model=List[ScanHistorySchema])
 def get_scan_history(db: Session = Depends(get_db)):
     try:
         history = db.query(ScanHistoryDB).order_by(ScanHistoryDB.scan_start.desc()).all()
@@ -778,7 +775,7 @@ class TopologyCategory(BaseModel):
     name: str
     count: int
 
-@app.get("/api/topology", response_model=List[TopologyCategory])
+@app.get("/api/v1/topology", response_model=List[TopologyCategory])
 def get_topology_summary(db: Session = Depends(get_db)):
     categories = TopologyService(db).get_categories()
     return [
@@ -803,7 +800,7 @@ def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
         ]
     )
 
-@app.get("/api/graph/resource/{resource_id}", response_model=ResourceGraphResponse)
+@app.get("/api/v1/graph/resource/{resource_id}", response_model=ResourceGraphResponse)
 def get_resource_graph(resource_id: str, db: Session = Depends(get_db)):
     data = DependencyService(db).get_resource_graph(resource_id)
     if not data:
@@ -829,7 +826,7 @@ def get_resource_graph(resource_id: str, db: Session = Depends(get_db)):
         ]
     )
 
-@app.get("/api/topology/category/{category}", response_model=List[TopologyResource])
+@app.get("/api/v1/topology/category/{category}", response_model=List[TopologyResource])
 def get_topology_level_2(category: str, db: Session = Depends(get_db)):
     resources = TopologyService(db).get_resources_by_category(category)
     return [
@@ -909,7 +906,7 @@ def get_graph_topology(db: Session = Depends(get_db)):
 # --- Dashboard Summary & Inventory Endpoints ---
 
 
-@app.get("/api/inventory")
+@app.get("/api/v1/inventory")
 def get_inventory(db: Session = Depends(get_db)):
     resources = db.query(ResourceDB).all()
     
@@ -1580,8 +1577,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
 
 
 @app.post(
-    "/api/discover",
-    response_model=BackgroundJobSchema
+        response_model=BackgroundJobSchema
 )
 def trigger_discovery(
     request: DiscoveryRequest,
@@ -1624,7 +1620,7 @@ def trigger_discovery(
     )
 
 @app.post(
-    "/api/discovery/run",
+    "/api/v1/discovery/run",
     response_model=BackgroundJobSchema,
     summary="Trigger a full AWS discovery scan (alias for /api/discover)"
 )
@@ -1872,7 +1868,7 @@ def auth_me(authorization: Optional[str] = Header(None), db: Session = Depends(g
 
 
 # Unified & Provider-specific Connect Endpoints
-@app.post("/api/cloud/connect/aws")
+@app.post("/api/v1/cloud/connections/aws")
 def connect_aws(payload: AwsConnectPayload, db: Session = Depends(get_db)):
     try:
         session = assume_target_aws_role(payload.roleArn, payload.region)
@@ -1912,7 +1908,7 @@ def connect_aws(payload: AwsConnectPayload, db: Session = Depends(get_db)):
         "session": session
     }
 
-@app.post("/api/cloud/connect/azure")
+@app.post("/api/v1/cloud/connections/azure")
 def connect_azure(payload: AzureConnectPayload, db: Session = Depends(get_db)):
     try:
         session = connect_azure_tenant(payload.tenantId, payload.clientId, payload.clientSecret, payload.region)
@@ -1952,7 +1948,7 @@ def connect_azure(payload: AzureConnectPayload, db: Session = Depends(get_db)):
         "session": session
     }
 
-@app.post("/api/cloud/connect/gcp")
+@app.post("/api/v1/cloud/connections/gcp")
 def connect_gcp(payload: GcpConnectPayload, db: Session = Depends(get_db)):
     try:
         session = connect_gcp_project(payload.serviceAccountJson, payload.region)
@@ -2020,7 +2016,7 @@ def seed_discovery_for_new_connection(db: Session, provider: str, region: str):
     pass
 
 @app.get(
-    "/api/graph/health",
+    "/api/v1/graph/health",
     response_model=GraphHealthResponseSchema
 )
 def graph_health():
@@ -2042,7 +2038,7 @@ def graph_health():
             graph.close()
 
 @app.post(
-    "/api/graph/sync",
+    "/api/v1/graph/sync",
     response_model=GraphSyncResponseSchema
 )
 def sync_graph(
@@ -2092,7 +2088,7 @@ def clear_graph():
             graph.close()
 
 @app.get(
-    "/api/graph/sync/status",
+    "/api/v1/graph/sync/status",
     response_model=GraphSyncStatusSchema
 )
 def graph_sync_status(
@@ -2106,7 +2102,7 @@ def graph_sync_status(
         success_rate=0
     )
 
-@app.get("/api/graph/stats")
+@app.get("/api/v1/graph/stats")
 def graph_stats():
     graph = None
     try:
@@ -2120,7 +2116,7 @@ def graph_stats():
         if graph:
             graph.close()
 
-@app.get("/api/graph/verify")
+@app.get("/api/v1/graph/verify")
 def verify_graph():
     graph = None
     try:
@@ -2134,7 +2130,7 @@ def verify_graph():
         if graph:
             graph.close()
 
-@app.get("/api/graph/dashboard")
+@app.get("/api/v1/graph/dashboard")
 def graph_dashboard(db: Session = Depends(get_db)):
     from app.models import ResourceNodeDB, ResourceRelationshipDB
     try:
@@ -2156,14 +2152,14 @@ def graph_dashboard(db: Session = Depends(get_db)):
         "orphans": 2
     }
 
-@app.get("/api/graph/last-sync")
+@app.get("/api/v1/graph/last-sync")
 def graph_last_sync():
     from app.services.graph.sync_tracker import SyncTracker
     return {
         "last_sync": SyncTracker.get()
     }
 
-@app.get("/api/graph/relationships")
+@app.get("/api/v1/graph/relationships")
 def graph_relationships():
     graph = None
     try:
@@ -2180,27 +2176,27 @@ def graph_relationships():
         if graph:
             graph.close()
 
-@app.get("/api/graph/downstream/{resource_id}")
+@app.get("/api/v1/graph/downstream/{resource_id}")
 def downstream(resource_id: str):
     analyzer = DependencyAnalyzer()
     return analyzer.get_downstream(resource_id)
 
-@app.get("/api/graph/upstream/{resource_id}")
+@app.get("/api/v1/graph/upstream/{resource_id}")
 def upstream(resource_id: str):
     analyzer = DependencyAnalyzer()
     return analyzer.get_upstream(resource_id)
 
-@app.get("/api/graph/dependencies/{resource_id}")
+@app.get("/api/v1/graph/dependencies/{resource_id}")
 def dependencies(resource_id: str):
     analyzer = DependencyAnalyzer()
     return analyzer.get_dependencies(resource_id)
 
-@app.get("/api/graph/blast-radius/{resource_id}")
+@app.get("/api/v1/graph/blast-radius/{resource_id}")
 def blast_radius(resource_id: str):
     analyzer = BlastRadiusAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.post("/api/graph/root-cause")
+@app.post("/api/v1/graph/root-cause")
 def root_cause(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2208,12 +2204,12 @@ def root_cause(request: dict):
     analyzer = RootCauseAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/criticality/{resource_id}")
+@app.get("/api/v1/graph/criticality/{resource_id}")
 def criticality(resource_id: str):
     analyzer = CriticalityAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.post("/api/graph/security-analysis")
+@app.post("/api/v1/graph/security-analysis")
 def security_group_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2221,32 +2217,32 @@ def security_group_analysis(request: dict):
     analyzer = SecurityImpactAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/security-group/{resource_id}")
+@app.get("/api/v1/graph/security-group/{resource_id}")
 def analyze_security_group(resource_id: str):
     analyzer = SecurityGroupAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/attack-path/{resource_id}")
+@app.get("/api/v1/graph/attack-path/{resource_id}")
 def analyze_attack_path(resource_id: str):
     analyzer = AttackPathAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/exposure/{resource_id}")
+@app.get("/api/v1/graph/exposure/{resource_id}")
 def analyze_exposure(resource_id: str):
     analyzer = ExposureAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
 
-@app.get("/api/graph/iam-analysis/{role_id}")
+@app.get("/api/v1/graph/iam-analysis/{role_id}")
 def analyze_iam(role_id: str):
     analyzer = IAMAnalyzer(Neo4jService())
     return analyzer.analyze(role_id)
 
-@app.get("/api/graph/network-analysis/{resource_id}")
+@app.get("/api/v1/graph/network-analysis/{resource_id}")
 def analyze_network(resource_id: str):
     analyzer = NetworkAnalyzer(Neo4jService())
     return analyzer.analyze(resource_id)
 
-@app.get("/api/ai/recommendations")
+@app.get("/api/v1/ai/recommendations")
 def get_all_recommendations(category: Optional[str] = None):
     engine = AIRecommendationEngine()
     recs = engine.analyze_environment()
@@ -2254,37 +2250,37 @@ def get_all_recommendations(category: Optional[str] = None):
         recs = [r for r in recs if r.category == category.upper()]
     return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
-@app.get("/api/ai/recommendations/{resource_id}")
+@app.get("/api/v1/ai/recommendations/{resource_id}")
 def get_resource_recommendations(resource_id: str):
     engine = AIRecommendationEngine()
     recs = engine.analyze_resource(resource_id)
     return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
-@app.get("/api/ai/remediation")
+@app.get("/api/v1/ai/remediation")
 def get_all_remediation_plans():
     planner = RemediationPlanner()
     plans = planner.plan_environment()
     return {"count": len(plans), "plans": [p.dict() for p in plans]}
 
-@app.get("/api/ai/remediation/{resource_id}")
+@app.get("/api/v1/ai/remediation/{resource_id}")
 def get_resource_remediation(resource_id: str):
     planner = RemediationPlanner()
     plans = planner.plan_for_resource(resource_id)
     return {"resource": resource_id, "count": len(plans), "plans": [p.dict() for p in plans]}
 
-@app.get("/api/ai/orchestration")
+@app.get("/api/v1/ai/orchestration")
 def get_all_orchestrations():
     orchestrator = RemediationOrchestrator()
     packages = orchestrator.build_environment_packages()
     return {"count": len(packages), "packages": [p.dict() for p in packages]}
 
-@app.get("/api/ai/orchestration/{resource_id}")
+@app.get("/api/v1/ai/orchestration/{resource_id}")
 def get_resource_orchestration(resource_id: str):
     orchestrator = RemediationOrchestrator()
     packages = orchestrator.build_package(resource_id)
     return {"resource": resource_id, "count": len(packages), "packages": [p.dict() for p in packages]}
 
-@app.post("/api/ai/chat")
+@app.post("/api/v1/ai/chat")
 def ai_chat(request: ChatRequest, stream: bool = False):
     try:
         assistant = GraphAssistant(ai_memory)
@@ -2297,7 +2293,7 @@ def ai_chat(request: ChatRequest, stream: bool = False):
     except Exception as e:
         return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
 
-@app.post("/api/ai/chat/stream")
+@app.post("/api/v1/ai/chat/stream")
 def ai_chat_stream(request: ChatRequest):
     try:
         assistant = GraphAssistant(ai_memory)
@@ -2311,12 +2307,12 @@ def ai_chat_stream(request: ChatRequest):
     except Exception as e:
         return StandardLlmResponse.error(code="INTERNAL_ERROR", message=str(e), retryable=False).dict()
 
-@app.get("/api/ai/chat/history")
+@app.get("/api/v1/ai/chat/history")
 def get_ai_chat_history(conversation_id: str = "default_session"):
     history = ai_memory.get_history(conversation_id)
     return {"conversation_id": conversation_id, "history": [m.dict() for m in history]}
 
-@app.post("/api/ai/chat/reset")
+@app.post("/api/v1/ai/chat/reset")
 def reset_ai_chat(conversation_id: str = "default_session"):
     try:
         ai_memory.clear_history(conversation_id)
@@ -2331,7 +2327,7 @@ def reset_ai_chat(conversation_id: str = "default_session"):
             "message": str(e)
         }
 
-@app.get("/api/ai/chat/health")
+@app.get("/api/v1/ai/chat/health")
 def ai_chat_health():
     from app.services.ai.assistant.llm.config import settings
     from app.services.ai.assistant.llm.health import HealthManager
@@ -2340,13 +2336,13 @@ def ai_chat_health():
     status = HealthManager.get_health_status(session)
     return status
 
-@app.get("/api/ai/chat/tools")
+@app.get("/api/v1/ai/chat/tools")
 def ai_chat_tools():
     assistant = GraphAssistant(ai_memory)
     tools = assistant.tool_router.registry.list_tools()
     return {"count": len(tools), "tools": tools}
 
-@app.post("/api/graph/cost-analysis")
+@app.post("/api/v1/graph/cost-analysis")
 def cost_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2354,7 +2350,7 @@ def cost_analysis(request: dict):
     analyzer = CostAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.post("/api/graph/migration")
+@app.post("/api/v1/graph/migration")
 def migration_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2362,17 +2358,17 @@ def migration_analysis(request: dict):
     analyzer = MigrationPlanner()
     return analyzer.analyze(resource_id)
 
-@app.post("/api/graph/architecture-review")
+@app.post("/api/v1/graph/architecture-review")
 def architecture_review():
     analyzer = ArchitectureReviewer()
     return analyzer.analyze()
 
-@app.get("/api/graph/ai-recommendations")
+@app.get("/api/v1/graph/ai-recommendations")
 def ai_recommendations():
     agent = AIGraphAgent()
     return agent.generate_recommendations()
 
-@app.post("/api/graph/ai-query")
+@app.post("/api/v1/graph/ai-query")
 def ai_query(request: dict):
     query = request.get("query")
     if not query:
@@ -2380,7 +2376,7 @@ def ai_query(request: dict):
     engine = NLQueryEngine()
     return engine.execute_query(query)
 
-@app.get("/api/graph/tree/{resource_id}")
+@app.get("/api/v1/graph/tree/{resource_id}")
 def dependency_tree(resource_id: str):
     service = GraphAnalysisService()
     try:

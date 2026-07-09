@@ -4,7 +4,7 @@ from app.services.diagram.aws_icon_mapper import AWSIconMapper
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Architecture Diagram"]
 

@@ -6,7 +6,7 @@ from app.services.ai.well_architected_review import (
 
 router = APIRouter(
 
-    prefix="/api/ai/architecture",
+    prefix="/api/v1/architecture/reviews",
 
     tags=["Well Architected"]
 

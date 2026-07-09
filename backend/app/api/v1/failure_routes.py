@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List
 
-router = APIRouter(prefix="/api/ai/failure", tags=["AI Failure Analysis"])
+router = APIRouter(prefix="/api/v1/ai/analysis", tags=["AI Failure Analysis"])
 
 class FailureAnalyzeRequest(BaseModel):
     resource: str

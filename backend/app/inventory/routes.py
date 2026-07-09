@@ -5,9 +5,9 @@ from app.inventory import service, schemas
 
 router = APIRouter()
 
-@router.get("/resources")
-def get_resources(db: Session = Depends(get_db)):
-    return service.get_all_resources(db)
+# @router.get("/resources")
+# def get_resources(db: Session = Depends(get_db)):
+    # return service.get_all_resources(db)
 
 @router.get("/resources/compute")
 def get_compute_resources(db: Session = Depends(get_db)):

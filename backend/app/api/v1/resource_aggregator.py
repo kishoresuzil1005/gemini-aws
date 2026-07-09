@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.services.diagram.resource_aggregator import ResourceAggregator
 
 router = APIRouter(
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
     tags=["Architecture Diagram"]
 )
 

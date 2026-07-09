@@ -5,7 +5,7 @@ from app.services.ai.production_checklist import (
 )
 
 router = APIRouter(
-    prefix="/api/ai/production",
+    prefix="/api/v1/ai/production",
     tags=["Production Checklist"]
 )
 

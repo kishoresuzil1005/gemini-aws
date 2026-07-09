@@ -5,7 +5,7 @@ from app.services.diagram.svg_renderer import SVGRenderer
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Architecture Diagram"]
 

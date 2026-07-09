@@ -4,7 +4,7 @@ from app.services.diagram.architecture_model_builder import ArchitectureModelBui
 
 router = APIRouter(
 
-    prefix="/api/diagram",
+    prefix="/api/v1/architecture/diagrams",
 
     tags=["Diagram"]
 

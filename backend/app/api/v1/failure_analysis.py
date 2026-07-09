@@ -7,7 +7,7 @@ from app.services.ai.failure_analysis import FailureAnalysisService
 
 router = APIRouter(
 
-    prefix="/api/ai/failure",
+    prefix="/api/v1/ai/analysis",
 
     tags=["Failure Analysis"]
 

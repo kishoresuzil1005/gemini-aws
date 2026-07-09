@@ -4,7 +4,7 @@ from app.services.ai.architecture_scorer import ArchitectureScorer
 
 router = APIRouter(
 
-    prefix="/api/ai/architecture",
+    prefix="/api/v1/architecture/reviews",
 
     tags=["Architecture Score"]
 
