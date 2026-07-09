@@ -783,7 +783,7 @@ def get_topology_summary(db: Session = Depends(get_db)):
         for c in categories
     ]
 
-@app.get("/api/v1/dependencies/resource/{resource_id}", response_model=TopologyLevel3Response)
+@app.get("/api/v1/topology/dependencies/{resource_id}", response_model=TopologyLevel3Response)
 def get_topology_level_3(resource_id: str, db: Session = Depends(get_db)):
     data = DependencyService(db).get_resource_dependencies(resource_id)
     if not data:
@@ -1210,7 +1210,6 @@ app.include_router(
 
 
 # from app.api.ai import router as ollama_ai_router
-from app.api.doctor import router as doctor_router
 # from app.api.ai_chat import router as ai_router
 
 # app.include_router(
@@ -1219,11 +1218,7 @@ from app.api.doctor import router as doctor_router
 #     tags=["AI"]
 # )
 
-app.include_router(
-    doctor_router,
-    prefix="/api/ai",
-    tags=["AI Doctor"]
-)
+
 
 # app.include_router(
 #     ai_router,
@@ -2124,7 +2119,7 @@ def graph_last_sync():
         "last_sync": SyncTracker.get()
     }
 
-@app.get("/api/v1/graph/relationships")
+@app.get("/api/v1/graph/stats/relationships")
 def graph_relationships():
     graph = None
     try:
@@ -2307,7 +2302,7 @@ def ai_chat_tools():
     tools = assistant.tool_router.registry.list_tools()
     return {"count": len(tools), "tools": tools}
 
-@app.post("/api/v1/graph/cost-analysis")
+@app.post("/api/v1/finops/analysis")
 def cost_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2315,7 +2310,7 @@ def cost_analysis(request: dict):
     analyzer = CostAnalyzer()
     return analyzer.analyze(resource_id)
 
-@app.post("/api/v1/graph/migration")
+@app.post("/api/v1/migrations/analysis")
 def migration_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
@@ -2328,7 +2323,7 @@ def architecture_review():
     analyzer = ArchitectureReviewer()
     return analyzer.analyze()
 
-@app.get("/api/v1/graph/ai-recommendations")
+@app.get("/api/v1/graph/analysis/recommendations")
 def ai_recommendations():
     agent = AIGraphAgent()
     return agent.generate_recommendations()

@@ -6,14 +6,14 @@ from typing import Dict, Any, Optional
 from app.services.diagram.svg_renderer import SVGRenderer
 from app.services.diagram.drawio_generator import DrawIOGenerator
 
-router = APIRouter(prefix="/api/v1/architecture/reviews", tags=["AI Architecture Diagram"])
+router = APIRouter(prefix="/api/v1/architecture/diagrams", tags=["AI Architecture Diagram"])
 
 class DiagramRequest(BaseModel):
     provider: str = "aws"
     format: str = "svg"
     diagram_type: Optional[str] = "infrastructure"
 
-@router.post("/diagram")
+@router.post("/generate")
 async def generate_diagram(request: DiagramRequest):
     try:
         format_type = request.format.lower()
