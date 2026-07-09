@@ -1239,8 +1239,7 @@ app.include_router(
     tags=["AI Architect"]
 )
 
-from app.api.ai.architecture_diagram import router as architecture_diagram_router
-app.include_router(architecture_diagram_router)
+
 
 from app.api.v1.architecture_review import router as architecture_review_router
 app.include_router(architecture_review_router)
