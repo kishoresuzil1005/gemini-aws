@@ -8,7 +8,7 @@ router = APIRouter(
     tags=["Regions"]
 )
 
-@router.get("/regions")
+@router.get("")
 def get_regions():
 
     with engine.connect() as conn:

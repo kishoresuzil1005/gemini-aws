@@ -8,10 +8,8 @@ router = APIRouter(
     tags=["Regions"]
 )
 
-
 @router.get(
-    "/api/regions/dashboard"
+    "/api/v1/regions/dashboard"
 )
 def regions_dashboard():
-
     return RegionsDashboardService.get_regions()
