@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.services.topology_service import TopologyService
+from app.services.topology.topology_service import TopologyService
 
 router = APIRouter(prefix="/api/v1/topology", tags=["Topology"])
 
