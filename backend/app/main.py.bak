@@ -46,7 +46,7 @@ from app.services.graph.analysis.security.network_analyzer import NetworkAnalyze
 from app.services.graph.analysis.security.attack_path_analyzer import AttackPathAnalyzer
 
 # Sprint 9 AI Operations Engine
-from app.services.ai.engine import AIEngine
+from app.services.ai.recommendation_engine import AIRecommendationEngine
 from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
 from app.services.ai.assistant.memory.memory_manager import MemoryManager
@@ -2201,45 +2201,47 @@ def analyze_network(resource_id: str):
 
 @app.get("/api/v1/ai/recommendations")
 def get_all_recommendations(category: Optional[str] = None):
-    engine = AIEngine()
-    recs = engine.recommend(category=category)
-    return {"count": len(recs), "recommendations": [r.dict() if hasattr(r, 'dict') else r for r in recs]}
+    engine = AIRecommendationEngine()
+    recs = engine.analyze_environment()
+    if category:
+        recs = [r for r in recs if r.category == category.upper()]
+    return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
 @app.get("/api/v1/ai/recommendations/{resource_id}")
 def get_resource_recommendations(resource_id: str):
-    engine = AIEngine()
-    recs = engine.recommend(resource_id=resource_id)
-    return {"count": len(recs), "recommendations": [r.dict() if hasattr(r, 'dict') else r for r in recs]}
+    engine = AIRecommendationEngine()
+    recs = engine.analyze_resource(resource_id)
+    return {"count": len(recs), "recommendations": [r.dict() for r in recs]}
 
 @app.get("/api/v1/ai/actions/remediation")
 def get_all_remediation_plans():
-    engine = AIEngine()
-    plans = engine.plan_remediation()
-    return {"count": len(plans), "plans": [p.dict() if hasattr(p, 'dict') else p for p in plans]}
+    planner = RemediationPlanner()
+    plans = planner.plan_environment()
+    return {"count": len(plans), "plans": [p.dict() for p in plans]}
 
 @app.get("/api/v1/ai/actions/remediation/{resource_id}")
 def get_resource_remediation(resource_id: str):
-    engine = AIEngine()
-    plans = engine.plan_remediation(resource_id=resource_id)
-    return {"resource": resource_id, "count": len(plans), "plans": [p.dict() if hasattr(p, 'dict') else p for p in plans]}
+    planner = RemediationPlanner()
+    plans = planner.plan_for_resource(resource_id)
+    return {"resource": resource_id, "count": len(plans), "plans": [p.dict() for p in plans]}
 
 @app.get("/api/v1/ai/actions/orchestration")
 def get_all_orchestrations():
-    engine = AIEngine()
-    packages = engine.build_orchestration()
-    return {"count": len(packages), "packages": [p.dict() if hasattr(p, 'dict') else p for p in packages]}
+    orchestrator = RemediationOrchestrator()
+    packages = orchestrator.build_environment_packages()
+    return {"count": len(packages), "packages": [p.dict() for p in packages]}
 
 @app.get("/api/v1/ai/actions/orchestration/{resource_id}")
 def get_resource_orchestration(resource_id: str):
-    engine = AIEngine()
-    packages = engine.build_orchestration(resource_id=resource_id)
-    return {"resource": resource_id, "count": len(packages), "packages": [p.dict() if hasattr(p, 'dict') else p for p in packages]}
+    orchestrator = RemediationOrchestrator()
+    packages = orchestrator.build_package(resource_id)
+    return {"resource": resource_id, "count": len(packages), "packages": [p.dict() for p in packages]}
 
 @app.post("/api/v1/ai/chat")
 def ai_chat(request: ChatRequest, stream: bool = False):
     try:
-        engine = AIEngine(ai_memory)
-        response = engine.chat(request, stream=stream)
+        assistant = GraphAssistant(ai_memory)
+        response = assistant.chat(request, stream=stream)
         
         if response.status == "error":
             return response.dict(exclude_none=True)
@@ -2251,8 +2253,9 @@ def ai_chat(request: ChatRequest, stream: bool = False):
 @app.post("/api/v1/ai/chat/stream")
 def ai_chat_stream(request: ChatRequest):
     try:
-        engine = AIEngine(ai_memory)
-        response = engine.chat(request, stream=True)
+        assistant = GraphAssistant(ai_memory)
+        # Assuming the assistant returns a generator when stream=True
+        response = assistant.chat(request, stream=True)
         
         if hasattr(response, "status") and response.status == "error":
             return response.dict(exclude_none=True)
@@ -2292,8 +2295,8 @@ def ai_chat_health():
 
 @app.get("/api/v1/ai/tools")
 def get_ai_tools():
-    engine = AIEngine(ai_memory)
-    tools = engine.get_tools()
+    assistant = GraphAssistant(ai_memory)
+    tools = assistant.tool_router.registry.list_tools()
     return {"count": len(tools), "tools": tools}
 
 @app.post("/api/v1/finops/analysis")
