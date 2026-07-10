@@ -28,25 +28,13 @@ class ContextFilter:
             
         return filtered
 
-    def filter_tool_responses(self, tool_responses: List[Any], intent: str) -> List[Any]:
+    def filter_tool_responses(self, tool_results: List[Any], intent: str) -> List[Any]:
         """
         Filters tool responses to ensure we only include relevant ones based on intent.
         """
         filtered = []
-        for response in tool_responses:
-            tool_name = response.tool_name.lower()
-            
-            # Map tools to intent loosely
-            if intent == "SECURITY" and "security" not in tool_name and "analysis" not in tool_name:
-                continue
-            if intent == "REMEDIATION" and "terraform" not in tool_name and "remediation" not in tool_name:
-                continue
-            if intent == "ORCHESTRATION" and "orchestrat" not in tool_name and "execute" not in tool_name:
-                continue
-            if intent == "DOCUMENTATION" and "doc" not in tool_name and "rag" not in tool_name and "search" not in tool_name:
-                continue
-                
+        for response in tool_results:
             filtered.append(response)
             
         # Fallback: if we aggressively filtered everything, return original to avoid blanking out
-        return filtered if filtered else tool_responses
+        return filtered if filtered else tool_results

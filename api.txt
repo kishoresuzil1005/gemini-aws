@@ -1,0 +1,74 @@
+=== API Test Results ===
+
+--- POST /api/v1/auth/register ---
+Status: 200
+Response: {"accessToken":"jwt_access_token_org_5_user_5","tokenType":"Bearer","userId":5,"userEmail":"testuser_1783600560@example.com","organizationName":"Test Org","organizationId":5,"plan":"BASIC","role":"ORG_ADMIN"}
+
+--- GET /api/v1/auth/me ---
+Status: 200
+Response: {"accessToken":"jwt_access_token_org_5_user_5","tokenType":"Bearer","userId":5,"userEmail":"testuser_1783600560@example.com","organizationName":"Test Org","organizationId":5,"plan":"BASIC","role":"ORG_ADMIN"}
+
+--- GET /api/v1/accounts ---
+Status: 200
+Response: [{"id":1,"provider":"AWS","name":"AWS Corporate Main","credentialsHint":"AWS_ACCESS_KEY_ID & SECRET configured in env","region":"us-east-1"},{"id":2,"provider":"Azure","name":"Azure Corporate Sandbox","credentialsHint":"Tenant ID: 9fcd-1234-58bc-fa39","region":"eastus"}]
+
+--- GET /api/v1/inventory ---
+Status: 200
+Response: {"ec2":17,"rds":2,"lambda":9,"s3":17,"iam":7,"vpc":22}
+
+--- GET /api/v1/inventory/resources ---
+Status: 200
+Response: [{"id":"i-027d09b80036bb765","provider":"AWS","type":"EC2","name":"i-027d09b80036bb765","configurationHint":"Region: us-east-1 | Status: running","costEstimate":154.7,"dependenciesString":""},{"id":"i-0231aac7cfb9566ee","provider":"AWS","type":"EC2","name":"htt-task3","configurationHint":"Region: us-east-1 | Status: stopped","costEstimate":154.7,"dependenciesString":""},{"id":"i-09d5b22167f8b77a7","provider":"AWS","type":"EC2","name":"sudha-server","configurationHint":"Region: us-east-1 | Status: running","costEstimate":154.7,"dependenciesString":""},{"id":"i-06d74665d9e16da17","provider":"AWS","type":"EC2","name":"Aws_Mobile_App","configurationHint":"Region: us-east-1 | Status: running","costEstimate":154.7,"dependenciesString":""},{"id":"cloudops-db","provider":"AWS","type":"RDS","name":"cloudops-db","configurationHint":"Region: us-east-1 | Status: available","costEstimate":343.5,"dependenciesString":""},{"id":"database-2","provider":"AWS","type":"RDS","name":"database-2","configurat
+
+--- GET /api/v1/inventory/resources/compute ---
+Status: 200
+Response: [{"resource_id":"i-027d09b80036bb765","instance_class":null,"resource_version":2,"size_gb":null,"name":"i-027d09b80036bb765","memory_size":null,"region":"us-east-1","monthly_requests":null,"id":3461,"status":"running","avg_duration_ms":null,"resource_type":"EC2","tags":null,"resource_metadata":{"vpc_id":"vpc-024d5cb6be0620574","subnet_id":"subnet-01ff4e680ac3a627d","ebs_volumes":["vol-0a3a02525cc773ea3"],"launch_time":"2026-07-02 07:41:13+00:00","instance_type":"t2.micro","security_groups":["sg-01ab16dfe2fc1578a"],"iam_instance_profile":null},"cloud_account_id":1,"discovered_at":1782981923335,"configuration_hint":null,"provider":"AWS","instance_type":"t2.micro","scan_id":"d5d895b5-f186-4d82-a104-ba17e5a44ff7"},{"resource_id":"i-0231aac7cfb9566ee","instance_class":null,"resource_version":2,"size_gb":null,"name":"htt-task3","memory_size":null,"region":"us-east-1","monthly_requests":null,"id":3462,"status":"stopped","avg_duration_ms":null,"resource_type":"EC2","tags":null,"resource_metada
+
+--- GET /api/v1/inventory/resources/databases ---
+Status: 200
+Response: [{"resource_id":"cloudops-db","instance_class":"db.t3.micro","resource_version":2,"size_gb":null,"name":"cloudops-db","memory_size":null,"region":"us-east-1","monthly_requests":null,"id":3465,"status":"available","avg_duration_ms":null,"resource_type":"RDS","tags":null,"resource_metadata":{"class":"db.t3.micro","engine":"postgres","multi_az":false,"subnet_group":{"VpcId":"vpc-0d83f3850a716271b","Subnets":[{"SubnetStatus":"Active","SubnetOutpost":{},"SubnetIdentifier":"subnet-0bf0259c7a43101cb","SubnetAvailabilityZone":{"Name":"us-east-1a"}},{"SubnetStatus":"Active","SubnetOutpost":{},"SubnetIdentifier":"subnet-02f849177ccf21165","SubnetAvailabilityZone":{"Name":"us-east-1b"}}],"DBSubnetGroupName":"cloudops-db-subnet","SubnetGroupStatus":"Complete","DBSubnetGroupDescription":"Managed by Terraform"},"vpc_security_groups":[{"Status":"active","VpcSecurityGroupId":"sg-03f0bfb99734c8ed4"}]},"cloud_account_id":1,"discovered_at":1782981923335,"configuration_hint":null,"provider":"AWS","instanc
+
+--- GET /api/v1/inventory/resources/summary ---
+Status: 200
+Response: {"totalResources":360,"countsByType":{"EC2":17,"RDS":2,"Lambda":9,"VPC":22,"Subnet":64,"SecurityGroup":83,"IAM":7,"RouteTable":25,"NetworkInterface":22,"ElasticIP":7,"InternetGateway":21,"ALB":2,"EBS":17,"AutoScalingGroup":1,"TargetGroup":2,"S3":17,"EventBridgeBus":18,"APIGateway":3,"APIGatewayStage":1,"APIGatewayIntegration":2,"WAFWebACL":4,"SNSTopic":3,"EventBridgeRule":1,"DynamoDBTable":1,"CloudFront":4,"Route53HostedZone":1,"Route53Record":4}}
+
+--- GET /api/v1/inventory/scan/history ---
+Status: 200
+Response: [{"id":"d5d895b5-f186-4d82-a104-ba17e5a44ff7","account_id":"1","scan_start":"2026-07-06T09:00:32.542872","scan_end":"2026-07-06T09:04:11.797049","status":"COMPLETED","resources_found":360},{"id":"68aa74ff-1486-4844-abdb-619deaabc228","account_id":"1","scan_start":"2026-07-06T07:42:19.214878","scan_end":"2026-07-06T07:45:56.030685","status":"COMPLETED","resources_found":356},{"id":"459c52c1-594e-4b5f-8108-8ff4d1ab20ee","account_id":"aws-prod","scan_start":"2026-06-24T05:08:38.869799","scan_end":"2026-06-24T05:13:38.869807","status":"SUCCESS","resources_found":42}]
+
+--- GET /api/v1/topology ---
+Status: 200
+Response: [{"name":"Compute","count":26},{"name":"Storage","count":34},{"name":"Database","count":2},{"name":"Network","count":88},{"name":"Security","count":90},{"name":"Other","count":120}]
+
+--- GET /api/v1/graph/health ---
+Status: 200
+Response: {"status":"healthy","neo4j_uri":"connected"}
+
+--- GET /api/v1/graph/stats ---
+Status: 200
+Response: {"nodes":367,"edges":138}
+
+--- GET /api/v1/cost/summary ---
+Status: 200
+Response: {"month":"July 2026","actualCost":69.5,"forecastCost":309.86,"currency":"USD","byService":[{"service":"AWS Cost Explorer","amount":0.78},{"service":"AWS Secrets Manager","amount":0.02},{"service":"AWS WAF","amount":4.13},{"service":"Amazon API Gateway","amount":0.0},{"service":"Amazon DynamoDB","amount":0.0},{"service":"EC2 - Other","amount":4.77},{"service":"Amazon Elastic Compute Cloud - Compute","amount":21.75},{"service":"Amazon Elastic Load Balancing","amount":7.25},{"service":"Amazon Relational Database Service","amount":7.72},{"service":"Amazon Route 53","amount":0.5},{"service":"Amazon Simple Storage Service","amount":0.04},{"service":"Amazon Virtual Private Cloud","amount":11.94},{"service":"Tax","amount":10.6}],"dailyTrend":[{"date":"2026-06-09","amount":3.02},{"date":"2026-06-10","amount":87.68},{"date":"2026-06-11","amount":205.9},{"date":"2026-06-12","amount":15.12},{"date":"2026-06-13","amount":5.02},{"date":"2026-06-14","amount":3.58},{"date":"2026-06-15","amount":5.22},
+
+--- GET /api/v1/billing/summary ---
+Status: 200
+Response: {"actual_cost":69.5,"forecast":309.86}
+
+--- GET /api/v1/ec2/instances ---
+Status: 422
+Response: {"detail":[{"type":"missing","loc":["query","region"],"msg":"Field required","input":null}]}
+
+--- GET /health ---
+Status: 200
+Response: {"status":"healthy","timestamp":"2026-07-09T12:36:10.088130","cpu_percent":1.1,"memory_percent":45.9,"disk_percent":61.4}
+
+--- GET /ready ---
+Status: 200
+Response: {"status":"ready"}
+
+--- GET /live ---
+Status: 200
+Response: {"status":"alive"}
+

@@ -6,10 +6,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import ResourceDB
 from app.services.ai.insights import AIInsightEngine
-from app.services.ai.chat import CloudAssistant
 from app.services.optimization.recommendations import RecommendationEngine
 from app.services.cost.aggregator import CostAggregator
-from app.services.llm.cloud_chat import CloudLLM
 
 router = APIRouter()
 
@@ -142,44 +140,4 @@ def insights(db: Session = Depends(get_db)):
     return result
 
 
-@router.post(
-    "/ai/chat",
-    response_model=LocalAIChatResponseSchema
-)
-# Commented out to resolve conflict with modern Ollama AI chat router:
-# @router.post(
-#     "/api/ai/chat",
-#     response_model=LocalAIChatResponseSchema
-# )
-def chat(payload: ChatRequest, db: Session = Depends(get_db)):
-    """
-    Interactive natural language Copilot chat for cloud topology and FinOps Q&A.
-    """
-    result = CloudAssistant.ask(db, payload.question)
-    return LocalAIChatResponseSchema(answer=result["answer"])
 
-
-@router.post(
-    "/ai/assistant",
-    response_model=LocalAIChatResponseSchema
-)
-@router.post(
-    "/api/ai/assistant",
-    response_model=LocalAIChatResponseSchema
-)
-def assistant(payload: ChatRequest, db: Session = Depends(get_db)):
-    """
-    Interactive high-fidelity senior SRE Assistant routing through OpenAI / Gemini API compatibility.
-    """
-    inventory = db.query(ResourceDB).all()
-    recommendations = RecommendationEngine.generate(db)
-    costs = CostAggregator.calculate_account_monthly(db, 1)
-
-    answer = CloudLLM.ask(
-        inventory=[r.__dict__ for r in inventory],
-        costs=costs,
-        recommendations=recommendations,
-        question=payload.question
-    )
-
-    return LocalAIChatResponseSchema(answer=answer)

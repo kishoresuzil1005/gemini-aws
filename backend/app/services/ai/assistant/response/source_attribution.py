@@ -4,7 +4,7 @@ class SourceAttribution:
     def __init__(self):
         pass
 
-    def attribute(self, target_resource: str, tool_responses: List[Any]) -> List[Any]:
+    def attribute(self, target_resource: str, tool_results: List[Any]) -> List[Any]:
         """
         Tracks which analyzers and data sources contributed to the answer.
         """
@@ -12,7 +12,7 @@ class SourceAttribution:
         if target_resource:
             sources.append("Neo4j Knowledge Graph")
             
-        for tr in tool_responses:
+        for tr in tool_results:
             if isinstance(tr.context, dict) and "sources" in tr.context:
                 # Extend with detailed source objects
                 sources.extend(tr.context["sources"])

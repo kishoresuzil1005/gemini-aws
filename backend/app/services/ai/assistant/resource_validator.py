@@ -14,8 +14,9 @@ class ResourceNotFoundError(Exception):
         super().__init__(f"Resource '{resource_id}' does not exist.")
 
 class ResourceValidator:
-    def __init__(self):
+    def __init__(self, memory_manager=None):
         self.neo4j = Neo4jService()
+        self.memory = memory_manager
 
     def resolve(self, candidate: Optional[str], session_id: str = None) -> ResourceMatch:
         """
@@ -24,12 +25,9 @@ class ResourceValidator:
         """
         match = ResourceMatch()
         
-        if not candidate and session_id:
+        if not candidate and session_id and self.memory:
             # Fallback to Conversation Memory
-            from app.services.ai.assistant.memory.memory_manager import MemoryManager
-            from app.services.ai.assistant.memory.memory_store import MemoryStore
-            mm = MemoryManager(MemoryStore())
-            ctx = mm.get_context(session_id)
+            ctx = self.memory.get_context(session_id)
             if ctx and ctx.current_resource:
                 candidate = ctx.current_resource
         

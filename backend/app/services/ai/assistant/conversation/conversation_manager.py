@@ -3,7 +3,6 @@ from app.services.ai.assistant.memory.memory_manager import MemoryManager
 from app.services.ai.assistant.memory.session_manager import SessionManager
 from app.services.ai.assistant.history.history_manager import HistoryManager
 from app.services.ai.assistant.history.history_formatter import HistoryFormatter
-from app.services.ai.assistant.conversation.conversation_store import ConversationStore
 from app.services.ai.assistant.assistant_models import ConversationContext
 
 class ConversationManager:
@@ -12,7 +11,6 @@ class ConversationManager:
         self.session_manager = session_manager
         self.history = history_manager
         self.formatter = HistoryFormatter()
-        self.store = ConversationStore()
 
     def process_turn(self, session_id: str, current_intent_data: Dict[str, Any]) -> ConversationContext:
         """

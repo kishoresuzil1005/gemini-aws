@@ -1,7 +1,9 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.services.ai.assistant.llm.base_provider import BaseProvider
 from app.services.ai.assistant.context.prompt_templates import SYSTEM_PROMPT, build_user_prompt
-from app.services.ai.assistant.assistant_models import ChatResponse, ToolResponse
+from app.services.ai.assistant.assistant_models import ChatResponse
+from app.services.ai.assistant.reasoning.reasoning_models import ReasoningResult
+from app.services.ai.assistant.actions.action_models import ActionResult
 
 from app.services.ai.assistant.response.confidence_engine import ConfidenceEngine
 from app.services.ai.assistant.response.evidence_engine import EvidenceEngine
@@ -22,7 +24,7 @@ class ResponseGenerator:
         self.explainer = ExplanationBuilder()
         self.formatter = ResponseFormatter()
 
-    def generate(self, question: str, history_str: str, context_str: str, intent: str, target: str, tool_responses: List[ToolResponse], request_id: str, stream: bool = False) -> ChatResponse:
+    def generate(self, question: str, history_str: str, context_str: str, intent: str, target: str, reasoning_result: ReasoningResult, request_id: str, stream: bool = False, action_result: Optional[ActionResult] = None) -> ChatResponse:
         prompt = build_user_prompt(question, history_str, context_str, intent)
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -38,12 +40,12 @@ class ResponseGenerator:
         if not self.validation.validate(raw_answer, {}):
              raw_answer = "Validation failed for the generated response."
 
-        sources = self.attribution.attribute(target, tool_responses)
-        evidence = self.evidence_engine.extract_evidence(tool_responses, raw_answer)
-        tools_used = [tr.tool_name for tr in tool_responses]
+        sources = list(set([f.source_tool for f in reasoning_result.findings])) if reasoning_result else []
+        evidence = [e.description for e in reasoning_result.evidence] if reasoning_result else []
+        tools_used = list(set([f.source_tool for f in reasoning_result.findings])) if reasoning_result else []
         confidence = self.confidence_engine.calculate(evidence, tools_used, raw_answer)
         
-        explanation = self.explainer.build_explanation(raw_answer, evidence, sources)
+        explanation = reasoning_result.explanation if reasoning_result and reasoning_result.explanation else self.explainer.build_explanation(raw_answer, evidence, sources)
         
         # We attach the extra metadata directly to ChatResponse for now
         response = ChatResponse(
