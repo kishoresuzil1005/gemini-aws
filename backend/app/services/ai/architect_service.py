@@ -24,12 +24,20 @@ class ArchitectService:
             resource_id
         )
 
-        prompt = PromptBuilder.build(
-            resource_id=resource_id,
-            resource_type=resource_type,
-            criticality=criticality.get("criticality_score", 0),
-            blast_radius=criticality.get("details", {}).get("blast_radius", 0),
-            graph_context=graph_context
+        prompt_builder = PromptBuilder()
+        query = f"Analyze the architecture, risk, and blast radius for this {resource_type} resource ({resource_id}). Provide a technical assessment."
+        architecture_context = {
+            "failure_context": {
+                "resource": resource_id,
+                "criticality_score": criticality.get("criticality_score", 0),
+                "blast_radius": criticality.get("details", {}).get("blast_radius", 0),
+            }
+        }
+        
+        prompt = prompt_builder.build(
+            query=query,
+            context=str(graph_context),
+            architecture_context=architecture_context
         )
 
         ai_response = self.ollama.generate(
