@@ -27,8 +27,8 @@ class ArchitectService:
         prompt = PromptBuilder.build(
             resource_id=resource_id,
             resource_type=resource_type,
-            criticality=criticality["score"],
-            blast_radius=criticality["blast_radius"],
+            criticality=criticality.get("criticality_score", 0),
+            blast_radius=criticality.get("details", {}).get("blast_radius", 0),
             graph_context=graph_context
         )
 
@@ -39,9 +39,9 @@ class ArchitectService:
         return {
             "resource": resource_id,
             "resource_type": resource_type,
-            "risk": criticality["criticality"],
-            "criticality_score": criticality["score"],
-            "blast_radius": criticality["blast_radius"],
+            "risk": criticality.get("criticality_level", "Unknown"),
+            "criticality_score": criticality.get("criticality_score", 0),
+            "blast_radius": criticality.get("details", {}).get("blast_radius", 0),
             "graph_dependencies": graph_context,
             "ai_analysis": ai_response
         }
