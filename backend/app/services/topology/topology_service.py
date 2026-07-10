@@ -1,5 +1,5 @@
 import time
-from app.services.architecture_service import ArchitectureService
+from app.services.ai.architecture_service import ArchitectureService
 from collections import defaultdict
 from app.models import ResourceDB
 from app.services.topology.category_map import CATEGORY_MAP
