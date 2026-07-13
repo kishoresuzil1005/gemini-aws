@@ -96,4 +96,4 @@ class AWSRelationshipBuilder:
         except Exception as e:
             logger.error(f"Error building graph from inventory: {e}")
             
-        return relationship
+        return relationships
