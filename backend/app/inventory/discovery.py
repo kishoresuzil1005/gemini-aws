@@ -61,12 +61,23 @@ def discover_resources(
                 print("Scan:", scan_result.scan_id)
                 
                 # Upsert logic based on resource_id
+                resource_payload = dict(norm)
+                for key in (
+                    "provider",
+                    "resource_type",
+                    "resource_id",
+                    "name",
+                    "region",
+                    "status",
+                ):
+                    resource_payload.pop(key, None)
+
                 existing = db.query(ResourceDB).filter(ResourceDB.resource_id == norm["resource_id"]).first()
                 if existing:
                     existing.name = norm["name"]
                     existing.region = norm["region"]
                     existing.status = norm["status"]
-                    existing.resource_metadata = dict(norm.get("metadata", {}))
+                    existing.resource_metadata = resource_payload
                     existing.scan_id = uuid.UUID(scan_result.scan_id)
                     existing.resource_version = (existing.resource_version or 0) + 1
                 else:
@@ -78,7 +89,7 @@ def discover_resources(
                         name=norm["name"],
                         region=norm["region"],
                         status=norm["status"],
-                        resource_metadata=dict(norm.get("metadata", {})),
+                        resource_metadata=resource_payload,
                         scan_id=uuid.UUID(scan_result.scan_id),
                         resource_version=1
                     ))
