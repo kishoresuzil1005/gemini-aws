@@ -54,6 +54,13 @@ class ALBDiscovery:
                         attributes = {a['Key']: a['Value'] for a in attr_resp.get('Attributes', [])}
                     except Exception: pass
 
+                    print("=" * 80)
+                    print("RAW ALB")
+                    print("vpc_id:", vpc_id)
+                    print("subnets:", [az.get("SubnetId") for az in lb.get("AvailabilityZones", [])])
+                    print("security_groups:", security_groups)
+                    print("=" * 80)
+
                     res = NormalizedResource(
                         resource_id=lb_arn,
                         resource_type='ALB',
