@@ -66,4 +66,4 @@ class GraphBuilderCoordinator:
         # 5. Indexer
         self.indexer.build_indexes()
         
-        logger.info("Graph pipeline successfully generated.")
+        logger.info("Graph pipeline successfully generated."

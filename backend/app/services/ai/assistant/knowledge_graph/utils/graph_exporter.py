@@ -8,4 +8,4 @@ class GraphExporter:
         lines = ["graph TD;"]
         for u, v in graph.edges():
             lines.append(f"    {u}-->{v};")
-        return "\n".join(lines)
+        return "\n".join(lines

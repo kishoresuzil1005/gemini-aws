@@ -15,4 +15,4 @@ class LearningRepository:
         return [o for o in self._outcomes if o.action == action]
         
     def clear(self):
-        self._outcomes = []
+        self._outcomes = [

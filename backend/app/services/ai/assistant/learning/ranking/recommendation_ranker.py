@@ -6,4 +6,4 @@ class RecommendationRanker:
     
     def rank(self, scores: List[RecommendationScore]) -> List[RecommendationScore]:
         # TBD: Weighting algorithms
-        return sorted(scores, key=lambda s: s.success_rate, reverse=True)
+        return sorted(scores, key=lambda s: s.success_rate, reverse=True

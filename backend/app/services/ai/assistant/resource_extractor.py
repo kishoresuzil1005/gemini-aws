@@ -56,4 +56,4 @@ class ResourceExtractor:
                 target_resource = token
                 break
 
-        return target_resource
+        return target_resourc

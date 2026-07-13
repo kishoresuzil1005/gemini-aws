@@ -12,4 +12,4 @@ class FailurePredictor:
             return 50.0
             
         failures = sum(1 for h in history if h.status == "FAILURE")
-        return (failures / len(history)) * 100.0
+        return (failures / len(history)) * 100.

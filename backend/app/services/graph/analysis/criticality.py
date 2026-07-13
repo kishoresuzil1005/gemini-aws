@@ -52,4 +52,4 @@ class CriticalityAnalyzer:
                 "blast_radius": blast_radius,
                 "resource_weight": resource_weight
             }
-        }
+        

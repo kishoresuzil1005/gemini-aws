@@ -16,4 +16,4 @@ class LearningMetrics:
         return {
             "total_learned": len(outcomes),
             "global_success_rate": (successes / len(outcomes)) * 100
-        }
+        

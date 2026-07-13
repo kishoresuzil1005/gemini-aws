@@ -10,4 +10,4 @@ class GraphCache:
         return self._cache.get(key)
         
     def set(self, key: str, value: Any):
-        self._cache[key] = value
+        self._cache[key] = valu

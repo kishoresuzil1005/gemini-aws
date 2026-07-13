@@ -12,4 +12,4 @@ class MissionHistory:
         self._history.append(result)
 
     def get_all_results(self) -> List[MissionResult]:
-        return self._history
+        return self._histor

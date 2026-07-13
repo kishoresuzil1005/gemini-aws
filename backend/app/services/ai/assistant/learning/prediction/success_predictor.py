@@ -12,4 +12,4 @@ class SuccessPredictor:
             return 50.0 # Unknown
             
         successes = sum(1 for h in history if h.status == "SUCCESS")
-        return (successes / len(history)) * 100.0
+        return (successes / len(history)) * 100.

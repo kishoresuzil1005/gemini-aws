@@ -170,4 +170,4 @@ class DependencyService:
             "nodes": nodes_list,
             "edges": edges_list,
             "impact_analysis": impact_analysis
-        }
+        

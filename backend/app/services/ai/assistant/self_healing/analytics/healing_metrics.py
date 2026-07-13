@@ -11,4 +11,4 @@ class HealingMetrics:
         return 4.2
         
     def get_success_ratio(self) -> float:
-        return 96.5
+        return 96.

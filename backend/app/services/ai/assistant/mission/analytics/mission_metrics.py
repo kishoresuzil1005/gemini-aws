@@ -22,4 +22,4 @@ class MissionMetrics:
             "total_missions": total,
             "success_rate_pct": (successes / total) * 100.0,
             "average_duration_sec": avg_duration
-        }
+        

@@ -7,4 +7,4 @@ class ValidationEngine:
         Verifies AI responses against actual infrastructure data.
         Returns False if hallucination is highly suspected.
         """
-        return True # Mock for now
+        return True # Mock for no

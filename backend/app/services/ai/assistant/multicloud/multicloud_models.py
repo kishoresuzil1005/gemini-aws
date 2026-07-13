@@ -41,4 +41,4 @@ class GenericActionRequest(BaseModel):
 class TranslatedActionPayload(BaseModel):
     provider: CloudProvider
     api_call: str
-    payload: Dict[str, Any]
+    payload: Dict[str, Any

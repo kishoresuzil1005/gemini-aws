@@ -27,4 +27,4 @@ class ConflictResolver:
             )
             conflicts.append(conflict)
             
-        return conflicts
+        return conflict

@@ -18,4 +18,4 @@ class BackgroundRenderer:
 width="{width}"
 height="{height}"
 fill="{theme.canvas.background}"/>
-""")
+"""

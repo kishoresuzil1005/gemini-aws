@@ -73,4 +73,4 @@ class HierarchyEngine:
             if node["id"] not in layer:
                 layer[node["id"]] = 0
 
-        return layer
+        return laye

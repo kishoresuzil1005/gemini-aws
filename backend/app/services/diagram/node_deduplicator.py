@@ -31,4 +31,4 @@ class NodeDeduplicator:
 
         print(f"[NodeDeduplicator] Nodes before: {len(nodes)} | after: {len(result)}")
 
-        return result
+        return resul

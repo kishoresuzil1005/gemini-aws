@@ -13,4 +13,4 @@ class RemediationPlan(BaseModel):
     rollback: str
     estimated_time: str
     downtime: str
-    risk: str
+    risk: st

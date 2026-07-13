@@ -35,4 +35,4 @@ class MissionTimeline:
         output = [f"Timeline for {mission_id}:"]
         for entry in timeline:
             output.append(f"{entry['timestamp']} | {entry['event']} | {entry['details']}")
-        return "\n".join(output)
+        return "\n".join(output

@@ -27,4 +27,4 @@ class ALBMetadata:
     @staticmethod
     def get_targets(resource: ResourceDB) -> List[Dict[str, Any]]:
         metadata = resource.resource_metadata or {}
-        return metadata.get("targets", [])
+        return metadata.get("targets", []

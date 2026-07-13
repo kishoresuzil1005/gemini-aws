@@ -61,4 +61,4 @@ class ArchitectureModelBuilder:
 
             architecture["layers"][layer].append(resource)
 
-        return architecture
+        return architectur

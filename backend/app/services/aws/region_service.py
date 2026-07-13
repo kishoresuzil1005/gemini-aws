@@ -42,4 +42,4 @@ class AWSRegionService:
     @staticmethod
     def get_all_regions():
         regions = AWSAWSRegionService.get_regions()
-        return [r["name"] for r in regions]
+        return [r["name"] for r in regions

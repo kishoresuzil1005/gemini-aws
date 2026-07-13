@@ -332,5 +332,3 @@ class SecurityGroupService:
                     }
 
         return None
-
-

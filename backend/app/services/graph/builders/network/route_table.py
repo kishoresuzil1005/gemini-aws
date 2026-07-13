@@ -57,4 +57,4 @@ class RouteTableGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        return edges
+        return edge

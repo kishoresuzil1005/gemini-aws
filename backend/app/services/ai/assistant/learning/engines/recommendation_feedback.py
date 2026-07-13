@@ -16,4 +16,4 @@ class RecommendationFeedbackEngine:
             latency_ms=0,
             user_accepted=accepted
         )
-        self.memory.remember(outcome)
+        self.memory.remember(outcome

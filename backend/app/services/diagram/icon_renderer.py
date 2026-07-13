@@ -52,4 +52,4 @@ class IconRenderer:
 
             print("Embedded:", node["type"])
 
-            svg.append(transformed)
+            svg.append(transformed

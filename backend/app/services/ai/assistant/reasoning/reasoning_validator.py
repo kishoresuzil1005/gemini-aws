@@ -30,4 +30,4 @@ class ReasoningValidator:
                 errors.append(f"Broken reference: Evidence {e.id} points to missing finding {e.finding_id}")
                 is_valid = False
                 
-        return is_valid, errors
+        return is_valid, error

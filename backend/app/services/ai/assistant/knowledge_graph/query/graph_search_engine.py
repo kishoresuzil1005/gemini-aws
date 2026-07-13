@@ -12,4 +12,4 @@ class GraphSearchEngine:
         
     def search_by_type(self, resource_type: str) -> List[CloudNode]:
         node_ids = self.indexer.find_by_type(resource_type)
-        return [self.repository.find_node(nid) for nid in node_ids if self.repository.find_node(nid)]
+        return [self.repository.find_node(nid) for nid in node_ids if self.repository.find_node(nid)

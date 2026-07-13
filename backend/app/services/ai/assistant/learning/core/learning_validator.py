@@ -8,4 +8,4 @@ class LearningValidator:
             return False
         if outcome.status not in ["SUCCESS", "FAILURE", "ROLLBACK"]:
             return False
-        return True
+        return Tru

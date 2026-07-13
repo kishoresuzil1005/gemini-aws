@@ -53,4 +53,4 @@ class ReasoningRules:
         """
         if not tools:
             return "UNKNOWN"
-        return max(tools, key=lambda t: CONFLICT_RESOLUTION_PRIORITY.get(t, 0))
+        return max(tools, key=lambda t: CONFLICT_RESOLUTION_PRIORITY.get(t, 0)

@@ -32,4 +32,4 @@ class BudgetEngine:
                 current_cost,
                 2
             )
-        }
+        

@@ -12,4 +12,4 @@ class EBSGraphBuilder:
             if res.resource_type == "EBSVolume":
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

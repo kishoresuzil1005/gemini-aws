@@ -108,4 +108,4 @@ class ApprovalResult(BaseModel):
     approved: bool
     approver: str
     reason: str
-    approved_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    approved_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)

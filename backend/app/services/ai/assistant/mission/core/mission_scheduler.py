@@ -21,4 +21,4 @@ class MissionScheduler:
         # Priority mapping
         priority_map = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
         pending.sort(key=lambda x: priority_map.get(x.priority.value, 0), reverse=True)
-        return pending[0].mission_id
+        return pending[0].mission_i

@@ -114,4 +114,4 @@ class RemediationOrchestrator:
         priority_map = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
         packages.sort(key=lambda x: priority_map.get(x.risk_level, 99))
             
-        return packages
+        return package

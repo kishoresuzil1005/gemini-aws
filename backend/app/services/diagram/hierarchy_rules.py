@@ -68,4 +68,4 @@ class HierarchyRules:
         #
         # Unknown relationships do not affect hierarchy
         #
-        return None, None
+        return None, Non

@@ -130,4 +130,4 @@ class FailureAnalysisService:
 
             "best_practices": rag["answer"]
 
-        }
+        

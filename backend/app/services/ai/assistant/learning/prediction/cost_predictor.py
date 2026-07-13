@@ -14,4 +14,4 @@ class CostPredictor:
         costs = [h.cost_impact for h in history if h.cost_impact is not None]
         if not costs:
             return 0.0
-        return sum(costs) / len(costs)
+        return sum(costs) / len(costs

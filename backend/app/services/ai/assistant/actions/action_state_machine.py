@@ -34,4 +34,4 @@ class ActionStateMachine:
             )
             
         plan.status = new_status
-        return True
+        return Tru

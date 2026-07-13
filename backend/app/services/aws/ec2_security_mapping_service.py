@@ -184,4 +184,3 @@ class EC2SecurityMappingService:
                 continue
 
         return None
-

@@ -20,4 +20,4 @@ class ToolValidator:
         if missing:
             return False, f"Tool '{tool_name}' missing required args: {missing}"
 
-        return True, ""
+        return True, "

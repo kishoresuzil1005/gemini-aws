@@ -75,4 +75,4 @@ class OrthogonalRouter:
         print("Routes created :", len(routed_edges))
         print("======================================")
 
-        return routed_edges
+        return routed_edge

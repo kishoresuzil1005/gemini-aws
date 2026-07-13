@@ -12,4 +12,4 @@ class PlaybookGenerator:
         with open(file_path, "r") as f:
             content = f.read()
             
-        return content.replace("{{ resource_id }}", resource_id)
+        return content.replace("{{ resource_id }}", resource_id

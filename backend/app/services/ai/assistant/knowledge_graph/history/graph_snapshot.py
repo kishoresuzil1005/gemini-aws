@@ -5,4 +5,4 @@ class GraphSnapshot:
     """Captures a point-in-time snapshot of the Knowledge Graph."""
     
     def take_snapshot(self, repository: GraphRepository, timestamp: datetime = None):
-        pass
+        pas

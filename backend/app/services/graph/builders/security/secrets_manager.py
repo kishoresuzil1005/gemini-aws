@@ -12,4 +12,4 @@ class SecretsManagerGraphBuilder:
             if res.resource_type in ("SecretsManager", "SecretsManagerSecret"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

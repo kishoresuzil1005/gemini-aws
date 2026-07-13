@@ -15,4 +15,4 @@ class FeatureStore:
             outcome.cost_impact or 0.0,
             1.0 if outcome.user_accepted else 0.0
         ]
-        return vector
+        return vecto

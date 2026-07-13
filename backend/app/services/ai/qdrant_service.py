@@ -190,4 +190,4 @@ class QdrantService:
         return self.search(
             vector=embedding,
             limit=limit
-        )
+        

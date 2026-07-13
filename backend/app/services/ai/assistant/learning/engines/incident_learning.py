@@ -10,4 +10,4 @@ class IncidentLearningEngine:
         incident = self.memory.recognize_incident(signature)
         if incident and incident.remediation_success_rate > 0.8:
             return incident.best_remediation_action
-        return "Requires new analysis"
+        return "Requires new analysis

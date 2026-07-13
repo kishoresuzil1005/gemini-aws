@@ -22,4 +22,4 @@ class LambdaCostCalculator:
         # 2. Count requests cost
         request_cost = monthly_requests * lambda_pricing.get("request_rate", 0.0000002)
         
-        return compute_cost + request_cost
+        return compute_cost + request_cos

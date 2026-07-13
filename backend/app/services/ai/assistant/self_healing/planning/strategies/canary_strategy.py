@@ -21,4 +21,4 @@ class CanaryStrategy:
             ],
             requires_approval=True,
             confidence=92.5
-        )
+        

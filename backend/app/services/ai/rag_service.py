@@ -244,4 +244,4 @@ class RAGService:
                 "sources": [],
                 "prompt_rendered": "",
                 "hallucination_check": "ERROR"
-            }
+            

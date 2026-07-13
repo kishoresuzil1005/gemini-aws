@@ -120,4 +120,4 @@ class Planner:
                 if dependency not in step_names:
                     plan.status = PlanStatus.FAILED
                     plan.context.metadata["error"] = f"Invalid dependency '{dependency}' for tool '{step.tool_name}'."
-                    return
+                    retur

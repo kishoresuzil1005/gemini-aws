@@ -79,4 +79,4 @@ class ResourceValidator:
         finally:
             db.close()
             
-        return match
+        return matc

@@ -13,4 +13,4 @@ class IncidentDetector:
             severity="CRITICAL",
             resource_id=payload.get("instance_id", "unknown"),
             raw_payload=payload
-        )
+        

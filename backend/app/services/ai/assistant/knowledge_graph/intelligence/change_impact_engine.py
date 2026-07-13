@@ -28,4 +28,4 @@ class ChangeImpactEngine:
             "target": target_node_id,
             "proposed_change": proposed_change,
             "cascading_effects": cascading_changes
-        }
+        

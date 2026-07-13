@@ -52,4 +52,4 @@ class MissionResult(BaseModel):
     status: MissionStatus
     duration_seconds: float
     metrics_achieved: Dict[str, Any]
-    insights: List[str]
+    insights: List[str

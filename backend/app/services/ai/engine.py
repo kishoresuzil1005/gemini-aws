@@ -41,4 +41,4 @@ class AIEngine:
 
     def get_tools(self) -> List[Dict]:
         assistant = GraphAssistant(self.memory)
-        return assistant.tool_router.registry.list_tools()
+        return assistant.tool_router.registry.list_tools(

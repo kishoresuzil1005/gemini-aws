@@ -93,4 +93,4 @@ class ExecutionPlanner:
                 )
             ]
             
-        return steps
+        return step

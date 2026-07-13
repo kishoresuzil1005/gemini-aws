@@ -192,4 +192,4 @@ fill="#607D8B"/>
 
         svg.append("</svg>")
 
-        return "\n".join(svg)
+        return "\n".join(svg

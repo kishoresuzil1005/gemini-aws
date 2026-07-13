@@ -17,4 +17,4 @@ class RiskRanker:
                 
             tr.metadata["reasoning"]["risk_score"] = risk_score
             
-        return tool_results
+        return tool_result

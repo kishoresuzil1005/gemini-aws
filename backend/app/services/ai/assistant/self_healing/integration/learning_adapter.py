@@ -10,4 +10,4 @@ class LearningAdapter:
         if not success:
             print("[LearningAdapter] Flagging this repair strategy as unreliable for this failure mode.")
         else:
-            print("[LearningAdapter] Increasing confidence score for this repair strategy.")
+            print("[LearningAdapter] Increasing confidence score for this repair strategy."

@@ -47,4 +47,3 @@ def get_cached_cost():
 
 def save_cached_cost(data):
     CostSummaryCache.set(data)
-

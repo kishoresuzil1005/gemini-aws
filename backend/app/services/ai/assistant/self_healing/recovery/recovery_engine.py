@@ -11,4 +11,4 @@ class RecoveryEngine:
 
     def handle_failure(self, incident_id: str, failed_step: str):
         print(f"[RecoveryEngine] Intercepted failure at step '{failed_step}'. Escalating to Rollback...")
-        self.rollback.initiate_rollback(incident_id) # Mock parameter
+        self.rollback.initiate_rollback(incident_id) # Mock paramete

@@ -1,20 +1,23 @@
-from azure.mgmt.storage import StorageManagementClient
-from app.providers.azure.auth import AzureAuth
-from app.providers.azure.exceptions import map_azure_exception
+from typing import Dict, Any, List, Optional
+from app.providers.common.client_factory import client_factory
 
 class StorageService:
-    def __init__(self, auth: AzureAuth, subscription_id: str):
-        self.client = StorageManagementClient(auth.credential, subscription_id)
+    def __init__(self, subscription_id: str):
+        self.subscription_id = subscription_id
+        # Client would typically be obtained via client_factory.get_azure_client(..., credential)
+        # self.client = client_factory.get_azure_client("storage")
 
-    def execute(self, method_name: str, **kwargs):
-        try:
-            # We assume generic storage actions are directed to storage_accounts for now
-            method = getattr(self.client.storage_accounts, method_name)
-            
-            res = method(**kwargs)
-            if hasattr(res, "result"):
-                return res.result()
-            return res
-            
-        except Exception as e:
-            raise map_azure_exception(e)
+    def list(self) -> List[Dict[str, Any]]:
+        return []
+
+    def get(self, resource_id: str) -> Optional[Dict[str, Any]]:
+        return None
+
+    def create(self, **kwargs) -> Dict[str, Any]:
+        return {}
+
+    def update(self, resource_id: str, **kwargs) -> Dict[str, Any]:
+        return {}
+
+    def delete(self, resource_id: str) -> Dict[str, Any]:
+        return {"status": "deleted"}

@@ -10,4 +10,4 @@ class RDSCostCalculator:
         Computes monthly database engine fees based on instance sizes.
         """
         hourly_rate = pricing_service.get_hourly_price("RDS", db_class, region)
-        return hourly_rate * 24 * 30
+        return hourly_rate * 24 * 3

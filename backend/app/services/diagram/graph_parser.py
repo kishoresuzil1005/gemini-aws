@@ -56,4 +56,3 @@ class GraphParser:
         finally:
 
             service.close()
-

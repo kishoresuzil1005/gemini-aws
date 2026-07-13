@@ -27,4 +27,4 @@ class RecommendationEngine:
         if not recommendations and any(f.get("severity") in ["HIGH", "CRITICAL"] for f in findings):
             recommendations.add("Review AWS well-architected framework for this resource type.")
             
-        return list(recommendations)
+        return list(recommendations

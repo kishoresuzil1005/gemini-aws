@@ -24,4 +24,4 @@ class MissionPolicy:
                 print(f"[MissionPolicy] REJECTED: Deletion in production environment is blocked by policy.")
                 return {"allowed": False, "reason": "Production deletion blocked."}
                 
-        return {"allowed": True, "reason": "Compliant"}
+        return {"allowed": True, "reason": "Compliant"

@@ -63,4 +63,4 @@ class MetricCollector:
 
         finally:
 
-            db.close()
+            db.close(

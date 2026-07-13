@@ -339,4 +339,4 @@ User Question: {query}
 
 Please formulate a precise, highly technical, and actionable response:
 """
-        return augmented_prompt
+        return augmented_promp

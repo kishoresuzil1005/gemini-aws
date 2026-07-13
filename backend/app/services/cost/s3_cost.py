@@ -12,4 +12,4 @@ class S3CostCalculator:
         """
         rates = FALLBACK_PRICES.get("S3", {})
         price_per_gb_month = rates.get(storage_class, rates.get("default", 0.023))
-        return size_gb * price_per_gb_month
+        return size_gb * price_per_gb_mont

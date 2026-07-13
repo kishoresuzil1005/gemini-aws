@@ -45,4 +45,4 @@ class GraphValidation:
             seen.add(edge_signature)
             valid_edges.append(edge)
             
-        return valid_edges
+        return valid_edge

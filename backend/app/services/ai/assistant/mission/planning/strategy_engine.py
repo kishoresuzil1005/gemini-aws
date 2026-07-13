@@ -13,4 +13,4 @@ class StrategyEngine:
     def determine_strategy(self, intent: str, context: Dict[str, Any]) -> ExecutionStrategy:
         if "production" in str(context).lower() or "critical" in intent.lower():
             return ExecutionStrategy.CONSERVATIVE
-        return ExecutionStrategy.BALANCED
+        return ExecutionStrategy.BALANCE

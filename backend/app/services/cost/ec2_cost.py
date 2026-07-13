@@ -11,4 +11,4 @@ class EC2CostCalculator:
         Monthly formula: Hourly Rate * 24 Hours * 30 Days (720 hours).
         """
         hourly_rate = pricing_service.get_hourly_price("EC2", instance_type, region)
-        return hourly_rate * 24 * 30
+        return hourly_rate * 24 * 3

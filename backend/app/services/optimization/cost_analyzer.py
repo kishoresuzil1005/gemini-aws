@@ -45,4 +45,4 @@ class CostAnalyzer:
 
         except Exception:
 
-            return 0.0
+            return 0.

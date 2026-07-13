@@ -37,4 +37,4 @@ class ValidationEngine:
             check_type="GenericCheck",
             command="echo 'Verify resource state in AWS Console'",
             expected_result="Healthy/Available"
-        )
+        

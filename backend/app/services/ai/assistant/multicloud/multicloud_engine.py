@@ -37,4 +37,4 @@ class MultiCloudEngine:
             parameters=request.parameters
         )
         
-        return translated_payload
+        return translated_payloa

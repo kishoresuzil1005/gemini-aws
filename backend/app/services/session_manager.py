@@ -157,4 +157,4 @@ def connect_gcp_project(service_account_json: str, region: str) -> Dict[str, Any
     }
 
     session_cache.store_session(cache_key, session_payload, duration_seconds=duration_s)
-    return session_payload
+    return session_payloa

@@ -87,4 +87,4 @@ class ExposureService:
             except Exception as e:
                 print(region, e)
 
-        return exposed
+        return expose

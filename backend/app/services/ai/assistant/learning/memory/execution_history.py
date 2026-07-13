@@ -9,4 +9,4 @@ class ExecutionHistory:
         self.repository = repository
         
     def get_recent_executions(self, limit: int = 100) -> List[ExecutionOutcome]:
-        return self.repository._outcomes[-limit:]
+        return self.repository._outcomes[-limit:

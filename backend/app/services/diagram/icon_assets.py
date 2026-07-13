@@ -143,4 +143,4 @@ class IconAssetManager:
         Returns every supported AWS resource alias.
         """
         cls._initialize()
-        return sorted(list(cls._index.keys()) + list(cls.ALIASES.keys()))
+        return sorted(list(cls._index.keys()) + list(cls.ALIASES.keys())

@@ -17,4 +17,4 @@ class ExplainabilityEngine:
         Evidence: Knowledge Graph mapped the lock directly to 'prod-db-1'.
         Why alternatives rejected: A failover strategy was evaluated but rejected due to high data replication lag (Risk > Threshold).
         """
-        return explanation
+        return explanatio

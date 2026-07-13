@@ -34,4 +34,4 @@ class MissionManager:
 
     def list_active_missions(self) -> List[Mission]:
         all_missions = self.repository.get_all()
-        return [m for m in all_missions if m.status in (MissionStatus.PENDING, MissionStatus.RUNNING, MissionStatus.PAUSED)]
+        return [m for m in all_missions if m.status in (MissionStatus.PENDING, MissionStatus.RUNNING, MissionStatus.PAUSED)

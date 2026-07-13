@@ -87,4 +87,4 @@ class ThemeManager:
 
         self.edge = EdgeTheme()
 
-        self.text = TextTheme()
+        self.text = TextTheme(

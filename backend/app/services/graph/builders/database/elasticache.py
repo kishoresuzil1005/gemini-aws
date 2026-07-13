@@ -12,4 +12,4 @@ class ElastiCacheGraphBuilder:
             if res.resource_type in ("ElastiCache", "ElastiCacheRedis", "ElastiCacheMemcached", "ElastiCacheCluster"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

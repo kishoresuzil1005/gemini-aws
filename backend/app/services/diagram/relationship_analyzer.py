@@ -96,4 +96,4 @@ class RelationshipAnalyzer:
             "child_to_parent": dict(child_to_parent),
             "entry_nodes": entry_nodes,
             "leaf_nodes": leaf_nodes
-        }
+        

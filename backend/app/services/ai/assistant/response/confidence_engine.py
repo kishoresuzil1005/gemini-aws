@@ -20,4 +20,4 @@ class ConfidenceEngine:
             base_score += min(len(tools_used) * 10, 20)
             
         # Cap at 100
-        return min(base_score, 100)
+        return min(base_score, 100

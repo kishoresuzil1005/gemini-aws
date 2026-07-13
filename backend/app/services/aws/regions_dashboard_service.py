@@ -108,4 +108,4 @@ class RegionsDashboardService:
                 "elastic_ips": elastic_ips
             })
 
-        return result
+        return resul

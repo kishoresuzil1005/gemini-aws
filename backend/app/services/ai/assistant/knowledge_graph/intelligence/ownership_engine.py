@@ -15,4 +15,4 @@ class OwnershipEngine:
             labels = node.properties.get("labels", {})
             return labels.get("app.kubernetes.io/managed-by", "UNKNOWN")
             
-        return "UNKNOWN"
+        return "UNKNOWN

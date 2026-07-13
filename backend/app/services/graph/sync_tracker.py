@@ -9,4 +9,4 @@ class SyncTracker:
 
     @classmethod
     def get(cls):
-        return cls.last_sync
+        return cls.last_syn

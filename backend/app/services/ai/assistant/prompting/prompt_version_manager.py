@@ -45,4 +45,4 @@ class PromptVersionManager:
 
     def list_versions(self) -> Dict[str, Any]:
         return {vid: {"description": v.description, "active": vid == self._active_version}
-                for vid, v in self._versions.items()}
+                for vid, v in self._versions.items()

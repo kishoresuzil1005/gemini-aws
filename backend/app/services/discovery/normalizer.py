@@ -78,4 +78,4 @@ class ResourceNormalizer:
             except Exception as e:
                 logger.error(f"Error normalizing resource {raw}: {e}")
                 
-        return normalized
+        return normalize

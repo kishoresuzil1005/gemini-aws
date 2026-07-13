@@ -1,21 +1,23 @@
-from google.cloud import storage
-from app.providers.gcp.auth import GCPAuth
-from app.providers.gcp.exceptions import map_gcp_exception
+from typing import Dict, Any, List, Optional
+from app.providers.common.client_factory import client_factory
 
 class StorageService:
-    def __init__(self, auth: GCPAuth):
-        self.auth = auth
-        self.client = storage.Client(credentials=auth.credentials, project=auth.default_project_id)
+    def __init__(self, project_id: str):
+        self.project_id = project_id
+        # Client typically obtained via client_factory.get_gcp_client(...)
+        # self.client = client_factory.get_gcp_client("storage")
 
-    def execute(self, method_name: str, **kwargs):
-        try:
-            # We map generic storage actions to buckets
-            if "bucket_name" in kwargs:
-                bucket = self.client.bucket(kwargs.pop("bucket_name"))
-                method = getattr(bucket, method_name)
-                return method(**kwargs)
-            else:
-                method = getattr(self.client, method_name)
-                return method(**kwargs)
-        except Exception as e:
-            raise map_gcp_exception(e)
+    def list(self) -> List[Dict[str, Any]]:
+        return []
+
+    def get(self, resource_id: str) -> Optional[Dict[str, Any]]:
+        return None
+
+    def create(self, **kwargs) -> Dict[str, Any]:
+        return {}
+
+    def update(self, resource_id: str, **kwargs) -> Dict[str, Any]:
+        return {}
+
+    def delete(self, resource_id: str) -> Dict[str, Any]:
+        return {"status": "deleted"}

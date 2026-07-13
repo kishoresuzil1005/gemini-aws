@@ -46,4 +46,4 @@ class ApprovalEngine:
         # In a real system, verify the approval_id against a database record.
         res = ApprovalResult(approved=True, approver="SystemUser", reason="Valid Approval ID.")
         self.state_machine.transition(plan, ActionStatus.APPROVED)
-        return res
+        return re

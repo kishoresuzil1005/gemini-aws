@@ -79,4 +79,4 @@ class DocumentLoader:
                 "metadata": chunk_metadata
             })
                 
-        return chunks
+        return chunk

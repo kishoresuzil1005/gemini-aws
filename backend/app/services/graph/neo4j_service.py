@@ -590,4 +590,4 @@ class Neo4jService:
                 return row["count"]
         except Exception as e:
             logger.error(f"Error getting edge count: {e}")
-            return len(MemoryGraphStore.edges)
+            return len(MemoryGraphStore.edges

@@ -17,4 +17,4 @@ class WorkflowMonitor:
         
     def track_step(self, step: WorkflowStep):
         """Emits progress events for an individual step."""
-        logger.info(f"  -> [Step {step.step_id}] Status: {step.status.value}")
+        logger.info(f"  -> [Step {step.step_id}] Status: {step.status.value}"

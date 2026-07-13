@@ -19,4 +19,4 @@ class SourceAttribution:
             else:
                 sources.append(tr.tool_name)
             
-        return sources
+        return source

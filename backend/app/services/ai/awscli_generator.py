@@ -12,4 +12,4 @@ class AWSCLIGenerator:
         with open(file_path, "r") as f:
             content = f.read()
             
-        return content.replace("{{ resource_id }}", resource_id).replace("{{ resource_arn }}", f"arn:aws:...:{resource_id}")
+        return content.replace("{{ resource_id }}", resource_id).replace("{{ resource_arn }}", f"arn:aws:...:{resource_id}"

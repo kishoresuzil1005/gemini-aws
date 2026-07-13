@@ -118,4 +118,4 @@ class EC2Optimizer:
                 "remediation_type": "AUTOMATIC"
             })
 
-        return recommendations
+        return recommendation

@@ -10,4 +10,4 @@ class ModelRegistry:
         self._models[f"{name}_{version}"] = model_instance
         
     def get_model(self, name: str, version: str = "v1"):
-        return self._models.get(f"{name}_{version}")
+        return self._models.get(f"{name}_{version}"

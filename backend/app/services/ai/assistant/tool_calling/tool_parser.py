@@ -30,4 +30,4 @@ class ToolCallParser:
             return tool_call, clean_text
         except json.JSONDecodeError as e:
             print(f"[ToolCallParser] Failed to parse tool call JSON: {e}")
-            return None, llm_response
+            return None, llm_respons

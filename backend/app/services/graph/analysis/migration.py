@@ -36,4 +36,4 @@ class MigrationPlanner:
             "migration_target": resource_id,
             "total_dependencies": len(package),
             "migration_package": package
-        }
+        

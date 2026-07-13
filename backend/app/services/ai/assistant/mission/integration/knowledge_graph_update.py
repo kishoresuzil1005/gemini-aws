@@ -12,4 +12,4 @@ class KnowledgeGraphIntegration:
             "feasible": True,
             "blast_radius": "LOW",
             "dependencies_affected": 2
-        }
+        

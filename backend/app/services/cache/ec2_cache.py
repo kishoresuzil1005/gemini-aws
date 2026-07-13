@@ -71,4 +71,3 @@ class EC2Cache:
         with cls._lock:
             cls._summary_cache.clear()
             cls._extended_cache.clear()
-

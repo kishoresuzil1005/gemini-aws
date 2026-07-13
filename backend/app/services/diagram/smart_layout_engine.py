@@ -214,5 +214,3 @@ class SmartLayoutEngine:
         print("================================")
 
         return layout
-
-

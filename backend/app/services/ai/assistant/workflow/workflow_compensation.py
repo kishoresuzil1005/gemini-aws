@@ -33,4 +33,4 @@ class WorkflowCompensation:
             compensation_steps=compensation_steps
         )
         plan.compensation_plan = c_plan
-        return c_plan
+        return c_pla

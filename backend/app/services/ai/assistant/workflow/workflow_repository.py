@@ -42,4 +42,4 @@ class WorkflowRepository:
                     plan = WorkflowPlan(**m.metadata)
                     if plan.status == status:
                         workflows.append(plan)
-        return workflows
+        return workflow

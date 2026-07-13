@@ -59,4 +59,4 @@ class CostAnalyzer:
             "application_root": root_resource_id,
             "total_monthly_cost": total_cost,
             "breakdown": breakdown
-        }
+        

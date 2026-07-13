@@ -314,4 +314,4 @@ class AWSDiscoveryScanner:
         )
 
         DISCOVERY_CACHE[cache_key] = (scan_result, now)
-        return scan_result
+        return scan_resul

@@ -9,4 +9,4 @@ class MissionExporter:
     def export_to_file(mission: Mission, file_path: str):
         data = MissionSerializer.to_json(mission)
         with open(file_path, "w") as f:
-            f.write(data)
+            f.write(data

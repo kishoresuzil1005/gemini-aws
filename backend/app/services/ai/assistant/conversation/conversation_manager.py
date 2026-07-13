@@ -42,4 +42,4 @@ class ConversationManager:
         # We might not want the very last message in history if it's the current prompt
         if messages:
             messages = messages[:-1]
-        return self.formatter.format_for_prompt(messages)
+        return self.formatter.format_for_prompt(messages

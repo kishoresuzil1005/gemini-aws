@@ -44,4 +44,4 @@ class DiagramGenerator:
             "diagram_type": diagram_type,
             "layers": layers,
             "nodes_rendered": len(nodes)
-        }
+        

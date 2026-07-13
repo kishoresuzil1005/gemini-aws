@@ -34,4 +34,4 @@ class AIGraphAgent:
             "status": "success",
             "context_analyzed": arch_data,
             "recommendations": recommendations
-        }
+        

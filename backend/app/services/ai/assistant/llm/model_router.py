@@ -20,4 +20,4 @@ class ModelRouter:
     def select_model(self, intent: str) -> str:
         selected = self.model_map.get(intent, self.model_map["default"])
         print(f"[ModelRouter] Intent='{intent}' -> Model='{selected}'")
-        return selected
+        return selecte

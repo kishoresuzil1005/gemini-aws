@@ -14,4 +14,4 @@ class CriticalityEngine:
         if env in ["dev", "development", "test"]:
             return "LOW_PRIORITY"
             
-        return "UNKNOWN"
+        return "UNKNOWN

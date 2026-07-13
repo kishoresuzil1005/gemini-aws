@@ -227,4 +227,4 @@ class GraphAssistant:
         # 13. Save assistant response
         self.memory.add_message(request.conversation_id, "assistant", chat_response.answer)
         
-        return chat_response
+        return chat_respons

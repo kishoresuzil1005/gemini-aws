@@ -22,4 +22,4 @@ class SavingsCalculator:
         """
         Backward compatible mapping to summarize
         """
-        return SavingsCalculator.summarize(recommendations)
+        return SavingsCalculator.summarize(recommendations

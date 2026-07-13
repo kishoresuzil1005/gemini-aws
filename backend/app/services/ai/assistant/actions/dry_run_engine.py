@@ -25,4 +25,4 @@ class DryRunEngine:
             warnings=["Simulated environment impact. Ensure backups exist."] if downtime != 0 else [],
             rollback_available=policy.get("rollback_possible", False),
             summary=f"Simulated {plan.request.action_name} on {plan.request.resource_id}. Impact: {policy.get('risk_level', 'INFO')}."
-        )
+        

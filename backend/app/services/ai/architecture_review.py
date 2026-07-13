@@ -189,4 +189,4 @@ class ArchitectureReviewService:
 
 
 # Backward-compatible alias for architecture_service.py
-ArchitectureReview = ArchitectureReviewService
+ArchitectureReview = ArchitectureReviewServic

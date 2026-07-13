@@ -12,4 +12,4 @@ class LearningScheduler:
         
     def run_batch_learning(self):
         # Triggers offline processing of the queue
-        pass
+        pas

@@ -14,4 +14,4 @@ class BaseGraphBuilder:
 
     @classmethod
     def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
-        raise NotImplementedError("Each builder must implement build_resource_edges")
+        raise NotImplementedError("Each builder must implement build_resource_edges"

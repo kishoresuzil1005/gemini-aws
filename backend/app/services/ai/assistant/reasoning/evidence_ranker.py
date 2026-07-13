@@ -44,4 +44,4 @@ class EvidenceRanker:
         top_finding_ids = {e.finding_id for e in top_evidence}
         top_findings = [f for f in findings if f.id in top_finding_ids]
         
-        return top_findings, top_evidence
+        return top_findings, top_evidenc

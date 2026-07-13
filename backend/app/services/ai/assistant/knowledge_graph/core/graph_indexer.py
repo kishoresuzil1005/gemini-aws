@@ -22,4 +22,4 @@ class GraphIndexer:
                 self._by_provider[prov].append(node_id)
                 
     def find_by_type(self, resource_type: str) -> List[str]:
-        return self._by_type.get(resource_type, [])
+        return self._by_type.get(resource_type, []

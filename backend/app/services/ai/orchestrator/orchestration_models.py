@@ -34,4 +34,4 @@ class ExecutionPackage(BaseModel):
     execution_plan: List[ExecutionStep]
     execution_graph: Dict[str, Any]
     rollback: RollbackPlan
-    validation: ValidationPlan
+    validation: ValidationPla

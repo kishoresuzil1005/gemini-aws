@@ -55,4 +55,4 @@ class RecommendationEngine:
 
 
 # Alias for backward compatibility mapping
-RecommendationsEngine = RecommendationEngine
+RecommendationsEngine = RecommendationEngin

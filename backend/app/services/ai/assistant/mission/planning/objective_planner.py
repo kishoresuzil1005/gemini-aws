@@ -19,4 +19,4 @@ class ObjectivePlanner:
             dependencies=[obj1.objective_id]
         )
         goal.objectives = [obj1, obj2]
-        return goal.objectives
+        return goal.objective

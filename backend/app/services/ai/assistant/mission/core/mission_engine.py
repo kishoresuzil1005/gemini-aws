@@ -40,4 +40,4 @@ class MissionEngine:
 
     def get_mission_status(self, mission_id: str) -> Optional[MissionStatus]:
         mission = self.manager.get_mission(mission_id)
-        return mission.status if mission else None
+        return mission.status if mission else Non

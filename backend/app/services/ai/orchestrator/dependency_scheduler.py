@@ -30,4 +30,4 @@ class DependencyScheduler:
             # Insert at the beginning
             steps.insert(0, dependency_step)
             
-        return steps
+        return step

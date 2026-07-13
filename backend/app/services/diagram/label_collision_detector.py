@@ -20,4 +20,4 @@ class LabelCollisionDetector:
             (x, y, width, height)
         )
 
-        return True
+        return Tru

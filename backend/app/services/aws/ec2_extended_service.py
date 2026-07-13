@@ -603,4 +603,4 @@ class EC2ExtendedService:
                 ]
             except Exception as e:
                 logger.warning(f"Error describe_trust_stores: {e}")
-        return []
+        return [

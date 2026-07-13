@@ -127,4 +127,4 @@ class AWSColorPalette:
     @classmethod
     def supported_services(cls):
 
-        return sorted(cls.COLORS.keys())
+        return sorted(cls.COLORS.keys()

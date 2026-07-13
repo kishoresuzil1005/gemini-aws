@@ -43,4 +43,4 @@ class EmbeddingService:
         return self.get_embedding(text)
 
     def embed_many(self, texts):
-        return self.get_embeddings(texts)
+        return self.get_embeddings(texts

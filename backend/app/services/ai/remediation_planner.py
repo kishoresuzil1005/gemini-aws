@@ -99,4 +99,4 @@ class RemediationPlanner:
         for rec in recs:
             if rec.priority not in ["INFO", "GOOD"]:
                 plans.append(self.create_plan(rec))
-        return plans
+        return plan

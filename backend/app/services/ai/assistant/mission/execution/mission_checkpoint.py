@@ -16,4 +16,4 @@ class MissionCheckpointManager:
 
     def get_latest_checkpoint(self, mission_id: str) -> MissionCheckpoint:
         history = self._checkpoints.get(mission_id, [])
-        return history[-1] if history else None
+        return history[-1] if history else Non

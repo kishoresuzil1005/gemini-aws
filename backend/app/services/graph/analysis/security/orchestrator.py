@@ -109,4 +109,4 @@ class SecurityImpactAnalyzer:
             "findings": findings,
             "recommendations": recommendations,
             "attack_paths": attack_result.get("paths", [])
-        }
+        

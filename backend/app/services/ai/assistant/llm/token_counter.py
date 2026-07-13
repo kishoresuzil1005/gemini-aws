@@ -25,4 +25,4 @@ class TokenCounter:
         used = self.count_messages(messages)
         fits = used < limit
         print(f"[TokenCounter] {used}/{limit} tokens for model '{model}' — {'OK' if fits else 'OVERFLOW'}")
-        return fits
+        return fit

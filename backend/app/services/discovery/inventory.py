@@ -34,4 +34,4 @@ class InventoryManager:
             db.add_all(db_resources)
             db.commit()
             
-        return db_resources
+        return db_resource

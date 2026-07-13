@@ -23,4 +23,4 @@ class ProviderDiscovery:
         
     def is_provider_connected(self, provider: CloudProvider) -> bool:
         conn = self.connected_providers.get(provider)
-        return conn is not None and conn.is_active
+        return conn is not None and conn.is_activ

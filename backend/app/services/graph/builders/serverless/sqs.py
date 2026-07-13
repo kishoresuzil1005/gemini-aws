@@ -12,4 +12,4 @@ class SQSGraphBuilder:
             if res.resource_type in ("SQS", "SQSQueue"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

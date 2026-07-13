@@ -21,4 +21,4 @@ class MissionRecoveryManager:
             self.manager.update_status(mission_id, MissionStatus.RUNNING)
             return True
             
-        return False
+        return Fals

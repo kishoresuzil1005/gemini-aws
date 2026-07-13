@@ -156,4 +156,3 @@ class SecurityAuditService:
             "total_findings": len(findings),
             "findings": findings
         }
-

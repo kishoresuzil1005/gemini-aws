@@ -17,4 +17,4 @@ class CloudWatchCollector:
             "source": "aws.cloudwatch",
             "metric": sns_message.get("Trigger", {}).get("MetricName")
         }
-        return self.detector.ingest_alert(normalized)
+        return self.detector.ingest_alert(normalized

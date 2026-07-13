@@ -30,4 +30,4 @@ class KubernetesGraphBuilder(BaseGraphBuilder):
         
     def build_edges(self) -> List[CloudEdge]:
         # K8s explicitly manages parent-child (OwnerReferences)
-        return []
+        return [

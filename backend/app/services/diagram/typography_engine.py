@@ -106,4 +106,4 @@ class TypographyEngine:
 
             lines.append(current)
 
-        return lines
+        return line

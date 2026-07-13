@@ -13,4 +13,4 @@ class ScanResult:
     resources: List[Dict[str, Any]]
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
-    statistics: Dict[str, Any] = field(default_factory=dict)
+    statistics: Dict[str, Any] = field(default_factory=dict

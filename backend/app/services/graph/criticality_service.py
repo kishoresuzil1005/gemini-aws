@@ -9,4 +9,4 @@ class CriticalityService:
 
     def top_critical(self):
         # We'll improve this in Sprint 8.5
-        return []
+        return [

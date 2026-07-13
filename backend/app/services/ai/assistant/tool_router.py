@@ -29,4 +29,4 @@ class ToolRouter:
         Resolves a tool name to its registered implementation.
         Answers one question: Which tool implementation matches this name?
         """
-        return self.registry.get_tool(tool_name)
+        return self.registry.get_tool(tool_name

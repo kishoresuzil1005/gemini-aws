@@ -24,4 +24,4 @@ class RecommendationEngine:
             success_rate=success,
             average_recovery_time_ms=0, # delegated to performance engine normally
             predicted_failure_probability=failure
-        )
+        

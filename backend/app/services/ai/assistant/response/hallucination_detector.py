@@ -9,4 +9,4 @@ class HallucinationDetector:
         """
         # A basic check could involve looking for typical resource ID patterns in the answer 
         # and checking if they exist in the context.
-        return False
+        return Fals

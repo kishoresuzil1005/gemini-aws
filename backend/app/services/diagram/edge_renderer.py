@@ -63,4 +63,4 @@ fill="{style.label_color}"
 text-anchor="middle">
 {edge["relationship"]}
 </text>
-""")
+"""

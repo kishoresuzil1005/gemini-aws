@@ -12,4 +12,4 @@ class EKSGraphBuilder:
             if res.resource_type == "EKSCluster":
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

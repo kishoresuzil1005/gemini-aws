@@ -11,4 +11,4 @@ class VPCGraphBuilder(BaseGraphBuilder):
     def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
         # VPCs are top-level constructs, usually Subnets connect TO VPCs.
         # But if we need VPC -> DHCP or Peering, it goes here.
-        return []
+        return [

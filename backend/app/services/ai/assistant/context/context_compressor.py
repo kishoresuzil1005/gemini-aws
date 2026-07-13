@@ -22,4 +22,4 @@ class ContextCompressor:
                 # Keep first 5 and last 5, or just summarize count
                 compressed[key] = f"List of {len(value)} items (summarized). First item: {value[0]}"
                 
-        return compressed
+        return compresse

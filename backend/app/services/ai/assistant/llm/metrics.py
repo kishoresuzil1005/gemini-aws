@@ -28,4 +28,4 @@ class MetricsTracker:
             "llm_success": cls._metrics["llm_success"],
             "llm_failure": cls._metrics["llm_failure"],
             "avg_latency_ms": round(avg_latency, 2)
-        }
+        

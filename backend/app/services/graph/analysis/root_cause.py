@@ -23,4 +23,4 @@ class RootCauseAnalyzer:
         return {
             "symptom_resource": resource_id,
             "possible_root_causes": upstream_nodes
-        }
+        

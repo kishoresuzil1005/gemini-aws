@@ -42,4 +42,4 @@ class MissionDashboard:
                 {"id": m.mission_id, "title": m.title, "status": m.status.value}
                 for m in missions[-5:]
             ]
-        }
+        

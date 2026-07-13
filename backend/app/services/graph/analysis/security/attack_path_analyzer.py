@@ -39,4 +39,4 @@ class AttackPathAnalyzer:
             "resource": resource_id,
             "risk_level": risk,
             "paths": attack_paths
-        }
+        

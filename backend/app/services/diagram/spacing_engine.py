@@ -46,4 +46,4 @@ class SpacingEngine:
                 if curr["x"] < expected_min_x:
                     curr["x"] = expected_min_x
 
-        return nodes
+        return node

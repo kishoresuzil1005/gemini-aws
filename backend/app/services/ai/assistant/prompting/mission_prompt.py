@@ -50,4 +50,4 @@ class KnowledgePromptBuilder:
 === CLOUD KNOWLEDGE CONTEXT ===
 {chr(10).join(lines)}
 ================================
-"""
+""

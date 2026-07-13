@@ -158,4 +158,4 @@ class ArchitecturePatterns:
         return self.patterns.get(key)
         
     def get_all_patterns(self) -> Dict[str, Any]:
-        return self.patterns
+        return self.pattern

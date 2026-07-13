@@ -55,4 +55,4 @@ class WorkflowExecutor:
                 
         self.state_machine.transition(plan, WorkflowStatus.COMPLETED)
         self.monitor.track_workflow(plan)
-        return True
+        return Tru

@@ -78,4 +78,4 @@ class LayerBuilder:
         Return the logical architecture layer
         for a given AWS resource type.
         """
-        return self.LAYER_MAP.get(resource_type, "Other")
+        return self.LAYER_MAP.get(resource_type, "Other"

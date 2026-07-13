@@ -17,4 +17,4 @@ class GraphAssistant:
             return f"Mission started with ID: {mission_id}"
         else:
             # Fallback to single-task Planner
-            return "Simple task executed."
+            return "Simple task executed.

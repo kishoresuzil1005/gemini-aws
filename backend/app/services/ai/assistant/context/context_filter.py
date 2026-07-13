@@ -37,4 +37,4 @@ class ContextFilter:
             filtered.append(response)
             
         # Fallback: if we aggressively filtered everything, return original to avoid blanking out
-        return filtered if filtered else tool_results
+        return filtered if filtered else tool_result

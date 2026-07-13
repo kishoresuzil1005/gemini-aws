@@ -12,4 +12,4 @@ class BaseProvider(ABC):
 
     @abstractmethod
     def generate_response(self, messages: List[Dict[str, str]], request_id: str, stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
-        pass
+        pas

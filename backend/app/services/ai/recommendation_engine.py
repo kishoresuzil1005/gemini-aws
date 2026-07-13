@@ -207,4 +207,4 @@ class AIRecommendationEngine:
         final_list = list(unique_recs.values())
         final_list.sort(key=lambda x: priority_map.get(x.priority, 99))
         
-        return final_list
+        return final_lis

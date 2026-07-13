@@ -16,4 +16,4 @@ class RootCauseAnalyzer:
             if tr.tool_name == "RootCauseTool" and tr.status == ToolStatus.SUCCESS:
                 tr.metadata["reasoning"]["is_root_cause"] = True
                 
-        return tool_results
+        return tool_result

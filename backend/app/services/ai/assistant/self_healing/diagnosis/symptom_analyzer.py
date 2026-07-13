@@ -9,4 +9,4 @@ class SymptomAnalyzer:
         print("[SymptomAnalyzer] Correlating active symptoms across the fleet...")
         if len(active_alerts) > 1:
             return "Cascading Failure"
-        return "Isolated Component Failure"
+        return "Isolated Component Failure

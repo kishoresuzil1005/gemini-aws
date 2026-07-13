@@ -11,4 +11,4 @@ class HistoryManager:
         return history[-limit:] if history else []
 
     def get_full_history(self, session_id: str) -> List[Message]:
-        return self.store.get_messages(session_id)
+        return self.store.get_messages(session_id

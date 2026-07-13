@@ -29,4 +29,4 @@ class GCPGraphBuilder(BaseGraphBuilder):
         
     def build_edges(self) -> List[CloudEdge]:
         # GCP specific edge building
-        return []
+        return [

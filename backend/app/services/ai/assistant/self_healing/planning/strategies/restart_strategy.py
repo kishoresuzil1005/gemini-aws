@@ -18,4 +18,4 @@ class RestartStrategy:
             ],
             requires_approval=False,
             confidence=95.0
-        )
+        

@@ -32,4 +32,4 @@ class RelationshipEngine:
                 if node.properties.get("namespace"):
                     pass # build edge
                     
-        return edges
+        return edge

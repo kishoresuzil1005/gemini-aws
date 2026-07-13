@@ -24,4 +24,4 @@ def with_retry(max_retries=3, base_delay=1.0, backoff_factor=2.0):
             
             raise last_exception
         return wrapper
-    return decorator
+    return decorato

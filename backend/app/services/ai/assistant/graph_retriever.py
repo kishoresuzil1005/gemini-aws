@@ -32,4 +32,4 @@ class GraphRetriever:
         except Exception:
             pass
             
-        return context
+        return contex

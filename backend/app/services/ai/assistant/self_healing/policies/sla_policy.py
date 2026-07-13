@@ -12,4 +12,4 @@ class SLAPolicy:
             return "CRITICAL"
         elif tier == "SILVER":
             return "HIGH"
-        return "NORMAL"
+        return "NORMAL

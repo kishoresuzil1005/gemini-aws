@@ -17,4 +17,4 @@ class MissionMemory:
 
     def clear_context(self, mission_id: str):
         if mission_id in self._contexts:
-            del self._contexts[mission_id]
+            del self._contexts[mission_id

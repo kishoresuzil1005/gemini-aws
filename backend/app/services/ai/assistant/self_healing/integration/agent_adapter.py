@@ -8,4 +8,4 @@ class AgentAdapter:
     def dispatch_to_domain_agent(self, action: str, target: str, context: Dict[str, Any]):
         print(f"[AgentAdapter] Requesting Agent Director to assign '{action}' on {target} to a domain agent...")
         # Integrates with the DirectorEngine
-        return True
+        return Tru

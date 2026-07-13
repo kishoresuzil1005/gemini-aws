@@ -40,4 +40,4 @@ class SnapshotOptimizer:
                 "remediation_type": "AUTOMATIC"
             })
             
-        return recommendations
+        return recommendation

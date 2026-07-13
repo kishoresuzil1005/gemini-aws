@@ -12,4 +12,4 @@ class SNSGraphBuilder:
             if res.resource_type in ("SNS", "SNSTopic"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edges
+        return edge

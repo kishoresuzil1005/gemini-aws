@@ -92,4 +92,4 @@ class EC2InstancesService:
                 "public_ip": "34.210.44.12",
                 "private_ip": "10.0.2.14"
             }
-        ]
+        

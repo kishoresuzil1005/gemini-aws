@@ -19,4 +19,4 @@ class HealingResult(BaseModel):
     incident_id: str
     success: bool
     rollback_triggered: bool
-    duration_seconds: float
+    duration_seconds: floa

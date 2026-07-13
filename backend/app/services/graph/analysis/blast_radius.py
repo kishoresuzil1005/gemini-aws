@@ -24,4 +24,4 @@ class BlastRadiusAnalyzer:
             "resource": resource_id,
             "impacted_count": len(downstream_nodes),
             "impacted_resources": downstream_nodes
-        }
+        

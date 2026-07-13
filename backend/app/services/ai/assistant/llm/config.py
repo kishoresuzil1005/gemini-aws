@@ -9,4 +9,4 @@ class AISettings:
         self.health_cache_seconds: int = int(os.getenv("AI_HEALTH_CACHE_SECONDS", "60"))
         self.stream_enabled: bool = os.getenv("AI_STREAM_ENABLED", "false").lower() == "true"
 
-settings = AISettings()
+settings = AISettings(

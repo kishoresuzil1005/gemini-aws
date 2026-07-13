@@ -22,4 +22,4 @@ class ReasoningExplainer:
             top_risk = risks[0]
             explanation += f"4. Prioritized highest risk: {top_risk.severity} ({top_risk.score}).\n"
             
-        return explanation
+        return explanatio

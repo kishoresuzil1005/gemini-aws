@@ -61,4 +61,4 @@ class RDSOptimizer:
                 "remediation_type": "MANUAL"
             })
 
-        return recommendations
+        return recommendation

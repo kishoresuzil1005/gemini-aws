@@ -36,4 +36,4 @@ class WorkflowScheduler:
                 del remaining[step.step_id]
                 
         self.state_machine.transition(plan, WorkflowStatus.SCHEDULED)
-        return stages
+        return stage

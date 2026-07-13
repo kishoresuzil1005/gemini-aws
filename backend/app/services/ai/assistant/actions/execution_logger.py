@@ -19,4 +19,4 @@ class ExecutionLogger:
             provider=plan.request.context.provider_name
         )
         self.logs.append(log)
-        # Real system would write to CloudWatch or Elasticsearch here
+        # Real system would write to CloudWatch or Elasticsearch her

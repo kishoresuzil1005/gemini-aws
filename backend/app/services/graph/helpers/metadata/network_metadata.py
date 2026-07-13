@@ -53,4 +53,4 @@ class NetworkMetadata:
     @staticmethod
     def get_instance_id(resource: ResourceDB) -> str:
         metadata = resource.resource_metadata or {}
-        return metadata.get("instance_id")
+        return metadata.get("instance_id"

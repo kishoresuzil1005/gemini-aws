@@ -12,4 +12,4 @@ class RiskPredictor:
             return 0.0
             
         rollbacks = sum(1 for h in history if h.status == "ROLLBACK")
-        return (rollbacks / len(history)) * 100.0
+        return (rollbacks / len(history)) * 100.

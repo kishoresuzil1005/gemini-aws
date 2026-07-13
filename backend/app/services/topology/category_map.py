@@ -20,4 +20,3 @@ CATEGORY_MAP = {
     "IAM": "Security",
     "KMS": "Security",
     "SECURITYGROUP": "Security"
-}

@@ -52,4 +52,4 @@ class GraphEngine:
             
     def get_underlying_graph(self) -> nx.DiGraph:
         """Returns the raw networkx graph for advanced algorithms (e.g. shortest path) in traversal engines."""
-        return self._graph
+        return self._grap

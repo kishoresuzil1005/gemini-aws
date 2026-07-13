@@ -107,4 +107,4 @@ class GraphMetadataHelper:
             for pair in rule.get("UserIdGroupPairs", []):
                 if pair.get("GroupId"):
                     sgs.add(pair.get("GroupId"))
-        return list(sgs)
+        return list(sgs

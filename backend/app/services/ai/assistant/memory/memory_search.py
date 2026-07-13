@@ -11,4 +11,4 @@ class MemorySearch:
         """
         history = self.store.get_messages(session_id)
         # Basic keyword search for now
-        return [msg for msg in history if resource_name in msg.content]
+        return [msg for msg in history if resource_name in msg.content

@@ -47,4 +47,4 @@ class NetworkAnalyzer:
             "resource": resource_id,
             "network_type": "PUBLIC" if is_public else "PRIVATE",
             "findings": findings
-        }
+        

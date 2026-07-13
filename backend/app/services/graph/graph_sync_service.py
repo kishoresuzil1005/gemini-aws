@@ -131,4 +131,4 @@ class GraphSyncService:
         }
 
     def close(self):
-        self.graph.close()
+        self.graph.close(

@@ -34,4 +34,4 @@ class RiskPrioritizer:
                 
         # Sort descending by risk score
         risks.sort(key=lambda r: r.score, reverse=True)
-        return risks
+        return risk

@@ -30,4 +30,4 @@ class IncidentPattern(BaseModel):
     incident_signature: str
     occurrence_count: int
     best_remediation_action: str
-    remediation_success_rate: float
+    remediation_success_rate: floa

@@ -6,4 +6,4 @@ class PolicyLearningEngine:
     def should_learn(self, outcome: ExecutionOutcome, environment: str) -> bool:
         if environment.lower() in ["sandbox", "test", "chaos"]:
             return False
-        return True
+        return Tru

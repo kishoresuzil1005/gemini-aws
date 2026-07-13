@@ -43,4 +43,3 @@ PROVIDER_METADATA: Dict[CloudProvider, ProviderMetadata] = {
         supports_iam=False,
         supports_kubernetes=True
     )
-}

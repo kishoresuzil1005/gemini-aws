@@ -42,4 +42,3 @@ ACTION_POLICIES = {
         "timeout_seconds": 10,
         "risk_level": "INFO"
     }
-}

@@ -27,4 +27,4 @@ class MissionExecutor:
         await asyncio.sleep(2)
         
         print(f"[MissionExecutor] Completed mission: {mission_id}")
-        self.manager.update_status(mission_id, MissionStatus.COMPLETED)
+        self.manager.update_status(mission_id, MissionStatus.COMPLETED

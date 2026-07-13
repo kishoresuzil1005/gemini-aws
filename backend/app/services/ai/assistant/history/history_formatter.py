@@ -13,4 +13,4 @@ class HistoryFormatter:
         for msg in messages:
             formatted.append(f"{msg.role.capitalize()}: {msg.content}")
             
-        return "\n".join(formatted)
+        return "\n".join(formatted

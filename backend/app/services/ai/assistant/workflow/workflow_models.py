@@ -60,4 +60,4 @@ class CheckpointRecord(BaseModel):
     completed_steps: List[str] = Field(default_factory=list)
     variables: Dict[str, Any] = Field(default_factory=dict)
     temporary_outputs: Dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)

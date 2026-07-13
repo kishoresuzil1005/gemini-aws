@@ -14,4 +14,4 @@ class SessionManager:
 
     def end_session(self, session_id: str):
         if session_id in self.active_sessions:
-            self.active_sessions[session_id]["active"] = False
+            self.active_sessions[session_id]["active"] = Fals

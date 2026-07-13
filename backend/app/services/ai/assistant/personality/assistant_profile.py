@@ -16,4 +16,4 @@ class AssistantPersonality:
     }
 
     def get_system_prompt(self, mode: str = "default") -> str:
-        return self.PROFILES.get(mode, self.PROFILES["default"])
+        return self.PROFILES.get(mode, self.PROFILES["default"]

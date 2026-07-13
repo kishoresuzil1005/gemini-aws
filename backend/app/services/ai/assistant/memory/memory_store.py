@@ -25,4 +25,4 @@ class MemoryStore:
         if session_id in self._history:
             del self._history[session_id]
         if session_id in self._context:
-            del self._context[session_id]
+            del self._context[session_id

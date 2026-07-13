@@ -45,4 +45,4 @@ class ResourceMapper:
         if not native_name:
             raise UnsupportedResourceError(f"Resource type {generic_type.value} is not supported on {provider.value}.")
             
-        return native_name
+        return native_nam

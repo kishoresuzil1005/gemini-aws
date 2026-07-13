@@ -10,4 +10,4 @@ class ConstraintEngine:
         if mission_context.get("environment") == "production":
             constraints.append("no_downtime_allowed")
             constraints.append("require_human_approval_for_deletions")
-        return constraints
+        return constraint

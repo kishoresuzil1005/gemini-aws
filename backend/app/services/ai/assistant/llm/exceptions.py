@@ -15,4 +15,4 @@ class LlmTimeoutError(LlmException):
 
 class LlmProviderError(LlmException):
     def __init__(self, message: str):
-        super().__init__(message, retryable=False)
+        super().__init__(message, retryable=False

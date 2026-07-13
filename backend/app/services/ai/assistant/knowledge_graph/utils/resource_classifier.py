@@ -9,4 +9,4 @@ class ResourceClassifier:
             if "db" in node.resource_name.lower():
                 return "Database"
             return "Application Server"
-        return "Unknown"
+        return "Unknown

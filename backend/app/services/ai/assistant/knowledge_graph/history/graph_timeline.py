@@ -8,4 +8,4 @@ class GraphTimeline:
         self.snapshots: List[GraphSnapshot] = []
         
     def get_timeline(self):
-        return self.snapshots
+        return self.snapshot
