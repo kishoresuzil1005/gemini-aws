@@ -17,12 +17,26 @@ class NetworkMetadata:
     @staticmethod
     def get_referenced_security_groups(resource: ResourceDB) -> List[str]:
         metadata = resource.resource_metadata or {}
+
+        ingress = metadata.get("ingress_rules") or []
+        egress = metadata.get("egress_rules") or []
+
+        if not isinstance(ingress, list):
+            ingress = []
+
+        if not isinstance(egress, list):
+            egress = []
+
         sgs = set()
-        for rule in metadata.get("ingress_rules", []) + metadata.get("egress_rules", []):
-            if isinstance(rule, dict):
-                for pair in rule.get("UserIdGroupPairs", []):
-                    if pair.get("GroupId"):
-                        sgs.add(pair.get("GroupId"))
+
+        for rule in ingress + egress:
+            if not isinstance(rule, dict):
+                continue
+
+            for pair in rule.get("UserIdGroupPairs", []):
+                if isinstance(pair, dict) and pair.get("GroupId"):
+                    sgs.add(pair["GroupId"])
+
         return list(sgs)
 
     @staticmethod
