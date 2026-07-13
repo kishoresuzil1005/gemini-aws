@@ -75,6 +75,10 @@ def discover_resources(
                         **dict(norm.get("metadata", {})),
                         **dict(norm.get("configuration", {})),
                         **dict(norm.get("security", {})),
+                        "dependencies": [
+                            d if isinstance(d, dict) else d.dict()
+                            for d in norm.get("dependencies", [])
+                        ]
                     }
                     existing.scan_id = uuid.UUID(scan_result.scan_id)
                     existing.resource_version = (existing.resource_version or 0) + 1
@@ -91,6 +95,10 @@ def discover_resources(
                             **dict(norm.get("metadata", {})),
                             **dict(norm.get("configuration", {})),
                             **dict(norm.get("security", {})),
+                            "dependencies": [
+                                d if isinstance(d, dict) else d.dict()
+                                for d in norm.get("dependencies", [])
+                            ]
                         },
                         scan_id=uuid.UUID(scan_result.scan_id),
                         resource_version=1
