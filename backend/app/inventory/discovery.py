@@ -60,6 +60,12 @@ def discover_resources(
                 print("Metadata:", norm.get("metadata"))
                 print("Scan:", scan_result.scan_id)
                 
+                if norm.get("resource_type") == "ALB":
+                    print("=" * 80)
+                    print("ALB NORMALIZED RESOURCE")
+                    print(norm)
+                    print("=" * 80)
+
                 existing = db.query(ResourceDB).filter(ResourceDB.resource_id == norm["resource_id"]).first()
                 if existing:
                     existing.name = norm["name"]
