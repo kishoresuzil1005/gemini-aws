@@ -92,8 +92,20 @@ class AWSRelationshipBuilder:
         
         try:
             for builder_cls in builders:
-                relationships.extend(builder_cls.build(resources))
-        except Exception as e:
-            logger.error(f"Error building graph from inventory: {e}")
+                print("=" * 70)
+                print(f"Running: {builder_cls.__name__}")
+                
+                result = builder_cls.build(resources)
+                
+                print("Returned type:", type(result))
+                
+                if not isinstance(result, list):
+                    raise Exception(f"{builder_cls.__name__} returned {type(result)} instead of list")
+                
+                relationships.extend(result)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            raise
             
         return relationships
