@@ -61,10 +61,20 @@ class ALBDiscovery:
                         name=lb['LoadBalancerName'],
                         status=lb.get('State', {}).get('Code', 'Unknown'),
                         metadata={
-                            'dns_name': lb.get('DNSName'),
-                            'scheme': lb.get('Scheme'),
-                            'type': lb.get('Type'),
-                            'ip_address_type': lb.get('IpAddressType')
+                            "dns_name": lb.get("DNSName"),
+                            "scheme": lb.get("Scheme"),
+                            "type": lb.get("Type"),
+                            "ip_address_type": lb.get("IpAddressType"),
+                            
+                            "vpc_id": vpc_id,
+                            
+                            "subnets": [
+                                az.get("SubnetId")
+                                for az in lb.get("AvailabilityZones", [])
+                                if az.get("SubnetId")
+                            ],
+                            
+                            "security_groups": security_groups
                         },
                         security={
                             'security_groups': security_groups
