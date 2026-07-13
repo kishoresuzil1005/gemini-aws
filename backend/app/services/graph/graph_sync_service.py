@@ -83,7 +83,16 @@ class GraphSyncService:
             builder = AWSRelationshipBuilder(db=self.db)
             relationships = builder.build()
 
+            print(type(relationships))
+            if relationships:
+                print(type(relationships[0]))
+                print(relationships[0])
+
             for rel in relationships:
+                print("Processing:", rel)
+                print(type(rel))
+                if isinstance(rel, dict):
+                    print(type(rel.get("type")))
 
                 #
                 # Ensure source node exists — use real name/region from DB
@@ -118,7 +127,10 @@ class GraphSyncService:
                     relationship_type=rel["type"]
                 )
         except Exception as ge_e:
+            import traceback
+            traceback.print_exc()
             print(f"Error executing graph relationships builder: {ge_e}")
+            raise
 
         from app.services.graph.sync_tracker import SyncTracker
         SyncTracker.update()
