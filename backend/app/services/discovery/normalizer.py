@@ -34,8 +34,25 @@ class ResourceNormalizer:
                 raw_metadata = raw.get("metadata", {})
                 if not isinstance(raw_metadata, dict):
                     raw_metadata = {"_raw_metadata": raw_metadata}
-                
-                raw_metadata = make_json_safe(raw_metadata)
+
+                configuration = raw.get("configuration", {})
+                if not isinstance(configuration, dict):
+                    configuration = {}
+
+                security = raw.get("security", {})
+                if not isinstance(security, dict):
+                    security = {}
+
+                monitoring = raw.get("monitoring", {})
+                if not isinstance(monitoring, dict):
+                    monitoring = {}
+
+                raw_metadata = {
+                    **make_json_safe(raw_metadata),
+                    **make_json_safe(configuration),
+                    **make_json_safe(security),
+                    **make_json_safe(monitoring),
+                }
                     
                 norm = {
                     "resource_id": str(resource_id),
@@ -63,7 +80,8 @@ class ResourceNormalizer:
                 base_keys = {"id", "type", "resource_id", "resource_type", "provider", "name", 
                              "region", "status", "state", "instance_type", "instance_class", 
                              "size_gb", "memory_size", "monthly_requests", "avg_duration_ms", 
-                             "dependencies", "metadata", "configuration_hint", "configurationHint"}
+                             "dependencies", "metadata", "configuration", "security", "monitoring",
+                             "configuration_hint", "configurationHint"}
                              
                 for key, value in raw.items():
                     if key not in base_keys:
@@ -78,4 +96,4 @@ class ResourceNormalizer:
             except Exception as e:
                 logger.error(f"Error normalizing resource {raw}: {e}")
                 
-        return normalize
+        return normalized
