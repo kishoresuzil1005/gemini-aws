@@ -32,27 +32,28 @@ class ResourceNormalizer:
                 
                 # Capture everything else in metadata
                 raw_metadata = raw.get("metadata", {})
+
                 if not isinstance(raw_metadata, dict):
                     raw_metadata = {"_raw_metadata": raw_metadata}
 
-                configuration = raw.get("configuration", {})
-                if not isinstance(configuration, dict):
-                    configuration = {}
+                raw_metadata = make_json_safe(raw_metadata)
 
-                security = raw.get("security", {})
-                if not isinstance(security, dict):
-                    security = {}
+                configuration = make_json_safe(raw.get("configuration", {}))
+                security = make_json_safe(raw.get("security", {}))
+                monitoring = make_json_safe(raw.get("monitoring", {}))
+                cost = make_json_safe(raw.get("cost", {}))
 
-                monitoring = raw.get("monitoring", {})
-                if not isinstance(monitoring, dict):
-                    monitoring = {}
+                if isinstance(configuration, dict):
+                    raw_metadata.update(configuration)
 
-                raw_metadata = {
-                    **make_json_safe(raw_metadata),
-                    **make_json_safe(configuration),
-                    **make_json_safe(security),
-                    **make_json_safe(monitoring),
-                }
+                if isinstance(security, dict):
+                    raw_metadata.update(security)
+
+                if isinstance(monitoring, dict):
+                    raw_metadata.update(monitoring)
+
+                if isinstance(cost, dict):
+                    raw_metadata.update(cost)
                     
                 norm = {
                     "resource_id": str(resource_id),
