@@ -1,11 +1,12 @@
-from typing import List, Dict, Any
+from typing import List
 from app.models import ResourceDB
 
+
 class RDSMetadata:
-    """Extracts properties strictly matching the RDS metadata schema in PostgreSQL."""
+    """Extracts properties from RDS metadata."""
 
     @staticmethod
-    def get_vpc_id(resource: ResourceDB) -> str:
+    def get_vpc_id(resource: ResourceDB):
         metadata = resource.resource_metadata or {}
 
         subnet_group = metadata.get("subnet_group")
@@ -21,11 +22,14 @@ class RDSMetadata:
 
         groups = metadata.get("vpc_security_groups", [])
 
-        if groups and isinstance(groups[0], dict):
+        if not groups:
+            return []
+
+        if isinstance(groups[0], dict):
             return [
                 sg.get("VpcSecurityGroupId")
                 for sg in groups
-                if sg.get("VpcSecurityGroupId")
+                if isinstance(sg, dict) and sg.get("VpcSecurityGroupId")
             ]
 
         return groups
@@ -36,7 +40,8 @@ class RDSMetadata:
 
         subnet_group = metadata.get("subnet_group")
 
-        # Old discovery stores only the subnet group name
+        # Older inventory format:
+        # "subnet_group": "cloudops-db-subnet"
         if isinstance(subnet_group, str):
             return []
 
