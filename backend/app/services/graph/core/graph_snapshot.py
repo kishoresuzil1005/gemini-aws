@@ -1,5 +1,6 @@
 import time
 import json
+from typing import Any
 
 class GraphSnapshotManager:
     """

@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from ....models.healing_models import RepairPlan
+from ...models.healing_models import RepairPlan
 
 class CanaryStrategy:
     """
