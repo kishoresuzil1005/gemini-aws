@@ -46,4 +46,4 @@ class ALBGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        return edge
+        return edges

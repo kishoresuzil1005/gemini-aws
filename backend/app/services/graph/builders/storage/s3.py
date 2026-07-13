@@ -12,4 +12,4 @@ class S3GraphBuilder:
             if res.resource_type in ("S3Bucket", "S3"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges

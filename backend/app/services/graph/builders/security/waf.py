@@ -12,4 +12,4 @@ class WAFGraphBuilder:
             if res.resource_type in ("WAF", "WAFWebACL"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges

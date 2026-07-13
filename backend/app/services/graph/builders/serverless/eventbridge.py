@@ -12,4 +12,4 @@ class EventBridgeGraphBuilder:
             if res.resource_type in ("EventBridgeRule", "EventBridgeBus", "EventBridge"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges

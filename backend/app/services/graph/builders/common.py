@@ -55,4 +55,4 @@ class GraphBuilderHelper:
                     "source_type": resource.resource_type,
                     "target_type": resource_lookup[target_id]
                 })
-        return edge
+        return edges

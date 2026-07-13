@@ -12,4 +12,4 @@ class InternetGatewayGraphBuilder:
             if res.resource_type == "InternetGateway":
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges

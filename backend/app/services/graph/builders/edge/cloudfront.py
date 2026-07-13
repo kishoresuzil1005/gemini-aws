@@ -12,4 +12,4 @@ class CloudFrontGraphBuilder:
             if res.resource_type in ("CloudFront", "CloudFrontDistribution"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges

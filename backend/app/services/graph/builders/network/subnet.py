@@ -24,4 +24,4 @@ class SubnetGraphBuilder(BaseGraphBuilder):
             )
             if edge: edges.append(edge)
             
-        return edge
+        return edges

@@ -50,4 +50,4 @@ class TargetGroupGraphBuilder(BaseGraphBuilder):
                 )
                 if edge: edges.append(edge)
                 
-        return edge
+        return edges

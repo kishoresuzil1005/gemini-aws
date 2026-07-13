@@ -12,4 +12,4 @@ class Route53GraphBuilder:
             if res.resource_type in ("Route53", "Route53HostedZone"):
                 edges.extend(GraphBuilderHelper.build_edges(res, resource_lookup))
                 
-        return edge
+        return edges
