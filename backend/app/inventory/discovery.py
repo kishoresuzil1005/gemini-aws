@@ -138,6 +138,18 @@ def discover_resources(
             all_resource_ids = [r["resource_id"] for r in normalized_resources]
             if all_resource_ids:
                 db.query(ResourceRelationshipDB).filter(ResourceRelationshipDB.source_resource_id.in_(all_resource_ids)).delete(synchronize_session=False)
+
+            print("=" * 80)
+            print("TOTAL RELATIONSHIPS CREATED:", len(relationships))
+            
+            for rel in relationships[:30]:
+                print(
+                    rel.source_resource_id,
+                    rel.relationship_type,
+                    rel.target_resource_id
+                )
+            
+            print("=" * 80)
             
             db.add_all(relationships)
 

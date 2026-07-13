@@ -87,7 +87,15 @@ class AWSDiscoveryScanner:
 
             try:
                 print("LAMBDA START")
-                resources.extend(LambdaDiscovery.discover(reg))
+                lambda_resources = LambdaDiscovery.discover(reg)
+                print("=" * 80)
+                print("LAMBDA DISCOVERED:", len(lambda_resources))
+                for r in lambda_resources:
+                    print("RESOURCE:", r.get("resource_id", "UNKNOWN"))
+                    print("DEPENDENCIES:", r.get("dependencies"))
+                    print("CONFIGURATION:", r.get("configuration"))
+                print("=" * 80)
+                resources.extend(lambda_resources)
                 print("LAMBDA DONE")
             except Exception as e:
                 logger.warning(f"LambdaDiscovery failed in region {reg}: {e}")
@@ -101,7 +109,15 @@ class AWSDiscoveryScanner:
 
             try:
                 print("ALB START")
-                resources.extend(ALBDiscovery.discover(reg))
+                alb_resources = ALBDiscovery.discover(reg)
+                print("=" * 80)
+                print("ALB DISCOVERED:", len(alb_resources))
+                for r in alb_resources:
+                    print("RESOURCE:", r.get("resource_id", "UNKNOWN"))
+                    print("DEPENDENCIES:", r.get("dependencies"))
+                    print("METADATA:", r.get("metadata"))
+                print("=" * 80)
+                resources.extend(alb_resources)
                 print("ALB DONE")
             except Exception as e:
                 logger.warning(f"ALBDiscovery failed in region {reg}: {e}")
@@ -314,4 +330,4 @@ class AWSDiscoveryScanner:
         )
 
         DISCOVERY_CACHE[cache_key] = (scan_result, now)
-        return scan_resul
+        return scan_result
