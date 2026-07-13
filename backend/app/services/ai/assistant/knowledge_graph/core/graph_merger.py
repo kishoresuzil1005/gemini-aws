@@ -14,4 +14,4 @@ class GraphMerger:
         """
         # For this prototype, we'll assume a dummy merge rule 
         # (e.g. finding a tag 'k8s.io/cluster-name')
-        pas
+        pass

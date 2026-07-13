@@ -18,4 +18,4 @@ class GraphValidator:
         # Check cycles (not all cycles are bad, but for dependencies they might be)
         cycles = list(nx.simple_cycles(graph))
         if cycles:
-            pas
+            pass

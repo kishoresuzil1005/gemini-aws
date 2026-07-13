@@ -9,4 +9,4 @@ class ForgettingEngine:
         
     def apply_decay(self):
         # E.g. prune records older than 1 year or apply weight reduction
-        pas
+        pass

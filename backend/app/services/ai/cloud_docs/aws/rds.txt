@@ -1,31 +1,38 @@
-# Amazon Relational Database Service (Amazon RDS) - Core Concepts and Security
 
-Amazon Relational Database Service (Amazon RDS) makes it easy to set up, operate, and scale a relational database in the cloud. It provides cost-efficient and resizable capacity while managing time-consuming database administration tasks, freeing you up to focus on your applications and business.
 
-## Core Concepts
 
-### DB Instances and Engines
-A DB Instance is an isolated database environment in the cloud. You can choose from six popular database engines:
-1.  Amazon Aurora (MySQL/PostgreSQL compatible)
-2.  PostgreSQL
-3.  MySQL
-4.  MariaDB
-5.  Oracle
-6.  Microsoft SQL Server
 
-### High Availability (Multi-AZ Deployments)
-In a Multi-AZ deployment, Amazon RDS automatically provisions and maintains a synchronous standby replica in a different Availability Zone (AZ). The primary DB Instance synchronously replicates data across AZs to the standby. In case of failure or maintenance on the primary, RDS performs automatic failover to the standby with minimal downtime and zero administrative intervention.
 
-### DB Subnet Groups
-Each DB Instance must have an associated DB Subnet Group, which defines the private IP address pool available for configuration. It must span at least two Availability Zones in your Region.
 
-## Security Controls and Hardening
+Amazon RDS User Guide - Welcome
 
-### 1. Private Placement
-Never run databases with public access enabled. Ensure that the database instance has `publicly_accessible` set to `False` and is placed exclusively inside private/isolated subnets with no public path or internet-facing routing.
 
-### 2. Restrict Security Group Traffic
-Restrict DB Security Group inbound access exclusively to the specific Security Group(s) of authorized application servers (such as the app microservices security group) on the specific database port (e.g. 5432 for Postgres, 3306 for MySQL). Do not open database ports to broad subnet CIDRs or 0.0.0.0/0.
 
-### 3. Encryption
-Enable storage encryption using keys managed in AWS Key Management Service (AWS KMS). Also, configure mandatory SSL/TLS connections for any clients connecting to the database to secure transit paths.
+
+
+
+What is Amazon RDS?
+
+
+Amazon Relational Database Service (Amazon RDS) makes it easy to set up, operate, and scale a relational database in the cloud.
+
+
+Concepts
+
+
+
+
+DB Instances: Six popular supported database engines
+
+
+Multi-AZ Deployment: Synchronous replication for failover and high availability
+
+
+Read Replicas: Increase read-scaling capacity
+
+
+
+
+
+
+

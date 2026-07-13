@@ -1,4 +1,4 @@
-#!/home/suzil/Downloads/cloudops (1)/venv/bin/python3
+#!/Users/ironman/Downloads/build-your-own-x/gemini-aws/venv/bin/python3.13
 
 import sys
 import json

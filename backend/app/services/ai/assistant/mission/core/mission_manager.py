@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from ..models.mission_models import Mission, MissionGoal, MissionStatus
 from .mission_repository import MissionRepository
 

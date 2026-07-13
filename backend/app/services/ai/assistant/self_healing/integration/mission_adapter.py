@@ -8,4 +8,4 @@ class MissionAdapter:
     def dispatch_to_mission_control(self, plan: RepairPlan):
         print("[MissionAdapter] Delegating repair plan to Autonomous Mission Control...")
         # Calls MissionEngine.start_mission(...)
-        pas
+        pass

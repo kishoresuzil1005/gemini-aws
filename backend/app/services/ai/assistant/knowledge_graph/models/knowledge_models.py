@@ -47,4 +47,4 @@ class ResourceOwner(BaseModel):
     pass
 
 class Lineage(BaseModel):
-    pas
+    pass

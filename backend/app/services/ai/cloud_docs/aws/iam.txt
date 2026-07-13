@@ -1,28 +1,41 @@
-# AWS Identity and Access Management (IAM) - Concepts and Security Standards
 
-AWS Identity and Access Management (IAM) is a web service that helps you securely control access to AWS resources. You use IAM to control who is authenticated (signed in) and authorized (has permissions) to use resources.
 
-## Core Concepts
 
-### IAM Identities
-*   **IAM Users:** A representation of a person or service that interacts with AWS.
-*   **IAM Groups:** A collection of IAM users. You can use groups to specify permissions for multiple users.
-*   **IAM Roles:** An identity with permission policies that determine what the identity can and cannot do in AWS. Unlike users, roles do not have static passwords or access keys. Instead, roles provide temporary security credentials when assumed, mitigating credential exposure risks.
 
-### IAM Policies
-Policies are documents that define permissions. They are written in JSON and can be attached to identities (identity-based policies) or resources (resource-based policies, like S3 bucket policies).
-*   **Effect:** Specifies whether the policy allows or denies access.
-*   **Action:** The specific API actions/operations you want to allow or deny.
-*   **Resource:** The Amazon Resource Name (ARN) of the specific resources targeted by the actions.
-*   **Condition:** Optional constraints under which the policy is valid.
 
-## Core DevSecOps Principles
 
-### 1. Principle of Least Privilege (PoLP)
-Grant only the minimum required permissions necessary to perform a task. Avoid using administrator permissions (`"Action": "*"`) for applications or individual developers. Regularly review active IAM permissions via AWS Access Advisor or IAM Access Analyzer.
+AWS IAM User Guide - Introduction
 
-### 2. AWS Security Token Service (STS) and AssumeRole
-Always prefer cross-account or cross-service delegation using AWS STS `AssumeRole`. Instead of passing long-lived API credentials, clients or services should assume target IAM roles dynamically to fetch dynamic, short-lived session tokens.
 
-### 3. Implement Multi-Factor Authentication (MFA)
-Ensure that Multi-Factor Authentication (MFA) is enabled for all human accounts, especially the AWS Account Root User and any users with privileges.
+
+
+
+
+What is AWS IAM?
+
+
+AWS Identity and Access Management (IAM) is a web service that helps you securely control access to AWS resources.
+
+
+Concepts
+
+
+
+
+IAM Users: Operational human identity representation
+
+
+IAM Groups: Grouping of identities
+
+
+IAM Roles: Assumable policies with temporary tokens
+
+
+JSON Policies: Define permission rules
+
+
+
+
+
+
+

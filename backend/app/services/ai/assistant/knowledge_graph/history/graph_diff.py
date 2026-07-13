@@ -4,4 +4,4 @@ class GraphDiff:
     """Calculates the difference between two graph snapshots (What changed?)."""
     
     def calculate_diff(self, snapshot_a: GraphSnapshot, snapshot_b: GraphSnapshot):
-        pas
+        pass
