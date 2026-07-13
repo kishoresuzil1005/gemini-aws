@@ -40,3 +40,5 @@ google-cloud-iam
 google-api-python-client
 kubernetes
 networkx
+
+celery>=5.3.6

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 from app.services.ai.assistant.knowledge_graph.core.graph_repository import GraphRepository
 
 class TopologyEngine:

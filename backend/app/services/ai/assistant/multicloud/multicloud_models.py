@@ -11,10 +11,12 @@ class CloudProvider(str, Enum):
     OCI = "OCI"
 
 class GenericResourceType(str, Enum):
-    COMPUTE = "COMPUTE"
-    STORAGE = "STORAGE"
-    DATABASE = "DATABASE"
-    NETWORK = "NETWORK"
+    COMPUTE = "compute"
+    STORAGE = "storage"
+    DATABASE = "database"
+    NETWORK = "network"
+    KUBERNETES = "kubernetes"
+    SECURITY = "security"
     LOAD_BALANCER = "LOAD_BALANCER"
     FUNCTION = "FUNCTION"
     CONTAINER = "CONTAINER"

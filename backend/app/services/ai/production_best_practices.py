@@ -1,5 +1,5 @@
 from typing import Dict, Any, List
-from app.services.ai.production_checklist import ProductionChecklist
+from app.services.ai.production_checklist import ProductionChecklistService as ProductionChecklist
 
 class ProductionBestPractices:
     def __init__(self):

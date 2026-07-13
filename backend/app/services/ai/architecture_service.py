@@ -2,7 +2,7 @@ import json
 from typing import Dict, Any, List
 from app.services.ai.architecture_patterns import ArchitecturePatterns
 from app.services.ai.architecture_review import ArchitectureReview
-from app.services.ai.failure_analysis import FailureAnalysis
+from app.services.ai.failure_analysis import FailureAnalysisService as FailureAnalysis
 from app.services.ai.production_best_practices import ProductionBestPractices
 from app.services.diagram.diagram_generator import DiagramGenerator
 
