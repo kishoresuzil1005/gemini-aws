@@ -45,7 +45,11 @@ class LambdaDiscovery:
                         'last_modified': f.get('LastModified'),
                         'version': f.get('Version'),
                         'description': f.get('Description'),
-                        'environment_variables': list(f.get('Environment', {}).get('Variables', {}).keys())
+                        'environment_variables': list(f.get('Environment', {}).get('Variables', {}).keys()),
+                        
+                        # Needed by Graph Builder
+                        'role': f.get('Role'),
+                        'vpc_config': vpc_config
                     },
                     security={
                         'role': f.get('Role'),
