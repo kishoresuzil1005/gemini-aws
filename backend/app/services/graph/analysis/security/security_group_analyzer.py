@@ -51,4 +51,4 @@ class SecurityGroupAnalyzer:
             "usage_count": usage_count,
             "used_by": used_by,
             "findings": findings
-        
+        }

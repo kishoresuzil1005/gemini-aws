@@ -9,4 +9,4 @@ class GraphQuery:
         
     def execute_query(self, query: str) -> List[Dict[str, Any]]:
         # Future cypher-like execution
-        return [
+        return []

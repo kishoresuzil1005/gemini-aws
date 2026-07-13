@@ -25,4 +25,4 @@ class HealingStateMachine:
         self._states[incident_id] = new_state
         
     def get_state(self, incident_id: str) -> HealingState:
-        return self._states.get(incident_id, HealingState.DETECTED
+        return self._states.get(incident_id, HealingState.DETECTED)

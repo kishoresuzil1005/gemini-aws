@@ -18,4 +18,4 @@ class SuccessEvaluator:
             duration_seconds=execution_metrics.get("duration", 0),
             metrics_achieved={"actual_reduction_pct": actual},
             insights=["Target met successfully"] if status == MissionStatus.COMPLETED else ["Fell short of target"]
-        
+        )

@@ -74,4 +74,4 @@ class ArchitectureReviewer:
             "score": score,
             "max_score": 100,
             "warnings": warnings
-        
+        }

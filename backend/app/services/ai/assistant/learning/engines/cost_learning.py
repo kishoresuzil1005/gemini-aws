@@ -11,4 +11,4 @@ class CostLearningEngine:
         savings = [h.cost_impact for h in history if h.cost_impact and h.cost_impact > 0]
         if not savings:
             return 0.0
-        return sum(savings) / len(savings
+        return sum(savings) / len(savings)

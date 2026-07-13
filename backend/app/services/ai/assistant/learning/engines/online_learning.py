@@ -7,4 +7,4 @@ class OnlineLearningEngine:
         self.learning_engine = learning_engine
         
     def trigger_update(self):
-        self.learning_engine.process_feedback_loop(
+        self.learning_engine.process_feedback_loop()

@@ -65,4 +65,4 @@ class IncidentEngine:
                 "title": f"Overly Permissive IAM Role: {res.name or res.resource_id}",
                 "severity": "CRITICAL",
                 "description": "Role has AdministratorAccess."
-            }
+            })

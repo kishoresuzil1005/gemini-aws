@@ -21,4 +21,4 @@ class BlastRadiusEngine:
             "affected_nodes": affected_nodes,
             "impact_score": impact_score,
             "criticality": criticality
-        
+        }

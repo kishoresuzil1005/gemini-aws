@@ -47,4 +47,4 @@ class NLQueryEngine:
             "query_provided": natural_language_query,
             "cypher_generated": cypher_query,
             "results": db_results
-        
+        }

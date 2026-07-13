@@ -18,4 +18,4 @@ class RollbackManager:
             snapshot_ids=[f"snap-{plan.request.resource_id}"],
             rollback_commands=[f"restore {plan.request.resource_id}"],
             dependencies=[]
-        
+        )

@@ -67,4 +67,4 @@ class ResourceAggregator:
 
             "edges": graph["edges"]
 
-        
+        }

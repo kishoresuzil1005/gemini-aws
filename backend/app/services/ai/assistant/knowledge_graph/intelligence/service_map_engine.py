@@ -9,4 +9,4 @@ class ServiceMapEngine:
         
     def extract_service_map(self, service_name: str) -> List[str]:
         """e.g., Frontend -> API -> Auth -> DB"""
-        return [
+        return []

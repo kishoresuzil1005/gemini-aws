@@ -19,4 +19,4 @@ class ConversationContext:
         return dict(self._context)
 
     def reset(self):
-        self._context = {
+        self._context = {}

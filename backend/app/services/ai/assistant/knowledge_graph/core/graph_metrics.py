@@ -12,4 +12,4 @@ class GraphMetrics:
         return {
             "node_count": graph.number_of_nodes(),
             "edge_count": graph.number_of_edges()
-        
+        }

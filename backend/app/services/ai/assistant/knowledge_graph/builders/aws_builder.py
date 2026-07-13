@@ -28,4 +28,4 @@ class AWSGraphBuilder(BaseGraphBuilder):
         
     def build_edges(self) -> List[CloudEdge]:
         # Leave explicit edges empty if RelationshipEngine will handle it, or add explicit ones here
-        return [
+        return []

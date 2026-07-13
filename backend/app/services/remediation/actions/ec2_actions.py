@@ -45,4 +45,4 @@ class EC2Actions:
         return {
             "InstanceId": instance_id,
             "Status": "rebooting"
-        
+        }

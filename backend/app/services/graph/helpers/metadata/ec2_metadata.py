@@ -27,4 +27,4 @@ class EC2Metadata:
     @staticmethod
     def get_iam_instance_profile(resource: ResourceDB) -> str:
         metadata = resource.resource_metadata or {}
-        return metadata.get("iam_instance_profile"
+        return metadata.get("iam_instance_profile")

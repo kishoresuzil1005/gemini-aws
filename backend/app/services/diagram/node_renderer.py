@@ -83,4 +83,4 @@ font-size="{style.size}"
 fill="{style.color}">
 {meta}
 </text>
-"""
+""")

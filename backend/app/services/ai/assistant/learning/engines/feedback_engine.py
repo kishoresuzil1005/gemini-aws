@@ -10,4 +10,4 @@ class FeedbackEngine:
     def process_execution_result(self, outcome: ExecutionOutcome):
         # Validate and store
         if outcome.status in ["SUCCESS", "FAILURE", "ROLLBACK"]:
-            self.memory.remember(outcome
+            self.memory.remember(outcome)

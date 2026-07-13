@@ -9,4 +9,4 @@ class DependencyEngine:
         
     def get_dependencies(self, node_id: str) -> List[str]:
         # Implementation would traverse incoming edges
-        return [
+        return []

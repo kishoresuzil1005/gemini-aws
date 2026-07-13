@@ -7,4 +7,4 @@ class Recommendation(BaseModel):
     success_rate: float
     average_recovery_time_ms: int
     predicted_failure_probability: float
-    features_used: List[float] = [
+    features_used: List[float] = []

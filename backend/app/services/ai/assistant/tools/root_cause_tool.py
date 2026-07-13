@@ -25,4 +25,4 @@ class RootCauseTool(BaseTool):
             status=status,
             execution_time_ms=execution_time_ms,
             context=result
-        
+        )

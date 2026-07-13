@@ -60,4 +60,4 @@ class IntentClassifier:
         return {
             "intent": detected_intent,
             "confidence": confidence
-        
+        }

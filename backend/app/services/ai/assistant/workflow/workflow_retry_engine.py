@@ -27,4 +27,4 @@ class WorkflowRetryEngine:
                     
                 step.retry_count += 1
                 delay = self.get_backoff_delay(step)
-                time.sleep(delay
+                time.sleep(delay)

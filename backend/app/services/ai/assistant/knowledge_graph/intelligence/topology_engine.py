@@ -9,4 +9,4 @@ class TopologyEngine:
         
     def build_topology(self, region: str) -> Dict[str, Any]:
         """e.g., Internet -> CloudFront -> ALB -> ECS -> RDS"""
-        return {"topology": "Physical architecture representation"
+        return {"topology": "Physical architecture representation"}

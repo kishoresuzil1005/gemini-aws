@@ -6,4 +6,4 @@ class GraphSerializer:
     
     def serialize_to_json(self, repository: GraphRepository) -> str:
         # Convert internal graph to JSON representation
-        return json.dumps({"nodes": [], "edges": []}
+        return json.dumps({"nodes": [], "edges": []})

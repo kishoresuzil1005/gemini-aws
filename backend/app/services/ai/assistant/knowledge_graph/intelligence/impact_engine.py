@@ -9,4 +9,4 @@ class ImpactEngine:
         
     def get_impact(self, node_id: str) -> List[str]:
         # Implementation would traverse downstream edges looking for breaking conditions
-        return [
+        return []

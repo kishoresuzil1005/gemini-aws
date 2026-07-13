@@ -116,4 +116,4 @@ class OllamaProvider(BaseProvider):
             latency = int((time.time() - start_time) * 1000)
             MetricsTracker.record_failure(latency)
             logger.error(f"[Req: {request_id}] Generation Failed: {str(e)}")
-            return self._format_error("OLLAMA_ERROR", f"Error communicating with Ollama: {str(e)}"
+            return self._format_error("OLLAMA_ERROR", f"Error communicating with Ollama: {str(e)}")

@@ -91,4 +91,4 @@ class ArchitectureRecommendationService:
 
             "recommendations": recommendations
 
-        
+        }

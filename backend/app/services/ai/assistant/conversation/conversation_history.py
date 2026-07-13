@@ -25,4 +25,4 @@ class ConversationHistory:
         return self._history.copy()
 
     def clear(self):
-        self._history = [
+        self._history = []

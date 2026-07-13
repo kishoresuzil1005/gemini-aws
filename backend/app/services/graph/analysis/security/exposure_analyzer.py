@@ -122,4 +122,4 @@ class ExposureAnalyzer:
             "internet_accessible": internet_accessible,
             "exposure": exposure,
             "reason": reasons
-        
+        }

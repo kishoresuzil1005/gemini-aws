@@ -17,4 +17,4 @@ class MissionMonitor:
             "mission_id": mission_id,
             "status": mission.status.value,
             "is_healthy": mission.status not in ["FAILED", "CANCELLED"]
-        
+        }

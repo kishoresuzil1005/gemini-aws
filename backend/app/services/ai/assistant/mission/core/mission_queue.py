@@ -37,4 +37,4 @@ class MissionQueue:
         return self._queue[0][2]
 
     def is_empty(self) -> bool:
-        return len(self._queue) == 
+        return len(self._queue) == ""

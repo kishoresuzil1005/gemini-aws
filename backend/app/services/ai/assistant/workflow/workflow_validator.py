@@ -28,4 +28,4 @@ class WorkflowValidator:
             return False, errors
             
         self.state_machine.transition(plan, WorkflowStatus.VALIDATED)
-        return True, [
+        return True, []

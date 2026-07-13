@@ -65,4 +65,4 @@ class AIMetricsCollector:
 
 
 # Singleton collector
-ai_metrics = AIMetricsCollector(
+ai_metrics = AIMetricsCollector()

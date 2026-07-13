@@ -38,4 +38,4 @@ async def mission_chat(payload: Dict[str, Any]):
         "response": f"Mission initiated for: '{intent}'",
         "mission_id": "mission-mock-001",
         "status": "PLANNING"
-    
+    }

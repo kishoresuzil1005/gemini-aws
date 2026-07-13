@@ -72,4 +72,4 @@ class CategoryMapper:
             if cat in fallbacks:
                 fallbacks.remove(cat)
                 
-        return list(fallbacks
+        return list(fallbacks)

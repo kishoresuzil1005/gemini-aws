@@ -18,4 +18,4 @@ class GraphRelationship:
             "type": relationship,
             "source_type": source_type,
             "target_type": target_type
-        
+        }

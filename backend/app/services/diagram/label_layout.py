@@ -13,4 +13,4 @@ class LabelLayout:
             "title_y": node["y"] + cls.TITLE_OFFSET,
             "meta_x": cx,
             "meta_y": node["y"] + cls.META_OFFSET,
-        
+        }

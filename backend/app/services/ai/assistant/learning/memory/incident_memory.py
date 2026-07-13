@@ -14,4 +14,4 @@ class IncidentMemory:
         return None
         
     def store_incident(self, pattern: IncidentPattern):
-        self._incidents.append(pattern
+        self._incidents.append(pattern)

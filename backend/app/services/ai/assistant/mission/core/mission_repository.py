@@ -16,4 +16,4 @@ class MissionRepository:
         return self._store.get(mission_id)
 
     def get_all(self) -> List[Mission]:
-        return list(self._store.values()
+        return list(self._store.values())

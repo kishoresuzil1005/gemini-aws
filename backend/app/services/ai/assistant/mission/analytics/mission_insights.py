@@ -17,4 +17,4 @@ class MissionInsights:
             f"Analyzed {len(results)} past missions.",
             "Cost optimization missions show a high success rate.",
             "Consider increasing concurrency for objective execution to reduce average mission time."
-        
+        ]

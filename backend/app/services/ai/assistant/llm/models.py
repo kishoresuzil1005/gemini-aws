@@ -22,4 +22,4 @@ class StandardLlmResponse(BaseModel):
         return cls(
             status="error",
             errors=[{"code": code, "message": message, "retryable": retryable}]
-        
+        )

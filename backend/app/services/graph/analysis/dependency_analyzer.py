@@ -68,4 +68,4 @@ class DependencyAnalyzer:
             return []
         except Exception as e:
             logger.error(f"Error querying upstream dependencies: {e}")
-            return [
+            return []

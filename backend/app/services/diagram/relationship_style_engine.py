@@ -135,4 +135,4 @@ class RelationshipStyleEngine:
         return mapping.get(
             relationship,
             cls.DEFAULT
-        
+        )

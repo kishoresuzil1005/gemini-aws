@@ -26,4 +26,4 @@ class RecommendationTool(BaseTool):
             status=status,
             execution_time_ms=execution_time_ms,
             context=context
-        
+        )

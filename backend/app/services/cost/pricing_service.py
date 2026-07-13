@@ -185,4 +185,4 @@ class PricingService:
             "eu-central-1": "Europe (Frankfurt)",
             "ap-south-1": "Asia Pacific (Mumbai)"
         }
-        return region_map.get(region, "US East (N. Virginia)"
+        return region_map.get(region, "US East (N. Virginia)")

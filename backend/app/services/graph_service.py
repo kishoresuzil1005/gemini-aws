@@ -15,4 +15,4 @@ class GraphService:
 
     @staticmethod
     def clear_graph():
-        Neo4jService.clear_graph(
+        Neo4jService.clear_graph()

@@ -13,4 +13,4 @@ class LineageEngine:
         if tags.get("ManagedBy") == "Terraform":
             return "Terraform"
             
-        return "Manual
+        return "Manual"

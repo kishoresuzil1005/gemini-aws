@@ -43,4 +43,4 @@ class ReasoningResult(BaseModel):
     risks: List[Risk] = Field(default_factory=list)
     conflicts: List[Conflict] = Field(default_factory=list)
     recommendations: List[RecommendationPriority] = Field(default_factory=list)
-    explanation: str = "
+    explanation: str = ""

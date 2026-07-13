@@ -30,4 +30,4 @@ class ForecastEngine:
 
             "forecast_cost":
             round(projected, 2)
-        
+        }

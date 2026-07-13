@@ -25,4 +25,4 @@ class PlannerRules:
 
     @staticmethod
     def get_tools(intent: str) -> List[str]:
-        return INTENT_TOOL_MAP.get(intent, ["GraphTool"]
+        return INTENT_TOOL_MAP.get(intent, ["GraphTool"])

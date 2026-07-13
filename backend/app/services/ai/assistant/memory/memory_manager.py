@@ -37,4 +37,4 @@ class MemoryManager:
         self.store.clear(session_id)
 
     def get_history(self, session_id: str) -> List[Message]:
-        return self.store.get_messages(session_id
+        return self.store.get_messages(session_id)

@@ -44,4 +44,4 @@ class SpendAnomalyDetector:
                     previous.amount
             }]
 
-        return [
+        return []

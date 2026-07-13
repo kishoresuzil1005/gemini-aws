@@ -31,4 +31,4 @@ class LambdaMetadata:
         vpc_config = metadata.get("vpc_config", {})
         if isinstance(vpc_config, dict):
             return vpc_config.get("SecurityGroupIds", [])
-        return [
+        return []

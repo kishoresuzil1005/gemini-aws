@@ -8,4 +8,4 @@ class AutoGraphSync:
         try:
             return service.sync_resources()
         finally:
-            service.close(
+            service.close()

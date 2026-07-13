@@ -27,4 +27,4 @@ class ContextPrioritizer:
                     return priority
             return 99 # Default low priority
             
-        return sorted(sections, key=get_priority
+        return sorted(sections, key=get_priority)

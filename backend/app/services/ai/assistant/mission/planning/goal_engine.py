@@ -14,4 +14,4 @@ class GoalEngine:
             description=f"Goal for: {intent}",
             metrics={"target_reduction_pct": 20.0},
             objectives=[]
-        
+        )

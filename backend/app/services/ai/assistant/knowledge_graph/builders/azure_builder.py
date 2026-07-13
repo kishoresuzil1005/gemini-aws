@@ -30,4 +30,4 @@ class AzureGraphBuilder(BaseGraphBuilder):
         
     def build_edges(self) -> List[CloudEdge]:
         # Azure specific edge building (e.g. NIC -> Subnet)
-        return [
+        return []

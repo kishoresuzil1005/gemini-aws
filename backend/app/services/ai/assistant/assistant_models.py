@@ -48,4 +48,4 @@ class ToolResponse(BaseModel):
     execution_time_ms: int = 0
     confidence: float = 1.0
     context: Any = None
-    metadata: Dict[str, Any] = {
+    metadata: Dict[str, Any] = {}

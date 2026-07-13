@@ -18,4 +18,4 @@ class ResponseScorer:
             "latency_score": latency_score,
             "overall": overall,
             "grade": "A" if overall >= 85 else "B" if overall >= 70 else "C"
-        
+        }

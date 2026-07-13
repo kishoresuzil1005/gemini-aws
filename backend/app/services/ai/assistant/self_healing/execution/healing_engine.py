@@ -13,4 +13,4 @@ class HealingEngine:
             success=True,
             rollback_triggered=False,
             duration_seconds=45.0
-        
+        )

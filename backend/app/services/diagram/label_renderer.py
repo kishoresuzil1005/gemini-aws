@@ -67,4 +67,4 @@ font-size="{meta_style.size}"
 fill="{meta_style.color}">
 {meta}
 </text>
-"""
+""")

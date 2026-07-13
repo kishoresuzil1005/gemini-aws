@@ -38,4 +38,4 @@ class ProviderSelector:
         if self.discovery.is_provider_connected(CloudProvider.AWS):
             return CloudProvider.AWS
             
-        raise ProviderNotFoundError("Could not determine a connected Cloud Provider for the request."
+        raise ProviderNotFoundError("Could not determine a connected Cloud Provider for the request.")

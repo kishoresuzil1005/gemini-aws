@@ -11,4 +11,4 @@ class PerformanceLearningEngine:
         latencies = [h.latency_ms for h in history if h.latency_ms > 0]
         if not latencies:
             return 0
-        return sum(latencies) // len(latencies
+        return sum(latencies) // len(latencies)

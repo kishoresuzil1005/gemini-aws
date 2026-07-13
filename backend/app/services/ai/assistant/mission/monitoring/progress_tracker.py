@@ -21,4 +21,4 @@ class ProgressTracker:
             "percentage": (completed / total) * 100.0,
             "completed": completed,
             "total": total
-        
+        }

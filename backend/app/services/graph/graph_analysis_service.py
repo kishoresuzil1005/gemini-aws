@@ -243,4 +243,4 @@ class GraphAnalysisService:
                     {"type": "USES", "to": "sg-98765432"}
                 ]
             }
-        
+        ]

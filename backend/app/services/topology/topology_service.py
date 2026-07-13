@@ -145,4 +145,4 @@ class TopologyService:
             "resource": resource_id,
             "affected_resources": affected,
             "count": len(affected)
-        
+        }

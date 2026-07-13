@@ -59,4 +59,4 @@ class AIConfiguration:
 
 
 # Singleton instance for import across the codebase
-ai_config = AIConfiguration(
+ai_config = AIConfiguration()

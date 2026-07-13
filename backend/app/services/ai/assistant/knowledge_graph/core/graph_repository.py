@@ -25,4 +25,4 @@ class GraphRepository:
         
     def clear(self):
         """Wipes the repository."""
-        self.engine._graph.clear(
+        self.engine._graph.clear()

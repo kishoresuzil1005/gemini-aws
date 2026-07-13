@@ -15,4 +15,4 @@ class CostForecastEngine:
         
         daily_average = current_month_accumulated / days_elapsed
         projected_spend = daily_average * 30
-        return round(projected_spend, 2
+        return round(projected_spend, 2)

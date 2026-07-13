@@ -62,4 +62,4 @@ class SVGSanitizer:
 
         svg = cls.CLOSE_SVG_PATTERN.sub("", svg)
 
-        return svg.strip(
+        return svg.strip()

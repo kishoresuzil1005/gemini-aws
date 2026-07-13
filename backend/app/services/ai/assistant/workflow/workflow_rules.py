@@ -21,3 +21,4 @@ WORKFLOW_POLICIES = {
         "requires_compensation_plan": True,
         "blackout_windows": []
     }
+}

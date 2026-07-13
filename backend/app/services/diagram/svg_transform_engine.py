@@ -74,4 +74,4 @@ class SVGTransformEngine:
 <g transform="translate({x},{y}) scale({scale})">
 {svg_fragment}
 </g>
-""
+"""

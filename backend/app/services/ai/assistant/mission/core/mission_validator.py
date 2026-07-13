@@ -13,4 +13,4 @@ class MissionValidator:
         if not mission.goal.objectives:
             return {"valid": False, "reason": "No objectives defined"}
             
-        return {"valid": True, "reason": "Passed all pre-flight checks"
+        return {"valid": True, "reason": "Passed all pre-flight checks"}

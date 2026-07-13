@@ -33,4 +33,4 @@ class RollbackPlanner:
         return RollbackPlan(
             strategy=strategy,
             commands=commands
-        
+        )

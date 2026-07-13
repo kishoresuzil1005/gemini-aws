@@ -11,4 +11,4 @@ class MissionSerializer:
 
     @staticmethod
     def from_json(json_str: str) -> Mission:
-        return Mission.model_validate_json(json_str
+        return Mission.model_validate_json(json_str)

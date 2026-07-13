@@ -12,4 +12,4 @@ class DecisionMemory:
         return self.repository.get_outcomes_for_action(action)
         
     def remember(self, outcome: ExecutionOutcome):
-        self.repository.save_outcome(outcome
+        self.repository.save_outcome(outcome)

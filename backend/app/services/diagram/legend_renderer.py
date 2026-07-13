@@ -207,4 +207,4 @@ font-size="11"
 fill="#263238">
 Relationships : {len(model["edges"])}
 </text>
-"""
+""")

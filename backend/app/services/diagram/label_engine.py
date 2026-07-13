@@ -31,4 +31,4 @@ class LabelEngine:
             f"Name: {node.get('display_name','')}\n"
             f"Type: {node.get('type','')}\n"
             f"ID: {node.get('id','')}"
-        
+        )

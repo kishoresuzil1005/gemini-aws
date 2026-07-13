@@ -17,4 +17,4 @@ class HealingDashboard:
             "active_incidents": 1,
             "incidents_healed_today": 12,
             "rollback_count": 0
-        
+        }

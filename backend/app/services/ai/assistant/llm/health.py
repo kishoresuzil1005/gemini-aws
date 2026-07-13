@@ -59,4 +59,4 @@ class HealthManager:
     @classmethod
     def check_health(cls, session: requests.Session) -> bool:
         status = cls.get_health_status(session)
-        return status.get("status") == "healthy
+        return status.get("status") == "healthy"

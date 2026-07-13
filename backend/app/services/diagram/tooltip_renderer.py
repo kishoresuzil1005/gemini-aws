@@ -7,4 +7,4 @@ class TooltipRenderer:
 <title>
 {text}
 </title>
-"""
+""")

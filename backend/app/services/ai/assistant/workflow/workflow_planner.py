@@ -47,4 +47,4 @@ class WorkflowPlanner:
             step_id=step_id,
             action_request=req,
             depends_on=depends_on
-        
+        )

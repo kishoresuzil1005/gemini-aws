@@ -27,4 +27,4 @@ class ApprovalGateway:
             self.pending_approvals[approval_id]["status"] = "APPROVED" if approved else "REJECTED"
             self.pending_approvals[approval_id]["resolved_by"] = user_id
             self.pending_approvals[approval_id]["resolved_at"] = datetime.utcnow().isoformat()
-            print(f"[ApprovalGateway] Request {approval_id} resolved: {'APPROVED' if approved else 'REJECTED'} by {user_id}"
+            print(f"[ApprovalGateway] Request {approval_id} resolved: {'APPROVED' if approved else 'REJECTED'} by {user_id}")

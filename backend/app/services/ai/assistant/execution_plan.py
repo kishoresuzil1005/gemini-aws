@@ -64,4 +64,4 @@ class ExecutionPlan(BaseModel):
     steps: List[ExecutionStep] = Field(default_factory=list)
     expected_outputs: List[str] = Field(default_factory=list)
     estimated_steps: int = 0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

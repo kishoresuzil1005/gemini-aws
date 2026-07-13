@@ -27,4 +27,4 @@ class LearningAudit:
             outcome=outcome,
             model_version=model_version,
             features=features
-        )
+        ))

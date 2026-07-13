@@ -13,4 +13,4 @@ class MissionPlanner:
             description=intent,
             metrics={},
             objectives=[]
-        
+        )

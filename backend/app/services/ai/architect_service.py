@@ -70,4 +70,4 @@ class ArchitectService:
         if result and len(result) > 0:
             return result[0]["type"]
 
-        return "Unknown
+        return "Unknown"

@@ -8,4 +8,4 @@ class ExplanationBuilder:
         """
         # In a real implementation this might use another LLM call or template
         # to format the final explanation.
-        return f"{llm_answer}
+        return f"{llm_answer}"

@@ -39,4 +39,4 @@ class MissionEventBus:
                 try:
                     callback(event)
                 except Exception as e:
-                    print(f"[MissionEventBus] Error in subscriber: {e}"
+                    print(f"[MissionEventBus] Error in subscriber: {e}")

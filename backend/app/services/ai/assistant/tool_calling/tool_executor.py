@@ -42,4 +42,4 @@ class ToolExecutor:
             }
         except Exception as e:
             print(f"[ToolExecutor] Tool '{tool_name}' raised an error: {e}")
-            return {"used_tool": False, "text": clean_text, "tool_error": str(e)
+            return {"used_tool": False, "text": clean_text, "tool_error": str(e)}

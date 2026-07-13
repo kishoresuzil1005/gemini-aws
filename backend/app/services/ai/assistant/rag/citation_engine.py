@@ -44,4 +44,4 @@ class CitationEngine:
         lines = ["\n\n---\n**Sources:**"]
         for c in citations:
             lines.append(f"{c['ref']} {c['icon']} **{c['title']}** (confidence: {c['confidence']})")
-        return "\n".join(lines
+        return "\n".join(lines)

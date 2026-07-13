@@ -28,4 +28,4 @@ class CostDependencyEngine:
             "indirect_monthly_costs_usd": indirect_costs,
             "net_impact_usd": direct_savings - indirect_costs,
             "affected_financial_nodes": len(affected_nodes)
-        
+        }

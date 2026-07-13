@@ -26,4 +26,4 @@ class PolicyEngine:
             self.state_machine.transition(plan, ActionStatus.REJECTED)
             return False, errors
             
-        return True, [
+        return True, []

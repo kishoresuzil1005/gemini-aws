@@ -42,4 +42,4 @@ class ActionTranslator:
             provider=provider,
             api_call=api_call,
             payload=payload
-        
+        )

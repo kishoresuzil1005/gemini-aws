@@ -32,4 +32,4 @@ class ProviderCapability:
         if not self.supports_action(provider, resource, action):
             raise UnsupportedCapabilityError(
                 f"Provider {provider.value} does not support action {action.value} on {resource.value}."
-            
+            )

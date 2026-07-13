@@ -18,4 +18,4 @@ class HealingTimeline:
             "details": details
         }
         self._timeline[incident_id].append(entry)
-        print(f"[HealingTimeline] {incident_id}: {event_name}"
+        print(f"[HealingTimeline] {incident_id}: {event_name}")

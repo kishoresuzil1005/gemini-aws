@@ -27,4 +27,4 @@ class GraphTraversal:
             nodes.add(u)
             nodes.add(v)
             
-        return list(nodes
+        return list(nodes)

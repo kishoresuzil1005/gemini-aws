@@ -74,4 +74,4 @@ class SVGIconCache:
         """
         Cached resource types.
         """
-        return sorted(cls._cache.keys()
+        return sorted(cls._cache.keys())

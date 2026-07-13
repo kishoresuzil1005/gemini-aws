@@ -123,4 +123,4 @@ class VPCAZBuilder:
                 current_az,
                 current_subnet,
                 vpcs
-            
+            )

@@ -73,4 +73,4 @@ class AWSIconMapper:
 
         return str(
             Path(self.BASE) / relative
-        
+        )
