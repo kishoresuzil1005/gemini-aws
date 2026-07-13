@@ -41,6 +41,17 @@ class RDSGraphBuilder(BaseGraphBuilder):
                 target_type="SecurityGroup"
             )
             if edge: edges.append(edge)
+
+        # RDS -> Subnet
+        for subnet_id in RDSMetadata.get_subnets(resource):
+            edge = GraphRelationship.create(
+                source=resource.resource_id,
+                target=subnet_id,
+                relationship=RelationshipType.IN_SUBNET,
+                source_type="RDS",
+                target_type="Subnet"
+            )
+            if edge: edges.append(edge)
             
         print("Edges Created:", len(edges))
         for edge in edges:

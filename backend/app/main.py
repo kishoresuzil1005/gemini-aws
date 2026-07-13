@@ -134,6 +134,7 @@ async def api_gateway_layer(request: Request, call_next):
         "/api/auth/login", "/api/v1/auth/login",
         "/api/auth/register", "/api/v1/auth/register",
         "/api/v1/auth/logout", "/api/auth/logout",
+        "/api/v1/graph/sync",
         "/docs", "/redoc", "/openapi.json"
     ]
     
