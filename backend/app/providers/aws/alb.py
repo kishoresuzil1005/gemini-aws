@@ -89,6 +89,11 @@ class ALBDiscovery:
                         tags=tags,
                         dependencies=dependencies
                     )
+                    print("=" * 80)
+                    print("ALB RAW RESOURCE")
+                    print(res.dict())
+                    print("=" * 80)
+                    
                     lbs.append(res.dict())
                     
             return lbs
