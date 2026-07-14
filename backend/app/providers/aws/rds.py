@@ -56,7 +56,7 @@ class RDSDiscovery:
                         'backup_retention_period': db.get('BackupRetentionPeriod'),
                         'db_parameter_groups': [pg.get('DBParameterGroupName') for pg in db.get('DBParameterGroups', [])],
                         'option_group_memberships': [og.get('OptionGroupName') for og in db.get('OptionGroupMemberships', [])],
-                        'subnet_group': subnet_group.get('DBSubnetGroupName')
+                        'subnet_group': subnet_group
                     },
                     monitoring={
                         'monitoring_interval': db.get('MonitoringInterval', 0),
