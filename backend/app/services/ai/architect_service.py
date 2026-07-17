@@ -40,9 +40,13 @@ class ArchitectService:
             architecture_context=architecture_context
         )
 
-        ai_response = self.ollama.generate(
-            prompt
-        )
+        print("=" * 80)
+        print("PROMPT LENGTH:", len(prompt))
+        print("=" * 80)
+        print(prompt[:2000])      # first 2000 characters
+        print("=" * 80)
+
+        ai_response = self.ollama.generate(prompt)
 
         return {
             "resource": resource_id,

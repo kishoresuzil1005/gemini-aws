@@ -24,7 +24,14 @@ class OllamaService:
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=120)
+            print("Prompt length:", len(prompt))
+            print("Model:", self.model)
+
+            response = requests.post(
+                url,
+                json=payload,
+                timeout=120
+            )
             response.raise_for_status()
             data = response.json()
             return data.get("response", "")
