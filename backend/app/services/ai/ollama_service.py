@@ -11,6 +11,12 @@ class OllamaService:
 
     def generate(self, prompt: str) -> str:
         url = f"{self.host}/api/generate"
+
+        print("=" * 60)
+        print("OLLAMA URL :", url)
+        print("OLLAMA MODEL :", self.model)
+        print("PROMPT LENGTH :", len(prompt))
+
         payload = {
             "model": self.model,
             "prompt": prompt,
