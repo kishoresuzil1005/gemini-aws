@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class OllamaService:
     def __init__(self, host: str = None, model: str = None):
-        self.host = host or os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        self.host = host or os.getenv("OLLAMA_URL", "http://ollama:11434")
         self.model = model or os.getenv("OLLAMA_MODEL", "llama3")
 
     def generate(self, prompt: str) -> str:
