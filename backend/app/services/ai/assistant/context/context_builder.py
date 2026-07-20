@@ -59,7 +59,7 @@ class ContextBuilder:
         ctx = conversation_context
         
         # 1. AI Context Engine Section
-        if ctx.current_resource and ctx.current_intent in ["SECURITY", "REMEDIATION", "ORCHESTRATION", "INVESTIGATION", "UNKNOWN", "DEPENDENCY", "BLAST_RADIUS"]:
+        if ctx.current_resource:
             from app.services.ai.context_engine.engine import ContextEngine
             from app.services.ai.context_engine.request import ContextRequest
             from app.services.ai.context_engine.enums import ContextLevel
@@ -72,9 +72,23 @@ class ContextBuilder:
                     level=ContextLevel.DEEP
                 )
                 # Run the context engine
-                ai_context = asyncio.run(engine.build_context(req))
+                ai_context = asyncio.run(engine.build(req))
                 
-                # Append ContextEngine outputs
+                # Resource identity section
+                if ai_context.resource:
+                    raw_sections.append({
+                        "title": "RESOURCE IDENTITY",
+                        "content": dict_to_text(ai_context.resource)
+                    })
+
+                # Inventory section
+                if ai_context.inventory:
+                    raw_sections.append({
+                        "title": "RESOURCE INVENTORY",
+                        "content": dict_to_text(ai_context.inventory)
+                    })
+
+                # Graph / topology section
                 if ai_context.graph:
                     raw_sections.append({
                         "title": "RESOURCE GRAPH DATA",
@@ -95,7 +109,7 @@ class ContextBuilder:
                     })
             except Exception as e:
                 import logging
-                logging.getLogger(__name__).error(f"ContextEngine failed: {e}")
+                logging.getLogger(__name__).exception(f"ContextEngine failed: {e}")
         
         # 2. Reasoning Sections
         if reasoning_result and reasoning_result.findings:
