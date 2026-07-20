@@ -135,6 +135,7 @@ async def api_gateway_layer(request: Request, call_next):
         "/api/auth/register", "/api/v1/auth/register",
         "/api/v1/auth/logout", "/api/auth/logout",
         "/api/v1/graph/sync",
+        "/api/v1/ai/context",   # Context Engine debug endpoint
         "/docs", "/redoc", "/openapi.json"
     ]
     
@@ -459,6 +460,14 @@ class AIChatResponseSchema(BaseModel):
 def startup_event():
     init_db()
     db = next(get_db())
+
+    # Register Context Engine providers automatically
+    try:
+        from app.services.ai.context_engine import register_default_providers
+        register_default_providers()
+        print("[CONTEXT ENGINE] Default providers registered successfully.")
+    except Exception as ce_err:
+        print(f"[CONTEXT ENGINE] Provider registration failed (non-fatal): {ce_err}")
     
     # 1. Seed accounts if table is empty
     if db.query(CloudAccountDB).count() == 0:
@@ -2293,6 +2302,70 @@ def get_ai_tools():
     engine = AIEngine(ai_memory)
     tools = engine.get_tools()
     return {"count": len(tools), "tools": tools}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Context Engine Debug Endpoint
+# GET /api/v1/ai/context/{resource_id}
+# ──────────────────────────────────────────────────────────────────────────────
+@app.get("/api/v1/ai/context/{resource_id}")
+async def get_ai_context(
+    resource_id: str,
+    level: str = "basic",
+):
+    """Build and return the assembled AIContext for a resource.
+
+    This endpoint is intended for debugging and integration verification.
+
+    Query Parameters
+    ----------------
+    level : str
+        Context depth: ``basic`` | ``standard`` | ``full`` | ``deep``.
+        Defaults to ``basic``.
+
+    Returns
+    -------
+    JSON representation of the assembled :class:`AIContext`, including
+    all sections populated by the enabled providers (resource, graph,
+    inventory, security, documentation, metrics, cost) plus execution
+    metadata.
+    """
+    from app.services.ai.context_engine import ContextEngine, ContextRequest, ContextLevel
+    from app.services.ai.context_engine.registry import registry, register_default_providers
+
+    # Ensure providers are registered (idempotent)
+    if len(registry) == 0:
+        register_default_providers()
+
+    # Validate level
+    valid_levels = {l.value: l for l in ContextLevel}
+    if level not in valid_levels:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error":   "Invalid context level",
+                "valid":   list(valid_levels.keys()),
+                "received": level,
+            },
+        )
+
+    ctx_level = valid_levels[level]
+    request = ContextRequest(identifier=resource_id, level=ctx_level)
+
+    try:
+        engine  = ContextEngine()
+        context = await engine.build(request)
+        return JSONResponse(content=context.model_dump(mode="json"))
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error":       "ContextEngine failed",
+                "detail":      str(exc),
+                "resource_id": resource_id,
+                "level":       level,
+            },
+        )
 
 @app.post("/api/v1/finops/analysis")
 def cost_analysis(request: dict):
