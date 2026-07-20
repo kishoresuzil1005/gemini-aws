@@ -6,9 +6,11 @@ Providers rely entirely on these services rather than instantiating
 clients or database sessions themselves.
 """
 
+import os
 import boto3
 from typing import Any, Dict, List, Optional
 import logging
+from app.providers.aws.cost_explorer import CostExplorerAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +82,6 @@ class CostService:
     
     def __init__(self, account_id: int = 1):
         self.account_id = account_id
-        from app.providers.aws.cost_explorer import CostExplorerAdapter
         self.adapter = CostExplorerAdapter(self.account_id)
         
     def get_current_month_cost(self) -> float:
@@ -96,7 +97,11 @@ class DocumentationService:
     def __init__(self):
         try:
             from qdrant_client import QdrantClient
-            self.client = QdrantClient(host="localhost", port=6333, timeout=3)
+            self.client = QdrantClient(
+                host=os.getenv("QDRANT_HOST", "qdrant"),
+                port=int(os.getenv("QDRANT_PORT", "6333")),
+                timeout=3
+            )
         except Exception as exc:
             logger.warning("Failed to initialize QdrantClient: %s", exc)
             self.client = None
