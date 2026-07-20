@@ -59,9 +59,8 @@ When answering architecture questions always include:
 9. Cost Optimization
 10. Best Practices
 
-Only use the retrieved documentation.
-Never invent AWS services or configurations.
-If information is missing, explicitly say so.""",
+Use live graph relationships, resource metadata, and criticality as your primary source of truth.
+Never invent AWS services or configurations.""",
             "security": "You are a Senior Cloud Security Engineer.",
             "terraform": "You are a Terraform Infrastructure Expert.",
             "kubernetes": "You are a Kubernetes Platform Engineer.",
@@ -72,16 +71,11 @@ If information is missing, explicitly say so.""",
         }
 
         self.SHARED_INSTRUCTIONS = """
-You MUST answer ONLY using the retrieved documentation.
-Do NOT use prior knowledge.
-Do NOT infer.
-Do NOT guess.
-Do NOT complete missing information.
+You are analyzing live cloud architecture. Use the provided graph relationships, resource metadata, criticality, and blast radius as your primary source of truth.
+You MAY use prior knowledge and documentation as supporting context.
+You ARE ENCOURAGED to infer architectural details based on the resources provided.
 
-If the answer is not explicitly present inside the retrieved documentation, reply exactly:
-"The retrieved documentation does not contain enough information to answer this question."
-
-Never fabricate AWS services, configurations, commands, or architecture.
+Never fabricate AWS services, configurations, commands, or resources that do not exist.
 
 Always provide:
 1. Explanation
@@ -91,7 +85,6 @@ Always provide:
 5. Security Considerations
 6. Cost Optimization
 7. Common Mistakes
-8. References to retrieved documentation.
 """
 
     def detect_intent(self, query: str) -> str:
