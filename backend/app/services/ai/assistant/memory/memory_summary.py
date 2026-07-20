@@ -19,4 +19,4 @@ class MemorySummary:
             snippet = msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
             summary += f"- {msg.role}: {snippet}\n"
             
-        return summar
+        return summary
