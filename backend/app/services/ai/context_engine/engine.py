@@ -31,7 +31,7 @@ class ContextEngine:
             (derived from the global ``registry``) is used.
         """
         from .service_container import ServiceContainer
-        self.container = container or ServiceContainer.create()
+        self.container = container or ServiceContainer.instance()
         self._factory = PipelineFactory(self.container, configuration)
 
     async def build(self, request: ContextRequest) -> AIContext:
