@@ -23,13 +23,14 @@ class ResourceExtractor:
     ]
 
     RESERVED_WORDS = {
-        "what", "why", "how", "depends", "dependency", "show", "delete", 
+        "what", "why", "how", "depends", "dependency", "dependencies", "show", "delete", 
         "remove", "move", "execute", "generate", "terraform", "cloudformation", 
         "recommend", "please", "tell", "can", "could", "would", "should", 
         "does", "did", "is", "are", "be", "into", "from", "with", "using", 
         "safe", "safely", "analyze", "analyse", "check", "inspect", "review",
         "automation", "automate", "orchestrate", "rollback", "remediate", 
-        "explain", "describe", "compare", "about", "inventory"
+        "explain", "describe", "compare", "about", "inventory",
+        "the", "of", "a", "an", "and", "to", "for", "in", "on", "at"
     }
 
     def extract(self, message: str) -> Optional[str]:
