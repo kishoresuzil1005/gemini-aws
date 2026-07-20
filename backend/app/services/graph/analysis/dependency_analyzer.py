@@ -27,15 +27,21 @@ class DependencyAnalyzer:
         }
 
     def get_downstream(self, resource_id: str, depth: int = 5):
+        """Resources that depend ON the given resource (or are connected downstream)."""
         if not self.neo4j.driver:
             return []
             
         try:
+            # Use undirected (-) to capture both directed and undirected relationships
+            # This ensures IN_VPC, IN_SUBNET, USES_SG etc. are all returned
             query = f"""
-            MATCH path=(n {{id:$resource_id}})-[*1..{depth}]->(m)
+            MATCH path=(n {{id:$resource_id}})-[*1..{depth}]-(m)
+            WHERE m.id <> $resource_id
             RETURN DISTINCT
                 m.id as id,
-                labels(m) as labels
+                m.name as name,
+                labels(m) as labels,
+                [rel in relationships(path) | type(rel)][0] as relation_type
             """
             res = self.neo4j.query(query, resource_id=resource_id)
             if res:
@@ -49,15 +55,21 @@ class DependencyAnalyzer:
             return []
 
     def get_upstream(self, resource_id: str, depth: int = 5):
+        """Resources that the given resource depends ON."""
         if not self.neo4j.driver:
             return []
             
         try:
+            # For upstream: look for resources that have outgoing directed edges TO this resource
+            # Fall back to undirected if nothing found via directed
             query = f"""
             MATCH path=(a)-[*1..{depth}]->(b {{id:$resource_id}})
+            WHERE a.id <> $resource_id
             RETURN DISTINCT
                 a.id as id,
-                labels(a) as labels
+                a.name as name,
+                labels(a) as labels,
+                [rel in relationships(path) | type(rel)][0] as relation_type
             """
             res = self.neo4j.query(query, resource_id=resource_id)
             if res:
