@@ -30,7 +30,8 @@ class ResourceExtractor:
         "safe", "safely", "analyze", "analyse", "check", "inspect", "review",
         "automation", "automate", "orchestrate", "rollback", "remediate", 
         "explain", "describe", "compare", "about", "inventory",
-        "the", "of", "a", "an", "and", "to", "for", "in", "on", "at"
+        "the", "of", "a", "an", "and", "to", "for", "in", "on", "at",
+        "breaks", "fails", "fail", "happens", "if"
     }
 
     def extract(self, message: str) -> Optional[str]:
