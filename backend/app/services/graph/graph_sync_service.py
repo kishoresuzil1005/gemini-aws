@@ -44,12 +44,24 @@ class GraphSyncService:
             for row in resource_rows:
                 if not row.resource_id:
                     continue
+                
+                import json
+                tags_dict = {}
+                try:
+                    if row.tags:
+                        tags_dict = json.loads(row.tags) if isinstance(row.tags, str) else row.tags
+                except Exception:
+                    pass
+                
                 all_nodes[row.resource_id] = {
                     "resource_type": row.resource_type,
                     "resource_id": row.resource_id,
                     "name": row.name or row.resource_id,
                     "provider": row.provider or "AWS",
-                    "region": row.region or ""
+                    "region": row.region or "",
+                    "status": row.status or "active",
+                    "account_id": str(row.cloud_account_id) if row.cloud_account_id else "",
+                    "tags": tags_dict
                 }
         except Exception as e:
             print(f"[GRAPH_SYNC] Error reading resources: {e}")
@@ -59,14 +71,22 @@ class GraphSyncService:
 
         for resource_id, data in all_nodes.items():
             try:
-                self.graph.create_node(
+                success = self.graph.create_node(
                     node_type=data["resource_type"],
                     resource_id=data["resource_id"],
                     name=data["name"],
                     provider=data["provider"],
-                    region=data.get("region", "")
+                    region=data.get("region", ""),
+                    status=data.get("status", "active"),
+                    account_id=data.get("account_id", ""),
+                    arn=data.get("arn", ""),
+                    tags=data.get("tags", {})
                 )
-                synced += 1
+                if success:
+                    synced += 1
+                else:
+                    failed += 1
+                    print(f"[GRAPH_SYNC] Failed to create node {resource_id}")
             except Exception as e:
                 print(f"[GRAPH_SYNC] {resource_id}: {e}")
                 failed += 1
@@ -104,7 +124,11 @@ class GraphSyncService:
                     resource_id=rel["from"],
                     name=src_data.get("name") or rel["from"],
                     provider=src_data.get("provider", "AWS"),
-                    region=src_data.get("region", "")
+                    region=src_data.get("region", ""),
+                    status=src_data.get("status", "active"),
+                    account_id=src_data.get("account_id", ""),
+                    arn=src_data.get("arn", ""),
+                    tags=src_data.get("tags", {})
                 )
 
                 # Merge target
@@ -114,7 +138,11 @@ class GraphSyncService:
                     resource_id=rel["to"],
                     name=tgt_data.get("name") or rel["to"],
                     provider=tgt_data.get("provider", "AWS"),
-                    region=tgt_data.get("region", "")
+                    region=tgt_data.get("region", ""),
+                    status=tgt_data.get("status", "active"),
+                    account_id=tgt_data.get("account_id", ""),
+                    arn=tgt_data.get("arn", ""),
+                    tags=tgt_data.get("tags", {})
                 )
 
                 #

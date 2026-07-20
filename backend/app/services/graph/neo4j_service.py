@@ -91,6 +91,9 @@ class Neo4jService:
                 session.run(
                     "CREATE CONSTRAINT aws_resource_id_unique IF NOT EXISTS FOR (r:AWSResource) REQUIRE r.id IS UNIQUE"
                 )
+            
+            self.driver.verify_connectivity()
+            logger.info("Connected to Neo4j successfully.")
         except Exception as e:
             logger.warning(f"Neo4j driver connection failed: {e}. Active mock fallback store enabled.")
             self.driver = None
@@ -233,6 +236,12 @@ class Neo4jService:
         """
         Create or update graph node
         """
+        logger.info(
+            "Creating node: %s (%s)",
+            resource_id,
+            node_type
+        )
+        
         # Save to fallback
         MemoryGraphStore.merge_node(
             resource_id=resource_id,
@@ -249,7 +258,7 @@ class Neo4jService:
         )
 
         if not self.driver:
-            return
+            return True
 
         query = f"""
         MERGE (n:AWSResource {{
@@ -304,7 +313,7 @@ class Neo4jService:
 
         try:
             with self.driver.session() as session:
-                session.run(
+                result = session.run(
                     query,
 
                     id=resource_id,
@@ -318,8 +327,13 @@ class Neo4jService:
                     arn=arn,
                     tags=tags or {},
                 )
+                
+                result.consume()
+                
+            return True
         except Exception as e:
-            logger.error(f"Error merging resource node {resource_id} in Neo4j: {e}")
+            logger.exception("Failed to create node %s", resource_id)
+            return False
 
     # ---------------------------------------------------------
     # RELATIONSHIPS
@@ -362,10 +376,18 @@ class Neo4jService:
         safe_rel_type = "".join(c for c in relationship_type if c.isalnum() or c == "_").upper()
         if not safe_rel_type:
             safe_rel_type = "RELATED_TO"
+        
+        logger.info(
+            "Creating relationship: %s -[%s]-> %s",
+            source_id,
+            safe_rel_type,
+            target_id
+        )
+        
         MemoryGraphStore.merge_edge(source_id, target_id, safe_rel_type)
 
         if not self.driver:
-            return
+            return True
 
         query = f"""
         MATCH (a:AWSResource {{id: $source}})
@@ -376,13 +398,18 @@ class Neo4jService:
 
         try:
             with self.driver.session() as session:
-                session.run(
+                result = session.run(
                     query,
                     source=source_id,
                     target=target_id
                 )
+                
+                result.consume()
+                
+            return True
         except Exception as e:
-            logger.error(f"Error creating relationship ({source_id})-[{safe_rel_type}]->({target_id}) in Neo4j: {e}")
+            logger.exception("Failed to create relationship (%s)-[%s]->(%s)", source_id, safe_rel_type, target_id)
+            return False
 
     # ---------------------------------------------------------
     # GRAPH EXPORT
