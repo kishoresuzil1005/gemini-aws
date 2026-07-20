@@ -13,7 +13,7 @@ class IntentClassifier:
         ],
         "DEPENDENCY": [
             "dependency", "dependencies", "depends", "connected",
-            "relationship", "upstream", "downstream"
+            "relationship", "upstream", "downstream", "breaks", "fails", "fail"
         ],
         "BLAST_RADIUS": [
             "blast radius", "what happens if", "delete", "remove",

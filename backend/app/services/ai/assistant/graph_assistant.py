@@ -117,7 +117,7 @@ class GraphAssistant:
         
         # 7. Planning
         execution_plan = None
-        if ctx.current_intent != "UNKNOWN":
+        if ctx.current_intent and ctx.current_intent != "UNKNOWN":
             execution_plan = self.planner.create_plan(
                 conversation_id=request.conversation_id,
                 intent=ctx.current_intent,
