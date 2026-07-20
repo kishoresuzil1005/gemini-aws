@@ -32,6 +32,10 @@ class InventoryProvider(BaseProvider):
     source     = "postgres"
     enabled    = flag_enabled(INVENTORY_PROVIDER_ENABLED)
 
+    def __init__(self, *, db_session_factory):
+        super().__init__()
+        self.db_session_factory = db_session_factory
+
     def supports(self, level: ContextLevel) -> bool:
         return True
 
@@ -45,10 +49,9 @@ class InventoryProvider(BaseProvider):
 
     def _fetch_from_db(self, resource_id: str) -> Dict[str, Any]:
         try:
-            from app.database import SessionLocal
             from app.models import ResourceDB, CloudAccountDB
 
-            db = SessionLocal()
+            db = self.db_session_factory()
             try:
                 row: Optional[ResourceDB] = (
                     db.query(ResourceDB)

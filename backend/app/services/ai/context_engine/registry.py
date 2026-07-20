@@ -94,17 +94,42 @@ def register_default_providers() -> None:
         HealthProvider,
     )
 
-    for provider_cls in [
-        ResourceProvider,
-        GraphProvider,
-        InventoryProvider,
-        IAMProvider,
-        DocumentationProvider,
-        MetricsProvider,
-        CostProvider,
-        CloudTrailProvider,
-        EventBridgeProvider,
-        ConfigProvider,
-        HealthProvider,
-    ]:
-        registry.register(provider_cls())
+    from .service_container import ServiceContainer
+
+    container = ServiceContainer.create()
+
+    registry.register(ResourceProvider(
+        db_session_factory=container.db_session_factory,
+        neo4j_service=container.neo4j_service
+    ))
+    
+    registry.register(GraphProvider(
+        neo4j_service=container.neo4j_service
+    ))
+    
+    registry.register(InventoryProvider(
+        db_session_factory=container.db_session_factory
+    ))
+    
+    registry.register(IAMProvider(
+        iam_service=container.iam_service
+    ))
+    
+    registry.register(DocumentationProvider(
+        db_session_factory=container.db_session_factory,
+        documentation_service=container.documentation_service
+    ))
+    
+    registry.register(MetricsProvider(
+        cloudwatch_service=container.cloudwatch_service
+    ))
+    
+    registry.register(CostProvider(
+        cost_service=container.cost_service
+    ))
+
+    # Placeholders without external dependencies
+    registry.register(CloudTrailProvider())
+    registry.register(EventBridgeProvider())
+    registry.register(ConfigProvider())
+    registry.register(HealthProvider())

@@ -37,6 +37,7 @@ from app.services.graph.analysis.architecture_review import ArchitectureReviewer
 from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
 from app.services.graph.analysis.ai_graph_agent import AIGraphAgent
 from app.services.graph.analysis.ai_query import NLQueryEngine
+from app.services.graph.graph_analysis_service import GraphAnalysisService
 
 # Sprint 8.5 Security Modules
 from app.services.graph.analysis.security.exposure_analyzer import ExposureAnalyzer

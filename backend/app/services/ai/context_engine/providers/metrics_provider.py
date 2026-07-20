@@ -37,6 +37,10 @@ class MetricsProvider(BaseProvider):
     source     = "cloudwatch"
     enabled    = flag_enabled(METRICS_PROVIDER_ENABLED)
 
+    def __init__(self, *, cloudwatch_service):
+        super().__init__()
+        self.cloudwatch_service = cloudwatch_service
+
     def supports(self, level: ContextLevel) -> bool:
         return level == ContextLevel.DEEP
 
@@ -81,11 +85,10 @@ class MetricsProvider(BaseProvider):
             metric_queries = self._ec2_metric_queries(resource_id)
 
         try:
-            client = boto3.client("cloudwatch")
-            response = client.get_metric_data(
-                MetricDataQueries=metric_queries,
-                StartTime=start_dt,
-                EndTime=end_dt,
+            response = self.cloudwatch_service.get_metric_data(
+                metric_queries=metric_queries,
+                start_time=start_dt,
+                end_time=end_dt,
             )
 
             for result in response.get("MetricDataResults", []):

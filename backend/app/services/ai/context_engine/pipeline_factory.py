@@ -12,7 +12,8 @@ class PipelineFactory:
     ``ResourceResolver``.
     """
 
-    def __init__(self, configuration: Optional[PipelineConfiguration] = None):
+    def __init__(self, container=None, configuration: Optional[PipelineConfiguration] = None):
+        self.container = container
         self._external_config = configuration
 
     def create(self) -> ContextPipeline:
@@ -28,4 +29,4 @@ class PipelineFactory:
             config = self._external_config
         else:
             config = PipelineConfiguration(providers=registry.ordered_providers)
-        return ContextPipeline(config)
+        return ContextPipeline(config, container=self.container)

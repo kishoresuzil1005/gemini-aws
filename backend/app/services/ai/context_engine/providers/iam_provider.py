@@ -36,6 +36,10 @@ class IAMProvider(BaseProvider):
     source     = "aws_iam"
     enabled    = flag_enabled(IAM_PROVIDER_ENABLED)
 
+    def __init__(self, *, iam_service):
+        super().__init__()
+        self.iam_service = iam_service
+
     def supports(self, level: ContextLevel) -> bool:
         return level in (ContextLevel.FULL, ContextLevel.DEEP)
 
@@ -48,30 +52,20 @@ class IAMProvider(BaseProvider):
     # ------------------------------------------------------------------
 
     def _fetch_iam(self, resource_id: str) -> Dict[str, Any]:
-        """
-        Determine the IAM principal associated with the resource and fetch
-        its roles, policies, trust relationships, and permission boundaries.
-
-        For Phase 2 we collect:
-         - IAM roles attached to the instance profile (EC2 instances)
-         - Inline + attached managed policies
-         - Trust relationship principals
-         - Permission boundaries on the role
-        """
         identities: List[Dict] = []
         permissions: List[Dict] = []
         trust_relationships: List[Dict] = []
         permission_boundaries: List[Dict] = []
 
         try:
-            client = boto3.client("iam")
+            svc = self.iam_service
 
             # Attempt to resolve the resource as an EC2 instance profile role
-            role_name = self._resolve_role_for_resource(resource_id)
+            role_name = svc.resolve_instance_profile_role(resource_id)
 
             if role_name:
                 try:
-                    role_resp = client.get_role(RoleName=role_name)
+                    role_resp = svc.get_role(role_name)
                     role = role_resp.get("Role", {})
 
                     # Identity
@@ -110,17 +104,16 @@ class IAMProvider(BaseProvider):
                         })
 
                     # Attached managed policies
-                    pag = client.get_paginator("list_attached_role_policies")
-                    for page in pag.paginate(RoleName=role_name):
-                        for pol in page.get("AttachedPolicies", []):
-                            permissions.append({
-                                "principal": role.get("Arn", role_name),
-                                "actions":   ["*"],   # full expansion deferred to IAMAnalyzer
-                                "resources": ["*"],
-                                "effect":    "Allow",
-                                "policy_name": pol.get("PolicyName", ""),
-                                "policy_arn":  pol.get("PolicyArn", ""),
-                            })
+                    attached = svc.list_attached_role_policies(role_name)
+                    for pol in attached:
+                        permissions.append({
+                            "principal": role.get("Arn", role_name),
+                            "actions":   ["*"],
+                            "resources": ["*"],
+                            "effect":    "Allow",
+                            "policy_name": pol.get("PolicyName", ""),
+                            "policy_arn":  pol.get("PolicyArn", ""),
+                        })
 
                 except Exception as exc:
                     logger.debug("IAMProvider role fetch for %s: %s", role_name, exc)
@@ -128,16 +121,15 @@ class IAMProvider(BaseProvider):
             else:
                 # Fallback: list roles that match resource prefix/name
                 try:
-                    role_pag = client.get_paginator("list_roles")
-                    for page in role_pag.paginate():
-                        for r in page.get("Roles", []):
-                            if resource_id in r.get("RoleName", "") or resource_id in r.get("Arn", ""):
-                                identities.append({
-                                    "id":   r.get("RoleId", ""),
-                                    "name": r.get("RoleName", ""),
-                                    "type": "role",
-                                    "arn":  r.get("Arn", ""),
-                                })
+                    all_roles = svc.list_roles()
+                    for r in all_roles:
+                        if resource_id in r.get("RoleName", "") or resource_id in r.get("Arn", ""):
+                            identities.append({
+                                "id":   r.get("RoleId", ""),
+                                "name": r.get("RoleName", ""),
+                                "type": "role",
+                                "arn":  r.get("Arn", ""),
+                            })
                 except Exception:
                     pass
 
@@ -150,30 +142,3 @@ class IAMProvider(BaseProvider):
             "trust_relationships":   trust_relationships,
             "permission_boundaries": permission_boundaries,
         }
-
-    def _resolve_role_for_resource(self, resource_id: str) -> str:
-        """
-        Try to find the IAM role associated with an EC2 instance
-        by looking at its instance profile.
-        """
-        if not resource_id.startswith("i-"):
-            return ""
-        try:
-            ec2 = boto3.client("ec2")
-            resp = ec2.describe_instances(InstanceIds=[resource_id])
-            reservations = resp.get("Reservations", [])
-            if reservations:
-                instance = reservations[0]["Instances"][0]
-                profile = instance.get("IamInstanceProfile", {})
-                arn = profile.get("Arn", "")
-                if arn:
-                    # ARN format: arn:aws:iam::ACCOUNT:instance-profile/PROFILE_NAME
-                    profile_name = arn.split("/")[-1]
-                    iam = boto3.client("iam")
-                    p_resp = iam.get_instance_profile(InstanceProfileName=profile_name)
-                    roles = p_resp.get("InstanceProfile", {}).get("Roles", [])
-                    if roles:
-                        return roles[0].get("RoleName", "")
-        except Exception as exc:
-            logger.debug("_resolve_role_for_resource(%s): %s", resource_id, exc)
-        return ""

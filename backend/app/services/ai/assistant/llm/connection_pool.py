@@ -11,4 +11,4 @@ class ConnectionPool:
             # adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=100)
             # cls._instance.mount('http://', adapter)
             # cls._instance.mount('https://', adapter)
-        return cls._instanc
+        return cls._instance

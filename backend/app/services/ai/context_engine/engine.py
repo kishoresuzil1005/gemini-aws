@@ -14,17 +14,25 @@ class ContextEngine:
     assembled context.
     """
 
-    def __init__(self, configuration: PipelineConfiguration | None = None):
+    def __init__(
+        self,
+        container=None,
+        configuration: PipelineConfiguration | None = None
+    ):
         """Create a ContextEngine.
 
         Parameters
         ----------
+        container: Optional[ServiceContainer]
+            The dependency injection container. If not provided, a default one is created.
         configuration: Optional[PipelineConfiguration]
             If provided, this configuration will be used for every pipeline
             instance created by the engine. Otherwise, the default configuration
             (derived from the global ``registry``) is used.
         """
-        self._factory = PipelineFactory(configuration)
+        from .service_container import ServiceContainer
+        self.container = container or ServiceContainer.create()
+        self._factory = PipelineFactory(self.container, configuration)
 
     async def build(self, request: ContextRequest) -> AIContext:
         """Validate the request, run the pipeline, and return an ``AIContext``.

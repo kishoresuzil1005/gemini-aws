@@ -34,4 +34,4 @@ class IdleResourceDetector:
                     "Review and stop instance"
                 })
 
-        return result
+        return results

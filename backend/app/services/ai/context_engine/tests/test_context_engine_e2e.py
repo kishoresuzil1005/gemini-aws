@@ -58,6 +58,21 @@ def _make_std_response(output_key: str, data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+class FakeServiceContainer:
+    """Mock container for DI."""
+    def __init__(self):
+        self.db_session_factory = MagicMock()
+        self.neo4j_service = MagicMock()
+        self.cloudwatch_service = MagicMock()
+        self.iam_service = MagicMock()
+        self.cost_service = MagicMock()
+        self.documentation_service = MagicMock()
+
+@pytest.fixture()
+def fake_container():
+    return FakeServiceContainer()
+
+
 @pytest.fixture()
 def isolated_registry():
     """Returns a fresh ProviderRegistry that is cleaned up after the test."""
@@ -66,8 +81,11 @@ def isolated_registry():
 
 
 @pytest.fixture()
-def mock_resource_provider():
-    provider = ResourceProvider()
+def mock_resource_provider(fake_container):
+    provider = ResourceProvider(
+        db_session_factory=fake_container.db_session_factory,
+        neo4j_service=fake_container.neo4j_service
+    )
     provider.fetch = AsyncMock(return_value=_make_std_response("resource", {
         "id":       MOCK_RESOURCE_ID,
         "name":     "test-instance",
@@ -83,8 +101,8 @@ def mock_resource_provider():
 
 
 @pytest.fixture()
-def mock_graph_provider():
-    provider = GraphProvider()
+def mock_graph_provider(fake_container):
+    provider = GraphProvider(neo4j_service=fake_container.neo4j_service)
     provider.fetch = AsyncMock(return_value=_make_std_response("graph", {
         "resource": {"id": MOCK_RESOURCE_ID, "type": "EC2"},
         "nodes": [
@@ -103,8 +121,8 @@ def mock_graph_provider():
 
 
 @pytest.fixture()
-def mock_inventory_provider():
-    provider = InventoryProvider()
+def mock_inventory_provider(fake_container):
+    provider = InventoryProvider(db_session_factory=fake_container.db_session_factory)
     provider.fetch = AsyncMock(return_value=_make_std_response("inventory", {
         "resource_id":     MOCK_RESOURCE_ID,
         "account_id":      "123456789012",
@@ -150,7 +168,7 @@ class TestContextEngineEndToEnd:
             resolver=ResourceResolver(),
         )
 
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -173,7 +191,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -202,7 +220,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -230,7 +248,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -255,7 +273,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.STANDARD)
         context = await engine.build(request)
 
@@ -283,7 +301,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -308,7 +326,7 @@ class TestContextEngineEndToEnd:
             cache=MemoryCache(),
             resolver=ResourceResolver(),
         )
-        engine  = ContextEngine(config)
+        engine  = ContextEngine(configuration=config)
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
@@ -330,12 +348,15 @@ class TestContextLevelFilter:
         from app.services.ai.context_engine.providers import (
             ResourceProvider, GraphProvider, InventoryProvider
         )
-        for P in [ResourceProvider, GraphProvider, InventoryProvider]:
-            assert P().supports(ContextLevel.BASIC) is True
+        fake_container = FakeServiceContainer()
+        assert ResourceProvider(db_session_factory=fake_container.db_session_factory, neo4j_service=fake_container.neo4j_service).supports(ContextLevel.BASIC) is True
+        assert GraphProvider(neo4j_service=fake_container.neo4j_service).supports(ContextLevel.BASIC) is True
+        assert InventoryProvider(db_session_factory=fake_container.db_session_factory).supports(ContextLevel.BASIC) is True
 
     def test_iam_only_on_full_and_deep(self):
         from app.services.ai.context_engine.providers import IAMProvider
-        p = IAMProvider()
+        fake_container = FakeServiceContainer()
+        p = IAMProvider(iam_service=fake_container.iam_service)
         assert p.supports(ContextLevel.BASIC)    is False
         assert p.supports(ContextLevel.STANDARD) is False
         assert p.supports(ContextLevel.FULL)     is True
@@ -343,7 +364,8 @@ class TestContextLevelFilter:
 
     def test_metrics_only_on_deep(self):
         from app.services.ai.context_engine.providers import MetricsProvider
-        p = MetricsProvider()
+        fake_container = FakeServiceContainer()
+        p = MetricsProvider(cloudwatch_service=fake_container.cloudwatch_service)
         assert p.supports(ContextLevel.BASIC)    is False
         assert p.supports(ContextLevel.STANDARD) is False
         assert p.supports(ContextLevel.FULL)     is False

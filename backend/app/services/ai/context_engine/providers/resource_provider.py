@@ -32,8 +32,13 @@ class ResourceProvider(BaseProvider):
     source     = "postgres"
     enabled    = flag_enabled(RESOURCE_PROVIDER_ENABLED)
 
+    def __init__(self, *, db_session_factory, neo4j_service):
+        super().__init__()
+        self.db_session_factory = db_session_factory
+        self.neo4j_service = neo4j_service
+
     def supports(self, level: ContextLevel) -> bool:
-        return True   # runs at every context level
+        return True   # resource identity is the core of every context
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
@@ -46,12 +51,10 @@ class ResourceProvider(BaseProvider):
     # ------------------------------------------------------------------
 
     def _fetch_from_db(self, resource_id: str) -> Dict[str, Any]:
-        """Query PostgreSQL for the resource record."""
         try:
-            from app.database import SessionLocal
             from app.models import ResourceDB, ResourceNodeDB
 
-            db = SessionLocal()
+            db = self.db_session_factory()
             try:
                 row: Optional[ResourceDB] = (
                     db.query(ResourceDB)

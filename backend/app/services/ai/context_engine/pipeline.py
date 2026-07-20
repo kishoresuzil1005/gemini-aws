@@ -16,8 +16,9 @@ class ContextPipeline:
     4. Return the assembled context.
     """
 
-    def __init__(self, config: PipelineConfiguration):
+    def __init__(self, config: PipelineConfiguration, container=None):
         self.config = config
+        self.container = container
         # Lazy initialisation of components – they can be swapped later.
         self._assembler = ContextAssembler()
         self._provider_manager = ProviderManager(

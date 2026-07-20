@@ -17,4 +17,4 @@ class Rightsizer:
             if avg_cpu < 8:
                 return "t3.small"
 
-        return Non
+        return None

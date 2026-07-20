@@ -39,6 +39,10 @@ class CostProvider(BaseProvider):
     source     = "cost_explorer"
     enabled    = flag_enabled(COST_PROVIDER_ENABLED)
 
+    def __init__(self, *, cost_service):
+        super().__init__()
+        self.cost_service = cost_service
+
     def supports(self, level: ContextLevel) -> bool:
         return level == ContextLevel.DEEP
 
@@ -52,39 +56,23 @@ class CostProvider(BaseProvider):
 
     def _fetch_cost(self, resource_id: str, granularity: str) -> Dict[str, Any]:
         """
-        Use the CostExplorerAdapter to pull current/previous month costs
+        Use the CostService to pull current/previous month costs
         and the 30-day daily breakdown.
-
-        Cost Explorer does NOT filter by resource ID without resource-level
-        granularity; we use the first cloud account.
         """
         try:
-            from app.database import SessionLocal
-            from app.models import CloudAccountDB
-            from app.providers.aws.cost_explorer import CostExplorerAdapter
-
-            db = SessionLocal()
-            try:
-                acct = db.query(CloudAccountDB).filter(
-                    CloudAccountDB.provider == "AWS"
-                ).first()
-                account_id = acct.id if acct else 1
-            finally:
-                db.close()
-
-            adapter = CostExplorerAdapter(account_id)
+            svc = self.cost_service
 
             current_month  = 0.0
             previous_month = 0.0
             daily_breakdown: List[Dict] = []
 
             try:
-                current_month = adapter.get_current_month_cost()
+                current_month = svc.get_current_month_cost()
             except Exception as exc:
                 logger.debug("CostProvider current_month error: %s", exc)
 
             try:
-                trend = adapter.get_daily_cost_trend(days=60)
+                trend = svc.get_daily_cost_trend(days=60)
                 if trend:
                     mid = len(trend) // 2
                     # Last 30 days = current period

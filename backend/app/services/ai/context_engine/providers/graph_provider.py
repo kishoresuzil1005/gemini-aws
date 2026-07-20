@@ -32,6 +32,10 @@ class GraphProvider(BaseProvider):
     source     = "neo4j"
     enabled    = flag_enabled(GRAPH_PROVIDER_ENABLED)
 
+    def __init__(self, *, neo4j_service):
+        super().__init__()
+        self.neo4j_service = neo4j_service
+
     def supports(self, level: ContextLevel) -> bool:
         return True   # graph topology is needed at every context level
 
@@ -45,8 +49,7 @@ class GraphProvider(BaseProvider):
 
     def _fetch_topology(self, resource_id: str) -> Dict[str, Any]:
         try:
-            from app.services.graph.neo4j_service import Neo4jService
-            svc = Neo4jService()
+            svc = self.neo4j_service
 
             # Get full graph model from the Neo4j service
             full_graph = svc.get_graph_model()

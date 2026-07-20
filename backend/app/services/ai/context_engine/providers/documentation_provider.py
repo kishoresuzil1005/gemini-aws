@@ -56,6 +56,11 @@ class DocumentationProvider(BaseProvider):
     source     = "multi"
     enabled    = flag_enabled(DOCUMENTATION_PROVIDER_ENABLED)
 
+    def __init__(self, *, db_session_factory, documentation_service):
+        super().__init__()
+        self.db_session_factory = db_session_factory
+        self.documentation_service = documentation_service
+
     def supports(self, level: ContextLevel) -> bool:
         return level in (ContextLevel.FULL, ContextLevel.DEEP)
 
@@ -68,7 +73,7 @@ class DocumentationProvider(BaseProvider):
         sources.extend(internal)
 
         # 2. Qdrant semantic search
-        qdrant = self._search_qdrant(resource.resource_id)
+        qdrant = self.documentation_service.search_qdrant(resource.resource_id)
         sources.extend(qdrant)
 
         # 3. AWS official documentation
@@ -91,10 +96,9 @@ class DocumentationProvider(BaseProvider):
 
     def _search_internal(self, resource_id: str) -> List[Dict]:
         try:
-            from app.database import SessionLocal
             from app.models import ResourceDB, ResourceSnapshotDB
 
-            db = SessionLocal()
+            db = self.db_session_factory()
             try:
                 row = db.query(ResourceDB).filter(
                     ResourceDB.resource_id == resource_id
@@ -137,52 +141,6 @@ class DocumentationProvider(BaseProvider):
             return []
 
     # ------------------------------------------------------------------
-    #  Source: Qdrant semantic vector search
-    # ------------------------------------------------------------------
-
-    def _search_qdrant(self, resource_id: str) -> List[Dict]:
-        """
-        Semantic search against ingested documentation in Qdrant.
-        Phase 2: connect to Qdrant if available, else return empty.
-        """
-        try:
-            from qdrant_client import QdrantClient
-            from qdrant_client.http.models import Filter, FieldCondition, MatchValue
-
-            client = QdrantClient(host="localhost", port=6333, timeout=3)
-            collections = [c.name for c in client.get_collections().collections]
-            if not collections:
-                return []
-
-            # Use the first documentation collection
-            coll = collections[0]
-            # Simple text query using resource_id as the search term
-            # In a real implementation this would use an embedding model
-            results = client.scroll(
-                collection_name=coll,
-                scroll_filter=Filter(
-                    must=[FieldCondition(key="resource_type", match=MatchValue(value=resource_id[:3].upper()))]
-                ) if len(resource_id) >= 3 else None,
-                limit=3,
-                with_payload=True,
-            )
-            docs = []
-            for point in results[0]:
-                payload = point.payload or {}
-                docs.append({
-                    "type":    "qdrant",
-                    "title":   payload.get("title", "Documentation"),
-                    "url":     payload.get("url", ""),
-                    "snippet": payload.get("content", "")[:400],
-                    "score":   0.8,
-                })
-            return docs
-
-        except Exception as exc:
-            logger.debug("Qdrant search failed (non-critical): %s", exc)
-            return []
-
-    # ------------------------------------------------------------------
     #  Source: AWS Official Documentation
     # ------------------------------------------------------------------
 
@@ -191,10 +149,9 @@ class DocumentationProvider(BaseProvider):
         Map the resource type to the corresponding AWS documentation URL.
         """
         try:
-            from app.database import SessionLocal
             from app.models import ResourceDB
 
-            db = SessionLocal()
+            db = self.db_session_factory()
             try:
                 row = db.query(ResourceDB).filter(
                     ResourceDB.resource_id == resource_id
