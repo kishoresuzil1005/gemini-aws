@@ -103,6 +103,11 @@ class GraphSyncService:
             builder = AWSRelationshipBuilder(db=self.db)
             relationships = builder.build()
 
+            print("=" * 80)
+            print("Relationship Count:", len(relationships))
+            print("First Relationship:", relationships[:5])
+            print("=" * 80)
+
             print(type(relationships))
             if relationships:
                 print(type(relationships[0]))
@@ -149,6 +154,12 @@ class GraphSyncService:
                 # Write relationship
                 #
 
+                print(
+                    f"Writing relationship "
+                    f"{rel['from']} "
+                    f"--{rel['type']}--> "
+                    f"{rel['to']}"
+                )
                 self.graph.create_relationship(
                     source_id=rel["from"],
                     target_id=rel["to"],

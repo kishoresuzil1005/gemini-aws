@@ -312,6 +312,7 @@ class Neo4jService:
         """
 
         try:
+            print(query)
             with self.driver.session() as session:
                 result = session.run(
                     query,
@@ -364,6 +365,13 @@ class Neo4jService:
         if len(args) > 2 and relationship_type is None:
             relationship_type = args[2]
 
+        print("=" * 80)
+        print("Neo4j create_relationship()")
+        print(source_id)
+        print(target_id)
+        print(relationship_type)
+        print("=" * 80)
+
         if not self:
             inst = Neo4jService()
             return inst.create_relationship(
@@ -386,7 +394,9 @@ class Neo4jService:
         
         MemoryGraphStore.merge_edge(source_id, target_id, safe_rel_type)
 
+        print(self.driver)
         if not self.driver:
+            print("Neo4j Driver is None")
             return True
 
         query = f"""
@@ -397,6 +407,7 @@ class Neo4jService:
         """
 
         try:
+            print(query)
             with self.driver.session() as session:
                 result = session.run(
                     query,
