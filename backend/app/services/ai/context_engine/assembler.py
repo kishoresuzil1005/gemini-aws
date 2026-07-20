@@ -57,7 +57,7 @@ class ContextAssembler:
             "security": {},
             "documentation": {},
             "findings": {},
-            "recommendations": {},
+            "recommendations": [],
             "provider_data": {},
             "debug": {},
         }

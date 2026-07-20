@@ -21,6 +21,7 @@ from .enums             import ContextLevel, ProviderScope
 from .models            import AIContext, ExecutionMetadata
 from .registry          import registry, register_default_providers
 from .base_provider     import BaseProvider
+from .analysis_engine   import AnalysisEngine
 
 __all__ = [
     "ContextEngine",
@@ -30,6 +31,7 @@ __all__ = [
     "AIContext",
     "ExecutionMetadata",
     "BaseProvider",
+    "AnalysisEngine",
     "registry",
     "register_default_providers",
 ]

@@ -16,8 +16,7 @@ def test_graph_assistant_end_to_end():
     response = assistant.chat(req)
     
     # Check that everything worked end to end and Mock provider was hit
-    # Note: If ResourceExtractor/Validator fails to find i-123 in mock db, it might short-circuit.
-    # We should ensure we don't crash at least.
+    # The unified pipeline may return an empty context when providers are not configured.
     assert response is not None
     assert response.status in ["success", "error"]
     if response.status == "success":

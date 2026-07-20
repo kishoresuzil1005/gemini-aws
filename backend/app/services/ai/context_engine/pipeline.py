@@ -5,6 +5,7 @@ from .assembler import ContextAssembler
 from .provider_manager import ProviderManager
 from .configuration import PipelineConfiguration
 from .request import ContextRequest
+from .analysis_engine import AnalysisEngine
 
 class ContextPipeline:
     """Orchestrates the end‑to‑end flow for building an :class:`AIContext`.
@@ -26,6 +27,7 @@ class ContextPipeline:
             cache=self.config.cache,
             strict=self.config.strict,
         )
+        self._analysis_engine = AnalysisEngine()
 
     async def run(self, request: ContextRequest) -> AIContext:
         # Resolve the identifier to a resource.
@@ -43,12 +45,4 @@ class ContextPipeline:
         # Assemble the final AIContext.
         context = self._assembler.assemble(payloads, exec_meta, level=request.level)
         
-        # Run Analyzers (Phase 3)
-        from app.services.ai.context_engine.analyzers.recommendation_analyzer import RecommendationAnalyzer
-        recommendation_analyzer = RecommendationAnalyzer()
-        rec_result = recommendation_analyzer.analyze(context)
-        
-        if rec_result.get("status") == "success":
-            context.recommendations = rec_result.get("recommendations", [])
-            
-        return context
+        return self._analysis_engine.analyze(context)

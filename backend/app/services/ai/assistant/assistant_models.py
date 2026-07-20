@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Any, Optional
+from app.services.ai.context_engine.enums import ContextLevel
 
 class Message(BaseModel):
     role: str
@@ -49,3 +50,37 @@ class ToolResponse(BaseModel):
     confidence: float = 1.0
     context: Any = None
     metadata: Dict[str, Any] = {}
+
+class ExecutionContext(BaseModel):
+    """Immutable assistant-layer request state.
+
+    ``ContextRequest`` remains the smaller Context Engine contract generated
+    from this model; the two are deliberately not interchangeable.
+    """
+    model_config = ConfigDict(frozen=True)
+
+    user_message: str
+    intent: Optional[str] = None
+    identifier: Optional[str] = None
+    provider: str = "aws"
+    account_id: Optional[str] = None
+    region: Optional[str] = None
+    analysis_depth: ContextLevel = ContextLevel.STANDARD
+    include_metrics: bool = True
+    include_cost: bool = True
+    include_security: bool = True
+    include_graph: bool = True
+    include_documentation: bool = True
+    include_inventory: bool = True
+    session_id: str
+    user_role: Optional[str] = None
+    permissions: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+class ResolvedQuery(BaseModel):
+    identifier: Optional[str] = None
+    confidence: float = 0.0
+    source: str = "none"
+    suggestions: List[str] = Field(default_factory=list)
+    ambiguity: bool = False
+    matched_resource: Optional[Dict[str, Any]] = None

@@ -81,7 +81,7 @@ class AIContext(BaseModel):
 
     # ── Analyzer output sections ───────────────────────────────────────
     findings:        Dict[str, Any] = Field(default_factory=dict)
-    recommendations: Dict[str, Any] = Field(default_factory=dict)
+    recommendations: List[Dict[str, Any]] = Field(default_factory=list)
 
     # ── Internals ─────────────────────────────────────────────────────
     provider_data: Dict[str, Any] = Field(

@@ -48,33 +48,18 @@ class RecommendationAnalyzer(BaseAnalyzer):
     name = "recommendation"
 
     def analyze(self, context: AIContext) -> Dict[str, Any]:
-        """Run all child analyzers and aggregate their findings."""
-        from .dependency_analyzer import DependencyAnalyzer
-        
-        analyzers = [
-            DependencyAnalyzer()
-        ]
-        
+        """Aggregate findings already produced by the analysis lifecycle."""
         all_recommendations = []
-        
-        for analyzer in analyzers:
-            result = analyzer.analyze(context)
-            if result.get("status") == "success":
-                findings = result.get("findings", [])
-                # Store findings in context natively
-                if analyzer.name not in context.findings:
-                    context.findings[analyzer.name] = findings
-                    
-                # Convert findings to recommendations
-                for finding in findings:
-                    all_recommendations.append({
-                        "id": f"{analyzer.name}-{len(all_recommendations)}",
-                        "severity": finding.get("severity", "LOW"),
-                        "category": analyzer.name,
-                        "title": finding.get("title", ""),
-                        "description": finding.get("description", ""),
-                        "source": analyzer.name,
-                    })
+        for analyzer_name, result in context.findings.items():
+            for finding in result.get("findings", []):
+                all_recommendations.append({
+                    "id": f"{analyzer_name}-{len(all_recommendations)}",
+                    "severity": finding.get("severity", "LOW"),
+                    "category": analyzer_name,
+                    "title": finding.get("title", ""),
+                    "description": finding.get("description", ""),
+                    "source": analyzer_name,
+                })
                     
         return {
             "status": "success",

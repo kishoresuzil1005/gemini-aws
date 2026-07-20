@@ -1,11 +1,15 @@
 import pytest
 from app.services.ai.assistant.reasoning.reasoning_engine import ReasoningEngine
-from tests.fixtures.tool_results import PUBLIC_RDS, PRIVATE_RDS, HIGH_PRIVATE, LOW_PUBLIC, INFO_ISOLATED
+from app.services.ai.context_engine.models import AIContext
 
 def test_reasoning_engine_process(reasoning):
-    results = [PUBLIC_RDS, PRIVATE_RDS, HIGH_PRIVATE, LOW_PUBLIC, INFO_ISOLATED]
-    
-    rr = reasoning.process("session_123", results)
+    context = AIContext(findings={
+        "security": {
+            "findings": [{"description": "Instance is publicly reachable", "severity": "HIGH"}]
+        }
+    })
+
+    rr = reasoning.process("session_123", context)
     
     assert rr.session_id == "session_123"
     assert len(rr.findings) > 0

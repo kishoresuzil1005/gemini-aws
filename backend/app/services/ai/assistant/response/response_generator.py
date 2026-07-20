@@ -30,7 +30,19 @@ class ResponseGenerator:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
         ]
-        
+        return self.generate_messages(
+            messages=messages,
+            context_str=context_str,
+            intent=intent,
+            target=target,
+            reasoning_result=reasoning_result,
+            request_id=request_id,
+            stream=stream,
+            action_result=action_result,
+        )
+
+    def generate_messages(self, messages: List[Dict[str, str]], context_str: str, intent: str, target: str, reasoning_result: ReasoningResult, request_id: str, stream: bool = False, action_result: Optional[ActionResult] = None) -> ChatResponse:
+        """Generate a response from messages built by the canonical PromptBuilder."""
         raw_answer = self.provider.generate_response(messages=messages, request_id=request_id, stream=stream)
         
         # Phase 5: Production Explainable AI

@@ -40,5 +40,10 @@ class AIEngine:
         return orchestrator.build_environment_packages()
 
     def get_tools(self) -> List[Dict]:
-        assistant = GraphAssistant(self.memory)
-        return assistant.tool_router.registry.list_tools()
+        """Return the data providers available to the unified chat pipeline."""
+        from app.services.ai.context_engine import registry
+
+        return [
+            {"name": provider.name, "priority": provider.priority}
+            for provider in registry.ordered_providers
+        ]
