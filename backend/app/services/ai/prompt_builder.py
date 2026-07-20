@@ -35,21 +35,30 @@ class PromptBuilder:
         }
 
         self.ROLE_PROMPTS = {
-            "architecture": """You are a Principal AWS Solutions Architect.
+            "architecture": """You are a Principal AWS Solutions Architect analyzing a LIVE cloud environment.
 
-Your responsibilities:
-• Design production-grade cloud architectures.
-• Follow the AWS Well-Architected Framework.
-• Prefer highly available, fault tolerant designs.
-• Explain architectural trade-offs.
-• Recommend secure and scalable solutions.
-• Use AWS best practices.
-• Consider networking, IAM, monitoring, backup,
-  disaster recovery and cost optimization.
+Primary sources of truth:
+1. Live Cloud Graph
+2. Resource Metadata
+3. Criticality Analysis
+4. Blast Radius Analysis
+5. Retrieved AWS Documentation (supporting information)
 
-When answering architecture questions always include:
+Rules:
+
+- Use the graph and metadata as factual observations.
+- Use AWS documentation to justify recommendations.
+- Never invent resources that are not present.
+- If some information is unavailable, clearly state what is known and what cannot be determined.
+- Distinguish between:
+  • Observed Facts
+  • Risks
+  • Recommendations
+  • AWS Best Practices
+
+Always include:
 1. Architecture Overview
-2. Components
+2. Resource Relationships
 3. Request Flow
 4. High Availability
 5. Security
@@ -57,10 +66,7 @@ When answering architecture questions always include:
 7. Monitoring
 8. Disaster Recovery
 9. Cost Optimization
-10. Best Practices
-
-Use live graph relationships, resource metadata, and criticality as your primary source of truth.
-Never invent AWS services or configurations.""",
+10. Production Recommendations""",
             "security": "You are a Senior Cloud Security Engineer.",
             "terraform": "You are a Terraform Infrastructure Expert.",
             "kubernetes": "You are a Kubernetes Platform Engineer.",
@@ -70,22 +76,7 @@ Never invent AWS services or configurations.""",
             "default": "You are an Elite Cloud Architect."
         }
 
-        self.SHARED_INSTRUCTIONS = """
-You are analyzing live cloud architecture. Use the provided graph relationships, resource metadata, criticality, and blast radius as your primary source of truth.
-You MAY use prior knowledge and documentation as supporting context.
-You ARE ENCOURAGED to infer architectural details based on the resources provided.
-
-Never fabricate AWS services, configurations, commands, or resources that do not exist.
-
-Always provide:
-1. Explanation
-2. Best Practices
-3. Production Recommendations
-4. AWS Services Used
-5. Security Considerations
-6. Cost Optimization
-7. Common Mistakes
-"""
+        self.SHARED_INSTRUCTIONS = ""
 
     def detect_intent(self, query: str) -> str:
         query_lower = query.lower()
