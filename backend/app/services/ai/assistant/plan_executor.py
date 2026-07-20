@@ -112,4 +112,4 @@ class PlanExecutor:
         else:
             plan.status = PlanStatus.PARTIAL_SUCCESS
             
-        return result
+        return results
