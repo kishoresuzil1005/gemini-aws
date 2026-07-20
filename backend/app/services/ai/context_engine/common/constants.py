@@ -31,6 +31,7 @@ SCHEMA_VERSION    = "1.0"
 # ─────────────────────────────────────────────
 DEFAULT_METRICS_LOOK_BACK_HOURS  = 24
 DEFAULT_COST_GRANULARITY         = "daily"
+DEFAULT_PROVIDER_TIMEOUT         = 5
 
 # ─────────────────────────────────────────────
 #  Default TTLs (seconds)
