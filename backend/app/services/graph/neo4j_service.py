@@ -34,15 +34,25 @@ class MemoryGraphStore:
     ):
         cls.nodes[resource_id] = {
             "id": resource_id,
-            "type": resource_type or "resource",
+            "type": resource_type or "Resource",
             "name": name or resource_id,
+
             "provider": provider or "AWS",
             "region": region or "us-east-1",
+
             "status": status or state or "active",
             "state": state or status or "active",
+
             "account_id": kwargs.get("account_id"),
             "arn": kwargs.get("arn"),
-            "tags": kwargs.get("tags", {})
+            "tags": kwargs.get("tags", {}),
+
+            "environment": kwargs.get("environment"),
+            "owner": kwargs.get("owner"),
+            "project": kwargs.get("project"),
+
+            "created_at": kwargs.get("created_at"),
+            "updated_at": kwargs.get("updated_at"),
         }
 
     @classmethod
@@ -211,8 +221,14 @@ class Neo4jService:
         node_type: str,
         resource_id: str,
         name: str,
+
         provider: str = "AWS",
-        region: str = ""
+        region: str = "",
+
+        status: str = "active",
+        account_id: str = "",
+        arn: str = "",
+        tags: dict | None = None,
     ):
         """
         Create or update graph node
@@ -222,7 +238,14 @@ class Neo4jService:
             resource_id=resource_id,
             resource_type=node_type,
             name=name,
-            provider=provider
+
+            provider=provider,
+            region=region,
+            status=status,
+
+            account_id=account_id,
+            arn=arn,
+            tags=tags or {},
         )
 
         if not self.driver:
@@ -235,9 +258,45 @@ class Neo4jService:
 
         SET
             n:{node_type},
-            n.name = CASE WHEN $name <> $id AND $name <> '' THEN $name ELSE coalesce(n.name, $name) END,
-            n.provider = CASE WHEN $provider <> '' THEN $provider ELSE coalesce(n.provider, $provider) END,
-            n.region = CASE WHEN $region <> '' THEN $region ELSE coalesce(n.region, $region) END,
+
+            n.name = CASE
+                WHEN $name <> $id AND $name <> ''
+                THEN $name
+                ELSE coalesce(n.name, $name)
+            END,
+
+            n.provider = CASE
+                WHEN $provider <> ''
+                THEN $provider
+                ELSE coalesce(n.provider, $provider)
+            END,
+
+            n.region = CASE
+                WHEN $region <> ''
+                THEN $region
+                ELSE coalesce(n.region, $region)
+            END,
+
+            n.status = CASE
+                WHEN $status <> ''
+                THEN $status
+                ELSE coalesce(n.status, $status)
+            END,
+
+            n.account_id = CASE
+                WHEN $account_id <> ''
+                THEN $account_id
+                ELSE coalesce(n.account_id, $account_id)
+            END,
+
+            n.arn = CASE
+                WHEN $arn <> ''
+                THEN $arn
+                ELSE coalesce(n.arn, $arn)
+            END,
+
+            n.tags = $tags,
+
             n.updated_at = datetime()
 
         RETURN n
@@ -247,10 +306,17 @@ class Neo4jService:
             with self.driver.session() as session:
                 session.run(
                     query,
+
                     id=resource_id,
                     name=name,
+
                     provider=provider,
-                    region=region
+                    region=region,
+
+                    status=status,
+                    account_id=account_id,
+                    arn=arn,
+                    tags=tags or {},
                 )
         except Exception as e:
             logger.error(f"Error merging resource node {resource_id} in Neo4j: {e}")
@@ -634,13 +700,22 @@ class Neo4jService:
         provider = resource.get("provider") or "AWS"
         region = resource.get("region") or ""
         
+        status = resource.get("status") or "active"
+        account_id = str(resource.get("account_id") or resource.get("account") or "")
+        arn = resource.get("arn") or ""
+        tags = resource.get("tags") or {}
+        
         inst = Neo4jService()
         inst.create_node(
             node_type=res_type, 
             resource_id=res_id, 
             name=name, 
             provider=provider.upper(), 
-            region=region
+            region=region,
+            status=status,
+            account_id=account_id,
+            arn=arn,
+            tags=tags
         )
 
     @staticmethod
