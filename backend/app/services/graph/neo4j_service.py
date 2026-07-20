@@ -39,7 +39,10 @@ class MemoryGraphStore:
             "provider": provider or "AWS",
             "region": region or "us-east-1",
             "status": status or state or "active",
-            "state": state or status or "active"
+            "state": state or status or "active",
+            "account_id": kwargs.get("account_id"),
+            "arn": kwargs.get("arn"),
+            "tags": kwargs.get("tags", {})
         }
 
     @classmethod
@@ -423,7 +426,10 @@ class Neo4jService:
                             n.name AS name,
                             n.provider AS provider,
                             n.region AS region,
-                            n.status AS status
+                            n.status AS status,
+                            n.account_id AS account_id,
+                            n.arn AS arn,
+                            n.tags AS tags
                         """,
                         id=resource_id
                     )
@@ -437,7 +443,10 @@ class Neo4jService:
                             "name": row["name"],
                             "provider": row["provider"] or "AWS",
                             "region": row["region"] or "",
-                            "status": row["status"] or "unknown"
+                            "status": row["status"] or "unknown",
+                            "account_id": row["account_id"],
+                            "arn": row["arn"],
+                            "tags": row["tags"] or {}
                         }
             except Exception as e:
                 logger.error(f"Error looking up single node: {e}")
@@ -451,7 +460,10 @@ class Neo4jService:
                 "name": info["name"],
                 "provider": info.get("provider", "AWS"),
                 "region": info.get("region", ""),
-                "status": info.get("status", "unknown")
+                "status": info.get("status", "unknown"),
+                "account_id": info.get("account_id"),
+                "arn": info.get("arn"),
+                "tags": info.get("tags", {})
             }
         return None
 
@@ -469,7 +481,10 @@ class Neo4jService:
             "resource_type": root["type"],
             "provider": root["provider"],
             "region": root["region"],
-            "status": root["status"]
+            "status": root["status"],
+            "account_id": root.get("account_id"),
+            "arn": root.get("arn"),
+            "tags": root.get("tags", {})
         }}
         
         edges = []
@@ -487,6 +502,9 @@ class Neo4jService:
                             m.provider AS m_provider,
                             m.region AS m_region,
                             m.status AS m_status,
+                            m.account_id AS m_account_id,
+                            m.arn AS m_arn,
+                            m.tags AS m_tags,
                             type(r) AS relation,
                             startNode(r).id AS source,
                             endNode(r).id AS target
@@ -503,7 +521,10 @@ class Neo4jService:
                                 "resource_type": row["m_type"] or "Resource",
                                 "provider": row["m_provider"] or "AWS",
                                 "region": row["m_region"] or "",
-                                "status": row["m_status"] or "unknown"
+                                "status": row["m_status"] or "unknown",
+                                "account_id": row["m_account_id"],
+                                "arn": row["m_arn"],
+                                "tags": row["m_tags"] or {}
                             }
                         
                         edges.append({
@@ -536,7 +557,10 @@ class Neo4jService:
                             "resource_type": info["type"],
                             "provider": info.get("provider", "AWS"),
                             "region": info.get("region", ""),
-                            "status": info.get("status", "unknown")
+                            "status": info.get("status", "unknown"),
+                            "account_id": info.get("account_id"),
+                            "arn": info.get("arn"),
+                            "tags": info.get("tags", {})
                         }
 
         return {
