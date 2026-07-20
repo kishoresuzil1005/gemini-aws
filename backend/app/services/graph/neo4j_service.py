@@ -420,7 +420,10 @@ class Neo4jService:
                         RETURN
                             n.id AS id,
                             labels(n)[0] AS type,
-                            n.name AS name
+                            n.name AS name,
+                            n.provider AS provider,
+                            n.region AS region,
+                            n.status AS status
                         """,
                         id=resource_id
                     )
@@ -431,7 +434,10 @@ class Neo4jService:
                         return {
                             "id": row["id"],
                             "type": row["type"],
-                            "name": row["name"]
+                            "name": row["name"],
+                            "provider": row["provider"] or "AWS",
+                            "region": row["region"] or "",
+                            "status": row["status"] or "unknown"
                         }
             except Exception as e:
                 logger.error(f"Error looking up single node: {e}")
@@ -442,9 +448,104 @@ class Neo4jService:
             return {
                 "id": info["id"],
                 "type": info["type"],
-                "name": info["name"]
+                "name": info["name"],
+                "provider": info.get("provider", "AWS"),
+                "region": info.get("region", ""),
+                "status": info.get("status", "unknown")
             }
         return None
+
+    def get_resource_subgraph(self, resource_id: str) -> dict:
+        """
+        Return the resource node, and all 1-hop connected nodes and their edges.
+        """
+        root = self.get_node(resource_id=resource_id)
+        if not root:
+            return {"resource": {}, "subgraph": {"nodes": [], "edges": []}}
+
+        nodes_dict = {root["id"]: {
+            "resource_id": root["id"],
+            "resource_name": root["name"],
+            "resource_type": root["type"],
+            "provider": root["provider"],
+            "region": root["region"],
+            "status": root["status"]
+        }}
+        
+        edges = []
+
+        if self.driver:
+            try:
+                with self.driver.session() as session:
+                    result = session.run(
+                        """
+                        MATCH (n {id:$id})-[r]-(m)
+                        RETURN 
+                            m.id AS m_id,
+                            labels(m)[0] AS m_type,
+                            m.name AS m_name,
+                            m.provider AS m_provider,
+                            m.region AS m_region,
+                            m.status AS m_status,
+                            type(r) AS relation,
+                            startNode(r).id AS source,
+                            endNode(r).id AS target
+                        """,
+                        id=resource_id
+                    )
+                    
+                    for row in result:
+                        m_id = row["m_id"]
+                        if m_id not in nodes_dict:
+                            nodes_dict[m_id] = {
+                                "resource_id": m_id,
+                                "resource_name": row["m_name"] or m_id,
+                                "resource_type": row["m_type"] or "Resource",
+                                "provider": row["m_provider"] or "AWS",
+                                "region": row["m_region"] or "",
+                                "status": row["m_status"] or "unknown"
+                            }
+                        
+                        edges.append({
+                            "source": row["source"],
+                            "target": row["target"],
+                            "relation": row["relation"] or "CONNECTED"
+                        })
+            except Exception as e:
+                logger.error(f"Error querying resource subgraph in Neo4j: {e}")
+        else:
+            # Fallback to in-memory graph
+            connected_ids = {resource_id}
+            for e in MemoryGraphStore.edges:
+                if e["source"] == resource_id or e["target"] == resource_id:
+                    edges.append({
+                        "source": e["source"],
+                        "target": e["target"],
+                        "relation": e["type"]
+                    })
+                    connected_ids.add(e["source"])
+                    connected_ids.add(e["target"])
+            
+            for c_id in connected_ids:
+                if c_id not in nodes_dict:
+                    info = MemoryGraphStore.nodes.get(c_id)
+                    if info:
+                        nodes_dict[c_id] = {
+                            "resource_id": info["id"],
+                            "resource_name": info["name"],
+                            "resource_type": info["type"],
+                            "provider": info.get("provider", "AWS"),
+                            "region": info.get("region", ""),
+                            "status": info.get("status", "unknown")
+                        }
+
+        return {
+            "resource": nodes_dict[resource_id],
+            "subgraph": {
+                "nodes": list(nodes_dict.values()),
+                "edges": edges
+            }
+        }
 
     # ---------------------------------------------------------
     # NODE DEPENDENCIES

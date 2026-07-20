@@ -49,59 +49,7 @@ class GraphProvider(BaseProvider):
 
     def _fetch_topology(self, resource_id: str) -> Dict[str, Any]:
         try:
-            svc = self.neo4j_service
-
-            # Get full graph from Neo4j
-            full_graph = svc.get_graph()
-            all_nodes: List[Dict] = full_graph.get("nodes", [])
-            all_edges: List[Dict] = full_graph.get("edges", [])
-
-            # Get root resource node
-            root_node = svc.get_node(resource_id)
-            root = {}
-            if root_node:
-                root = {
-                    "resource_id":       root_node.get("id", resource_id),
-                    "resource_name":     root_node.get("name", resource_id),
-                    "resource_type":     root_node.get("type", "Resource"),
-                    "provider":          root_node.get("provider", "aws"),
-                    "region":            root_node.get("region", ""),
-                    "status":            root_node.get("status", "unknown"),
-                }
-
-            # Build 1-hop subgraph
-            connected_ids = {resource_id}
-            subgraph_edges: List[Dict] = []
-            for edge in all_edges:
-                src = edge.get("source") or edge.get("from") or edge.get("a", {}).get("id", "")
-                tgt = edge.get("target") or edge.get("to") or edge.get("b", {}).get("id", "")
-                rel = edge.get("relation") or edge.get("type") or "CONNECTED"
-                if src == resource_id or tgt == resource_id:
-                    connected_ids.add(src)
-                    connected_ids.add(tgt)
-                    subgraph_edges.append({
-                        "source": src,
-                        "target": tgt,
-                        "relation": rel,
-                    })
-
-            subgraph_nodes = []
-            for n in all_nodes:
-                if n.get("id") in connected_ids:
-                    subgraph_nodes.append({
-                        "resource_id": n.get("id"),
-                        "resource_name": n.get("name"),
-                        "resource_type": n.get("type"),
-                        "provider": n.get("provider", "aws"),
-                    })
-
-            return {
-                "resource":  root,
-                "subgraph": {
-                    "nodes": subgraph_nodes,
-                    "edges": subgraph_edges,
-                },
-            }
+            return self.neo4j_service.get_resource_subgraph(resource_id)
 
         except Exception as exc:
             logger.warning("GraphProvider failed for %s: %s", resource_id, exc)
