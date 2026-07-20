@@ -10,6 +10,10 @@ import os
 import boto3
 from typing import Any, Dict, List, Optional
 import logging
+
+from app.database import SessionLocal
+from app.services.graph.neo4j_service import Neo4jService
+from app.models import CloudAccountDB
 from app.providers.aws.cost_explorer import CostExplorerAdapter
 
 logger = logging.getLogger(__name__)
@@ -22,8 +26,9 @@ logger = logging.getLogger(__name__)
 class CloudWatchService:
     """Encapsulates AWS CloudWatch API calls."""
     
-    def __init__(self):
-        self.client = boto3.client("cloudwatch")
+    def __init__(self, session: Optional[boto3.Session] = None):
+        aws_session = session or boto3.Session()
+        self.client = aws_session.client("cloudwatch")
     
     def get_metric_data(self, metric_queries: List[Dict], start_time: Any, end_time: Any) -> Dict[str, Any]:
         return self.client.get_metric_data(
@@ -36,9 +41,10 @@ class CloudWatchService:
 class IAMService:
     """Encapsulates AWS IAM API calls."""
     
-    def __init__(self):
-        self.iam = boto3.client("iam")
-        self.ec2 = boto3.client("ec2")
+    def __init__(self, session: Optional[boto3.Session] = None):
+        aws_session = session or boto3.Session()
+        self.iam = aws_session.client("iam")
+        self.ec2 = aws_session.client("ec2")
 
     def get_role(self, role_name: str) -> Dict[str, Any]:
         return self.iam.get_role(RoleName=role_name)
@@ -155,10 +161,6 @@ class ServiceContainer:
     _instance = None
 
     def __init__(self):
-        from app.database import SessionLocal
-        from app.services.graph.neo4j_service import Neo4jService
-        from app.models import CloudAccountDB
-        
         # Core services
         self.db_session_factory = SessionLocal
         self.neo4j_service = Neo4jService()
@@ -175,8 +177,9 @@ class ServiceContainer:
             db.close()
         
         # AWS & Domain services
-        self.cloudwatch_service = CloudWatchService()
-        self.iam_service = IAMService()
+        aws_session = boto3.Session()
+        self.cloudwatch_service = CloudWatchService(aws_session)
+        self.iam_service = IAMService(aws_session)
         self.cost_service = CostService(account_id=aws_account_id)
         self.documentation_service = DocumentationService()
 

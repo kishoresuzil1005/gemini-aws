@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class GraphProvider(BaseProvider):
-    """Fetches raw graph topology from Neo4j (or MemoryGraphStore fallback)."""
+    """Fetches raw graph topology from Neo4j."""
 
     name       = "graph"
     scope      = ProviderScope.STATIC
@@ -61,12 +61,12 @@ class GraphProvider(BaseProvider):
             root = {}
             if root_node:
                 root = {
-                    "id":       root_node.get("id", resource_id),
-                    "name":     root_node.get("name", resource_id),
-                    "type":     root_node.get("type", "Resource"),
-                    "provider": root_node.get("provider", "aws"),
-                    "region":   root_node.get("region", ""),
-                    "status":   root_node.get("status", "unknown"),
+                    "resource_id":       root_node.get("id", resource_id),
+                    "resource_name":     root_node.get("name", resource_id),
+                    "resource_type":     root_node.get("type", "Resource"),
+                    "provider":          root_node.get("provider", "aws"),
+                    "region":            root_node.get("region", ""),
+                    "status":            root_node.get("status", "unknown"),
                 }
 
             # Build 1-hop subgraph
@@ -85,7 +85,15 @@ class GraphProvider(BaseProvider):
                         "relation": rel,
                     })
 
-            subgraph_nodes = [n for n in all_nodes if n.get("id") in connected_ids]
+            subgraph_nodes = []
+            for n in all_nodes:
+                if n.get("id") in connected_ids:
+                    subgraph_nodes.append({
+                        "resource_id": n.get("id"),
+                        "resource_name": n.get("name"),
+                        "resource_type": n.get("type"),
+                        "provider": n.get("provider", "aws"),
+                    })
 
             return {
                 "resource":  root,
@@ -97,31 +105,7 @@ class GraphProvider(BaseProvider):
 
         except Exception as exc:
             logger.warning("GraphProvider failed for %s: %s", resource_id, exc)
-            return self._fallback_from_memory(resource_id)
-
-    def _fallback_from_memory(self, resource_id: str) -> Dict[str, Any]:
-        try:
-            from app.services.graph.neo4j_service import MemoryGraphStore
-            nodes = [
-                {"id": n["id"], "type": n["type"], "name": n["name"], "provider": n.get("provider", "aws")}
-                for n in MemoryGraphStore.nodes.values()
-            ]
-            edges = [
-                {"source": e["source"], "target": e["target"], "relation": e["type"]}
-                for e in MemoryGraphStore.edges
-            ]
-            root = MemoryGraphStore.nodes.get(resource_id, {"id": resource_id, "name": resource_id})
-            connected_ids = {resource_id}
-            sub_edges = []
-            for e in edges:
-                if e["source"] == resource_id or e["target"] == resource_id:
-                    connected_ids.add(e["source"])
-                    connected_ids.add(e["target"])
-                    sub_edges.append(e)
-            sub_nodes = [n for n in nodes if n["id"] in connected_ids]
             return {
-                "resource": root,
-                "subgraph": {"nodes": sub_nodes, "edges": sub_edges},
+                "resource": {},
+                "subgraph": {"nodes": [], "edges": []}
             }
-        except Exception:
-            return {"resource": {}, "subgraph": {}}
