@@ -68,9 +68,8 @@ class ContextBuilder:
             try:
                 engine = ContextEngine()
                 req = ContextRequest(
-                    resource_id=ctx.current_resource,
-                    level=ContextLevel.DEEP,
-                    intent=ctx.current_intent
+                    identifier=ctx.current_resource,
+                    level=ContextLevel.DEEP
                 )
                 # Run the context engine
                 ai_context = asyncio.run(engine.build_context(req))
