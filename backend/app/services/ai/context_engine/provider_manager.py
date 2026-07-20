@@ -56,6 +56,16 @@ class ProviderManager:
                 data = await provider.fetch(resource, request)
                 exec_ms = (time.monotonic() - t0) * 1000
                 
+                valid, reason = self._is_valid_response(data)
+                if not valid:
+                    self.health.update(
+                        provider=provider.name,
+                        status=ProviderStatus.INVALID_RESPONSE,
+                        execution_time_ms=exec_ms,
+                        last_error=reason,
+                    )
+                    continue
+                
                 payload_entry = {"provider": provider, "data": data}
                 payloads[provider.name] = payload_entry
                 if cache_key:
@@ -102,3 +112,24 @@ class ProviderManager:
 
     def provider_health(self):
         return self.health.get_all()
+
+    def _is_valid_response(self, result) -> tuple[bool, str]:
+        if result is None:
+            return False, "Provider returned None"
+        if not isinstance(result, dict):
+            return False, "Provider response is not a dictionary"
+        if "metadata" not in result:
+            return False, "Missing metadata block"
+        if "data" not in result:
+            return False, "Missing data block"
+            
+        metadata = result["metadata"]
+        if not isinstance(metadata, dict):
+            return False, "Metadata is invalid"
+            
+        required = ["provider", "status"]
+        for key in required:
+            if key not in metadata:
+                return False, f"Missing metadata field: {key}"
+                
+        return True, ""
