@@ -142,4 +142,4 @@ class ContextBuilder:
         if len(final_context) > MAX_CONTEXT_CHARS:
             final_context = final_context[:MAX_CONTEXT_CHARS] + "\n...[CONTEXT TRUNCATED DUE TO SIZE LIMIT]"
             
-        return final_contex
+        return final_context
