@@ -42,4 +42,13 @@ class ContextPipeline:
 
         # Assemble the final AIContext.
         context = self._assembler.assemble(payloads, exec_meta, level=request.level)
+        
+        # Run Analyzers (Phase 3)
+        from app.services.ai.context_engine.analyzers.recommendation_analyzer import RecommendationAnalyzer
+        recommendation_analyzer = RecommendationAnalyzer()
+        rec_result = recommendation_analyzer.analyze(context)
+        
+        if rec_result.get("status") == "success":
+            context.recommendations = rec_result.get("recommendations", [])
+            
         return context
