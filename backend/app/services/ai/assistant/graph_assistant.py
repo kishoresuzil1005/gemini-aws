@@ -24,6 +24,7 @@ from app.services.ai.assistant.actions.rollback_manager import RollbackManager
 from app.services.ai.assistant.actions.execution_logger import ExecutionLogger
 from app.services.ai.assistant.actions.audit_engine import AuditEngine
 from app.services.ai.assistant.actions.action_state_machine import ActionStateMachine
+from app.services.ai.assistant.actions.action_rules import ACTION_POLICIES
 from app.providers.provider_registry import ProviderRegistry
 from app.services.ai.assistant.multicloud.multicloud_models import CloudProvider
 from app.providers.aws.aws_provider import AWSProvider
