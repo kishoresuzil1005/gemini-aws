@@ -105,13 +105,6 @@ def mock_graph_provider(fake_container):
     provider = GraphProvider(neo4j_service=fake_container.neo4j_service)
     provider.fetch = AsyncMock(return_value=_make_std_response("graph", {
         "resource": {"id": MOCK_RESOURCE_ID, "type": "EC2"},
-        "nodes": [
-            {"id": MOCK_RESOURCE_ID, "type": "EC2", "name": "test-instance"},
-            {"id": "sg-001",         "type": "SecurityGroup", "name": "test-sg"},
-        ],
-        "edges": [
-            {"source": MOCK_RESOURCE_ID, "target": "sg-001", "relation": "MEMBER_OF"},
-        ],
         "subgraph": {
             "nodes": [{"id": MOCK_RESOURCE_ID, "type": "EC2"}, {"id": "sg-001", "type": "SecurityGroup"}],
             "edges": [{"source": MOCK_RESOURCE_ID, "target": "sg-001", "relation": "MEMBER_OF"}],
@@ -224,10 +217,10 @@ class TestContextEngineEndToEnd:
         request = ContextRequest(identifier=MOCK_RESOURCE_ID, level=ContextLevel.BASIC)
         context = await engine.build(request)
 
-        assert "nodes"    in context.graph
-        assert "edges"    in context.graph
         assert "subgraph" in context.graph
-        assert len(context.graph["nodes"]) >= 1
+        assert "nodes" in context.graph["subgraph"]
+        assert "edges" in context.graph["subgraph"]
+        assert len(context.graph["subgraph"]["nodes"]) >= 1
 
     @pytest.mark.asyncio
     async def test_inventory_section_populated(

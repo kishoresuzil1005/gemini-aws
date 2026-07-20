@@ -51,8 +51,8 @@ class GraphProvider(BaseProvider):
         try:
             svc = self.neo4j_service
 
-            # Get full graph model from the Neo4j service
-            full_graph = svc.get_graph_model()
+            # Get full graph from Neo4j
+            full_graph = svc.get_graph()
             all_nodes: List[Dict] = full_graph.get("nodes", [])
             all_edges: List[Dict] = full_graph.get("edges", [])
 
@@ -89,8 +89,6 @@ class GraphProvider(BaseProvider):
 
             return {
                 "resource":  root,
-                "nodes":     all_nodes,
-                "edges":     all_edges,
                 "subgraph": {
                     "nodes": subgraph_nodes,
                     "edges": subgraph_edges,
@@ -123,9 +121,7 @@ class GraphProvider(BaseProvider):
             sub_nodes = [n for n in nodes if n["id"] in connected_ids]
             return {
                 "resource": root,
-                "nodes":    nodes,
-                "edges":    edges,
                 "subgraph": {"nodes": sub_nodes, "edges": sub_edges},
             }
         except Exception:
-            return {"resource": {}, "nodes": [], "edges": [], "subgraph": {}}
+            return {"resource": {}, "subgraph": {}}
