@@ -42,7 +42,22 @@ class ResourceProvider(BaseProvider):
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
-        data = self._fetch_from_db(resource.resource_id)
+        # If the resolver already populated the full resource, use it directly.
+        if resource.is_fully_resolved:
+            data = {
+                "resource_id":   resource.resource_id,
+                "resource_name": resource.resource_name or resource.resource_id,
+                "resource_type": resource.resource_type,
+                "provider":      resource.provider or "aws",
+                "region":        resource.region or "",
+                "account_id":    resource.account_id or "",
+                "arn":           resource.arn or "",
+                "status":        resource.status or "unknown",
+                "tags":          resource.tags or {},
+            }
+        else:
+            # Resolver returned a stub – try the DB ourselves.
+            data = self._fetch_from_db(resource.resource_id, resource.original_identifier)
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)
 
@@ -50,17 +65,25 @@ class ResourceProvider(BaseProvider):
     #  Private helpers
     # ------------------------------------------------------------------
 
-    def _fetch_from_db(self, resource_id: str) -> Dict[str, Any]:
+    def _fetch_from_db(self, resource_id: str, original_identifier: str = "") -> Dict[str, Any]:
         try:
             from app.models import ResourceDB, ResourceNodeDB
 
             db = self.db_session_factory()
             try:
+                # Try exact resource_id first
                 row: Optional[ResourceDB] = (
                     db.query(ResourceDB)
                     .filter(ResourceDB.resource_id == resource_id)
                     .first()
                 )
+                # Fallback: search by name (catches user-supplied human names)
+                if row is None and original_identifier:
+                    row = (
+                        db.query(ResourceDB)
+                        .filter(ResourceDB.name.ilike(f"%{original_identifier}%"))
+                        .first()
+                    )
 
                 if row:
                     tags: Dict = {}

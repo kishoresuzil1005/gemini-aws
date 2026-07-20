@@ -4,6 +4,12 @@ Uses the existing ``Neo4jService`` to query nodes and edges for the given
 resource, including its direct neighborhood (1-hop subgraph).
 
 Returns only topology data – no analysis (criticality, blast-radius, paths).
+
+Lookup strategy
+---------------
+1. Try ``resource.resource_id`` (authoritative DB id, e.g. "db-xxxx").
+2. If Neo4j returns empty, try ``resource.resource_name`` (human name, e.g. "cloudops-db").
+3. If still empty, try the ``original_identifier`` typed by the user.
 """
 
 import time
@@ -41,35 +47,69 @@ class GraphProvider(BaseProvider):
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
-        data = self._fetch_topology(resource.resource_id)
+        data = self._fetch_topology(resource)
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)
 
     # ------------------------------------------------------------------
 
-    def _fetch_topology(self, resource_id: str) -> Dict[str, Any]:
+    def _fetch_topology(self, resource: ResolvedResource) -> Dict[str, Any]:
+        """Try each candidate ID until Neo4j returns a non-empty subgraph."""
+        # Build list of IDs to attempt (deduplicated, preserving priority order)
+        candidates: List[str] = []
+        for val in [
+            resource.resource_id,
+            resource.resource_name,
+            resource.original_identifier,
+        ]:
+            if val and val not in candidates:
+                candidates.append(val)
+
+        for candidate_id in candidates:
+            result = self._query_neo4j(candidate_id)
+            # Non-empty means we found the node in Neo4j
+            if result.get("resource") or result.get("subgraph", {}).get("nodes"):
+                logger.info(
+                    "GraphProvider: found graph data for '%s' using key '%s'",
+                    resource.original_identifier,
+                    candidate_id,
+                )
+                return result
+
+        # No match – return empty structure
+        logger.warning(
+            "GraphProvider: no graph data found for '%s' (tried: %s)",
+            resource.original_identifier,
+            candidates,
+        )
+        return {
+            "resource": {},
+            "subgraph": {"nodes": [], "edges": []},
+            "upstream": [],
+            "downstream": [],
+        }
+
+    def _query_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
-            # Get 1-hop subgraph
             subgraph_data = self.neo4j_service.get_resource_subgraph(resource_id)
-            
+
             # Get multi-hop dependencies
             from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
             dependency_analyzer = DependencyAnalyzer(self.neo4j_service)
-            
-            # Default depth is 5 in the analyzer
+
             downstream = dependency_analyzer.get_downstream(resource_id)
-            upstream = dependency_analyzer.get_upstream(resource_id)
-            
-            subgraph_data["upstream"] = upstream
+            upstream   = dependency_analyzer.get_upstream(resource_id)
+
+            subgraph_data["upstream"]   = upstream
             subgraph_data["downstream"] = downstream
-            
+
             return subgraph_data
 
         except Exception as exc:
-            logger.warning("GraphProvider failed for %s: %s", resource_id, exc)
+            logger.warning("GraphProvider._query_neo4j(%s) failed: %s", resource_id, exc)
             return {
                 "resource": {},
                 "subgraph": {"nodes": [], "edges": []},
                 "upstream": [],
-                "downstream": []
+                "downstream": [],
             }

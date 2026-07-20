@@ -41,13 +41,13 @@ class InventoryProvider(BaseProvider):
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
-        data = self._fetch_from_db(resource.resource_id)
+        data = self._fetch_from_db(resource.resource_id, resource.original_identifier)
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)
 
     # ------------------------------------------------------------------
 
-    def _fetch_from_db(self, resource_id: str) -> Dict[str, Any]:
+    def _fetch_from_db(self, resource_id: str, original_identifier: str = "") -> Dict[str, Any]:
         try:
             from app.models import ResourceDB, CloudAccountDB
 
@@ -57,6 +57,13 @@ class InventoryProvider(BaseProvider):
                     db.query(ResourceDB)
                     .filter(ResourceDB.resource_id == resource_id)
                     .first()
+                )
+                # Fallback: search by human name
+                if row is None and original_identifier:
+                    row = (
+                        db.query(ResourceDB)
+                        .filter(ResourceDB.name.ilike(f"%{original_identifier}%"))
+                        .first()
                 )
 
                 if not row:
