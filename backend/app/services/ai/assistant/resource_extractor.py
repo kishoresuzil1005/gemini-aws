@@ -56,5 +56,7 @@ class ResourceExtractor:
                     continue
                 target_resource = token
                 break
+        if target_resource:
+            target_resource = target_resource.rstrip(".,;:!?")
 
         return target_resource
