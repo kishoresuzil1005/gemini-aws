@@ -58,17 +58,45 @@ class ContextBuilder:
         raw_sections = []
         ctx = conversation_context
         
-        # 1. Graph Section (only if intent warrants graph data)
-        if ctx.current_resource and ctx.current_intent in ["SECURITY", "REMEDIATION", "ORCHESTRATION", "INVESTIGATION", "UNKNOWN"]:
-            graph_data = self.graph_retriever.get_resource_context(ctx.current_resource)
-            if graph_data:
-                filtered_data = self.filter.filter_graph_data(graph_data, ctx.current_intent)
-                compressed_data = self.compressor.compress(filtered_data)
+        # 1. AI Context Engine Section
+        if ctx.current_resource and ctx.current_intent in ["SECURITY", "REMEDIATION", "ORCHESTRATION", "INVESTIGATION", "UNKNOWN", "DEPENDENCY", "BLAST_RADIUS"]:
+            from app.services.ai.context_engine.engine import ContextEngine
+            from app.services.ai.context_engine.request import ContextRequest
+            from app.services.ai.context_engine.enums import ContextLevel
+            import asyncio
+            
+            try:
+                engine = ContextEngine()
+                req = ContextRequest(
+                    resource_id=ctx.current_resource,
+                    level=ContextLevel.DEEP,
+                    intent=ctx.current_intent
+                )
+                # Run the context engine
+                ai_context = asyncio.run(engine.build_context(req))
                 
-                raw_sections.append({
-                    "title": "RESOURCE GRAPH DATA",
-                    "content": dict_to_text(compressed_data)
-                })
+                # Append ContextEngine outputs
+                if ai_context.graph:
+                    raw_sections.append({
+                        "title": "RESOURCE GRAPH DATA",
+                        "content": dict_to_text(ai_context.graph)
+                    })
+                
+                if ai_context.findings:
+                    for analyzer_name, analyzer_findings in ai_context.findings.items():
+                        raw_sections.append({
+                            "title": f"FINDINGS: {analyzer_name.upper()}",
+                            "content": dict_to_text(analyzer_findings)
+                        })
+                        
+                if ai_context.recommendations:
+                    raw_sections.append({
+                        "title": "RECOMMENDATIONS",
+                        "content": dict_to_text(ai_context.recommendations)
+                    })
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"ContextEngine failed: {e}")
         
         # 2. Reasoning Sections
         if reasoning_result and reasoning_result.findings:
