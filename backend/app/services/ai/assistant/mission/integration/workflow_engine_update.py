@@ -11,4 +11,4 @@ class WorkflowEngine:
         # Dispatch to Agents
         # ...
         objective.status = "COMPLETED"
-        return Tru
+        return True

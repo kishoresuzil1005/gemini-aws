@@ -61,4 +61,4 @@ class ResponseGenerator:
         response.evidence = evidence
         response.tools_used = tools_used
         
-        return respons
+        return response

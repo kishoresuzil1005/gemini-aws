@@ -26,8 +26,7 @@ class ApprovalEngine:
             dry_run_summary=dry_run_summary
         )
         self.state_machine.transition(plan, ActionStatus.APPROVAL_REQUIRED)
-        return req
-
+        return request
     def process_approval(self, plan: ActionPlan, approval_id: Optional[str] = None) -> ApprovalResult:
         """
         Processes an approval. In test mode, this auto-approves. 
@@ -46,4 +45,4 @@ class ApprovalEngine:
         # In a real system, verify the approval_id against a database record.
         res = ApprovalResult(approved=True, approver="SystemUser", reason="Valid Approval ID.")
         self.state_machine.transition(plan, ActionStatus.APPROVED)
-        return re
+        return result

@@ -38,4 +38,4 @@ class WorkflowCheckpoint:
         last = checkpoints[-1]
         if last.metadata:
             return CheckpointRecord(**last.metadata)
-        return Non
+        return None

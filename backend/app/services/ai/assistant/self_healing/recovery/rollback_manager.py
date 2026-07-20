@@ -8,4 +8,4 @@ class RollbackManager:
     def initiate_rollback(self, incident: Incident):
         print(f"[RollbackManager] Repair failed. Initiating rollback for {incident.incident_id}...")
         # Restores DB snapshots, reverts deployments, etc.
-        return Tru
+        return True

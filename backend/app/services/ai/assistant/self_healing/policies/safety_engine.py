@@ -10,4 +10,4 @@ class SafetyEngine:
         if context.get("environment") == "production" and "delete" in str(plan.objectives).lower():
             print("[SafetyEngine] BLOCKED: Destructive action in production requires manual approval.")
             return False
-        return Tru
+        return True

@@ -27,4 +27,4 @@ class ResponseFormatter:
             "tools_used": tools_used
         }
         
-        return respons
+        return response

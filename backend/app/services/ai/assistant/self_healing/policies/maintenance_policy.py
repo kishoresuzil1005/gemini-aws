@@ -11,4 +11,4 @@ class MaintenancePolicy:
         if day >= 5:
             print("[MaintenancePolicy] BLOCKED: System is in weekend maintenance lock.")
             return False
-        return Tru
+        return True

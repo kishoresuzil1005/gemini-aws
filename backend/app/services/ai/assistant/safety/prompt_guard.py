@@ -33,4 +33,4 @@ class OutputFilter:
     def sanitize(self, response: str) -> str:
         for pattern in SECRET_PATTERNS:
             response = re.sub(pattern, "[REDACTED]", response, flags=re.IGNORECASE)
-        return respons
+        return response

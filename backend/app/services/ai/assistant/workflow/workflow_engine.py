@@ -56,4 +56,4 @@ class WorkflowEngine:
             comp_plan = self.compensation.create_compensation_plan(plan)
             # In a full system, we would then execute the comp_plan using the same executor logic
             
-        return pla
+        return plan

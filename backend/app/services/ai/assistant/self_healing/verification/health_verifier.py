@@ -7,4 +7,4 @@ class HealthVerifier:
     def verify(self, target_resource: str) -> bool:
         print(f"[HealthVerifier] Probing /health endpoint for {target_resource}...")
         # Mocking an HTTP probe
-        return Tru
+        return True

@@ -8,4 +8,4 @@ class ConfidenceCalibrator:
         """
         if historical_accuracy < 0.8:
             return raw_confidence * 0.8 # Penalyze overconfidence
-        return raw_confidenc
+        return raw_confidence

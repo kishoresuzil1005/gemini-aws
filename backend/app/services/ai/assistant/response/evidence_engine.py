@@ -13,4 +13,4 @@ class EvidenceEngine:
             # Just mock extraction for now
             if tr.context:
                 evidence.append(f"Fact from {tr.tool_name}")
-        return evidenc
+        return evidence

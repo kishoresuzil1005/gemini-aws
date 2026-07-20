@@ -55,4 +55,4 @@ class SVGLoader:
                 f"Unable to load SVG: {path}"
             )
 
-            return Non
+            return None

@@ -29,4 +29,4 @@ class RequestBuilder:
 
         db.commit()
 
-        return re
+        return result

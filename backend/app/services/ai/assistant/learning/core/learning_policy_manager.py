@@ -9,4 +9,4 @@ class LearningPolicyManager:
     def should_learn_from(self, outcome: ExecutionOutcome, environment: str) -> bool:
         if environment.lower() in self.blocked_environments:
             return False
-        return Tru
+        return True

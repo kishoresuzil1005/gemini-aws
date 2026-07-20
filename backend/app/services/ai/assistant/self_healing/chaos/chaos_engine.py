@@ -13,4 +13,4 @@ class ChaosEngine:
     def validate_healing_response(self, incident_id: str) -> bool:
         print(f"[ChaosEngine] Verifying if self-healing successfully recovered from injected failure {incident_id}...")
         # Checks if MTTR is within acceptable limits and loop closed successfully
-        return Tru
+        return True
