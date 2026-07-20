@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from neo4j import GraphDatabase
 from app.config import (
@@ -326,7 +327,7 @@ class Neo4jService:
                     status=status,
                     account_id=account_id,
                     arn=arn,
-                    tags=tags or {},
+                    tags=json.dumps(tags) if isinstance(tags, dict) else (tags if isinstance(tags, str) else "{}"),
                 )
                 
                 result.consume()
