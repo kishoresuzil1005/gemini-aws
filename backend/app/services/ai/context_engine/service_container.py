@@ -80,16 +80,14 @@ class CostService:
     
     def __init__(self, account_id: int = 1):
         self.account_id = account_id
-    
-    def _get_adapter(self):
         from app.providers.aws.cost_explorer import CostExplorerAdapter
-        return CostExplorerAdapter(self.account_id)
+        self.adapter = CostExplorerAdapter(self.account_id)
         
     def get_current_month_cost(self) -> float:
-        return self._get_adapter().get_current_month_cost()
+        return self.adapter.get_current_month_cost()
         
     def get_daily_cost_trend(self, days: int) -> List[Dict[str, Any]]:
-        return self._get_adapter().get_daily_cost_trend(days=days)
+        return self.adapter.get_daily_cost_trend(days=days)
 
 
 class DocumentationService:

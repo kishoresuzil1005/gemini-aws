@@ -72,12 +72,12 @@ class ResourceProvider(BaseProvider):
                     meta = row.resource_metadata or {}
                     arn = meta.get("arn", "") if isinstance(meta, dict) else ""
                     return {
-                        "id":       row.resource_id,
-                        "name":     row.name or row.resource_id,
-                        "type":     row.resource_type,
+                        "resource_id":       row.resource_id,
+                        "resource_name":     row.name or row.resource_id,
+                        "resource_type":     row.resource_type,
                         "provider": row.provider,
                         "region":   row.region or "",
-                        "account":  str(row.cloud_account_id or ""),
+                        "account_id":  str(row.cloud_account_id or ""),
                         "arn":      arn,
                         "status":   row.status or "unknown",
                         "tags":     tags,
@@ -91,12 +91,12 @@ class ResourceProvider(BaseProvider):
                 )
                 if node:
                     return {
-                        "id":       node.resource_id,
-                        "name":     node.name or node.resource_id,
-                        "type":     node.resource_type,
+                        "resource_id":       node.resource_id,
+                        "resource_name":     node.name or node.resource_id,
+                        "resource_type":     node.resource_type,
                         "provider": node.provider,
                         "region":   "",
-                        "account":  "",
+                        "account_id":  "",
                         "arn":      "",
                         "status":   "unknown",
                         "tags":     {},
@@ -112,27 +112,28 @@ class ResourceProvider(BaseProvider):
 
     def _fallback_from_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
-            from app.services.graph.neo4j_service import MemoryGraphStore
-            node = MemoryGraphStore.nodes.get(resource_id, {})
+            node = self.neo4j_service.get_node(resource_id)
+            if not node:
+                raise ValueError("Node not found")
             return {
-                "id":       node.get("id", resource_id),
-                "name":     node.get("name", resource_id),
-                "type":     node.get("type", "unknown"),
+                "resource_id":       node.get("id", resource_id),
+                "resource_name":     node.get("name", resource_id),
+                "resource_type":     node.get("type", "unknown"),
                 "provider": node.get("provider", "aws"),
                 "region":   node.get("region", ""),
-                "account":  "",
+                "account_id":  "",
                 "arn":      "",
                 "status":   node.get("status", "unknown"),
                 "tags":     {},
             }
         except Exception:
             return {
-                "id":       resource_id,
-                "name":     resource_id,
-                "type":     "unknown",
+                "resource_id":       resource_id,
+                "resource_name":     resource_id,
+                "resource_type":     "unknown",
                 "provider": "aws",
                 "region":   "",
-                "account":  "",
+                "account_id":  "",
                 "arn":      "",
                 "status":   "unknown",
                 "tags":     {},
