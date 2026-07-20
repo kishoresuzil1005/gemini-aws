@@ -96,7 +96,7 @@ def register_default_providers() -> None:
 
     from .service_container import ServiceContainer
 
-    container = ServiceContainer.create()
+    container = ServiceContainer.instance()
 
     registry.register(ResourceProvider(
         db_session_factory=container.db_session_factory,

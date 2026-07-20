@@ -18,7 +18,7 @@ class ProviderManager:
     """
 
     def __init__(self, providers: List[BaseProvider], cache: CacheBackend, strict: bool = True):
-        self.providers = providers
+        self.providers = sorted(providers, key=lambda p: getattr(p, "priority", 100))
         self.cache = cache
         self.strict = strict
         
@@ -33,7 +33,14 @@ class ProviderManager:
     async def run(self, resource: ResolvedResource, request: ContextRequest, exec_meta: ExecutionMetadata) -> Dict[str, Any]:
         payloads: Dict[str, Any] = {}
         for provider in self.providers:
-            if not provider.enabled or not provider.supports(request.level):
+            is_supported = provider.supports(request.level)
+            
+            if provider.name == "metrics" and getattr(request, "include_metrics", False):
+                is_supported = True
+            if provider.name == "cost" and getattr(request, "include_cost", False):
+                is_supported = True
+                
+            if not provider.enabled or not is_supported:
                 continue
 
             cache_key = None

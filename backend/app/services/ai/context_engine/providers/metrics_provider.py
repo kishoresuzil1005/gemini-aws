@@ -42,17 +42,18 @@ class MetricsProvider(BaseProvider):
         self.cloudwatch_service = cloudwatch_service
 
     def supports(self, level: ContextLevel) -> bool:
-        return level == ContextLevel.DEEP
+        return level.includes(ContextLevel.DEEP)
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
-        data = self._fetch_metrics(resource.resource_id, request.metrics_look_back)
+        data = self._fetch_metrics(resource, request.metrics_look_back)
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)
 
     # ------------------------------------------------------------------
 
-    def _fetch_metrics(self, resource_id: str, look_back_hours: int) -> Dict[str, Any]:
+    def _fetch_metrics(self, resource: ResolvedResource, look_back_hours: int) -> Dict[str, Any]:
+        resource_id = resource.resource_id
         start, end = look_back_range(look_back_hours)
         # CloudWatch requires tz-aware datetimes
         start_dt = start.replace(tzinfo=timezone.utc) if start.tzinfo is None else start
@@ -70,11 +71,11 @@ class MetricsProvider(BaseProvider):
         }
 
         # Determine dimension based on resource type
-        if resource_id.startswith("i-"):
+        if getattr(resource, "resource_type", "") == "EC2":
             namespace  = "AWS/EC2"
             dimensions = [{"Name": "InstanceId", "Value": resource_id}]
             metric_queries = self._ec2_metric_queries(resource_id)
-        elif resource_id.startswith("db-") or resource_id.startswith("cluster:"):
+        elif getattr(resource, "resource_type", "") == "RDS":
             namespace  = "AWS/RDS"
             dimensions = [{"Name": "DBInstanceIdentifier", "Value": resource_id}]
             metric_queries = self._rds_metric_queries(resource_id)
