@@ -32,6 +32,9 @@ SCHEMA_VERSION    = "1.0"
 DEFAULT_METRICS_LOOK_BACK_HOURS  = 24
 DEFAULT_COST_GRANULARITY         = "daily"
 DEFAULT_PROVIDER_TIMEOUT         = 5
+DEFAULT_PROVIDER_RETRIES         = 2
+DEFAULT_FAILURE_THRESHOLD        = 3
+DEFAULT_CIRCUIT_RESET            = 60
 
 # ─────────────────────────────────────────────
 #  Default TTLs (seconds)

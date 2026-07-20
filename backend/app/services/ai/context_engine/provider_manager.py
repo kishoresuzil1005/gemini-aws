@@ -10,7 +10,7 @@ from .cache import CacheBackend
 from .models import ExecutionMetadata
 from .provider_health_manager import ProviderHealthManager
 from .provider_status import ProviderStatus
-from .common.constants import DEFAULT_PROVIDER_TIMEOUT
+from .common.constants import DEFAULT_PROVIDER_TIMEOUT, DEFAULT_PROVIDER_RETRIES
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +57,24 @@ class ProviderManager:
                     )
                     continue
 
+            if not self.health.should_execute(provider.name):
+                logger.warning("%s skipped because circuit is open", provider.name)
+                continue
+
             t0 = time.monotonic()
+            attempt = 0
             try:
-                data = await asyncio.wait_for(
-                    provider.fetch(resource, request),
-                    timeout=getattr(provider, "timeout", DEFAULT_PROVIDER_TIMEOUT)
-                )
+                for attempt in range(DEFAULT_PROVIDER_RETRIES + 1):
+                    try:
+                        data = await asyncio.wait_for(
+                            provider.fetch(resource, request),
+                            timeout=getattr(provider, "timeout", DEFAULT_PROVIDER_TIMEOUT)
+                        )
+                        break
+                    except Exception:
+                        if attempt == DEFAULT_PROVIDER_RETRIES:
+                            raise
+                            
                 exec_ms = (time.monotonic() - t0) * 1000
                 
                 valid, reason = self._is_valid_response(data)
@@ -86,6 +98,7 @@ class ProviderManager:
                     status=ProviderStatus.SUCCESS,
                     execution_time_ms=exec_ms,
                     cache_hit=False,
+                    retries=attempt,
                 )
                     
             except asyncio.TimeoutError:
@@ -95,6 +108,7 @@ class ProviderManager:
                     status=ProviderStatus.TIMEOUT,
                     execution_time_ms=exec_ms,
                     last_error="Provider execution timed out",
+                    retries=attempt,
                 )
                 logger.warning("%s timed out", provider.name)
                 continue
@@ -107,6 +121,7 @@ class ProviderManager:
                     status=ProviderStatus.FAILED,
                     execution_time_ms=exec_ms,
                     last_error=str(exc),
+                    retries=attempt,
                 )
                 if self.strict:
                     raise ProviderError(f"Provider {provider.name} failed: {exc}") from exc

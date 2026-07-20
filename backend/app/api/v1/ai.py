@@ -140,4 +140,11 @@ def insights(db: Session = Depends(get_db)):
     return result
 
 
+@router.get(
+    "/api/v1/ai/providers/health"
+)
+def get_provider_health():
+    from app.services.ai.context_engine.provider_health_manager import ProviderHealthManager
+    health_manager = ProviderHealthManager()
+    return health_manager.summary()
 
