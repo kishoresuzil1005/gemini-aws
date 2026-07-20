@@ -45,7 +45,10 @@ class ResponseGenerator:
         tools_used = list(set([f.source_tool for f in reasoning_result.findings])) if reasoning_result else []
         confidence = self.confidence_engine.calculate(evidence, tools_used, raw_answer)
         
-        explanation = reasoning_result.explanation if reasoning_result and reasoning_result.explanation else self.explainer.build_explanation(raw_answer, evidence, sources)
+        if reasoning_result and reasoning_result.explanation:
+            explanation = f"{raw_answer}\n\n---\n{reasoning_result.explanation}"
+        else:
+            explanation = self.explainer.build_explanation(raw_answer, evidence, sources)
         
         # We attach the extra metadata directly to ChatResponse for now
         response = ChatResponse(
