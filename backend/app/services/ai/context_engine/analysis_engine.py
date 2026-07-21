@@ -36,7 +36,7 @@ class AnalysisEngine:
     def analyze(self, context: AIContext) -> AIContext:
         for analyzer in self.analyzers:
             result = analyzer.analyze(context)
-            if result.get("status") == "success":
+            if result.status == "success":
                 context.findings[analyzer.name] = result
 
         recommendations = self.recommendation_analyzer.generate(context)

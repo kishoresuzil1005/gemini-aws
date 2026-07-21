@@ -51,7 +51,8 @@ class RecommendationAnalyzer(BaseAnalyzer):
         """Aggregate findings already produced by the analysis lifecycle."""
         all_recommendations = []
         for analyzer_name, result in context.findings.items():
-            for finding in result.get("findings", []):
+            # In Phase 3, recommendations are separate from findings
+            for finding in (result.findings or []):
                 all_recommendations.append({
                     "id": f"{analyzer_name}-{len(all_recommendations)}",
                     "severity": finding.get("severity", "LOW"),

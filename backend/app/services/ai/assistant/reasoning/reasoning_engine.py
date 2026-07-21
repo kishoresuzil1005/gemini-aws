@@ -51,7 +51,7 @@ class ReasoningEngine:
         findings: List[Finding] = []
         evidence: List[Evidence] = []
         for analyzer_name, result in context.findings.items():
-            for item in result.get("findings", []):
+            for item in (result.findings or []):
                 finding_id = str(uuid.uuid4())
                 description = item.get("description", f"Finding from {analyzer_name}")
                 findings.append(Finding(
