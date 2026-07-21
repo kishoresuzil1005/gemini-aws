@@ -39,7 +39,7 @@ Planned output shape::
 from typing import Any, Dict, List
 
 from .base_analyzer import BaseAnalyzer
-from ..models import AIContext
+from ..models import AIContext, AnalyzerResult
 
 
 class RecommendationAnalyzer(BaseAnalyzer):
@@ -47,7 +47,7 @@ class RecommendationAnalyzer(BaseAnalyzer):
 
     name = "recommendation"
 
-    def analyze(self, context: AIContext) -> Dict[str, Any]:
+    def analyze(self, context: AIContext) -> AnalyzerResult:
         """Aggregate findings already produced by the analysis lifecycle."""
         all_recommendations = []
         for analyzer_name, result in context.findings.items():
@@ -61,12 +61,15 @@ class RecommendationAnalyzer(BaseAnalyzer):
                     "source": analyzer_name,
                 })
                     
-        return {
-            "status": "success",
-            "analyzer": self.name,
-            "recommendations": all_recommendations,
-            "total": len(all_recommendations),
-        }
+        return AnalyzerResult(
+            status="success",
+            analyzer=self.name,
+            findings=all_recommendations,
+            recommendations=all_recommendations,
+            metadata={
+                "count": len(all_recommendations)
+            },
+        )
 
     def generate(self, context: AIContext) -> List[Dict[str, Any]]:
         """Return a ranked list of recommendations.
@@ -74,4 +77,4 @@ class RecommendationAnalyzer(BaseAnalyzer):
         This is the preferred call‑site method for downstream consumers.
         """
         result = self.analyze(context)
-        return result.get("recommendations", [])
+        return result.recommendations or []

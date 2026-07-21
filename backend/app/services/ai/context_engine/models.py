@@ -89,3 +89,21 @@ class AIContext(BaseModel):
         description="Raw standardized provider responses keyed by provider name.",
     )
     debug: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ─────────────────────────────────────────────────────────
+#  Standardized Analyzer Output
+# ─────────────────────────────────────────────────────────
+
+class AnalyzerResult(BaseModel):
+    """Standardized result returned by all analyzers."""
+    
+    analyzer: str
+    status: str
+    summary: str = ""
+    findings: List[Dict[str, Any]] = Field(default_factory=list)
+    risks: List[Dict[str, Any]] = Field(default_factory=list)
+    recommendations: List[Dict[str, Any]] = Field(default_factory=list)
+    confidence: float = 1.0
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+

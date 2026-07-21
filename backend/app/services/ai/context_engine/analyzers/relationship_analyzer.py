@@ -22,7 +22,7 @@ Available methods
 from typing import Any, Dict, List, Optional, Set
 
 from .base_analyzer import BaseAnalyzer
-from ..models import AIContext
+from ..models import AIContext, AnalyzerResult
 
 
 class RelationshipAnalyzer(BaseAnalyzer):
@@ -30,18 +30,22 @@ class RelationshipAnalyzer(BaseAnalyzer):
 
     name = "relationship"
 
-    def analyze(self, context: AIContext) -> Dict[str, Any]:
+    def analyze(self, context: AIContext) -> AnalyzerResult:
         """Run all relationship analyses and return a combined summary."""
         root_id = context.resource.get("id", "")
-        return {
-            "downstream":                self.get_downstream(context, root_id),
-            "upstream":                  self.get_upstream(context, root_id),
-            "blast_radius":              self.compute_blast_radius(context, root_id),
-            "cycles":                    self.detect_cycles(context),
-            "dependency_depth":          self.dependency_depth(context, root_id),
-            "reachable_nodes":           self.reachable_nodes(context, root_id),
-            "single_points_of_failure":  self.find_single_points_of_failure(context),
-        }
+        return AnalyzerResult(
+            status="success",
+            analyzer=self.name,
+            metadata={
+                "downstream":                self.get_downstream(context, root_id),
+                "upstream":                  self.get_upstream(context, root_id),
+                "blast_radius":              self.compute_blast_radius(context, root_id),
+                "cycles":                    self.detect_cycles(context),
+                "dependency_depth":          self.dependency_depth(context, root_id),
+                "reachable_nodes":           self.reachable_nodes(context, root_id),
+                "single_points_of_failure":  self.find_single_points_of_failure(context),
+            },
+        )
 
     # ------------------------------------------------------------------
     #  Traversal helpers

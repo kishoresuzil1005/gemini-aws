@@ -7,7 +7,7 @@ Analyzes the raw graph data provided by GraphProvider (which now includes
 from typing import Any, Dict
 
 from .base_analyzer import BaseAnalyzer
-from ..models import AIContext
+from ..models import AIContext, AnalyzerResult
 
 
 class DependencyAnalyzer(BaseAnalyzer):
@@ -15,18 +15,18 @@ class DependencyAnalyzer(BaseAnalyzer):
 
     name = "dependency"
 
-    def analyze(self, context: AIContext) -> Dict[str, Any]:
+    def analyze(self, context: AIContext) -> AnalyzerResult:
         """Perform dependency analysis on graph data."""
         
         graph_data = context.graph
         if not graph_data:
-            return {
-                "status": "skipped",
-                "analyzer": self.name,
-                "reason": "No graph data available in context.",
-                "findings": [],
-                "summary": {},
-            }
+            return AnalyzerResult(
+                status="skipped",
+                analyzer=self.name,
+                reason="No graph data available in context.",
+                findings=[],
+                summary="",
+            )
             
         upstream = graph_data.get("upstream", [])
         downstream = graph_data.get("downstream", [])
@@ -78,13 +78,13 @@ class DependencyAnalyzer(BaseAnalyzer):
                 "description": "This resource has no upstream or downstream dependencies in the graph. It may be orphaned or unused."
             })
 
-        return {
-            "status": "success",
-            "analyzer": self.name,
-            "findings": findings,
-            "summary": {
+        return AnalyzerResult(
+            status="success",
+            analyzer=self.name,
+            findings=findings,
+            metadata={
                 "blast_radius_size": downstream_count,
                 "upstream_dependency_size": upstream_count,
                 "is_isolated": (downstream_count == 0 and upstream_count == 0)
             },
-        }
+        )
