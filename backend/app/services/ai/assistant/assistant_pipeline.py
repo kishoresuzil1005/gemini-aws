@@ -1,8 +1,11 @@
 """The single production pipeline used by GraphAssistant chat requests."""
 
 import asyncio
+import logging
 import uuid
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from app.services.ai.assistant.assistant_models import ChatRequest, ChatResponse, ExecutionContext
 from app.services.ai.assistant.conversation.conversation_manager import ConversationManager
@@ -13,6 +16,7 @@ from app.services.ai.assistant.query_resolver import QueryResolver
 from app.services.ai.assistant.reasoning.reasoning_engine import ReasoningEngine
 from app.services.ai.assistant.response.response_generator import ResponseGenerator
 from app.services.ai.context_engine import ContextEngine, ContextLevel, ContextRequest
+from app.services.ai.context_engine.analysis_engine import AnalysisEngine
 from app.services.ai.context_engine.models import AIContext
 
 
@@ -27,6 +31,7 @@ class AssistantPipeline:
         classifier: Optional[IntentClassifier] = None,
         resolver: Optional[QueryResolver] = None,
         context_engine: Optional[ContextEngine] = None,
+        analysis_engine: Optional[AnalysisEngine] = None,
         reasoning_engine: Optional[ReasoningEngine] = None,
         prompt_builder: Optional[PromptBuilder] = None,
         response_generator: Optional[ResponseGenerator] = None,
@@ -36,6 +41,7 @@ class AssistantPipeline:
         self.classifier = classifier or IntentClassifier()
         self.resolver = resolver or QueryResolver()
         self.context_engine = context_engine or ContextEngine()
+        self.analysis_engine = analysis_engine or AnalysisEngine()
         self.reasoning_engine = reasoning_engine or ReasoningEngine()
         self.prompt_builder = prompt_builder or PromptBuilder()
         self.generator = response_generator or ResponseGenerator(provider)
@@ -58,6 +64,7 @@ class AssistantPipeline:
         self.memory.add_message(request.conversation_id, "user", request.message)
 
         ai_context = self._build_context(execution_context)
+        ai_context = self.analysis_engine.analyze(ai_context)
         reasoning = self.reasoning_engine.process(request.conversation_id, ai_context)
         history = self.conversation.get_formatted_history(request.conversation_id, limit=5)
         messages, context_text = self.prompt_builder.build(
@@ -90,7 +97,8 @@ class AssistantPipeline:
         )
         try:
             return asyncio.run(self.context_engine.build(request))
-        except Exception:
+        except Exception as e:
+            logger.exception("Context build failed")
             # The LLM can still answer a general question when data providers are
-            # unavailable.  Provider execution details remain observable in logs.
+            # unavailable. Provider execution details remain observable in logs.
             return AIContext()

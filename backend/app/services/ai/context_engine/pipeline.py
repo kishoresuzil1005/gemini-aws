@@ -8,7 +8,6 @@ from .assembler import ContextAssembler
 from .provider_manager import ProviderManager
 from .configuration import PipelineConfiguration
 from .request import ContextRequest
-from .analysis_engine import AnalysisEngine
 
 class ContextPipeline:
     """Orchestrates the end‑to‑end flow for building an :class:`AIContext`.
@@ -30,7 +29,6 @@ class ContextPipeline:
             cache=self.config.cache,
             strict=self.config.strict,
         )
-        self._analysis_engine = AnalysisEngine()
 
     async def run(self, request: ContextRequest) -> AIContext:
         # Resolve the identifier to a resource.
@@ -53,6 +51,7 @@ class ContextPipeline:
         logger.info(f"Graph: {context.graph}")
         logger.info(f"Security: {context.security}")
         logger.info(f"Metrics: {context.metrics}")
+        logger.info("===== Cost =====")
         logger.info(f"Cost: {context.cost}")
 
-        return self._analysis_engine.analyze(context)
+        return context
