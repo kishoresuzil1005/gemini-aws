@@ -55,8 +55,9 @@ class QueryResolver:
                 result.source = "db_lookup"
         
         if result.identifier:
-            logger.info(f"Resolved target resource: {result.identifier} via {result.source}")
+            print(f"Resolved Identifier:\n{result.identifier}")
+            print(f"Resolved target resource: {result.identifier} via {result.source}")
         else:
-            logger.info("No specific target resource resolved from the query.")
+            print("No specific target resource resolved from the query.")
 
         return result

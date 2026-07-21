@@ -43,6 +43,7 @@ class PromptBuilder:
                 "content": build_user_prompt(question, history, context_text, intent),
             },
         ]
-        logger.info("===== FINAL PROMPT =====")
-        logger.info(prompt)
+        print("========== PROMPT ==========")
+        print(prompt)
+        print("============================")
         return prompt, context_text

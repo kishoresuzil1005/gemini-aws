@@ -45,9 +45,9 @@ class AnalysisEngine:
         recommendations = self.recommendation_analyzer.generate(context)
         context.recommendations = recommendations
         
-        logger.info("===== Findings =====")
-        logger.info(context.findings.keys())
-        logger.info("===== Graph after analysis =====")
-        logger.info(context.graph)
+        print("===== Findings =====")
+        print(context.findings.keys())
+        print("===== Graph after analysis =====")
+        print(context.graph)
         
         return context
