@@ -41,6 +41,11 @@ class ReasoningEngine:
         # 5. Generate Explanation
         explanation = self.explainer.explain(findings, evidence, risks, conflicts)
         
+        logger.info("Reasoning Result")
+        logger.info(findings)
+        logger.info(evidence)
+        logger.info(risks)
+        
         return ReasoningResult(
             session_id=session_id,
             is_valid=is_valid,
