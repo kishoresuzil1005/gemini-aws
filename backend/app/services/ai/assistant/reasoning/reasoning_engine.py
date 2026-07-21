@@ -1,5 +1,8 @@
 import uuid
+import logging
 from typing import Any, List
+
+logger = logging.getLogger(__name__)
 from app.services.ai.context_engine.models import AIContext
 from app.services.ai.assistant.reasoning.reasoning_models import ReasoningResult
 from app.services.ai.assistant.reasoning.reasoning_models import Evidence, Finding
@@ -19,6 +22,9 @@ class ReasoningEngine:
         """
         Interprets deterministic analysis stored in ``AIContext``.
         """
+        logger.info("===== Reasoning Input =====")
+        logger.info(context.graph)
+        logger.info(context.findings)
         # 1. Interpret deterministic analyzer output.  Reasoning never fetches
         # cloud data and no longer depends on assistant tools or execution plans.
         findings, evidence = self._extract_evidence(context)

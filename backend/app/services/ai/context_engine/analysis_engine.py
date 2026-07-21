@@ -1,6 +1,9 @@
 """Deterministic analysis lifecycle for the canonical AI context."""
 
+import logging
 from typing import Iterable
+
+logger = logging.getLogger(__name__)
 
 from .analyzers.architecture_analyzer import ArchitectureAnalyzer
 from .analyzers.base_analyzer import BaseAnalyzer
@@ -41,4 +44,10 @@ class AnalysisEngine:
 
         recommendations = self.recommendation_analyzer.generate(context)
         context.recommendations = recommendations
+        
+        logger.info("===== Findings =====")
+        logger.info(context.findings.keys())
+        logger.info("===== Graph after analysis =====")
+        logger.info(context.graph)
+        
         return context

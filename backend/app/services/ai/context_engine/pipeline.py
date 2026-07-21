@@ -1,4 +1,7 @@
 from typing import Any, Dict
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .models import AIContext, ExecutionMetadata
 from .assembler import ContextAssembler
@@ -45,4 +48,11 @@ class ContextPipeline:
         # Assemble the final AIContext.
         context = self._assembler.assemble(payloads, exec_meta, level=request.level)
         
+        logger.info("===== AIContext =====")
+        logger.info(f"Resource: {context.resource}")
+        logger.info(f"Graph: {context.graph}")
+        logger.info(f"Security: {context.security}")
+        logger.info(f"Metrics: {context.metrics}")
+        logger.info(f"Cost: {context.cost}")
+
         return self._analysis_engine.analyze(context)

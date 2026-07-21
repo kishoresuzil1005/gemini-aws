@@ -1,7 +1,10 @@
 """Prompt construction from the canonical AIContext model."""
 
 import json
+import logging
 from typing import Any, Dict, List
+
+logger = logging.getLogger(__name__)
 
 from app.services.ai.assistant.context.prompt_templates import SYSTEM_PROMPT, build_user_prompt
 from app.services.ai.context_engine.models import AIContext
@@ -33,10 +36,13 @@ class PromptBuilder:
         if len(context_text) > self.MAX_CONTEXT_CHARS:
             context_text = context_text[:self.MAX_CONTEXT_CHARS] + "\n...[CONTEXT TRUNCATED]"
 
-        return [
+        prompt = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": build_user_prompt(question, history, context_text, intent),
             },
-        ], context_text
+        ]
+        logger.info("===== FINAL PROMPT =====")
+        logger.info(prompt)
+        return prompt, context_text
