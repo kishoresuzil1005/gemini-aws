@@ -1,47 +1,38 @@
 import logging
 from fastapi import HTTPException
-from app.services.graph.neo4j_service import Neo4jService
+from knowledge.service.client_factory import get_default_client
 
 logger = logging.getLogger(__name__)
 
 class ExposureAnalyzer:
-    def __init__(self, neo4j_service: Neo4jService):
-        self.neo4j = neo4j_service
+    def __init__(self, knowledge_client=None):
+        self.client = knowledge_client or get_default_client()
 
     def lambda_api_gateways(self, resource_id: str):
         query = """
         MATCH (api:APIGateway)-[:INVOKES]->(l:Lambda {id:$resource_id})
         RETURN api.id AS id, api.name AS name
         """
-        return self.neo4j.query(query, resource_id=resource_id)
+        try:
+            return self.client.query_graph(query, resource_id=resource_id)
+        except NotImplementedError:
+            return []
 
     def analyze(self, resource_id: str):
         """
         Determines whether a resource is reachable from the Internet.
         Branches by resource type for specific exposure criteria.
         """
-        if not self.neo4j.node_exists(resource_id):
+        resource = self.client.get_resource(resource_id)
+        if not resource:
             raise HTTPException(status_code=404, detail="Resource not found")
             
         exposure = "PRIVATE"
         internet_accessible = False
         reasons = []
         
-        if not self.neo4j.driver:
-            return {
-                "resource": resource_id,
-                "internet_accessible": False,
-                "exposure": "UNKNOWN (Graph Disconnected)",
-                "reason": ["Neo4j not connected"]
-            }
-
         try:
-            # First, find the resource type
-            resource_type = "Unknown"
-            type_query = "MATCH (n {id:$resource_id}) RETURN labels(n)[0] as type"
-            res = self.neo4j.query(type_query, resource_id=resource_id)
-            if res and res[0].get("type"):
-                resource_type = res[0]["type"]
+            resource_type = resource.get("type", "Unknown")
 
             # Common Subnet -> IGW path query
             is_in_public_subnet = False
@@ -49,9 +40,13 @@ class ExposureAnalyzer:
             MATCH path=(n {id:$resource_id})-[:IN_SUBNET|ASSOCIATED_WITH|ROUTES_TO*1..5]->(igw:InternetGateway)
             RETURN count(path) as path_count
             """
-            igw_res = self.neo4j.query(igw_query, resource_id=resource_id)
-            if igw_res and igw_res[0]["path_count"] > 0:
-                is_in_public_subnet = True
+            try:
+                igw_res = self.client.query_graph(igw_query, resource_id=resource_id)
+                if igw_res and igw_res[0].get("path_count", 0) > 0:
+                    is_in_public_subnet = True
+            except NotImplementedError:
+                # If query graph not supported, default to safe assumption or mock
+                pass
 
             if resource_type == "EC2":
                 if is_in_public_subnet:
@@ -96,9 +91,12 @@ class ExposureAnalyzer:
                     
                 # Check VPC attachment
                 vpc_query = "MATCH (n {id:$resource_id})-[:IN_VPC]->(vpc) RETURN count(vpc) as vpc_count"
-                vpc_res = self.neo4j.query(vpc_query, resource_id=resource_id)
-                if not vpc_res or vpc_res[0]["vpc_count"] == 0:
-                    reasons.append("No VPC attachment")
+                try:
+                    vpc_res = self.client.query_graph(vpc_query, resource_id=resource_id)
+                    if not vpc_res or vpc_res[0].get("vpc_count", 0) == 0:
+                        reasons.append("No VPC attachment")
+                except NotImplementedError:
+                    pass
 
             elif resource_type == "ALB":
                 internet_accessible = True

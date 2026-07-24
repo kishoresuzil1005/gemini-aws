@@ -43,8 +43,32 @@ def build_synthetic_graph(node_count=1000):
         "configuration": {"publicly_accessible": True}
     })
     
+    nodes.append({
+        "id": "bad-cloudtrail",
+        "type": "CloudTrail",
+        "configuration": {"is_logging": False}
+    })
+    
+    nodes.append({
+        "id": "bad-kms",
+        "type": "KMSKey",
+        "configuration": {"key_manager": "CUSTOMER", "rotation_enabled": False}
+    })
+    
+    nodes.append({
+        "id": "bad-secretsmanager",
+        "type": "SecretsManagerSecret",
+        "configuration": {"rotation_enabled": False}
+    })
+    
+    nodes.append({
+        "id": "bad-identitycenter",
+        "type": "IdentityCenter",
+        "configuration": {"mfa_enforced": False}
+    })
+    
     # Fill with safe resources to test O(V) speed
-    for i in range(node_count - 4):
+    for i in range(node_count - 8):
         nodes.append({"id": f"good-ec2-{i}", "type": "EC2"})
         
     return {"nodes": nodes, "edges": edges}
@@ -66,6 +90,10 @@ def test_correctness():
     assert "AWS-VPC-001" in rule_ids
     assert "AWS-IAM-001" in rule_ids
     assert "AWS-RDS-001" in rule_ids
+    assert "AWS-CT-001" in rule_ids
+    assert "AWS-KMS-001" in rule_ids
+    assert "AWS-SM-001" in rule_ids
+    assert "AWS-SSO-001" in rule_ids
     
     # Verify JSON serialization works (API Compatibility)
     serialized = result.model_dump_json()

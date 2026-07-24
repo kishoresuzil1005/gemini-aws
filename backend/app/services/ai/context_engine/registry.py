@@ -1,16 +1,8 @@
 """ProviderRegistry – central registry of provider instances.
 
-Providers are registered during application startup.  The registry reads
-feature‑flag environment variables (defined in :mod:`common.constants`)
-and silently skips any provider whose flag is disabled.
-
-Usage::
-
-    from context_engine.registry import registry
-    from context_engine.providers import GraphProvider
-
-    registry.register(GraphProvider())
-    providers = registry.ordered_providers  # sorted by priority
+Providers are registered during application startup.
+All providers now rely entirely on the Enterprise Knowledge Service
+instead of direct provider logic (boto3, postgres, neo4j, etc).
 """
 
 import logging
@@ -28,13 +20,6 @@ class ProviderRegistry:
         self._providers: Dict[str, BaseProvider] = {}
 
     def register(self, provider: BaseProvider) -> None:
-        """Register *provider* unless its ``enabled`` flag is ``False``.
-
-        Parameters
-        ----------
-        provider:
-            An instantiated provider.  Must have a unique ``name``.
-        """
         if not provider.enabled:
             logger.debug("Provider %r is disabled (feature flag). Skipping.", provider.name)
             return
@@ -44,20 +29,16 @@ class ProviderRegistry:
         logger.debug("Registered provider %r (priority=%d).", provider.name, provider.priority)
 
     def get(self, name: str) -> Optional[BaseProvider]:
-        """Return the provider with the given *name*, or ``None``."""
         return self._providers.get(name)
 
     def unregister(self, name: str) -> None:
-        """Remove a provider by name (useful in tests)."""
         self._providers.pop(name, None)
 
     def clear(self) -> None:
-        """Remove all registered providers."""
         self._providers.clear()
 
     @property
     def ordered_providers(self) -> List[BaseProvider]:
-        """Return providers sorted by ``priority`` ascending (lower = earlier)."""
         return sorted(self._providers.values(), key=lambda p: p.priority)
 
     def __len__(self) -> int:
@@ -75,11 +56,7 @@ registry = ProviderRegistry()
 
 
 def register_default_providers() -> None:
-    """Register all built‑in providers respecting their feature flags.
-
-    Call this once during application startup (e.g., in the FastAPI lifespan
-    event or the app factory).
-    """
+    """Register all built‑in providers respecting their feature flags."""
     from .providers import (
         ResourceProvider,
         GraphProvider,
@@ -99,33 +76,31 @@ def register_default_providers() -> None:
     container = ServiceContainer.instance()
 
     registry.register(ResourceProvider(
-        db_session_factory=container.db_session_factory,
-        neo4j_service=container.neo4j_service
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(GraphProvider(
-        neo4j_service=container.neo4j_service
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(InventoryProvider(
-        db_session_factory=container.db_session_factory
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(IAMProvider(
-        iam_service=container.iam_service
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(DocumentationProvider(
-        db_session_factory=container.db_session_factory,
-        documentation_service=container.documentation_service
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(MetricsProvider(
-        cloudwatch_service=container.cloudwatch_service
+        knowledge_client=container.knowledge_client
     ))
     
     registry.register(CostProvider(
-        cost_service=container.cost_service
+        knowledge_client=container.knowledge_client
     ))
 
     # Placeholders without external dependencies

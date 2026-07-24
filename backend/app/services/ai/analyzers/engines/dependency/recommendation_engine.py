@@ -17,38 +17,70 @@ class RecommendationEngine:
         
         if analysis.is_spof:
             recommendations.append(AnalyzerRecommendation(
-                id=f"REC-SPOF-{analysis.node_id}",
                 title="Eliminate Single Point of Failure",
-                description=f"Deploy additional instances of {analysis.node_type} in multiple Availability Zones.",
+                description=f"Deploy additional instances of {analysis.node_type} in multiple Availability Zones to ensure high availability.",
                 priority="SHORT_TERM",
-                effort="Medium",
-                action_type="Architecture Change",
+                estimated_effort="Medium",
                 automation_possible=True,
-                estimated_savings=None
+                automation_script=f"aws autoscaling update-auto-scaling-group --auto-scaling-group-name {analysis.node_id}-asg --min-size 2 --max-size 4 --availability-zones us-east-1a us-east-1b",
+                estimated_risk_reduction="High - Eliminates Zone Failure Risk",
+                estimated_downtime="Zero downtime (Rolling Update)",
+                rollback_available=True,
+                approval_required=True,
+                metadata={
+                    "Terraform": 'resource "aws_autoscaling_group" "main" { vpc_zone_identifier = [var.subnet_a, var.subnet_b] }',
+                    "Runbook": "https://wiki.corp.internal/runbooks/spof-remediation",
+                    "Implementation Steps": [
+                        "1. Identify secondary subnets in alternate AZs.",
+                        "2. Update Auto Scaling Group or Load Balancer target groups.",
+                        "3. Ensure data replication is active (if database)."
+                    ],
+                    "Rollback Steps": [
+                        "1. Reduce min/max capacity back to 1.",
+                        "2. Remove secondary subnets from Target Group."
+                    ]
+                }
             ))
             
         if analysis.cycles:
             recommendations.append(AnalyzerRecommendation(
-                id=f"REC-CYCLE-{analysis.node_id}",
                 title="Break Circular Dependency",
-                description="Refactor architecture to decouple services and eliminate cyclic references.",
+                description="Refactor architecture to decouple services and eliminate cyclic references that cause infinite loops or deadlocks.",
                 priority="IMMEDIATE",
-                effort="High",
-                action_type="Refactor",
+                estimated_effort="High",
                 automation_possible=False,
-                estimated_savings=None
+                estimated_risk_reduction="Critical - Prevents cascading deadlocks",
+                estimated_downtime="Requires Scheduled Maintenance window",
+                rollback_available=False,
+                approval_required=True,
+                metadata={
+                    "Runbook": "https://wiki.corp.internal/runbooks/arch-decoupling",
+                    "Implementation Steps": [
+                        "1. Introduce an event bus (EventBridge/SQS) to decouple the cycle.",
+                        "2. Update service A to publish events instead of calling service B synchronously.",
+                        "3. Update service B to consume events asynchronously."
+                    ]
+                }
             ))
             
         if analysis.blast_radius > 50:
             recommendations.append(AnalyzerRecommendation(
-                id=f"REC-BLAST-{analysis.node_id}",
-                title="Reduce Blast Radius",
-                description="Implement circuit breakers and decouple downstream dependencies to reduce massive impact.",
+                title="Reduce Blast Radius (Bulkhead Pattern)",
+                description="Implement circuit breakers and decouple downstream dependencies to prevent massive cascading failures.",
                 priority="LONG_TERM",
-                effort="High",
-                action_type="Architecture Change",
+                estimated_effort="High",
                 automation_possible=False,
-                estimated_savings=None
+                estimated_risk_reduction="Medium - Limits lateral impact of failure",
+                estimated_downtime="Zero (Application level routing change)",
+                rollback_available=True,
+                approval_required=True,
+                metadata={
+                    "Implementation Steps": [
+                        "1. Implement Circuit Breaker pattern in the application mesh.",
+                        "2. Set concurrency limits on downstream lambda/API calls.",
+                        "3. Add degraded fallback responses."
+                    ]
+                }
             ))
             
         return recommendations

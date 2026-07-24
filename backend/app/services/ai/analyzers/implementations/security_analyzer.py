@@ -10,7 +10,7 @@ from app.services.ai.analyzers.base.analyzer_models import (
 )
 
 # Core Platform Engines
-from app.services.ai.analyzers.engines.graph.adapters.neo4j_adapter import Neo4jAdapter
+from app.services.ai.analyzers.engines.graph.adapters.graph_adapter import GraphAdapter
 from app.services.ai.analyzers.engines.graph.graph_index import GraphIndex
 from app.services.ai.analyzers.engines.scoring.scoring_engine import ScoringEngine
 from app.services.ai.analyzers.engines.context.engine_context import EngineContext
@@ -52,7 +52,7 @@ class SecurityAnalyzer(BaseAnalyzer):
         ctx = self._coerce_context(context)
         
         # 1. Parse Graph
-        infra_graph = Neo4jAdapter.fetch_graph(ctx.graph)
+        infra_graph = GraphAdapter.fetch_graph(ctx.graph)
         graph_index = GraphIndex.build(infra_graph)
         
         # 2. Build EngineContext

@@ -12,6 +12,8 @@ class ComplianceFramework(str, Enum):
     SOC2 = "SOC2"
     PCI_DSS = "PCI DSS"
     ISO27001 = "ISO27001"
+    HIPAA = "HIPAA"
+    GDPR = "GDPR"
     AWS_WELL_ARCHITECTED = "AWS Well Architected"
 
 class SecurityDomain(str, Enum):

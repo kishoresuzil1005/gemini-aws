@@ -1,13 +1,13 @@
 import logging
-from app.services.graph.neo4j_service import Neo4jService
+from knowledge.service.client_factory import get_default_client
 from app.services.graph.analysis.architecture_review import ArchitectureReviewer
 
 logger = logging.getLogger(__name__)
 
 class AIGraphAgent:
-    def __init__(self, neo4j_service: Neo4jService = None):
-        self.neo4j = neo4j_service or Neo4jService()
-        self.architecture_reviewer = ArchitectureReviewer(self.neo4j)
+    def __init__(self, knowledge_client=None):
+        self.client = knowledge_client or get_default_client()
+        self.architecture_reviewer = ArchitectureReviewer(self.client)
 
     def generate_recommendations(self):
         """
@@ -16,10 +16,6 @@ class AIGraphAgent:
         """
         # Step 1: Gather Context
         arch_data = self.architecture_reviewer.analyze()
-        
-        # In a real implementation, we would query OpenAI or Gemini here
-        # prompt = f"Analyze this graph data and provide 5 recommendations: {arch_data}"
-        # response = llm_client.generate(prompt)
         
         # MOCK LLM RESPONSE
         recommendations = [

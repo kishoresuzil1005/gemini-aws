@@ -14,6 +14,8 @@ class GraphIndex(BaseModel):
     by_type: Dict[str, Set[str]] = Field(default_factory=dict)
     by_region: Dict[str, Set[str]] = Field(default_factory=dict)
     by_owner: Dict[str, Set[str]] = Field(default_factory=dict)
+    by_account: Dict[str, Set[str]] = Field(default_factory=dict)
+    by_tag: Dict[str, Dict[str, Set[str]]] = Field(default_factory=dict) # key -> value -> set of nodes
 
     @classmethod
     def version(cls) -> str:
@@ -64,5 +66,20 @@ class GraphIndex(BaseModel):
             if owner not in idx.by_owner:
                 idx.by_owner[owner] = set()
             idx.by_owner[owner].add(node_id)
+            
+            # Account Index
+            account = props.get("account_id", props.get("account", "unknown"))
+            if account not in idx.by_account:
+                idx.by_account[account] = set()
+            idx.by_account[account].add(node_id)
+            
+            # Tags Index
+            for k, v in tags.items():
+                if k not in idx.by_tag:
+                    idx.by_tag[k] = {}
+                v_str = str(v)
+                if v_str not in idx.by_tag[k]:
+                    idx.by_tag[k][v_str] = set()
+                idx.by_tag[k][v_str].add(node_id)
             
         return idx

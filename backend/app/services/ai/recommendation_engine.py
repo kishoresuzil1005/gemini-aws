@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from pydantic import BaseModel
 from fastapi import HTTPException
-from app.services.graph.neo4j_service import Neo4jService
+from knowledge.service.client_factory import get_default_client
 from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
 from app.services.graph.analysis.criticality import CriticalityAnalyzer
 
@@ -16,26 +16,25 @@ class Recommendation(BaseModel):
     estimated_impact: str
 
 class AIRecommendationEngine:
-    def __init__(self, neo4j_service: Neo4jService = None):
-        self.neo4j = neo4j_service or Neo4jService()
-        self.security_analyzer = SecurityImpactAnalyzer(self.neo4j)
-        self.criticality_analyzer = CriticalityAnalyzer(self.neo4j)
+    def __init__(self, knowledge_client=None):
+        self.client = knowledge_client or get_default_client()
+        self.security_analyzer = SecurityImpactAnalyzer(self.client)
+        self.criticality_analyzer = CriticalityAnalyzer(self.client)
         
     def _determine_resource_type(self, resource_id: str) -> str:
-        if self.neo4j.driver:
-            try:
-                res = self.neo4j.query("MATCH (n {id:$resource_id}) RETURN labels(n)[0] as type", resource_id=resource_id)
-                if res and res[0].get("type"):
-                    return res[0]["type"]
-            except Exception:
-                pass
+        try:
+            resource = self.client.get_resource(resource_id)
+            if resource and resource.get("type"):
+                return resource["type"]
+        except Exception:
+            pass
         return "Unknown"
 
     def analyze_resource(self, resource_id: str) -> List[Recommendation]:
         """
         Consumes graph analyses for a specific resource and synthesizes actionable recommendations.
         """
-        if not self.neo4j.node_exists(resource_id):
+        if not self.client.get_resource(resource_id):
             raise HTTPException(status_code=404, detail="Resource not found")
             
         recommendations = {}
@@ -175,8 +174,6 @@ class AIRecommendationEngine:
         Scans all critical nodes in the environment and aggregates recommendations.
         """
         all_recs = []
-        if not self.neo4j.driver:
-            return all_recs
             
         try:
             # Query a sample of key compute and database resources
@@ -185,10 +182,13 @@ class AIRecommendationEngine:
             RETURN n.id AS id
             LIMIT 50
             """
-            results = self.neo4j.query(query)
-            for res in results:
-                recs = self.analyze_resource(res["id"])
-                all_recs.extend(recs)
+            try:
+                results = self.client.query_graph(query)
+                for res in results:
+                    recs = self.analyze_resource(res.get("id"))
+                    all_recs.extend(recs)
+            except NotImplementedError:
+                pass
         except Exception as e:
             pass
             
@@ -207,4 +207,4 @@ class AIRecommendationEngine:
         final_list = list(unique_recs.values())
         final_list.sort(key=lambda x: priority_map.get(x.priority, 99))
         
-        return final_lis
+        return final_list

@@ -17,6 +17,21 @@ class RootCauseEngine:
         causes = []
         confidence = "Low"
         
+        # 2. Dependency Chain Evaluation
+        if len(analysis.critical_path_upstream) > 3:
+            causes.append(f"Highly coupled dependency chain (depth {len(analysis.critical_path_upstream)}).")
+            
+        # 3. Bottleneck Analysis
+        node_type = str(graph.nodes.get(node_id, {}).get("type", "")).lower()
+        fan_in = len(index.reverse_adjacency.get(node_id, set()))
+        if fan_in > 5:
+            if "db" in node_type or "rds" in node_type or "dynamodb" in node_type:
+                causes.append("Identified as a Database Bottleneck (high fan-in).")
+            elif "vpc" in node_type or "gateway" in node_type or "subnet" in node_type:
+                causes.append("Identified as a Network Bottleneck (high fan-in).")
+            else:
+                causes.append("Identified as a Shared Infrastructure Bottleneck.")
+        
         # Check Cycles
         if analysis.cycles:
             for cycle in analysis.cycles:

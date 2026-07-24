@@ -63,6 +63,50 @@ class TraversalService:
                     stack.append((neighbor, depth + 1))
 
     @staticmethod
+    def ancestors(index: GraphIndex, node_id: str, max_depth: int = 10) -> List[str]:
+        """Returns all upstream dependencies (nodes that this node depends on)."""
+        return list(TraversalService.bfs(index, node_id, max_depth, reverse=True))
+
+    @staticmethod
+    def descendants(index: GraphIndex, node_id: str, max_depth: int = 10) -> List[str]:
+        """Returns all downstream dependencies (nodes that depend on this node)."""
+        return list(TraversalService.bfs(index, node_id, max_depth, reverse=False))
+
+    @staticmethod
+    def reachability(index: GraphIndex, source: str, target: str, max_depth: int = 20) -> bool:
+        """Determines if there is a directed path from source to target."""
+        if source == target:
+            return True
+        for node in TraversalService.bfs(index, source, max_depth, reverse=False):
+            if node == target:
+                return True
+        return False
+        
+    @staticmethod
+    def graph_diameter(index: GraphIndex) -> int:
+        """
+        Estimates the diameter of the graph (longest shortest path).
+        Note: O(V * (V+E)) complexity. Bounded for large graphs.
+        """
+        max_dist = 0
+        nodes = list(index.adjacency.keys())
+        if len(nodes) > 1000:
+            nodes = nodes[:1000] # Cap sample size for enterprise graphs to prevent O(N^2) explosion
+            
+        for node in nodes:
+            queue = deque([(node, 0)])
+            visited = set([node])
+            while queue:
+                current, depth = queue.popleft()
+                if depth > max_dist:
+                    max_dist = depth
+                for neighbor in index.adjacency.get(current, set()):
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append((neighbor, depth + 1))
+        return max_dist
+
+    @staticmethod
     def shortest_path(index: GraphIndex, start_node: str, target_node: str) -> List[str]:
         """Finds the shortest path between two nodes using BFS (optimized with parent pointers)."""
         if start_node == target_node:
@@ -124,17 +168,21 @@ class TraversalService:
         """
         Computes the longest path from start_node (useful for true critical path).
         Works effectively on DAGs. If cycles exist, this approximates using BFS depth tracking.
+        Includes a strict path limit to prevent exponential explosion on dense graphs.
         """
         adjacency = index.reverse_adjacency if reverse else index.adjacency
         queue = deque([(start_node, [start_node])])
         longest = []
+        paths_explored = 0
         
         while queue:
             current, path = queue.popleft()
+            paths_explored += 1
+            
             if len(path) > len(longest):
                 longest = path
                 
-            if len(path) > 20: # Sanity limit for enterprise graphs to avoid infinite loop on cycles
+            if len(path) > 7 or paths_explored > 500: # Strict limit to prevent O(d^L) exponential explosion
                 continue
                 
             for neighbor in adjacency.get(current, set()):

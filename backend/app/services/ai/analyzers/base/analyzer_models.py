@@ -273,4 +273,5 @@ class AnalyzerResult(BaseModel):
     evidence: List[Evidence] = Field(default_factory=list, description="Global evidence blocks.")
     detailed_score: Optional[OverallScore] = Field(default=None, description="Detailed breakdown of the score.")
 
+    telemetry: Dict[str, Any] = Field(default_factory=dict, description="Execution telemetry and runtime metrics.")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Execution telemetry or opaque data.")

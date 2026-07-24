@@ -1,6 +1,6 @@
 import logging
 from fastapi import HTTPException
-from app.services.graph.neo4j_service import Neo4jService
+from knowledge.service.client_factory import get_default_client
 from app.services.graph.analysis.security.exposure_analyzer import ExposureAnalyzer
 from app.services.graph.analysis.security.security_group_analyzer import SecurityGroupAnalyzer
 from app.services.graph.analysis.security.iam_analyzer import IAMAnalyzer
@@ -11,30 +11,24 @@ from app.services.graph.analysis.security.recommendation_engine import Recommend
 logger = logging.getLogger(__name__)
 
 class SecurityImpactAnalyzer:
-    def __init__(self, neo4j_service: Neo4jService = None):
-        self.neo4j = neo4j_service or Neo4jService()
-        self.exposure_analyzer = ExposureAnalyzer(self.neo4j)
-        self.sg_analyzer = SecurityGroupAnalyzer(self.neo4j)
-        self.iam_analyzer = IAMAnalyzer(self.neo4j)
-        self.network_analyzer = NetworkAnalyzer(self.neo4j)
-        self.attack_path_analyzer = AttackPathAnalyzer(self.neo4j)
+    def __init__(self, knowledge_client=None):
+        self.client = knowledge_client or get_default_client()
+        self.exposure_analyzer = ExposureAnalyzer(self.client)
+        self.sg_analyzer = SecurityGroupAnalyzer(self.client)
+        self.iam_analyzer = IAMAnalyzer(self.client)
+        self.network_analyzer = NetworkAnalyzer(self.client)
+        self.attack_path_analyzer = AttackPathAnalyzer(self.client)
         self.recommendation_engine = RecommendationEngine()
 
     def analyze(self, resource_id: str):
         """
         Orchestrates an end-to-end security analysis for a single resource.
         """
-        if not self.neo4j.node_exists(resource_id):
+        resource = self.client.get_resource(resource_id)
+        if not resource:
             raise HTTPException(status_code=404, detail="Resource not found")
             
-        resource_type = "Resource"
-        if self.neo4j.driver:
-            try:
-                res = self.neo4j.query("MATCH (n {id:$resource_id}) RETURN labels(n)[0] as type", resource_id=resource_id)
-                if res and res[0].get("type"):
-                    resource_type = res[0]["type"]
-            except Exception:
-                pass
+        resource_type = resource.get("type", "Resource")
                 
         findings = []
         

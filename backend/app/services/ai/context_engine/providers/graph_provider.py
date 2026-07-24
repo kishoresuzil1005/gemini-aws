@@ -38,9 +38,9 @@ class GraphProvider(BaseProvider):
     source     = "neo4j"
     enabled    = flag_enabled(GRAPH_PROVIDER_ENABLED)
 
-    def __init__(self, *, neo4j_service):
+    def __init__(self, *, knowledge_client):
         super().__init__()
-        self.neo4j_service = neo4j_service
+        self.knowledge_client = knowledge_client
 
     def supports(self, level: ContextLevel) -> bool:
         return True   # graph topology is needed at every context level
@@ -91,7 +91,7 @@ class GraphProvider(BaseProvider):
 
     def _query_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
-            subgraph_data = self.neo4j_service.get_resource_subgraph(resource_id)
+            subgraph_data = self.knowledge_client.get_resource_subgraph(resource_id)
             return subgraph_data
 
         except Exception as exc:

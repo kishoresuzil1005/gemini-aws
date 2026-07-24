@@ -32,10 +32,10 @@ class ResourceProvider(BaseProvider):
     source     = "postgres"
     enabled    = flag_enabled(RESOURCE_PROVIDER_ENABLED)
 
-    def __init__(self, *, db_session_factory, neo4j_service):
+    def __init__(self, *, db_session_factory, knowledge_client):
         super().__init__()
         self.db_session_factory = db_session_factory
-        self.neo4j_service = neo4j_service
+        self.knowledge_client = knowledge_client
 
     def supports(self, level: ContextLevel) -> bool:
         return True   # resource identity is the core of every context
@@ -130,12 +130,12 @@ class ResourceProvider(BaseProvider):
         except Exception as exc:
             logger.warning("ResourceProvider DB lookup failed for %s: %s", resource_id, exc)
 
-        # Last resort: Neo4j MemoryGraphStore
-        return self._fallback_from_neo4j(resource_id)
+        # Last resort: Knowledge Platform
+        return self._fallback_from_knowledge_platform(resource_id)
 
-    def _fallback_from_neo4j(self, resource_id: str) -> Dict[str, Any]:
+    def _fallback_from_knowledge_platform(self, resource_id: str) -> Dict[str, Any]:
         try:
-            node = self.neo4j_service.get_node(resource_id)
+            node = self.knowledge_client.get_resource(resource_id)
             if not node:
                 raise ValueError("Node not found")
             return {

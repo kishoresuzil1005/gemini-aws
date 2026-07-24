@@ -1,21 +1,17 @@
 import logging
-from app.services.graph.neo4j_service import Neo4jService
+from knowledge.service.client_factory import get_default_client
 
 logger = logging.getLogger(__name__)
 
 class NLQueryEngine:
-    def __init__(self, neo4j_service: Neo4jService = None):
-        self.neo4j = neo4j_service or Neo4jService()
+    def __init__(self, knowledge_client=None):
+        self.client = knowledge_client or get_default_client()
 
     def execute_query(self, natural_language_query: str):
         """
-        Translates a natural language question into a Cypher query,
-        executes it against Neo4j, and returns the result.
+        Translates a natural language question into a query,
+        executes it against the Knowledge Service, and returns the result.
         """
-        # In a real implementation, we would query OpenAI or Gemini here
-        # prompt = f"Translate this to Cypher for Neo4j: {natural_language_query}"
-        # cypher_query = llm_client.generate(prompt)
-        
         # MOCK LLM TRANSLATION
         cypher_query = ""
         mock_result = []
@@ -32,16 +28,16 @@ class NLQueryEngine:
             cypher_query = "MATCH (n) RETURN n LIMIT 5"
             mock_result = [{"n": "MOCK_NODE_DATA"}]
             
-        # Execute query if Neo4j is connected
+        # Execute query via Knowledge Service
         db_results = []
-        if self.neo4j.driver:
-            try:
-                db_results = self.neo4j.query(cypher_query)
-            except Exception as e:
-                logger.error(f"Error executing AI generated Cypher: {e}")
-                db_results = [{"error": str(e)}]
-        else:
+        try:
+            db_results = self.client.query_graph(cypher_query)
+        except NotImplementedError:
+            logger.warning("Graph querying not fully implemented in Knowledge Service.")
             db_results = mock_result
+        except Exception as e:
+            logger.error(f"Error executing AI generated query: {e}")
+            db_results = [{"error": str(e)}]
             
         return {
             "query_provided": natural_language_query,
