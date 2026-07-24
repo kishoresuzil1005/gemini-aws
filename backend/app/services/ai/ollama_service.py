@@ -12,10 +12,9 @@ class OllamaService:
     def generate(self, prompt: str) -> str:
         url = f"{self.host}/api/generate"
 
-        print("=" * 60)
-        print("OLLAMA URL :", url)
-        print("OLLAMA MODEL :", self.model)
-        print("PROMPT LENGTH :", len(prompt))
+        logger.debug(f"OLLAMA URL: {url}")
+        logger.debug(f"OLLAMA MODEL: {self.model}")
+        logger.info(f"Generating response from Ollama (Prompt length: {len(prompt)})")
 
         payload = {
             "model": self.model,
@@ -24,9 +23,6 @@ class OllamaService:
         }
         
         try:
-            print("Prompt length:", len(prompt))
-            print("Model:", self.model)
-
             response = requests.post(
                 url,
                 json=payload,
@@ -35,6 +31,12 @@ class OllamaService:
             response.raise_for_status()
             data = response.json()
             return data.get("response", "")
-        except Exception as e:
-            logger.error(f"Failed to generate response from Ollama: {e}")
+        except requests.exceptions.Timeout:
+            logger.exception("Ollama request timed out after 120 seconds.")
+            return "Error communicating with Ollama: TimeoutException"
+        except requests.exceptions.RequestException as e:
+            logger.exception(f"Network error communicating with Ollama: {e}")
             return f"Error communicating with Ollama: {str(e)}"
+        except ValueError as e:
+            logger.exception(f"Failed to parse JSON response from Ollama: {e}")
+            return f"Error parsing Ollama response: {str(e)}"

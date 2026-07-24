@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, AsyncGenerator, Union
+from typing import List, Dict, AsyncGenerator, Union, Any
 from app.services.ai.assistant.llm.config import AISettings
 
 class BaseProvider(ABC):
@@ -11,5 +11,5 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
-    def generate_response(self, messages: List[Dict[str, str]], request_id: str, stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
+    def generate_response(self, messages: List[Dict[str, str]], request_id: str, model_profile: Dict[str, Any], stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
         pass

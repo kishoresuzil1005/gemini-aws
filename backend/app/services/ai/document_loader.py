@@ -1,6 +1,9 @@
 import os
 import fitz  # PyMuPDF
 from typing import List, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 def chunk_text(text: str, size: int = 500, overlap: int = 100) -> List[str]:
     chunks = []
@@ -23,7 +26,7 @@ class DocumentLoader:
     def load_and_split_directory(self, directory_path: str) -> List[Dict[str, Any]]:
         chunks = []
         if not os.path.exists(directory_path):
-            print(f"[DOCUMENT LOADER] Directory {directory_path} does not exist.")
+            logger.warning(f"Directory {directory_path} does not exist.")
             return chunks
 
         for root, _, files in os.walk(directory_path):
@@ -32,12 +35,10 @@ class DocumentLoader:
                 if file.endswith((".txt", ".md", ".json", ".pdf")):
 
                     file_path = os.path.join(root, file)
-
-                    print(f"[LOADING] {file}")
+                    logger.debug(f"Loading document: {file}")
 
                     file_chunks = self.load_and_split_file(file_path, category=category)
-
-                    print(f"[CHUNKS] {file} -> {len(file_chunks)}")
+                    logger.debug(f"Document {file} yielded {len(file_chunks)} chunks")
 
                     chunks.extend(file_chunks)
         return chunks
@@ -56,7 +57,7 @@ class DocumentLoader:
             filename = os.path.basename(file_path)
             return self.split_text(content, source=filename, extra_metadata={"category": category})
         except Exception as e:
-            print(f"[DOCUMENT LOADER] Error reading file {file_path}: {e}")
+            logger.exception(f"Error reading file {file_path}: {e}")
             return []
 
     def split_text(self, text: str, source: str = "unknown", extra_metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
@@ -78,5 +79,4 @@ class DocumentLoader:
                 "content": chunk_text_content,
                 "metadata": chunk_metadata
             })
-                
-        return chunk
+        return chunks

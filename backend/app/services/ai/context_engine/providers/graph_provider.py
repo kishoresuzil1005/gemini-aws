@@ -92,17 +92,6 @@ class GraphProvider(BaseProvider):
     def _query_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
             subgraph_data = self.neo4j_service.get_resource_subgraph(resource_id)
-
-            # Get multi-hop dependencies
-            from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
-            dependency_analyzer = DependencyAnalyzer(self.neo4j_service)
-
-            downstream = dependency_analyzer.get_downstream(resource_id)
-            upstream   = dependency_analyzer.get_upstream(resource_id)
-
-            subgraph_data["upstream"]   = upstream
-            subgraph_data["downstream"] = downstream
-
             return subgraph_data
 
         except Exception as exc:

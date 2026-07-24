@@ -7,7 +7,9 @@ from app.services.ai.ollama_service import OllamaService
 from app.services.ai.prompt_builder import PromptBuilder
 from app.services.ai.retrieval_optimizer import RetrievalOptimizer
 from app.services.ai.category_mapper import CategoryMapper
+import logging
 
+logger = logging.getLogger(__name__)
 
 class RAGService:
     def __init__(self, collection_name: str = "cloud_docs"):
@@ -54,7 +56,7 @@ class RAGService:
                 "chunks_count": len(chunks)
             }
         except Exception as e:
-            print(f"[RAG INDEX ERROR] Failed to index document: {e}")
+            logger.exception(f"Failed to index document: {e}")
             return {"success": False, "message": str(e), "chunks_count": 0}
 
     def index_directory(self, dir_path: str) -> int:
@@ -72,7 +74,7 @@ class RAGService:
             for i, chunk in enumerate(chunks, start=1):
 
                 if i % 10 == 0:
-                    print(f"[EMBEDDING] {i}/{total}")
+                    logger.debug(f"Embedding chunk {i}/{total}")
 
                 vec = self.embedding_service.get_embedding(chunk["content"])
                 points.append({
@@ -87,7 +89,7 @@ class RAGService:
             self.qdrant_service.upsert_vectors(points)
             return len(chunks)
         except Exception as e:
-            print(f"[RAG INDEX DIRECTORY ERROR] {e}")
+            logger.exception(f"Failed to index directory: {e}")
             return 0
 
     def query_rag(self, query: str, limit: int = 8) -> Dict[str, Any]:
@@ -104,11 +106,11 @@ class RAGService:
             architecture_mode = self.prompt_builder.is_architecture_question(query)
             target_categories = self.category_mapper.detect_categories(intent, query)
             
-            print(f"[AI INTENT] {intent}")
+            logger.info(f"AI INTENT detected: {intent}")
             if architecture_mode:
-                print("[AI MODE] Architecture")
+                logger.info("AI MODE: Architecture")
             else:
-                print("[AI MODE] Standard")
+                logger.info("AI MODE: Standard")
             
             # Generate search query embedding
             query_vector = self.embedding_service.get_embedding(query)
@@ -229,7 +231,7 @@ class RAGService:
                 "hallucination_check": hallucination_status
             }
         except Exception as e:
-            print(f"[RAG QUERY ERROR] {e}")
+            logger.exception(f"Failed during RAG query: {e}")
             return {
                 "answer": f"I encountered an error retrieving or constructing the answer. Please verify connections. Details: {e}",
                 "intent": "unknown",

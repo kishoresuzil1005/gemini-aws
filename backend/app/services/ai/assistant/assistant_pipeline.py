@@ -47,8 +47,15 @@ class AssistantPipeline:
         self.generator = response_generator or ResponseGenerator(provider)
 
     def process(self, request: ChatRequest, stream: bool = False) -> ChatResponse:
+        import time
+        start = time.time()
+        
         request_id = str(uuid.uuid4())
+        
+        t = time.time()
         intent_data = self.classifier.classify(request.message)
+        logger.info(f"TIMING - Intent: {time.time() - t:.2f}s")
+        
         previous_context = self.memory.get_context(request.conversation_id)
         execution_context = ExecutionContext(
             user_message=request.message,
@@ -63,8 +70,14 @@ class AssistantPipeline:
         conversation_context = self.conversation.process_turn(request.conversation_id, intent_data)
         self.memory.add_message(request.conversation_id, "user", request.message)
 
+        t = time.time()
         ai_context = self._build_context(execution_context)
+        logger.info(f"TIMING - Context: {time.time() - t:.2f}s")
+        
+        t = time.time()
         ai_context = self.analysis_engine.analyze(ai_context)
+        logger.info(f"TIMING - Analysis: {time.time() - t:.2f}s")
+        
         reasoning = self.reasoning_engine.process(request.conversation_id, ai_context)
         history = self.conversation.get_formatted_history(request.conversation_id, limit=5)
         messages, context_text = self.prompt_builder.build(
@@ -74,6 +87,8 @@ class AssistantPipeline:
             reasoning=reasoning,
             intent=conversation_context.current_intent or "UNKNOWN",
         )
+        
+        t = time.time()
         response = self.generator.generate_messages(
             messages=messages,
             context_str=context_text,
@@ -83,7 +98,11 @@ class AssistantPipeline:
             request_id=request_id,
             stream=stream,
         )
+        logger.info(f"TIMING - Ollama: {time.time() - t:.2f}s")
+        
         self.memory.add_message(request.conversation_id, "assistant", response.answer or "")
+        
+        logger.info(f"TIMING - Total: {time.time() - start:.2f}s")
         return response
 
     def _build_context(self, execution_context: ExecutionContext) -> AIContext:

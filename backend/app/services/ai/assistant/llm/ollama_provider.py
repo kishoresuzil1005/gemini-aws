@@ -2,7 +2,7 @@ import time
 import json
 import logging
 import requests
-from typing import List, Dict, Union, AsyncGenerator
+from typing import List, Dict, Union, AsyncGenerator, Any
 from app.services.ai.assistant.llm.base_provider import BaseProvider
 from app.services.ai.assistant.llm.config import AISettings
 from app.services.ai.assistant.llm.connection_pool import ConnectionPool
@@ -53,29 +53,38 @@ class OllamaProvider(BaseProvider):
             }
         })
 
-    def generate_response(self, messages: List[Dict[str, str]], request_id: str, stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
+    def generate_response(self, messages: List[Dict[str, str]], request_id: str, model_profile: Dict[str, Any], stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
         start_time = time.time()
         logger.info(f"[Req: {request_id}] Connecting to Ollama at {self.settings.ollama_url}")
         
         status = HealthManager.get_health_status(self.session)
+        model_name = model_profile["model"]
         if status.get("status") != "healthy":
             latency = int((time.time() - start_time) * 1000)
             MetricsTracker.record_failure(latency)
             if status.get("status") == "model_missing":
-                logger.error(f"[Req: {request_id}] Model {self.settings.ollama_model} is missing")
-                return self._format_error("MODEL_NOT_FOUND", f"Model {self.settings.ollama_model} is not available on Ollama server.")
+                logger.error(f"[Req: {request_id}] Model {model_name} is missing")
+                return self._format_error("MODEL_NOT_FOUND", f"Model {model_name} is not available on Ollama server.")
             else:
                 logger.error(f"[Req: {request_id}] Ollama connection failed")
                 return self._format_error("OLLAMA_CONNECTION_FAILED", "Cannot connect to Ollama server.")
-                
-        logger.info(f"[Req: {request_id}] Health OK. Model {self.settings.ollama_model} Loaded.")
+        
+        logger.info(f"[Req: {request_id}] Health OK. Model {model_name} Loaded.")
 
         url = f"{self.settings.ollama_url}/api/chat"
         payload = {
-            "model": self.settings.ollama_model,
+            "model": model_name,
             "messages": messages,
-            "stream": stream
+            "stream": stream,
+            "options": {}
         }
+        if "temperature" in model_profile:
+            payload["options"]["temperature"] = model_profile["temperature"]
+        if "max_tokens" in model_profile:
+            payload["options"]["num_predict"] = model_profile["max_tokens"]
+        if not payload["options"]:
+            del payload["options"]
+
 
         try:
             logger.info(f"[Req: {request_id}] Chat Started")
