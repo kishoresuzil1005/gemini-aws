@@ -12,45 +12,45 @@ class KnowledgeAPI(abc.ABC):
     
     # Resources
     @abc.abstractmethod
-    def get_resource(self, resource_id: str) -> KnowledgeResponse: pass
+    def get_resource(self, resource_id: str) -> KnowledgeResponse: ...
     
     @abc.abstractmethod
-    def find_resource(self, name: str) -> KnowledgeResponse: pass
+    def find_resource(self, name: str) -> KnowledgeResponse: ...
     
     @abc.abstractmethod
-    def list_resources(self, query: KnowledgeQuery) -> KnowledgeResponse: pass
+    def list_resources(self, query: KnowledgeQuery) -> KnowledgeResponse: ...
 
     # Relationships
     @abc.abstractmethod
-    def get_relationship(self, relationship_id: str) -> KnowledgeResponse: pass
+    def get_relationship(self, relationship_id: str) -> KnowledgeResponse: ...
     
     @abc.abstractmethod
-    def find_relationships(self, resource_id: str) -> KnowledgeResponse: pass
+    def find_relationships(self, resource_id: str) -> KnowledgeResponse: ...
     
     @abc.abstractmethod
-    def find_dependencies(self, resource_id: str) -> KnowledgeResponse: pass
+    def find_dependencies(self, resource_id: str) -> KnowledgeResponse: ...
 
     # Rules
     @abc.abstractmethod
-    def get_rule(self, rule_id: str) -> KnowledgeResponse: pass
+    def get_rule(self, rule_id: str) -> KnowledgeResponse: ...
 
     @abc.abstractmethod
-    def list_rules(self, query: KnowledgeQuery) -> KnowledgeResponse: pass
+    def list_rules(self, query: KnowledgeQuery) -> KnowledgeResponse: ...
 
     # Graph
     @abc.abstractmethod
-    def get_node(self, node_id: str) -> KnowledgeResponse: pass
+    def get_node(self, node_id: str) -> KnowledgeResponse: ...
 
     @abc.abstractmethod
-    def find_shortest_path(self, source_id: str, target_id: str) -> KnowledgeResponse: pass
+    def find_shortest_path(self, source_id: str, target_id: str) -> KnowledgeResponse: ...
 
     @abc.abstractmethod
-    def find_blast_radius(self, resource_id: str) -> KnowledgeResponse: pass
+    def find_blast_radius(self, resource_id: str) -> KnowledgeResponse: ...
 
     # Search
     @abc.abstractmethod
-    def search(self, search_term: str, query: KnowledgeQuery) -> KnowledgeResponse: pass
+    def search(self, search_term: str, query: KnowledgeQuery) -> KnowledgeResponse: ...
 
     # Health
     @abc.abstractmethod
-    def health(self) -> Dict[str, Any]: pass
+    def health(self) -> Dict[str, Any]: ...

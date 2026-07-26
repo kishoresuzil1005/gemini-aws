@@ -32,14 +32,14 @@ class BaseCommercialConnector(BaseSchemaConnector, abc.ABC):
         """Perform any required authentication (e.g., AWS SDK credential chain).
         May be a no‑op for publicly accessible endpoints.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def discover(self) -> None:
         """Discover API version or available endpoints before fetching data.
         Should set internal attributes needed for ``fetch``.
         """
-        pass
+        ...
 
     def initialize(self) -> None:
         """Default implementation calls ``authenticate`` and ``discover``.

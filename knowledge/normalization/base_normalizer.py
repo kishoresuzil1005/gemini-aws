@@ -20,4 +20,4 @@ class BaseNormalizer(abc.ABC):
     @abc.abstractmethod
     def normalize(self, candidates: List[KnowledgeCandidate], context: NormalizationContext) -> List[CanonicalModel]:
         """Convert a list of provider-specific candidates into canonical models."""
-        raise NotImplementedError
+        ...

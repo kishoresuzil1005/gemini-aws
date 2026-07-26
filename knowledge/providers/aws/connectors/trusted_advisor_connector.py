@@ -28,7 +28,8 @@ class TrustedAdvisorConnector(BaseMonitoringConnector):
 
     def __init__(self, config: ConnectorConfig | None = None):
         super().__init__(config)
-        self.client = boto3.client("support", region_name="us-east-1") # Support API is in us-east-1
+        region = self.config.provider_metadata.get("region", "us-east-1") if self.config else "us-east-1"
+        self.client = boto3.client("support", region_name=region)
 
     def discover_definitions(self) -> List[str]:
         """Discover check IDs by fetching all available checks."""
@@ -40,9 +41,8 @@ class TrustedAdvisorConnector(BaseMonitoringConnector):
             self._cached_checks = resp.get("checks", [])
             return ["all_checks"]
         except (BotoCoreError, ClientError) as exc:
-            logger.warning(f"Could not access Support API: {exc}")
-            # Fallback mock for offline knowledge extraction
-            return ["mock_checks"]
+            logger.error(f"Could not access Support API: {exc}")
+            raise FetchError(f"Failed to fetch Trusted Advisor checks: {exc}") from exc
 
     def fetch_metadata(self, definition: str) -> Dict[str, Any]:
         """Format the cached check metadata."""
@@ -60,18 +60,7 @@ class TrustedAdvisorConnector(BaseMonitoringConnector):
                 ]
             }
         
-        # Fallback return for mock
-        return {
-            "category": "mock",
-            "checks": [
-                {
-                    "check_id": "mock_id_1",
-                    "check_name": "Mock Security Check",
-                    "category": "security",
-                    "description": "Mock description for offline testing."
-                }
-            ]
-        }
+        raise FetchError(f"Check definition '{definition}' is not cached or invalid.")
 
     def validate(self, raw_data: bytes) -> Any:
         parsed = json.loads(raw_data)

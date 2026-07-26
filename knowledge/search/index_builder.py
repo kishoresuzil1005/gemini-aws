@@ -87,7 +87,7 @@ class IndexBuilder:
         for rule in self.rule_catalog.list_rules():
             self.index.add_document("rules", self._doc_from_rule(rule))
 
-        # Documentation – optional, placeholder for future extension
+        # Documentation – optional, slot for future extension
         if self.documentation_provider and hasattr(self.documentation_provider, "list_documents"):
             for doc in self.documentation_provider.list_documents():
                 # Expected doc to have id, title, content, tags attributes

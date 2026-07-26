@@ -36,12 +36,12 @@ class BaseSchemaConnector(abc.ABC):
     @abc.abstractmethod
     def initialize(self) -> None:
         """Prepare any resources required for the connector (e.g., session, HTTP client)."""
-        pass
+        ...
 
     @abc.abstractmethod
     def health_check(self) -> bool:
         """Return ``True`` if the external source is reachable and healthy."""
-        pass
+        ...
 
     @abc.abstractmethod
     def fetch(self) -> bytes:
@@ -50,7 +50,7 @@ class BaseSchemaConnector(abc.ABC):
         Implementations should respect ``self.config.timeout`` and use the shared
         ``_retry`` helper for transient failures.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def validate(self, raw_data: bytes) -> Any:
@@ -59,7 +59,7 @@ class BaseSchemaConnector(abc.ABC):
         Returns the parsed representation (usually a ``dict``) ready for version
         extraction and snapshot creation.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def version(self, parsed_data: Any) -> str:
@@ -67,7 +67,7 @@ class BaseSchemaConnector(abc.ABC):
 
         The returned version is used for snapshot metadata.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def snapshot(self, parsed_data: Any, version: str) -> str:
@@ -76,7 +76,7 @@ class BaseSchemaConnector(abc.ABC):
         Returns the absolute path to the snapshot directory that contains the
         ``specification.json`` and accompanying metadata files.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def export(self, snapshot_path: str) -> None:
@@ -85,13 +85,13 @@ class BaseSchemaConnector(abc.ABC):
         In this milestone the export step simply records the location in a
         manifest – no further transformation is performed.
         """
-        pass
+        ...
 
     @abc.abstractmethod
     def shutdown(self) -> None:
         """Clean up any resources allocated during ``initialize``.
         """
-        pass
+        ...
 
     # ---------------------------------------------------------------------
     # Helper utilities shared by all connectors.

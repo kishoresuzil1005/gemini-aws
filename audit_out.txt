@@ -1,0 +1,11 @@
+Code Quality Issues:
+knowledge/rules/rule_lifecycle.py:12 - """Manages the state machine: DRAFT -> APPROVED -> PUBLISHED -> DEPRECATED -> ARCHIVED."""
+knowledge/rules/rule_lifecycle.py:17 - "PUBLISHED": ["DEPRECATED", "ARCHIVED"],
+knowledge/rules/rule_lifecycle.py:18 - "DEPRECATED": ["ARCHIVED"],
+knowledge/rules/rule_models.py:49 - status: str = "DRAFT"   # DRAFT, APPROVED, PUBLISHED, DEPRECATED, ARCHIVED
+knowledge/service/lifecycle.py:7 - pass
+knowledge/service/lifecycle.py:10 - pass
+knowledge/service/lifecycle.py:16 - pass
+knowledge/service/lifecycle.py:19 - pass
+
+Not Implemented Methods:

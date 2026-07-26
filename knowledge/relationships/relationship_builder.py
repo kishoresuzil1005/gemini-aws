@@ -28,7 +28,7 @@ class RelationshipBuilder:
         
         for res in resources:
             # We assume M7 placed pointers in `res.relationships` like: 
-            # [{"id": "arn:aws:vpc", "type": "attached_to"}]
+            # [{"id": "<target_resource_id>", "type": "<relationship_type>"}]
             for ptr in res.relationships:
                 rel_type = self.classifier.classify(ptr.get("type", "unknown"))
                 target_id = ptr.get("id")

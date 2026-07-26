@@ -50,14 +50,8 @@ class PersonalHealthConnector(BaseMonitoringConnector):
                 "event_types": event_types
             }
         except (BotoCoreError, ClientError) as exc:
-            logger.warning(f"Could not access Health API (may require Business Support): {exc}")
-            # Fallback mock for knowledge extraction
-            return {
-                "category": category,
-                "event_types": [
-                    {"event_type_code": f"AWS_{category.upper()}_MOCK", "category": category, "service": "MOCK"}
-                ]
-            }
+            logger.error(f"Could not access Health API (may require Business Support): {exc}")
+            raise FetchError(f"Failed to fetch Personal Health metadata for category {category}: {exc}") from exc
 
     def validate(self, raw_data: bytes) -> Any:
         parsed = json.loads(raw_data)

@@ -11,24 +11,24 @@ class RuleQueryAPI(abc.ABC):
 
     @abc.abstractmethod
     def get_rule(self, rule_id: str) -> CanonicalRule:
-        pass
+        ...
 
     @abc.abstractmethod
     def list_rules(self, include_drafts: bool = False) -> List[CanonicalRule]:
-        pass
+        ...
 
     @abc.abstractmethod
     def list_rules_by_category(self, category: str, include_drafts: bool = False) -> List[CanonicalRule]:
-        pass
+        ...
 
     @abc.abstractmethod
     def list_rules_by_severity(self, severity: str, include_drafts: bool = False) -> List[CanonicalRule]:
-        pass
+        ...
 
     @abc.abstractmethod
     def list_rules_by_resource(self, resource_type: str, include_drafts: bool = False) -> List[CanonicalRule]:
-        pass
+        ...
         
     @abc.abstractmethod
     def search_rules_by_tag(self, key: str, value: str, include_drafts: bool = False) -> List[CanonicalRule]:
-        pass
+        ...

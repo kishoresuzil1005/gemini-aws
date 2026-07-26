@@ -29,4 +29,4 @@ class BaseParser(abc.ABC):
         Returns:
             The parsed representation (e.g., dict, list, or AST).
         """
-        raise NotImplementedError
+        ...

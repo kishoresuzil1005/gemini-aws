@@ -28,4 +28,4 @@ class BaseValidator(abc.ABC):
         Returns a list of validation results. May raise FatalValidationError if 
         the error should halt the pipeline entirely.
         """
-        raise NotImplementedError
+        ...

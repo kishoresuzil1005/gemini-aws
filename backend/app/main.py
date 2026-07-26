@@ -24,6 +24,8 @@ from .aws_scanner import (
     scan_aws_resources, heal_security_group_ssh, heal_s3_bucket_encryption
 )
 from app.inventory.routes import router as inventory_router
+from app.api.endpoints.platform import router as platform_router
+from app.bootstrap import BootstrapManager
 from app.services.graph.neo4j_service import Neo4jService
 from app.services.graph.auto_sync import AutoGraphSync
 from app.services.graph.graph_sync_service import GraphSyncService
@@ -68,6 +70,7 @@ app = FastAPI(
     version="1.0.0"
 )
 app.include_router(inventory_router, prefix="/api/v1/inventory", tags=["Inventory Management"])
+app.include_router(platform_router, prefix="/api/v1/platform", tags=["Platform Core"])
 
 
 
@@ -469,6 +472,14 @@ def startup_event():
         print("[CONTEXT ENGINE] Default providers registered successfully.")
     except Exception as ce_err:
         print(f"[CONTEXT ENGINE] Provider registration failed (non-fatal): {ce_err}")
+        
+    # Initialize Knowledge Platform Runtime
+    try:
+        bm = BootstrapManager.get_instance()
+        bm.initialize_platform()
+        print("[KNOWLEDGE PLATFORM] Initialized successfully.")
+    except Exception as kp_err:
+        print(f"[KNOWLEDGE PLATFORM] Initialization failed: {kp_err}")
     
     # 1. Seed accounts if table is empty
     if db.query(CloudAccountDB).count() == 0:
@@ -512,6 +523,16 @@ def startup_event():
 
     db.commit()
     db.close()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    print("Shutting down Application...")
+    try:
+        bm = BootstrapManager.get_instance()
+        bm.shutdown_platform()
+        print("[KNOWLEDGE PLATFORM] Shut down successfully.")
+    except Exception as kp_err:
+        print(f"[KNOWLEDGE PLATFORM] Shutdown error: {kp_err}")
 
 
 # --- Account API Endpoints ---

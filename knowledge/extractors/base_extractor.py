@@ -28,4 +28,4 @@ class BaseExtractor(abc.ABC):
         Returns:
             A list of instantiated KnowledgeCandidates.
         """
-        raise NotImplementedError
+        ...

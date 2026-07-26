@@ -5,6 +5,7 @@ import logging
 from typing import Dict, Any
 
 from .knowledge_api import KnowledgeAPI
+from .lifecycle import Lifecycle
 from .knowledge_query import KnowledgeQuery
 from .knowledge_models import KnowledgeResponse
 from .knowledge_cache import KnowledgeCache
@@ -16,7 +17,7 @@ from .knowledge_exceptions import ServiceError
 
 logger = logging.getLogger(__name__)
 
-class KnowledgeService(KnowledgeAPI):
+class KnowledgeService(KnowledgeAPI, Lifecycle):
     """The absolute API boundary for the Knowledge Platform.
     
     Consumers (Analyzers, AI) MUST use this class instead of importing
@@ -35,6 +36,25 @@ class KnowledgeService(KnowledgeAPI):
         self.stats_monitor = KnowledgeStatistics(
             resource_catalog, relationship_catalog, rule_catalog, knowledge_graph
         )
+        self._is_ready = False
+
+    def initialize(self) -> None:
+        logger.info("Initializing KnowledgeService...")
+
+    def start(self) -> None:
+        logger.info("Starting KnowledgeService...")
+        self._is_ready = True
+
+    def ready(self) -> bool:
+        return self._is_ready
+
+    def shutdown(self) -> None:
+        logger.info("Shutting down KnowledgeService...")
+        self._is_ready = False
+
+    def dispose(self) -> None:
+        logger.info("Disposing KnowledgeService...")
+        self.cache = None
 
     # ---------------------------------------------------------
     # Helper: Caching Decorator-like Logic
@@ -66,32 +86,62 @@ class KnowledgeService(KnowledgeAPI):
         )
 
     def find_resource(self, name: str) -> KnowledgeResponse:
-        raise NotImplementedError("find_resource implemented dynamically via router")
+        return self._execute_with_cache(
+            f"find_res:{name}", 
+            self.router.handle_find_resource, 
+            name
+        )
 
     def list_resources(self, query: KnowledgeQuery) -> KnowledgeResponse:
         cache_key = f"list_res:{query.limit}:{query.offset}"
         return self._execute_with_cache(cache_key, self.router.handle_list_resources, query)
 
     def get_relationship(self, relationship_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"rel:{relationship_id}",
+            self.router.handle_get_relationship,
+            relationship_id
+        )
 
     def find_relationships(self, resource_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"find_rels:{resource_id}",
+            self.router.handle_find_relationships,
+            resource_id
+        )
 
     def find_dependencies(self, resource_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"deps:{resource_id}",
+            self.router.handle_find_dependencies,
+            resource_id
+        )
 
     def get_rule(self, rule_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"rule:{rule_id}",
+            self.router.handle_get_rule,
+            rule_id
+        )
 
     def list_rules(self, query: KnowledgeQuery) -> KnowledgeResponse:
-        raise NotImplementedError()
+        cache_key = f"list_rules:{query.limit}:{query.offset}"
+        return self._execute_with_cache(cache_key, self.router.handle_list_rules, query)
 
     def get_node(self, node_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"node:{node_id}",
+            self.router.handle_get_node,
+            node_id
+        )
 
     def find_shortest_path(self, source_id: str, target_id: str) -> KnowledgeResponse:
-        raise NotImplementedError()
+        return self._execute_with_cache(
+            f"path:{source_id}:{target_id}",
+            self.router.handle_find_shortest_path,
+            source_id,
+            target_id
+        )
 
     def find_blast_radius(self, resource_id: str) -> KnowledgeResponse:
         return self._execute_with_cache(

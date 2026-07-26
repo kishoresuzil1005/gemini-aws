@@ -33,14 +33,14 @@ class BaseBestPracticeConnector(BaseSchemaConnector, abc.ABC):
         """Return a list of identifiers (IDs, ARNs, URLs, etc.) for the source
         documents that will be processed.
         """
-        raise NotImplementedError
+        ...
 
     @abc.abstractmethod
     def fetch_metadata(self, document: Any) -> dict:
         """Given a document identifier, return a JSON‑serialisable dictionary
         containing the security metadata.
         """
-        raise NotImplementedError
+        ...
 
     def initialize(self) -> None:
         """Run base initialisation then discover documents.

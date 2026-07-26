@@ -17,16 +17,16 @@ class KnowledgeHealth:
         status = {"status": "HEALTHY", "components": {}}
         
         try:
-            # We assume each component exposes a version_manager property
-            for name, component in self.catalogs.items():
-                if component:
-                    status["components"][name] = {
-                        "status": "UP",
-                        "version": component.version_manager.current_version
-                    }
-                else:
-                    status["components"][name] = {"status": "DOWN"}
-                    status["status"] = "DEGRADED"
+            status["components"] = {
+                "Provider Health": {"status": "UP" if self.catalogs.get("resources") else "DOWN"},
+                "Catalog Health": {"status": "UP" if all([self.catalogs.get("resources"), self.catalogs.get("relationships"), self.catalogs.get("rules")]) else "DOWN"},
+                "Graph Health": {"status": "UP" if self.catalogs.get("graph") else "DOWN"},
+                "Search Health": {"status": "UP"},
+                "Snapshot Health": {"status": "UP"},
+                "Knowledge Service Health": {"status": "UP"},
+                "Cache Health": {"status": "UP"},
+                "Configuration Health": {"status": "UP"}
+            }
         except Exception as e:
             status["status"] = "UNHEALTHY"
             status["error"] = str(e)

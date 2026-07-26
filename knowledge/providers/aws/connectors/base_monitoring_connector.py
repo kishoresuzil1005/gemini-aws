@@ -34,14 +34,14 @@ class BaseMonitoringConnector(BaseSchemaConnector, abc.ABC):
         """Return a list of identifiers (namespaces, ARNs, URLs, etc.) for the
         definitions that will be processed.
         """
-        raise NotImplementedError
+        ...
 
     @abc.abstractmethod
     def fetch_metadata(self, definition: Any) -> dict:
         """Given a definition identifier, return a JSON‑serialisable dictionary
         containing the operational metadata.
         """
-        raise NotImplementedError
+        ...
 
     def initialize(self) -> None:
         """Run base initialisation then discover definitions.

@@ -7,17 +7,18 @@ consumable by analyzers and hides the underlying service complexity.
 """
 import logging
 from typing import Dict, Any, List, Optional
-from .knowledge_models import KnowledgeResponse, KnowledgeQuery
+from .knowledge_models import KnowledgeResponse
+from .knowledge_query import KnowledgeQuery
 
 logger = logging.getLogger(__name__)
 
 class KnowledgeClientError(Exception):
     """Base exception for Knowledge Client errors."""
-    pass
+    ...
 
 class KnowledgeNotFoundError(KnowledgeClientError):
     """Raised when requested knowledge cannot be found."""
-    pass
+    ...
 
 class KnowledgeClient:
     def __init__(self, service_instance):
@@ -28,8 +29,8 @@ class KnowledgeClient:
 
     def _extract_data(self, response: KnowledgeResponse) -> Any:
         """Extracts data from a successful response or raises an error."""
-        if not response.success:
-            raise KnowledgeClientError(f"Service returned error: {response.error}")
+        if response.errors:
+            raise KnowledgeClientError(f"Service returned error: {response.errors}")
         return response.data
 
     def get_resource(self, resource_id: str) -> Optional[Dict[str, Any]]:
@@ -87,11 +88,10 @@ class KnowledgeClient:
              # Try to see if service has query method
             if hasattr(self.service, "query"):
                 res = self.service.query(query, **kwargs)
-                return self._extract_data(res) if hasattr(res, "success") else res
+                return self._extract_data(res) if hasattr(res, "errors") else res
             else:
-                raise NotImplementedError("Direct graph querying via KS not yet supported.")
-        except NotImplementedError:
-            raise
+                raise KnowledgeClientError("Direct graph querying via KS not yet supported.")
+
         except Exception as e:
             logger.error(f"Error executing graph query: {e}")
             raise KnowledgeClientError(f"Failed to query graph: {e}")
@@ -101,7 +101,7 @@ class KnowledgeClient:
         try:
             if hasattr(self.service, "get_resource_subgraph"):
                 res = self.service.get_resource_subgraph(resource_id)
-                return self._extract_data(res) if hasattr(res, "success") else res
+                return self._extract_data(res) if hasattr(res, "errors") else res
             
             # Fallback
             resource = self.get_resource(resource_id)

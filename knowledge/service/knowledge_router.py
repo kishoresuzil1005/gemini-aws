@@ -53,3 +53,46 @@ class KnowledgeRouter:
         all_matches = self.search_engine.search_all(search_term)
         sliced, pag = self._paginate(all_matches, query)
         return ResponseBuilder.build(data=sliced, start_time=start_time, pagination=pag)
+
+    def handle_find_resource(self, name: str) -> KnowledgeResponse:
+        start_time = time.time()
+        # Assume a simple list filter, a real one would use the catalog query API
+        all_res = self.resources.list_resources()
+        matches = [r for r in all_res if name.lower() in (r.name or "").lower()]
+        return ResponseBuilder.build(data=matches, start_time=start_time)
+
+    def handle_get_relationship(self, relationship_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        rel = self.relationships.get_relationship(relationship_id)
+        return ResponseBuilder.build(data=rel, start_time=start_time)
+
+    def handle_find_relationships(self, resource_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        rels = self.relationships.find_relationships(resource_id)
+        return ResponseBuilder.build(data=rels, start_time=start_time)
+
+    def handle_find_dependencies(self, resource_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        deps = self.graph.find_dependencies(resource_id)
+        return ResponseBuilder.build(data=deps, start_time=start_time)
+
+    def handle_get_rule(self, rule_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        rule = self.rules.get_rule(rule_id)
+        return ResponseBuilder.build(data=rule, start_time=start_time)
+
+    def handle_list_rules(self, query: KnowledgeQuery) -> KnowledgeResponse:
+        start_time = time.time()
+        all_rules = self.rules.list_rules()
+        sliced, pag = self._paginate(all_rules, query)
+        return ResponseBuilder.build(data=sliced, start_time=start_time, pagination=pag)
+
+    def handle_get_node(self, node_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        node = self.graph.get_node(node_id)
+        return ResponseBuilder.build(data=node, start_time=start_time)
+
+    def handle_find_shortest_path(self, source_id: str, target_id: str) -> KnowledgeResponse:
+        start_time = time.time()
+        path = self.graph.find_shortest_path(source_id, target_id)
+        return ResponseBuilder.build(data=path, start_time=start_time)
