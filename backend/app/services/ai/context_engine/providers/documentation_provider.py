@@ -5,7 +5,7 @@ import logging
 from typing import Any, Dict
 
 from ..base_provider import BaseProvider
-from ..common.constants import DOCS_PROVIDER_ENABLED, TTL_STATIC
+from ..common.constants import DOCUMENTATION_PROVIDER_ENABLED, TTL_STATIC
 from ..common.helpers import flag_enabled
 from ..enums import ContextLevel, ProviderScope
 from ..request import ContextRequest
@@ -24,7 +24,7 @@ class DocumentationProvider(BaseProvider):
     cache_ttl  = TTL_STATIC
     version    = "1.0"
     source     = "knowledge_service"
-    enabled    = flag_enabled(DOCS_PROVIDER_ENABLED)
+    enabled    = flag_enabled(DOCUMENTATION_PROVIDER_ENABLED)
 
     def __init__(self, *, knowledge_client):
         super().__init__()
