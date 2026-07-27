@@ -92,7 +92,10 @@ class GraphProvider(BaseProvider):
     def _query_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
             from app.services.graph.neo4j_service import Neo4jService
-            subgraph_data = Neo4jService().get_resource_subgraph(resource_id)
+            from app.services.ai.context_engine.graph.graph_normalizer import GraphNormalizer
+            
+            raw_data = Neo4jService().get_resource_subgraph(resource_id)
+            subgraph_data = GraphNormalizer.normalize(raw_data)
             return subgraph_data
 
         except Exception as exc:

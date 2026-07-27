@@ -1,5 +1,6 @@
 import pytest
 from app.services.ai.context_engine.analyzers.dependency_analyzer import DependencyAnalyzer
+from app.services.ai.context_engine.graph.graph_normalizer import GraphNormalizer
 from app.services.ai.context_engine.models import AIContext
 
 @pytest.fixture
@@ -7,130 +8,124 @@ def analyzer():
     return DependencyAnalyzer()
 
 def create_context(resource_id, nodes, edges):
+    # Pass it through the normalizer to simulate real behavior!
+    raw = {
+        "resource": {"resource_id": resource_id},
+        "subgraph": {
+            "nodes": nodes,
+            "edges": edges
+        }
+    }
+    normalized = GraphNormalizer.normalize(raw)
+    
     return AIContext(
         resource={"resource_id": resource_id},
-        graph={
-            "resource": {"resource_id": resource_id},
-            "subgraph": {
-                "nodes": nodes,
-                "edges": edges
-            }
-        }
+        graph=normalized
     )
 
 def test_isolated_resource(analyzer):
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "A"}],
-        edges=[]
-    )
+    ctx = create_context("A", [{"id": "A"}], [])
     result = analyzer.analyze(ctx)
     assert result.metadata["is_isolated"] is True
-    assert result.metadata["upstream_dependency_size"] == 0
-    assert result.metadata["downstream_dependency_size"] == 0
-    assert result.metadata["blast_radius_size"] == 0
+    assert result.metadata["relationship_count"] == 0
+    assert result.metadata["dependency_depth"] == 0
     
     findings = result.findings
     assert len(findings) == 1
     assert findings[0]["title"] == "Isolated Resource"
 
-def test_resource_with_one_dependency(analyzer):
-    # A relies on B. A -> B (outgoing from A, so B is downstream of A)
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "A"}, {"id": "B"}],
-        edges=[{"source": "A", "target": "B", "relation": "USES"}]
-    )
+def test_single_dependency(analyzer):
+    ctx = create_context("A", [{"id": "A"}, {"id": "B", "type": "Subnet"}], [{"source": "A", "target": "B", "relationship": "IN_SUBNET"}])
     result = analyzer.analyze(ctx)
     assert result.metadata["is_isolated"] is False
-    assert result.metadata["upstream_dependency_size"] == 0
-    assert result.metadata["downstream_dependency_size"] == 1
-    assert result.metadata["blast_radius_size"] == 1
+    assert result.metadata["relationship_count"] == 1
+    assert result.metadata["dependency_depth"] == 1
     
-    findings = result.findings
-    assert len(findings) == 1
-    assert findings[0]["title"] == "Blast Radius"
+    summary = result.metadata["dependency_summary"]
+    assert "network" in summary
+    assert "Subnet B" in summary["network"][0]
 
-def test_resource_with_many_dependencies(analyzer):
-    # A relies on B, C, D, E.
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "A"}, {"id": "B"}, {"id": "C"}, {"id": "D"}, {"id": "E"}],
-        edges=[
-            {"source": "A", "target": "B"},
-            {"source": "A", "target": "C"},
-            {"source": "A", "target": "D"},
-            {"source": "A", "target": "E"},
-            {"source": "A", "target": "B"} # Duplicate edge to same target to test unique blast radius
-        ]
-    )
+def test_multiple_dependencies(analyzer):
+    nodes = [{"id": "A"}, {"id": "B"}, {"id": "C"}]
+    edges = [
+        {"source": "A", "target": "B", "relationship": "USES_SG"},
+        {"source": "A", "target": "C", "relationship": "ATTACHED_TO"}
+    ]
+    ctx = create_context("A", nodes, edges)
     result = analyzer.analyze(ctx)
     assert result.metadata["is_isolated"] is False
-    assert result.metadata["upstream_dependency_size"] == 0
-    assert result.metadata["downstream_dependency_size"] == 5 # 5 outgoing edges
-    assert result.metadata["blast_radius_size"] == 4 # 4 unique targets
-
-def test_upstream_and_downstream(analyzer):
-    # X -> A -> Y
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "X"}, {"id": "A"}, {"id": "Y"}],
-        edges=[
-            {"source": "X", "target": "A"},
-            {"source": "A", "target": "Y"}
-        ]
-    )
-    result = analyzer.analyze(ctx)
-    assert result.metadata["is_isolated"] is False
-    assert result.metadata["upstream_dependency_size"] == 1
-    assert result.metadata["downstream_dependency_size"] == 1
-    assert result.metadata["blast_radius_size"] == 1
+    assert result.metadata["relationship_count"] == 2
     
-    findings = result.findings
-    assert len(findings) == 2 # Blast radius and Upstream Dependencies
+    summary = result.metadata["dependency_summary"]
+    assert "security" in summary
+    assert "storage" in summary
+
+def test_duplicate_edges(analyzer):
+    ctx = create_context("A", [{"id": "A"}, {"id": "B"}], [
+        {"source": "A", "target": "B", "relationship": "USES_SG"},
+        {"source": "A", "target": "B", "relationship": "USES_SG"}
+    ])
+    result = analyzer.analyze(ctx)
+    # The edges are distinct in the graph (even if duplicates in content)
+    assert result.metadata["relationship_count"] == 2
+    # But connected resources should be 1
+    assert result.metadata["connected_resource_count"] == 1
 
 def test_cyclic_graph(analyzer):
-    # A -> B -> A
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "A"}, {"id": "B"}],
-        edges=[
-            {"source": "A", "target": "B"},
-            {"source": "B", "target": "A"}
-        ]
+    ctx = create_context("A", [{"id": "A"}, {"id": "B"}], [
+        {"source": "A", "target": "B", "relationship": "PEERS_WITH"},
+        {"source": "B", "target": "A", "relationship": "PEERS_WITH"}
+    ])
+    result = analyzer.analyze(ctx)
+    assert result.metadata["relationship_count"] == 2
+    assert result.metadata["dependency_depth"] == 1
+
+def test_unknown_resource(analyzer):
+    ctx = create_context("Unknown", [{"id": "X"}], [{"source": "X", "target": "Y", "relationship": "USES"}])
+    result = analyzer.analyze(ctx)
+    assert result.metadata["is_isolated"] is True
+
+def test_malformed_graph(analyzer):
+    ctx = create_context("A", ["this is just a string not a dict"], ["invalid edge string"])
+    result = analyzer.analyze(ctx)
+    # Normalizer will drop non-dict nodes/edges
+    assert result.metadata["is_isolated"] is True
+
+def test_normalized_graph(analyzer):
+    # Test that normalizer converts weird formats
+    ctx = create_context("A", 
+        [{"_id": "A", "resource_type": "EC2"}], 
+        [{"start": "A", "end": "B", "label": "IN_VPC"}]
     )
     result = analyzer.analyze(ctx)
     assert result.metadata["is_isolated"] is False
-    assert result.metadata["upstream_dependency_size"] == 1
-    assert result.metadata["downstream_dependency_size"] == 1
-    assert result.metadata["blast_radius_size"] == 1
+    assert result.metadata["relationship_count"] == 1
+    assert "network" in result.metadata["dependency_summary"]
 
-def test_empty_graph(analyzer):
-    ctx = create_context("A", [], [])
+def test_bfs_dependency_depth(analyzer):
+    # A -> B -> C -> D => Depth 3
+    nodes = [{"id": "A"}, {"id": "B"}, {"id": "C"}, {"id": "D"}]
+    edges = [
+        {"source": "A", "target": "B", "relationship": "R"},
+        {"source": "B", "target": "C", "relationship": "R"},
+        {"source": "C", "target": "D", "relationship": "R"}
+    ]
+    ctx = create_context("A", nodes, edges)
     result = analyzer.analyze(ctx)
-    assert result.metadata["is_isolated"] is True
-    assert result.metadata["upstream_dependency_size"] == 0
-    assert result.metadata["downstream_dependency_size"] == 0
-    assert result.metadata["blast_radius_size"] == 0
+    assert result.metadata["dependency_depth"] == 3
 
-def test_unknown_resource(analyzer):
-    # Resource ID is unknown, but graph has some edges
-    ctx = create_context("Unknown", [{"id": "X"}], [{"source": "X", "target": "Y"}])
+def test_relationship_categories(analyzer):
+    edges = [
+        {"source": "A", "target": "B", "relationship": "USES_ROLE"}, # Security
+        {"source": "A", "target": "C", "relationship": "MOUNTS"}, # Storage
+        {"source": "A", "target": "D", "relationship": "ROUTES_TO"}, # Network
+        {"source": "A", "target": "E", "relationship": "WEIRD_CUSTOM_REL"} # Infrastructure
+    ]
+    ctx = create_context("A", [{"id": "A"}, {"id": "B"}, {"id": "C"}, {"id": "D"}, {"id": "E"}], edges)
     result = analyzer.analyze(ctx)
-    # The analyzer won't find incoming/outgoing for "Unknown" since the edges don't involve "Unknown"
-    assert result.metadata["is_isolated"] is True
-    assert result.metadata["upstream_dependency_size"] == 0
-    assert result.metadata["downstream_dependency_size"] == 0
-    assert result.metadata["blast_radius_size"] == 0
-
-def test_critical_impact(analyzer):
-    ctx = create_context(
-        resource_id="A",
-        nodes=[{"id": "A"}, {"id": "B", "type": "aws_lb"}],
-        edges=[{"source": "A", "target": "B"}]
-    )
-    result = analyzer.analyze(ctx)
-    assert result.metadata["blast_radius_size"] == 1
-    findings = [f for f in result.findings if f["title"] == "Blast Radius"]
-    assert findings[0]["severity"] == "CRITICAL"
-    assert findings[0]["metadata"]["critical_impact_count"] == 1
+    summary = result.metadata["dependency_summary"]
+    
+    assert "security" in summary
+    assert "storage" in summary
+    assert "network" in summary
+    assert "infrastructure" in summary
