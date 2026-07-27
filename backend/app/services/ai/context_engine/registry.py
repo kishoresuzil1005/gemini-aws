@@ -75,7 +75,10 @@ def register_default_providers() -> None:
 
     container = ServiceContainer.instance()
 
+    from app.database import SessionLocal
+
     registry.register(ResourceProvider(
+        db_session_factory=SessionLocal,
         knowledge_client=container.knowledge_client
     ))
     
