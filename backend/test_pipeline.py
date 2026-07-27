@@ -8,6 +8,8 @@ from app.services.ai.assistant.graph_assistant import GraphAssistant
 from app.services.ai.assistant.assistant_models import ChatRequest
 
 def run_test():
+    from app.services.ai.context_engine.registry import register_default_providers
+    register_default_providers()
     assistant = GraphAssistant()
     
     queries = [

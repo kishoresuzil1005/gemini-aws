@@ -29,7 +29,7 @@ class EntityExtractor:
                       "issue", "problem", "error", "not", "working", "analyze", 
                       "explain", "show", "me", "details", "about", "this", "that", "it"}
         
-        keywords = [w for w in re.sub(r'[^a-zA-Z0-9-\s]', '', msg_lower).split() 
+        keywords = [w for w in re.sub(r'[^a-zA-Z0-9-_\s]', '', msg_lower).split() 
                     if w not in stop_words and len(w) > 2]
         
         return {
