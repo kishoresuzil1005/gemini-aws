@@ -12,13 +12,8 @@ class RDSGraphBuilder(BaseGraphBuilder):
     def build_resource_edges(cls, resource: ResourceDB) -> List[Dict[str, Any]]:
         edges = []
         
-        print("=" * 60)
-        print("Building RDS:", resource.resource_id)
-        print(resource.resource_metadata)
-        
         # RDS -> VPC
         vpc_id = RDSMetadata.get_vpc_id(resource)
-        print("VPC:", vpc_id)
         if vpc_id:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -31,7 +26,6 @@ class RDSGraphBuilder(BaseGraphBuilder):
             
         # RDS -> Security Groups
         sgs = RDSMetadata.get_security_groups(resource)
-        print("Security Groups:", sgs)
         for sg_id in sgs:
             edge = GraphRelationship.create(
                 source=resource.resource_id,
@@ -52,9 +46,5 @@ class RDSGraphBuilder(BaseGraphBuilder):
                 target_type="Subnet"
             )
             if edge: edges.append(edge)
-            
-        print("Edges Created:", len(edges))
-        for edge in edges:
-            print(edge)
             
         return edges

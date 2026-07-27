@@ -1,7 +1,10 @@
+import logging
 from sqlalchemy.orm import Session
 
 from app.models import ResourceDB, ResourceNodeDB
 from app.services.graph.neo4j_service import Neo4jService
+
+logger = logging.getLogger(__name__)
 
 
 class GraphSyncService:
@@ -36,7 +39,7 @@ class GraphSyncService:
                     "provider": row.provider or "AWS"
                 }
         except Exception as e:
-            print(f"[GRAPH_SYNC] Error reading resource_nodes: {e}")
+            logger.error("[GRAPH_SYNC] Error reading resource_nodes: %s", e)
 
         # 2. Overlay with resources table (has richer metadata + region)
         try:
@@ -64,7 +67,7 @@ class GraphSyncService:
                     "tags": tags_dict
                 }
         except Exception as e:
-            print(f"[GRAPH_SYNC] Error reading resources: {e}")
+            logger.error("[GRAPH_SYNC] Error reading resources: %s", e)
 
         synced = 0
         failed = 0
@@ -86,9 +89,9 @@ class GraphSyncService:
                     synced += 1
                 else:
                     failed += 1
-                    print(f"[GRAPH_SYNC] Failed to create node {resource_id}")
+                    logger.warning("[GRAPH_SYNC] Failed to create node %s", resource_id)
             except Exception as e:
-                print(f"[GRAPH_SYNC] {resource_id}: {e}")
+                logger.error("[GRAPH_SYNC] %s: %s", resource_id, e)
                 failed += 1
 
         total = len(all_nodes)
@@ -140,11 +143,9 @@ class GraphSyncService:
                 # Write relationship
                 #
 
-                print(
-                    f"Writing relationship "
-                    f"{rel['from']} "
-                    f"--{rel['type']}--> "
-                    f"{rel['to']}"
+                logger.debug(
+                    "Writing relationship %s --%s--> %s",
+                    rel['from'], rel['type'], rel['to']
                 )
                 self.graph.create_relationship(
                     source_id=rel["from"],
@@ -153,8 +154,7 @@ class GraphSyncService:
                 )
         except Exception as ge_e:
             import traceback
-            traceback.print_exc()
-            print(f"Error executing graph relationships builder: {ge_e}")
+            logger.exception("Error executing graph relationships builder: %s", ge_e)
             raise
 
         from app.services.graph.sync_tracker import SyncTracker

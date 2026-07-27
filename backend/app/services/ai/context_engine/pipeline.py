@@ -45,12 +45,6 @@ class ContextPipeline:
 
         # Assemble the final AIContext.
         context = self._assembler.assemble(payloads, exec_meta, level=request.level)
-        print("===== AIContext =====")
-        print(f"Resource: {context.resource}")
-        print(f"Graph: {context.graph}")
-        print(f"Security: {context.security}")
-        print(f"Metrics: {context.metrics}")
-        print("===== Cost =====")
-        print(f"Cost: {context.cost}")
+        logger.debug("AIContext assembled for resource: %s", context.resource.get("resource_id") if context.resource else "unknown")
 
         return context

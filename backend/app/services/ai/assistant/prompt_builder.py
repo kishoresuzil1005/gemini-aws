@@ -43,7 +43,4 @@ class PromptBuilder:
                 "content": build_user_prompt(question, history, context_text, intent),
             },
         ]
-        print("========== PROMPT ==========")
-        print(prompt)
-        print("============================")
         return prompt, context_text

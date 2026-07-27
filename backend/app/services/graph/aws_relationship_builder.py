@@ -92,12 +92,7 @@ class AWSRelationshipBuilder:
         
         try:
             for builder_cls in builders:
-                print("=" * 70)
-                print(f"Running: {builder_cls.__name__}")
-                
                 result = builder_cls.build(resources)
-                
-                print("Returned type:", type(result))
                 
                 if not isinstance(result, list):
                     raise Exception(f"{builder_cls.__name__} returned {type(result)} instead of list")

@@ -22,9 +22,7 @@ class ReasoningEngine:
         """
         Interprets deterministic analysis stored in ``AIContext``.
         """
-        print("===== Reasoning Input =====")
-        print(context.graph)
-        print(context.findings)
+        logger.debug("Reasoning engine processing context for session: %s", session_id)
         # 1. Interpret deterministic analyzer output.  Reasoning never fetches
         # cloud data and no longer depends on assistant tools or execution plans.
         findings, evidence = self._extract_evidence(context)
@@ -41,10 +39,7 @@ class ReasoningEngine:
         # 5. Generate Explanation
         explanation = self.explainer.explain(findings, evidence, risks, conflicts)
         
-        print("Reasoning Result")
-        print(findings)
-        print(evidence)
-        print(risks)
+        logger.debug("Reasoning complete. Findings: %d, Evidence: %d", len(findings), len(evidence))
         
         return ReasoningResult(
             session_id=session_id,
