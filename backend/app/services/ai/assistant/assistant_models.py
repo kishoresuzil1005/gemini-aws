@@ -83,4 +83,5 @@ class ResolvedQuery(BaseModel):
     source: str = "none"
     suggestions: List[str] = Field(default_factory=list)
     ambiguity: bool = False
+    not_found: bool = False
     matched_resource: Optional[Dict[str, Any]] = None

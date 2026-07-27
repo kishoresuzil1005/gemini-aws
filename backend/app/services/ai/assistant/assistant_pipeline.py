@@ -52,10 +52,13 @@ class AssistantPipeline:
         
         request_id = str(uuid.uuid4())
         
+        from app.services.ai.orchestrator.feature_flag_util import is_enabled
         t = time.time()
         intent_data = self.classifier.classify(request.message)
         logger.info(f"TIMING - Intent: {time.time() - t:.2f}s")
-        
+        if is_enabled("AI_INTENT_V2"):
+            logger.info(f"Intent: {intent_data.get('intent', 'UNKNOWN')}")
+            logger.info(f"Confidence: {intent_data.get('confidence', 0.0):.2f}")
         previous_context = self.memory.get_context(request.conversation_id)
         execution_context = ExecutionContext(
             user_message=request.message,
@@ -68,6 +71,16 @@ class AssistantPipeline:
         if getattr(query, "ambiguity", False):
             suggestions_text = "\n".join(query.suggestions)
             answer = f"I found multiple resources matching your request. Which one would you like me to analyze?\n\n{suggestions_text}"
+            self.memory.add_message(request.conversation_id, "user", request.message)
+            self.memory.add_message(request.conversation_id, "assistant", answer)
+            return ChatResponse(
+                status="success",
+                answer=answer,
+                intent=intent_data["intent"]
+            )
+            
+        if getattr(query, "not_found", False):
+            answer = "I could not find a resource matching your request."
             self.memory.add_message(request.conversation_id, "user", request.message)
             self.memory.add_message(request.conversation_id, "assistant", answer)
             return ChatResponse(

@@ -1,0 +1,9 @@
+# CloudOps AI Feature Flags – enable individual capabilities
+AI_INTENT_V2: true            # IntentClassifier V2 with confidence scores
+AI_RESOLVER_V2: false          # Resolver pipeline: EntityExtractor → CandidateGenerator → CandidateScorer → CandidateSelector
+AI_PROVIDER_PARALLEL: false    # Parallel provider execution with TaskScheduler & dependency graph
+AI_CONTEXT_VALIDATOR_V2: false # Structured ValidationResult (no exceptions)
+AI_PROMPT_BUILDER_V2: false    # Clean, deduplicate, compress, token‑budget enforcement
+AI_MEMORY_V2: false            # Extended investigation session state
+AI_OBSERVABILITY: false        # Rich observability (timings, token usage, cache hits, etc.)
+AI_STREAMING: false            # Server‑Sent Events streaming of intermediate results
