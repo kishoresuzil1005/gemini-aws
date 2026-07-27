@@ -32,6 +32,8 @@ class OllamaProvider(BaseProvider):
     def _execute_request(self, url: str, payload: dict, stream: bool):
         try:
             response = self.session.post(url, json=payload, timeout=self.settings.timeout, stream=stream)
+            logger.info(f"HTTP Status: {response.status_code}")
+            logger.info(f"Response Body: {response.text[:500]}")
             response.raise_for_status()
             return response
         except requests.exceptions.Timeout:
@@ -89,6 +91,8 @@ class OllamaProvider(BaseProvider):
         try:
             logger.info(f"[Req: {request_id}] Chat Started")
             if not stream:
+                logger.info(f"Ollama URL: {url}")
+                logger.info(f"Payload: {json.dumps(payload, indent=2)}")
                 response = self._execute_request(url, payload, stream=False)
                 data = response.json()
                 result = data.get("message", {}).get("content", "")
