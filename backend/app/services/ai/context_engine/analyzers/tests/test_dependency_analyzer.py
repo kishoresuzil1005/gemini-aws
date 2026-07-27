@@ -15,11 +15,7 @@ def create_context(resource_id, nodes, edges):
                 "nodes": nodes,
                 "edges": edges
             }
-        },
-        inventory=[],
-        metrics=[],
-        findings=[],
-        documentation=""
+        }
     )
 
 def test_isolated_resource(analyzer):
