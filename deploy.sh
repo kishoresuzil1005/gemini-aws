@@ -16,15 +16,15 @@ git reset --hard origin/main
 echo "=> Restarting Docker containers..."
 if [ -f "backend/docker-compose.yml" ]; then
     cd backend
-    docker-compose down
-    docker-compose up -d --build
+    sudo docker compose down
+    sudo docker compose up -d --build
     cd ..
 elif [ -f "docker-compose.yml" ]; then
-    docker-compose down
-    docker-compose up -d --build
+    sudo docker compose down
+    sudo docker compose up -d --build
 else
     echo "WARNING: Could not find docker-compose.yml. If you are not using Docker, please restart your systemd services or uvicorn processes manually."
 fi
 
 echo "=> Deployment complete!"
-echo "Check logs with: cd backend && docker-compose logs -f"
+echo "Check logs with: cd backend && sudo docker compose logs -f"
