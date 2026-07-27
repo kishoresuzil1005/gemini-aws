@@ -103,21 +103,7 @@ class GraphSyncService:
             builder = AWSRelationshipBuilder(db=self.db)
             relationships = builder.build()
 
-            print("=" * 80)
-            print("Relationship Count:", len(relationships))
-            print("First Relationship:", relationships[:5])
-            print("=" * 80)
-
-            print(type(relationships))
-            if relationships:
-                print(type(relationships[0]))
-                print(relationships[0])
-
             for rel in relationships:
-                print("Processing:", rel)
-                print(type(rel))
-                if isinstance(rel, dict):
-                    print(type(rel.get("type")))
 
                 #
                 # Ensure source node exists — use real name/region from DB
