@@ -64,6 +64,18 @@ class AssistantPipeline:
             session_id=request.conversation_id,
         )
         query = self.resolver.resolve(execution_context)
+        
+        if getattr(query, "ambiguity", False):
+            suggestions_text = "\n".join(query.suggestions)
+            answer = f"I found multiple resources matching your request. Which one would you like me to analyze?\n\n{suggestions_text}"
+            self.memory.add_message(request.conversation_id, "user", request.message)
+            self.memory.add_message(request.conversation_id, "assistant", answer)
+            return ChatResponse(
+                status="success",
+                answer=answer,
+                intent=intent_data["intent"]
+            )
+
         execution_context = execution_context.model_copy(update={"identifier": query.identifier})
 
         intent_data["target_resource"] = query.identifier
