@@ -13,9 +13,12 @@ def run_test():
     queries = [
         "Why is my EC2 unhealthy?",
         "Analyze Aws_Mobile_App",
-        "Analyze sudha-server",
         "Analyze database-2",
-        "Analyze VPC vpc-059667223c2f832db"
+        "Analyze sudha-server",
+        "Analyze VPC vpc-059667223c2f832db",
+        "Analyze hello-api",
+        "Analyze xyz123",
+        "Analyze EC2"
     ]
     
     for i, q in enumerate(queries):
