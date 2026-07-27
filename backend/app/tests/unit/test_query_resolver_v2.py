@@ -6,7 +6,7 @@ from app.services.ai.assistant.assistant_models import ExecutionContext
 def test_resolver_exact_id(mock_neo4j_class):
     mock_neo4j = MagicMock()
     mock_neo4j_class.return_value = mock_neo4j
-    mock_neo4j.query.return_value = [{"id": "i-0123456789abcdef0", "name": "web-prod", "type": "EC2"}]
+    mock_neo4j.query.return_value = [{"id": "i-0123456789abcdef0", "name": "web-prod", "type": ["AWSResource", "EC2"]}]
     
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze EC2 i-0123456789abcdef0", session_id="test")
@@ -22,7 +22,7 @@ def test_resolver_exact_id(mock_neo4j_class):
 def test_resolver_resource_name(mock_neo4j_class):
     mock_neo4j = MagicMock()
     mock_neo4j_class.return_value = mock_neo4j
-    mock_neo4j.query.return_value = [{"id": "i-9999", "name": "web-server", "type": "EC2"}]
+    mock_neo4j.query.return_value = [{"id": "i-9999", "name": "web-server", "type": ["AWSResource", "EC2"]}]
     
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze web-server", session_id="test")
@@ -38,7 +38,7 @@ def test_resolver_resource_name(mock_neo4j_class):
 def test_resolver_vpc(mock_neo4j_class):
     mock_neo4j = MagicMock()
     mock_neo4j_class.return_value = mock_neo4j
-    mock_neo4j.query.return_value = [{"id": "vpc-0abc", "name": "production", "type": "VPC"}]
+    mock_neo4j.query.return_value = [{"id": "vpc-0abc", "name": "production", "type": ["AWSResource", "VPC"]}]
     
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze production VPC", session_id="test")
@@ -55,8 +55,8 @@ def test_resolver_ambiguous_query(mock_neo4j_class):
     mock_neo4j_class.return_value = mock_neo4j
     # Multiple EC2 instances
     mock_neo4j.query.return_value = [
-        {"id": "i-1111", "name": "web1", "type": "EC2"},
-        {"id": "i-2222", "name": "web2", "type": "EC2"},
+        {"id": "i-1111", "name": "web1", "type": ["AWSResource", "EC2"]},
+        {"id": "i-2222", "name": "web2", "type": ["AWSResource", "EC2"]},
     ]
     
     resolver = QueryResolver()

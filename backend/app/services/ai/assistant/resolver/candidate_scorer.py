@@ -17,7 +17,10 @@ class CandidateScorer:
             
             c_id = (candidate.get("id") or "").lower()
             c_name = (candidate.get("name") or "").lower()
-            c_type = (candidate.get("type") or "").lower()
+            c_type_raw = candidate.get("type") or []
+            if isinstance(c_type_raw, str):
+                c_type_raw = [c_type_raw]
+            c_types = [t.lower() for t in c_type_raw]
             
             # 1. Exact ID Match (Highest confidence)
             if any(rid.lower() == c_id for rid in resource_ids):
@@ -33,7 +36,7 @@ class CandidateScorer:
                     if kw_lower == c_name:
                         matches += 3
                     # Exact type match gets a moderate boost
-                    elif kw_lower == c_type:
+                    elif kw_lower in c_types:
                         matches += 2
                     # Partial matches
                     elif kw_lower in c_name or kw_lower in c_id:

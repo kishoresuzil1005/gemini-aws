@@ -11,11 +11,11 @@ def run_test():
     assistant = GraphAssistant()
     
     queries = [
-        "Analyze EC2 i-0123456789abcdef0",
-        "Analyze web-server",
-        "Analyze production VPC",
-        "Analyze EC2",
-        "Analyze server xyz123"
+        "Why is my EC2 unhealthy?",
+        "Analyze Aws_Mobile_App",
+        "Analyze sudha-server",
+        "Analyze database-2",
+        "Analyze VPC vpc-059667223c2f832db"
     ]
     
     for i, q in enumerate(queries):
