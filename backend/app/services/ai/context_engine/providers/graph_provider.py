@@ -91,7 +91,8 @@ class GraphProvider(BaseProvider):
 
     def _query_neo4j(self, resource_id: str) -> Dict[str, Any]:
         try:
-            subgraph_data = self.knowledge_client.get_resource_subgraph(resource_id)
+            from app.services.graph.neo4j_service import Neo4jService
+            subgraph_data = Neo4jService().get_resource_subgraph(resource_id)
             return subgraph_data
 
         except Exception as exc:
