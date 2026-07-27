@@ -11,8 +11,11 @@ class TopologyService:
         self._graph_cache = None
         self._last_refresh = 0
 
-    def get_categories(self):
-        resources = self.db.query(ResourceDB).all()
+    def get_categories(self, region: str = None):
+        query = self.db.query(ResourceDB)
+        if region:
+            query = query.filter(ResourceDB.region == region)
+        resources = query.all()
         counts = defaultdict(int)
 
         # Pre-initialize core categories to guarantee they are displayed
@@ -34,8 +37,11 @@ class TopologyService:
             if category != "Other" or count > 0
         ]
 
-    def get_resources_by_category(self, category: str):
-        resources = self.db.query(ResourceDB).all()
+    def get_resources_by_category(self, category: str, region: str = None):
+        query = self.db.query(ResourceDB)
+        if region:
+            query = query.filter(ResourceDB.region == region)
+        resources = query.all()
         result = []
 
         for r in resources:
@@ -56,7 +62,7 @@ class TopologyService:
 
 
 
-    def _get_graph(self):
+    def _get_graph(self, region: str = None):
         now = time.time()
 
         if (
@@ -67,7 +73,8 @@ class TopologyService:
             return self._graph_cache
 
         try:
-            graph = self.architecture_service.build_graph()
+            from app.services.graph.neo4j_service import Neo4jService
+            graph = Neo4jService().get_graph(region=region)
 
             if not graph:
                 self._graph_cache = {"nodes": [], "edges": []}
@@ -87,8 +94,8 @@ class TopologyService:
                 "edges": []
             }
 
-    def get_graph(self):
-        graph = self._get_graph()
+    def get_graph(self, region: str = None):
+        graph = self._get_graph(region=region)
 
         return {
             "success": True,
@@ -98,12 +105,12 @@ class TopologyService:
             "edges": graph["edges"]
         }
 
-    def get_nodes(self):
-        graph = self._get_graph()
+    def get_nodes(self, region: str = None):
+        graph = self._get_graph(region=region)
         return graph["nodes"]
 
-    def get_edges(self):
-        graph = self._get_graph()
+    def get_edges(self, region: str = None):
+        graph = self._get_graph(region=region)
         return graph["edges"]
 
     def get_resource(self, resource_id):

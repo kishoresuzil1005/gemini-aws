@@ -427,12 +427,12 @@ class Neo4jService:
     # GRAPH EXPORT
     # ---------------------------------------------------------
 
-    def get_graph(self=None):
+    def get_graph(self=None, region: str = None):
         """
         Export entire graph
         """
         if self is None or not isinstance(self, Neo4jService):
-            return Neo4jService().get_graph()
+            return Neo4jService().get_graph(region=region)
 
         nodes = []
         edges = []
@@ -443,24 +443,28 @@ class Neo4jService:
                     node_result = session.run(
                         """
                         MATCH (n)
-
+                        WHERE ($region IS NULL OR n.region = $region OR coalesce(n.region, '') = '')
                         RETURN
                             n.id AS id,
                             labels(n)[0] AS type,
                             n.name AS name,
-                            n.provider AS provider
-                        """
+                            n.provider AS provider,
+                            n.region AS region
+                        """,
+                        region=region
                     )
 
                     edge_result = session.run(
                         """
                         MATCH (a)-[r]->(b)
-
+                        WHERE ($region IS NULL OR a.region = $region OR coalesce(a.region, '') = '')
+                          AND ($region IS NULL OR b.region = $region OR coalesce(b.region, '') = '')
                         RETURN
                             a.id AS source,
                             b.id AS target,
                             type(r) AS relation
-                        """
+                        """,
+                        region=region
                     )
 
                     for row in node_result:
@@ -468,7 +472,8 @@ class Neo4jService:
                             "id": row["id"],
                             "type": row["type"] or "Resource",
                             "name": row["name"] or row["id"],
-                            "provider": row["provider"] or "AWS"
+                            "provider": row["provider"] or "AWS",
+                            "region": row["region"]
                         })
 
                     for row in edge_result:
