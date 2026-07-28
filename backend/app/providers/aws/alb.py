@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 import logging
 from app.providers.aws.models import NormalizedResource, ResourceDependency
@@ -54,12 +56,12 @@ class ALBDiscovery:
                         attributes = {a['Key']: a['Value'] for a in attr_resp.get('Attributes', [])}
                     except Exception: pass
 
-                    print("=" * 80)
-                    print("RAW ALB")
-                    print("vpc_id:", vpc_id)
-                    print("subnets:", [az.get("SubnetId") for az in lb.get("AvailabilityZones", [])])
-                    print("security_groups:", security_groups)
-                    print("=" * 80)
+                    logger.debug("=" * 80)
+                    logger.debug("RAW ALB")
+                    logger.debug(f"vpc_id: {vpc_id}")
+                    logger.debug(f"subnets: {[az.get("SubnetId") for az in lb.get("AvailabilityZones", [])]}")
+                    logger.debug(f"security_groups: {security_groups}")
+                    logger.debug("=" * 80)
 
                     res = NormalizedResource(
                         resource_id=lb_arn,
@@ -96,10 +98,10 @@ class ALBDiscovery:
                         tags=tags,
                         dependencies=dependencies
                     )
-                    print("=" * 80)
-                    print("ALB RAW RESOURCE")
-                    print(res.dict())
-                    print("=" * 80)
+                    logger.debug("=" * 80)
+                    logger.debug("ALB RAW RESOURCE")
+                    logger.debug(res.dict())
+                    logger.debug("=" * 80)
                     
                     lbs.append(res.dict())
                     

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.services.diagram.svg_icon_cache import SVGIconCache
 from app.services.diagram.svg_transform_engine import SVGTransformEngine
 
@@ -25,14 +27,14 @@ class IconRenderer:
 
         from app.services.diagram.node_layout_engine import NodeLayoutEngine
 
-        print("========== ICON RENDERER ==========")
-        print("Nodes received:", len(nodes))
+        logger.debug("========== ICON RENDERER ==========")
+        logger.debug(f"Nodes received: {len(nodes)}")
 
         for node in nodes:
 
             icon_svg = SVGIconCache.get(node["type"])
 
-            print(node["type"], "->", "FOUND" if icon_svg else "MISSING")
+            logger.debug(f"{node["type"]} -> {"FOUND" if icon_svg else "MISSING"}")
 
             #
             # Unknown resource
@@ -50,6 +52,6 @@ class IconRenderer:
                 size=self.ICON_SIZE
             )
 
-            print("Embedded:", node["type"])
+            logger.debug(f"Embedded: {node["type"]}")
 
             svg.append(transformed)

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List, Callable
 from datetime import datetime
 
@@ -21,7 +23,7 @@ class EventBus:
         self.subscribers[topic].append(handler)
 
     def publish(self, event: PlatformEvent):
-        print(f"[EventBus] Publishing {event.topic} for tenant {event.tenant_id}")
+        logger.debug(f"[EventBus] Publishing {event.topic} for tenant {event.tenant_id}")
         if event.topic in self.subscribers:
             for handler in self.subscribers[event.topic]:
                 handler(event)

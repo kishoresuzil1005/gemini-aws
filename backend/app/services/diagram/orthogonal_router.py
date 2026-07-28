@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 class OrthogonalRouter:
     """
     Computes right-angle (orthogonal) routes between nodes.
@@ -12,9 +14,9 @@ class OrthogonalRouter:
 
     def route(self, graph: dict):
 
-        print("========== ORTHOGONAL ROUTER ==========")
-        print("Graph edges :", len(graph["edges"]))
-        print("Node lookup :", len(graph["node_lookup"]))
+        logger.debug("========== ORTHOGONAL ROUTER ==========")
+        logger.debug(f"Graph edges : {len(graph["edges"])}")
+        logger.debug(f"Node lookup : {len(graph["node_lookup"])}")
 
         node_lookup = graph["node_lookup"]
 
@@ -26,11 +28,11 @@ class OrthogonalRouter:
             target = node_lookup.get(edge["target"])
 
             if not source:
-                print(f"Missing source node: {edge['source']}")
+                logger.debug(f"Missing source node: {edge['source']}")
                 continue
 
             if not target:
-                print(f"Missing target node: {edge['target']}")
+                logger.debug(f"Missing target node: {edge['target']}")
                 continue
 
             #
@@ -72,7 +74,7 @@ class OrthogonalRouter:
 
             })
 
-        print("Routes created :", len(routed_edges))
-        print("======================================")
+        logger.debug(f"Routes created : {len(routed_edges)}")
+        logger.debug("======================================")
 
         return routed_edge

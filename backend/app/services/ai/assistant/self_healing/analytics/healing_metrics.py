@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class HealingMetrics:
@@ -6,7 +8,7 @@ class HealingMetrics:
     and success/rollback ratios.
     """
     def calculate_mttr(self, resolved_incidents: list) -> float:
-        print("[HealingMetrics] Calculating Mean Time To Repair (MTTR)...")
+        logger.debug("[HealingMetrics] Calculating Mean Time To Repair (MTTR)...")
         # Mock calculation in minutes
         return 4.2
         

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 import time
 
@@ -24,9 +26,9 @@ class TraceEngine:
     Distributed tracing across Microservices (Jaeger/OpenTelemetry).
     """
     def start_span(self, name: str) -> Any:
-        print(f"[TraceEngine] Started span: {name}")
+        logger.debug(f"[TraceEngine] Started span: {name}")
         return {"span_id": "mock-span-id", "start": time.time()}
         
     def end_span(self, span: Any):
         duration = time.time() - span["start"]
-        print(f"[TraceEngine] Ended span: {span['span_id']} in {duration}s")
+        logger.debug(f"[TraceEngine] Ended span: {span['span_id']} in {duration}s")

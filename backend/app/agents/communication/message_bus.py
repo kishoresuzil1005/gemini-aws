@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Callable, List
 from ..base.base_message import AgentMessage
 import asyncio
@@ -21,4 +23,4 @@ class MessageBus:
         try:
             callback(message)
         except Exception as e:
-            print(f"Error delivering message to {message.receiver_id}: {e}")
+            logger.debug(f"Error delivering message to {message.receiver_id}: {e}")

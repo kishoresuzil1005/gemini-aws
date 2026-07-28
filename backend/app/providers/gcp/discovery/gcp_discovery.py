@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..compute_service import GCPComputeService
 
@@ -9,7 +11,7 @@ class GCPDiscoveryEngine:
         self.compute = GCPComputeService(client_manager)
 
     def run_full_discovery(self) -> Dict[str, Any]:
-        print("[GCPDiscoveryEngine] Starting full GCP discovery...")
+        logger.debug("[GCPDiscoveryEngine] Starting full GCP discovery...")
         inventory = {
             "compute_instances": self.compute.list_instances()
         }

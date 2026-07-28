@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class SLAPolicy:
@@ -8,7 +10,7 @@ class SLAPolicy:
     def determine_urgency(self, business_context: Dict[str, Any]) -> str:
         tier = business_context.get("sla_tier", "BRONZE").upper()
         if tier == "MISSION_CRITICAL" or tier == "GOLD":
-            print(f"[SLAPolicy] {tier} workload impacted. Elevating repair priority to CRITICAL. Bypassing standard maintenance windows.")
+            logger.debug(f"[SLAPolicy] {tier} workload impacted. Elevating repair priority to CRITICAL. Bypassing standard maintenance windows.")
             return "CRITICAL"
         elif tier == "SILVER":
             return "HIGH"

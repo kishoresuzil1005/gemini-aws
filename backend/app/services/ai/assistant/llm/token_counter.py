@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, List
 
 class TokenCounter:
@@ -24,5 +26,5 @@ class TokenCounter:
         limit = self.CONTEXT_LIMITS.get(model, 8192)
         used = self.count_messages(messages)
         fits = used < limit
-        print(f"[TokenCounter] {used}/{limit} tokens for model '{model}' — {'OK' if fits else 'OVERFLOW'}")
+        logger.debug(f"[TokenCounter] {used}/{limit} tokens for model '{model}' — {'OK' if fits else 'OVERFLOW'}")
         return fit

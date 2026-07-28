@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from datetime import datetime
 
@@ -18,7 +20,7 @@ class ApprovalGateway:
             "status": "PENDING",
             "requested_at": datetime.utcnow().isoformat()
         }
-        print(f"[ApprovalGateway] Approval required for {incident_id}: {reason}")
+        logger.debug(f"[ApprovalGateway] Approval required for {incident_id}: {reason}")
         # In production, dispatch notification (Slack, Email) here
         return approval_id
 
@@ -27,4 +29,4 @@ class ApprovalGateway:
             self.pending_approvals[approval_id]["status"] = "APPROVED" if approved else "REJECTED"
             self.pending_approvals[approval_id]["resolved_by"] = user_id
             self.pending_approvals[approval_id]["resolved_at"] = datetime.utcnow().isoformat()
-            print(f"[ApprovalGateway] Request {approval_id} resolved: {'APPROVED' if approved else 'REJECTED'} by {user_id}")
+            logger.debug(f"[ApprovalGateway] Request {approval_id} resolved: {'APPROVED' if approved else 'REJECTED'} by {user_id}")

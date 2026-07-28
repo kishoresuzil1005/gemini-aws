@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, Optional
 from ..tool_registry import ToolRegistry
 from .tool_parser import ToolCallParser
@@ -27,13 +29,13 @@ class ToolExecutor:
 
         is_valid, error_msg = self.validator.validate(tool_name, args)
         if not is_valid:
-            print(f"[ToolExecutor] Validation failed: {error_msg}")
+            logger.debug(f"[ToolExecutor] Validation failed: {error_msg}")
             return {"used_tool": False, "text": clean_text, "tool_error": error_msg}
 
         tool = self.registry.get_tool(tool_name)
         try:
             result = tool.execute(**args)
-            print(f"[ToolExecutor] Tool '{tool_name}' executed successfully.")
+            logger.debug(f"[ToolExecutor] Tool '{tool_name}' executed successfully.")
             return {
                 "used_tool": True,
                 "tool_name": tool_name,
@@ -41,5 +43,5 @@ class ToolExecutor:
                 "text": clean_text
             }
         except Exception as e:
-            print(f"[ToolExecutor] Tool '{tool_name}' raised an error: {e}")
+            logger.debug(f"[ToolExecutor] Tool '{tool_name}' raised an error: {e}")
             return {"used_tool": False, "text": clean_text, "tool_error": str(e)}

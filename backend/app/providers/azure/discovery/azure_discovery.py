@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..compute_service import AzureComputeService
 
@@ -11,7 +13,7 @@ class AzureDiscoveryEngine:
         # self.storage = AzureStorageService(client_manager)
 
     def run_full_discovery(self) -> Dict[str, Any]:
-        print("[AzureDiscoveryEngine] Starting full Azure discovery...")
+        logger.debug("[AzureDiscoveryEngine] Starting full Azure discovery...")
         inventory = {
             "virtual_machines": self.compute.list_virtual_machines()
         }

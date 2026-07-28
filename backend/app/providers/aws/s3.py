@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 import concurrent.futures
 from typing import List
@@ -71,7 +73,7 @@ class S3Discovery:
                 pass
                 
         except Exception as e:
-            print(f"Error fetching configs for {bucket_name}: {e}")
+            logger.debug(f"Error fetching configs for {bucket_name}: {e}")
 
         res = NormalizedResource(
             resource_id=bucket_name,
@@ -112,9 +114,9 @@ class S3Discovery:
                         res = future.result()
                         resources.append(res.dict())
                     except Exception as e:
-                        print(f"Error processing bucket {futures[future]}: {e}")
+                        logger.debug(f"Error processing bucket {futures[future]}: {e}")
                         
             return resources
         except Exception as e:
-            print(f"Error in S3Discovery: {e}")
+            logger.debug(f"Error in S3Discovery: {e}")
             return []

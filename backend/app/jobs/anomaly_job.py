@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.database import (
     SessionLocal
 )
@@ -27,12 +29,12 @@ def run_anomaly_job():
             .detect(db)
         )
 
-        print(
+        logger.debug(
             f"[JOB] Spend anomalies:"
             f" {len(spend)}"
         )
 
-        print(
+        logger.debug(
             f"[JOB] Idle resources:"
             f" {len(idle)}"
         )

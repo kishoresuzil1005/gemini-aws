@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..base.base_task import SubTask
 from ..base.base_agent import BaseAgent
@@ -10,6 +12,6 @@ class DatabaseAgent(BaseAgent):
         super().__init__(agent_id, "database")
 
     def execute(self, task: SubTask, context: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"[DatabaseAgent {self.agent_id}] Executing task: {task.name}")
+        logger.debug(f"[DatabaseAgent {self.agent_id}] Executing task: {task.name}")
         # Implementation to manage databases
         return {"status": "success", "db_cluster": "db-cluster-1234"}

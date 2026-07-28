@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class CostPredictionEngine:
@@ -5,7 +7,7 @@ class CostPredictionEngine:
     Uses historical patterns and anomaly detection to forecast future cloud spend.
     """
     def forecast_spend(self, historical_cost_data: Dict[str, Any], days_ahead: int = 30) -> Dict[str, Any]:
-        print(f"[CostPredictionEngine] Forecasting cloud cost for the next {days_ahead} days...")
+        logger.debug(f"[CostPredictionEngine] Forecasting cloud cost for the next {days_ahead} days...")
         # Machine Learning / Statistical forecasting mock
         return {
             "forecasted_cost_usd": 12500.0,

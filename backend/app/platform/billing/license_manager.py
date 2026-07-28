@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from pydantic import BaseModel
 from typing import Dict
 
@@ -28,4 +30,4 @@ class UsageMeter:
     Tracks API and compute usage for billing purposes.
     """
     def record_usage(self, tenant_id: str, resource_type: str, quantity: float):
-        print(f"[UsageMeter] Billed Tenant {tenant_id}: {quantity} of {resource_type}")
+        logger.debug(f"[UsageMeter] Billed Tenant {tenant_id}: {quantity} of {resource_type}")

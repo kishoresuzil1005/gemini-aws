@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from concurrent.futures import ThreadPoolExecutor
 from app.services.ai.analyzers.engines.graph.infrastructure_graph import InfrastructureGraph
@@ -96,20 +98,20 @@ def test_phase_6_fault_injection():
     assert len(graph.edges) == 0 # Self loop and broken edge dropped
 
 if __name__ == '__main__':
-    print("[CERTIFICATION] Running Phase 3: Mathematical Certification...")
+    logger.debug("[CERTIFICATION] Running Phase 3: Mathematical Certification...")
     test_phase_3_correctness()
-    print("[CERTIFICATION] Phase 3 Passed: Tarjan SCC & BFS mathematically correct.")
+    logger.debug("[CERTIFICATION] Phase 3 Passed: Tarjan SCC & BFS mathematically correct.")
     
-    print("[CERTIFICATION] Running Phase 4: Performance & Memory Scaling...")
+    logger.debug("[CERTIFICATION] Running Phase 4: Performance & Memory Scaling...")
     test_phase_4_performance_and_memory()
-    print("[CERTIFICATION] Phase 4 Passed: 10,000 nodes processed linearly.")
+    logger.debug("[CERTIFICATION] Phase 4 Passed: 10,000 nodes processed linearly.")
     
-    print("[CERTIFICATION] Running Phase 5: Thread Safety Validation...")
+    logger.debug("[CERTIFICATION] Running Phase 5: Thread Safety Validation...")
     test_phase_5_concurrency()
-    print("[CERTIFICATION] Phase 5 Passed: 100 simultaneous threads cleanly accessed GraphIndex.")
+    logger.debug("[CERTIFICATION] Phase 5 Passed: 100 simultaneous threads cleanly accessed GraphIndex.")
     
-    print("[CERTIFICATION] Running Phase 6: Fault Injection...")
+    logger.debug("[CERTIFICATION] Running Phase 6: Fault Injection...")
     test_phase_6_fault_injection()
-    print("[CERTIFICATION] Phase 6 Passed: Malformed structures handled gracefully.")
+    logger.debug("[CERTIFICATION] Phase 6 Passed: Malformed structures handled gracefully.")
     
-    print("\n[CERTIFICATION] ALL PHASES PASSED. Graph Engine 100% Certified.")
+    logger.debug("\n[CERTIFICATION] ALL PHASES PASSED. Graph Engine 100% Certified.")

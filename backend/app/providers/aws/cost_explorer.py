@@ -1,4 +1,6 @@
 
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import datetime
 import boto3
 import time
@@ -33,7 +35,7 @@ class CostExplorerAdapter:
         if cache_key in LAST_COST_REFRESH:
             cached_val, timestamp = LAST_COST_REFRESH[cache_key]
             if now - timestamp < COST_TTL:
-                print(f"[COST CACHE] Protection HIT: current_month for account: {self.cloud_account_id}")
+                logger.debug(f"[COST CACHE] Protection HIT: current_month for account: {self.cloud_account_id}")
                 return cached_val
 
         if self.client:
@@ -93,7 +95,7 @@ class CostExplorerAdapter:
         if cache_key in LAST_COST_REFRESH:
             cached_val, timestamp = LAST_COST_REFRESH[cache_key]
             if now - timestamp < COST_TTL:
-                print(f"[COST CACHE] Protection HIT: cost_by_service for account: {self.cloud_account_id}")
+                logger.debug(f"[COST CACHE] Protection HIT: cost_by_service for account: {self.cloud_account_id}")
                 return cached_val
 
         if self.client:
@@ -181,7 +183,7 @@ class CostExplorerAdapter:
         if cache_key in LAST_COST_REFRESH:
             cached_val, timestamp = LAST_COST_REFRESH[cache_key]
             if now - timestamp < COST_TTL:
-                print(f"[COST CACHE] Protection HIT: daily_trend for account: {self.cloud_account_id}")
+                logger.debug(f"[COST CACHE] Protection HIT: daily_trend for account: {self.cloud_account_id}")
                 return cached_val
 
         if not self.client:
@@ -245,7 +247,7 @@ class CostExplorerAdapter:
 
         except Exception as e:
 
-            print(
+            logger.debug(
                 f"Daily trend error: {e}"
             )
 
@@ -260,7 +262,7 @@ class CostExplorerAdapter:
         if cache_key in LAST_COST_REFRESH:
             cached_val, timestamp = LAST_COST_REFRESH[cache_key]
             if now - timestamp < COST_TTL:
-                print(f"[COST CACHE] Protection HIT: forecast_cost for account: {self.cloud_account_id}")
+                logger.debug(f"[COST CACHE] Protection HIT: forecast_cost for account: {self.cloud_account_id}")
                 return cached_val
 
         if not self.client:

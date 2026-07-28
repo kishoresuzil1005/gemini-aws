@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 
 class DashboardAggregator:
@@ -6,7 +8,7 @@ class DashboardAggregator:
     Connects to the underlying Mission Engine and Billing databases.
     """
     def get_tenant_dashboard(self, tenant_id: str) -> Dict[str, Any]:
-        print(f"[DashboardAggregator] Compiling dashboard for tenant {tenant_id}")
+        logger.debug(f"[DashboardAggregator] Compiling dashboard for tenant {tenant_id}")
         return {
             "tenant_id": tenant_id,
             "system_health": "OPTIMAL",

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from .resource_discovery import ResourceDiscovery
 from .relationship_discovery import RelationshipDiscovery
@@ -14,7 +16,7 @@ class AWSDiscoveryEngine:
         self.inventory_sync = InventorySync()
 
     def run_full_discovery(self) -> Dict[str, Any]:
-        print("[AWSDiscoveryEngine] Starting full AWS resource discovery...")
+        logger.debug("[AWSDiscoveryEngine] Starting full AWS resource discovery...")
         
         # 1. Discover all raw resources
         raw_inventory = self.resource_discovery.discover_all()
@@ -25,7 +27,7 @@ class AWSDiscoveryEngine:
         # 3. Sync to persistent storage (DB and Knowledge Graph)
         sync_result = self.inventory_sync.sync_to_graph(graph_nodes, graph_edges)
         
-        print("[AWSDiscoveryEngine] Discovery complete.")
+        logger.debug("[AWSDiscoveryEngine] Discovery complete.")
         return {
             "status": "SUCCESS",
             "nodes_discovered": len(graph_nodes),

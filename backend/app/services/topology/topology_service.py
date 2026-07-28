@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from app.services.ai.architecture_service import ArchitectureService
 from collections import defaultdict
@@ -88,7 +90,7 @@ class TopologyService:
             return self._graph_cache
 
         except Exception as e:
-            print(f"[TOPOLOGY ERROR] {e}")
+            logger.debug(f"[TOPOLOGY ERROR] {e}")
             return {
                 "nodes": [],
                 "edges": []

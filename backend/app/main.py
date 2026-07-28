@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 import uuid
 import threading
@@ -7,6 +9,8 @@ from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, Header, Re
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+from app.core.logging import LoggingMiddleware
 from sqlalchemy.orm import Session
 
 from .config import is_aws_configured, AWS_DEFAULT_REGION
@@ -83,6 +87,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(LoggingMiddleware)
+
 # --- FastAPI API Gateway Layer (Phase A, B & C) ---
 # Simple thread-safe in-memory rate limiting state
 rates_tracker = collections.defaultdict(list)
@@ -106,7 +112,7 @@ async def api_gateway_layer(request: Request, call_next):
     rates_tracker[client_ip] = user_calls
 
     if len(user_calls) >= RATE_LIMIT_MAX:
-        print(f"[API GATEWAY METRIC 429] CLIENT IP: {client_ip} | BLOCKED: {method} {path} | PLAN: BASIC")
+        logger.debug(f"[API GATEWAY METRIC 429] CLIENT IP: {client_ip} | BLOCKED: {method} {path} | PLAN: BASIC")
         return JSONResponse(
             status_code=429,
             content={
@@ -163,7 +169,7 @@ async def api_gateway_layer(request: Request, call_next):
     response.headers["X-Rate-Limit-Limit"] = str(RATE_LIMIT_MAX)
     response.headers["X-Rate-Limit-Remaining"] = str(remaining_limits)
     
-    print(
+    logger.debug(
         f"[API GATEWAY AUDIT] CLIENT: {client_ip} | METHOD: {method} | ROUTE: {path} (version: {api_version}) | " +
         f"STATUS: {response.status_code} | LATENCY: {process_time_ms}ms | JWT: {token_status} | REMAINING_LIMIT: {remaining_limits}"
     )
@@ -469,17 +475,17 @@ def startup_event():
     try:
         from app.services.ai.context_engine import register_default_providers
         register_default_providers()
-        print("[CONTEXT ENGINE] Default providers registered successfully.")
+        logger.debug("[CONTEXT ENGINE] Default providers registered successfully.")
     except Exception as ce_err:
-        print(f"[CONTEXT ENGINE] Provider registration failed (non-fatal): {ce_err}")
+        logger.debug(f"[CONTEXT ENGINE] Provider registration failed (non-fatal): {ce_err}")
         
     # Initialize Knowledge Platform Runtime
     try:
         bm = BootstrapManager.get_instance()
         bm.initialize_platform()
-        print("[KNOWLEDGE PLATFORM] Initialized successfully.")
+        logger.debug("[KNOWLEDGE PLATFORM] Initialized successfully.")
     except Exception as kp_err:
-        print(f"[KNOWLEDGE PLATFORM] Initialization failed: {kp_err}")
+        logger.debug(f"[KNOWLEDGE PLATFORM] Initialization failed: {kp_err}")
     
     # 1. Seed accounts if table is empty
     if db.query(CloudAccountDB).count() == 0:
@@ -513,26 +519,26 @@ def startup_event():
             try:
                 AutoGraphSync.sync(sync_db)
             except Exception as e:
-                print(f"[GRAPH AUTO SYNC BG] {e}")
+                logger.debug(f"[GRAPH AUTO SYNC BG] {e}")
             finally:
                 sync_db.close()
         
         threading.Thread(target=run_sync, daemon=True).start()
     except Exception as ge_e:
-        print(f"[GRAPH AUTO SYNC INIT] {ge_e}")
+        logger.debug(f"[GRAPH AUTO SYNC INIT] {ge_e}")
 
     db.commit()
     db.close()
 
 @app.on_event("shutdown")
 def shutdown_event():
-    print("Shutting down Application...")
+    logger.debug("Shutting down Application...")
     try:
         bm = BootstrapManager.get_instance()
         bm.shutdown_platform()
-        print("[KNOWLEDGE PLATFORM] Shut down successfully.")
+        logger.debug("[KNOWLEDGE PLATFORM] Shut down successfully.")
     except Exception as kp_err:
-        print(f"[KNOWLEDGE PLATFORM] Shutdown error: {kp_err}")
+        logger.debug(f"[KNOWLEDGE PLATFORM] Shutdown error: {kp_err}")
 
 
 # --- Account API Endpoints ---
@@ -606,7 +612,7 @@ def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
             elif isinstance(cached, dict) and "byService" in cached:
                 service_costs = {s["service"].lower(): s["amount"] for s in cached["byService"]}
         except Exception as e:
-            print(f"Error reading cost cache: {e}")
+            logger.debug(f"Error reading cost cache: {e}")
 
     response_list = []
     for r in real_resources:
@@ -887,7 +893,7 @@ def get_graph_topology(db: Session = Depends(get_db)):
                 edges=[GraphEdgeSchema(source=e["source"], target=e["target"], type=e["type"]) for e in data["edges"]]
             )
     except Exception as e:
-        print(f"Neo4jService graph query failed: {e}")
+        logger.debug(f"Neo4jService graph query failed: {e}")
 
     # Fallback to high-fidelity PostgreSQL relational data
     nodes = []
@@ -930,7 +936,7 @@ def get_graph_topology(db: Session = Depends(get_db)):
             ))
             
     except Exception as e:
-        print(f"Critical fallback query failed: {e}")
+        logger.debug(f"Critical fallback query failed: {e}")
 
     return GraphResponseSchema(nodes=nodes, edges=edges)
 
@@ -998,13 +1004,13 @@ def get_cost_summary(
 
     if cached:
 
-        print(
+        logger.debug(
             "[COST CACHE] Returning cached data"
         )
 
         return cached
 
-    print(
+    logger.debug(
         "[COST CACHE] Cache MISS"
     )
 
@@ -1077,7 +1083,7 @@ def get_cost_summary(
 @app.post("/api/v1/cost/refresh", response_model=CloudCostSummarySchema)
 def refresh_cost_summary(db: Session = Depends(get_db)):
     from app.services.cost.cache import CostSummaryCache
-    print("[COST CACHE] Clearing cache and refreshing from AWS Cost Explorer")
+    logger.debug("[COST CACHE] Clearing cache and refreshing from AWS Cost Explorer")
     CostSummaryCache.clear()
     return get_cost_summary(db=db)
 
@@ -1501,13 +1507,13 @@ from app.inventory.discovery import discover_resources
 import traceback
 
 def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS", region: str = "all"):
-    print("========== WORKER STARTED ==========")
+    logger.debug("========== WORKER STARTED ==========")
     db = db_session_factory()
-    print("Database session created")
+    logger.debug("Database session created")
 
-    print("=" * 80)
-    print("STEP A")
-    print("job_id =", job_id)
+    logger.debug("=" * 80)
+    logger.debug("STEP A")
+    logger.debug(f"job_id = {job_id}")
 
     try:
         job = (
@@ -1516,8 +1522,8 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
             .first()
         )
 
-        print("STEP B")
-        print(job)
+        logger.debug("STEP B")
+        logger.debug(job)
 
     except Exception:
         import traceback
@@ -1525,42 +1531,42 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         raise
 
     if not job:
-        print("JOB NOT FOUND")
+        logger.debug("JOB NOT FOUND")
         db.close()
         return
 
     try:
-        print("STEP C")
+        logger.debug("STEP C")
         job.status = "RUNNING"
         job.progress = 0.1
 
-        print("STEP D")
+        logger.debug("STEP D")
         db.commit()
 
-        print("STEP E")
+        logger.debug("STEP E")
         from app.models import CloudAccountDB
         accounts = db.query(CloudAccountDB).filter(CloudAccountDB.provider == provider).all()
 
-        print("STEP F")
-        print("Account count:", len(accounts))
+        logger.debug("STEP F")
+        logger.debug(f"Account count: {len(accounts)}")
         for account in accounts:
-            print("ACCOUNT:", account.id, account.provider)
+            logger.debug(f"ACCOUNT: {account.id} {account.provider}")
 
         job.progress = 0.4
         db.commit()
 
-        print("Accounts found:", len(accounts))
+        logger.debug(f"Accounts found: {len(accounts)}")
         for account in accounts:
-            print("=" * 80)
-            print("CALLING discover_resources()")
-            print("Account:", account.id)
-            print("=" * 80)
+            logger.debug("=" * 80)
+            logger.debug("CALLING discover_resources()")
+            logger.debug(f"Account: {account.id}")
+            logger.debug("=" * 80)
             try:
                 discover_resources(db, account.id, region=region)
-                print("DISCOVERY FINISHED")
+                logger.debug("DISCOVERY FINISHED")
             except Exception as e:
-                print("DISCOVERY FAILED")
-                print(e)
+                logger.debug("DISCOVERY FAILED")
+                logger.debug(e)
                 import traceback
                 traceback.print_exc()
 
@@ -1568,7 +1574,7 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
             from app.services.graph.auto_sync import AutoGraphSync
             AutoGraphSync.sync(db)
         except Exception as ge:
-            print(f"Auto graph sync failed during discovery: {ge}")
+            logger.debug(f"Auto graph sync failed during discovery: {ge}")
 
         job.progress = 0.8
         db.commit()
@@ -1577,12 +1583,12 @@ def run_discovery_worker(job_id: str, db_session_factory, provider: str = "AWS",
         job.status = "COMPLETED"
         db.commit()
     except Exception as e:
-        print("=" * 80)
-        print("WORKER FAILED")
-        print("Exception Type:", type(e))
-        print("Exception:", e)
+        logger.debug("=" * 80)
+        logger.debug("WORKER FAILED")
+        logger.debug(f"Exception Type: {type(e)}")
+        logger.debug(f"Exception: {e}")
         traceback.print_exc()
-        print("=" * 80)
+        logger.debug("=" * 80)
 
         if job:
             job.status = "FAILED"
@@ -1616,7 +1622,7 @@ def trigger_discovery(
     db.commit()
     db.refresh(db_job)
 
-    print("STARTING THREAD")
+    logger.debug("STARTING THREAD")
 
     import threading
     threading.Thread(
@@ -1629,7 +1635,7 @@ def trigger_discovery(
         )
     ).start()
 
-    print("THREAD STARTED")
+    logger.debug("THREAD STARTED")
 
     return BackgroundJobSchema(
         id=db_job.id,

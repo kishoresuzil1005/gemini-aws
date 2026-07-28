@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 import requests
 from app.services.ai.assistant.llm.config import settings
@@ -45,7 +47,7 @@ class HealthManager:
                 }
 
         except Exception as e:
-            print("OLLAMA HEALTH CHECK ERROR:", e)
+            logger.debug(f"OLLAMA HEALTH CHECK ERROR: {e}")
             cls._last_status = {
                 "status": "unavailable",
                 "ollama": False,

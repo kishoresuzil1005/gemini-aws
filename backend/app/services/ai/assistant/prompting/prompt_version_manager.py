@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from datetime import datetime
 
@@ -38,7 +40,7 @@ class PromptVersionManager:
         if version_id not in self._versions:
             raise ValueError(f"Version '{version_id}' not found.")
         self._active_version = version_id
-        print(f"[PromptVersionManager] Active prompt set to '{version_id}'")
+        logger.debug(f"[PromptVersionManager] Active prompt set to '{version_id}'")
 
     def get_active_prompt(self) -> str:
         return self._versions[self._active_version].system_prompt

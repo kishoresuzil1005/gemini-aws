@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from apscheduler.schedulers.background import (
     BackgroundScheduler
 )
@@ -61,7 +63,7 @@ def start_scheduler():
 
     scheduler.start()
 
-    print(
+    logger.debug(
         "[SCHEDULER] Started"
     )
 

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class AgentAdapter:
@@ -6,6 +8,6 @@ class AgentAdapter:
     agents (e.g. Database Agent) via the Multi-Agent Director from Phase 10.
     """
     def dispatch_to_domain_agent(self, action: str, target: str, context: Dict[str, Any]):
-        print(f"[AgentAdapter] Requesting Agent Director to assign '{action}' on {target} to a domain agent...")
+        logger.debug(f"[AgentAdapter] Requesting Agent Director to assign '{action}' on {target} to a domain agent...")
         # Integrates with the DirectorEngine
         return True

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..aws_client import AWSClientManager
 from ..ec2_service import EC2Service
@@ -11,7 +13,7 @@ class AWSActionAdapter:
         self.ec2 = EC2Service(client_manager)
 
     def execute_action(self, action_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"[AWSActionAdapter] Executing {action_name} against real AWS Provider...")
+        logger.debug(f"[AWSActionAdapter] Executing {action_name} against real AWS Provider...")
         
         try:
             if action_name == "start_ec2_instance":

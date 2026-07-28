@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ...models.healing_models import RepairPlan
 
@@ -7,7 +9,7 @@ class CanaryStrategy:
     verifying health at each stage before proceeding.
     """
     def build_canary_plan(self, incident_id: str, target_deployment: str) -> RepairPlan:
-        print(f"[CanaryStrategy] Formulating progressive canary repair for {target_deployment}...")
+        logger.debug(f"[CanaryStrategy] Formulating progressive canary repair for {target_deployment}...")
         return RepairPlan(
             plan_id=f"rp-canary-{target_deployment}",
             incident_id=incident_id,

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, Type
 from .lifecycle_manager import LifecycleManager
 from .service_registry import ServiceRegistry
@@ -14,11 +16,11 @@ class ApplicationKernel:
         self.lifecycle = LifecycleManager(self.registry)
         
     def start(self):
-        print("[Kernel] Booting AI Cloud Operating System...")
+        logger.debug("[Kernel] Booting AI Cloud Operating System...")
         self.lifecycle.trigger_startup()
-        print("[Kernel] System is online and ready.")
+        logger.debug("[Kernel] System is online and ready.")
 
     def stop(self):
-        print("[Kernel] Shutting down AI Cloud Operating System...")
+        logger.debug("[Kernel] Shutting down AI Cloud Operating System...")
         self.lifecycle.trigger_shutdown()
-        print("[Kernel] System offline.")
+        logger.debug("[Kernel] System offline.")

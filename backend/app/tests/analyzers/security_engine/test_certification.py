@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 import json
 from concurrent.futures import ThreadPoolExecutor
@@ -145,20 +147,20 @@ def test_fault_injection():
     assert len(result.findings) > 2
 
 if __name__ == '__main__':
-    print("[CERTIFICATION] Running Correctness Verification...")
+    logger.debug("[CERTIFICATION] Running Correctness Verification...")
     test_correctness()
-    print("[CERTIFICATION] Correctness Passed.")
+    logger.debug("[CERTIFICATION] Correctness Passed.")
     
-    print("[CERTIFICATION] Running Performance Benchmarking...")
+    logger.debug("[CERTIFICATION] Running Performance Benchmarking...")
     test_performance()
-    print("[CERTIFICATION] Performance Passed (10,000 nodes).")
+    logger.debug("[CERTIFICATION] Performance Passed (10,000 nodes).")
     
-    print("[CERTIFICATION] Running Thread Safety Validation...")
+    logger.debug("[CERTIFICATION] Running Thread Safety Validation...")
     test_concurrency()
-    print("[CERTIFICATION] Concurrency Passed (100 simultaneous executions).")
+    logger.debug("[CERTIFICATION] Concurrency Passed (100 simultaneous executions).")
     
-    print("[CERTIFICATION] Running Fault Injection...")
+    logger.debug("[CERTIFICATION] Running Fault Injection...")
     test_fault_injection()
-    print("[CERTIFICATION] Fault Injection Passed.")
+    logger.debug("[CERTIFICATION] Fault Injection Passed.")
     
-    print("\n[CERTIFICATION] ALL PHASES PASSED. Security Engine 100% Certified.")
+    logger.debug("\n[CERTIFICATION] ALL PHASES PASSED. Security Engine 100% Certified.")

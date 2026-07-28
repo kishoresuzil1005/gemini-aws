@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..models.intelligence_models import BusinessRecommendation
 
@@ -6,7 +8,7 @@ class PerformanceEngine:
     Analyzes application bottlenecks, latency, and resource utilization to optimize performance.
     """
     def analyze_performance(self, metrics: Dict[str, Any]) -> List[BusinessRecommendation]:
-        print("[PerformanceEngine] Analyzing cloud metrics for capacity bottlenecks...")
+        logger.debug("[PerformanceEngine] Analyzing cloud metrics for capacity bottlenecks...")
         return [
             BusinessRecommendation(
                 recommendation_id="rec-perf-001",

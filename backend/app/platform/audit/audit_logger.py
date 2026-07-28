@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 import datetime
 
@@ -16,4 +18,4 @@ class AuditLogger:
             "status": status
         }
         # In a real environment, this gets written to an immutable append-only datastore or SIEM.
-        print(f"[AuditLog] {json.dumps(log_entry) if 'json' in globals() else str(log_entry)}")
+        logger.debug(f"[AuditLog] {json.dumps(log_entry) if 'json' in globals() else str(log_entry)}")

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..models.mission_models import MissionGoal
 
@@ -7,7 +9,7 @@ class MissionPlanner:
     instead of just ExecutionPlans.
     """
     def generate_mission_plan(self, intent: str) -> MissionGoal:
-        print("[Planner] Generating MissionPlan instead of a single ExecutionPlan.")
+        logger.debug("[Planner] Generating MissionPlan instead of a single ExecutionPlan.")
         # Integrate with GoalEngine underneath
         return MissionGoal(
             description=intent,

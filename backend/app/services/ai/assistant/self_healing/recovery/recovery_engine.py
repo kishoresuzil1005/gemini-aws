@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from .rollback_manager import RollbackManager
 
@@ -10,5 +12,5 @@ class RecoveryEngine:
         self.rollback = rollback_manager
 
     def handle_failure(self, incident_id: str, failed_step: str):
-        print(f"[RecoveryEngine] Intercepted failure at step '{failed_step}'. Escalating to Rollback...")
+        logger.debug(f"[RecoveryEngine] Intercepted failure at step '{failed_step}'. Escalating to Rollback...")
         self.rollback.initiate_rollback(incident_id) # Mock paramete

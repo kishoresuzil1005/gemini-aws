@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Callable, List
 from ..base.base_message import EventMessage
 import asyncio
@@ -20,4 +22,4 @@ class EventBus:
         try:
             callback(event)
         except Exception as e:
-            print(f"Error delivering event {event.event_type}: {e}")
+            logger.debug(f"Error delivering event {event.event_type}: {e}")

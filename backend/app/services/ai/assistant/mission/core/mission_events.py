@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from enum import Enum
 from typing import Dict, List, Callable, Any
 from datetime import datetime
@@ -39,4 +41,4 @@ class MissionEventBus:
                 try:
                     callback(event)
                 except Exception as e:
-                    print(f"[MissionEventBus] Error in subscriber: {e}")
+                    logger.debug(f"[MissionEventBus] Error in subscriber: {e}")

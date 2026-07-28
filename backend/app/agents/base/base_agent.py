@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -36,7 +38,7 @@ class BaseAgent(ABC):
         
     def initialize(self):
         """Prepare the agent (e.g. load local memory, establish connections)."""
-        print(f"[{self.__class__.__name__}] Initializing...")
+        logger.debug(f"[{self.__class__.__name__}] Initializing...")
         self.state.status = "IDLE"
 
     @abstractmethod
@@ -63,5 +65,5 @@ class BaseAgent(ABC):
 
     def shutdown(self):
         """Cleanly shutdown the agent."""
-        print(f"[{self.__class__.__name__}] Shutting down...")
+        logger.debug(f"[{self.__class__.__name__}] Shutting down...")
         self.state.status = "OFFLINE"

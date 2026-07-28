@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..models.intelligence_models import BusinessRecommendation
 
@@ -6,7 +8,7 @@ class CostIntelligence:
     Transforms raw billing data into actionable business savings and optimization insights.
     """
     def analyze_costs(self, billing_data: Dict[str, Any]) -> List[BusinessRecommendation]:
-        print("[CostIntelligence] Analyzing cloud spend for optimization opportunities...")
+        logger.debug("[CostIntelligence] Analyzing cloud spend for optimization opportunities...")
         
         # Mocking an insight derived from raw data
         return [

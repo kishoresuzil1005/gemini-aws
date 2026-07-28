@@ -237,7 +237,7 @@ class Neo4jService:
         """
         Create or update graph node
         """
-        logger.info(
+        logger.debug(
             "Creating node: %s (%s)",
             resource_id,
             node_type
@@ -380,7 +380,7 @@ class Neo4jService:
         if not safe_rel_type:
             safe_rel_type = "RELATED_TO"
         
-        logger.info(
+        logger.debug(
             "Creating relationship: %s -[%s]-> %s",
             source_id,
             safe_rel_type,

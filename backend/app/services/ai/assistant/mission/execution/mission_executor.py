@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import asyncio
 from ..core.mission_manager import MissionManager
 from ..models.mission_models import MissionStatus
@@ -19,12 +21,12 @@ class MissionExecutor:
         if not mission:
             return
             
-        print(f"[MissionExecutor] Starting execution for mission: {mission_id}")
+        logger.debug(f"[MissionExecutor] Starting execution for mission: {mission_id}")
         self.manager.update_status(mission_id, MissionStatus.RUNNING)
         
         # Iterates through objectives, spawns workflows via Workflow Engine...
         # Mocking completion for this skeleton
         await asyncio.sleep(2)
         
-        print(f"[MissionExecutor] Completed mission: {mission_id}")
+        logger.debug(f"[MissionExecutor] Completed mission: {mission_id}")
         self.manager.update_status(mission_id, MissionStatus.COMPLETED)

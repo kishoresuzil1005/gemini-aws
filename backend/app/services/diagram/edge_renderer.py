@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.services.diagram.orthogonal_router import OrthogonalRouter
 from app.services.diagram.relationship_style_engine import RelationshipStyleEngine
 
@@ -18,9 +20,9 @@ class EdgeRenderer:
 
         edges = router.route(model)
 
-        print("========== EDGE RENDERER ==========")
-        print("Routes returned :", len(edges))
-        print("===================================")
+        logger.debug("========== EDGE RENDERER ==========")
+        logger.debug(f"Routes returned : {len(edges)}")
+        logger.debug("===================================")
 
         for edge in edges:
 

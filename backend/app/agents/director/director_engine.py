@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import List, Dict, Any
 from ..core.agent_manager import AgentManager
 from .director_policy import DirectorPolicy
@@ -13,7 +15,7 @@ class DirectorEngine:
 
     def allocate_agents(self, workflow_context: Dict[str, Any]) -> List[str]:
         # Based on policy, select a subset of available agents rather than all
-        print("[DirectorEngine] Analyzing workflow to allocate necessary agents...")
+        logger.debug("[DirectorEngine] Analyzing workflow to allocate necessary agents...")
         required_domains = self.policy.determine_required_domains(workflow_context)
         
         allocated_agents = []

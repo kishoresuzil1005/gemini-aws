@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from pydantic import BaseModel
 from typing import Dict, Any, Callable
 
@@ -16,7 +18,7 @@ class PluginManager:
         self.loaded_plugins: Dict[str, Any] = {}
 
     def load_plugin(self, manifest: PluginManifest, module_impl: Any):
-        print(f"[PluginManager] Loading plugin: {manifest.name} v{manifest.version}")
+        logger.debug(f"[PluginManager] Loading plugin: {manifest.name} v{manifest.version}")
         self.loaded_plugins[manifest.plugin_id] = module_impl
         if hasattr(module_impl, "initialize"):
             module_impl.initialize()

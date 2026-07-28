@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, List, Any
 from ..core.mission_events import MissionEvent, MissionEventType, MissionEventBus
 
@@ -22,7 +24,7 @@ class MissionTimeline:
             "details": event.details
         }
         self._timelines[event.mission_id].append(entry)
-        print(f"[MissionTimeline] [{entry['timestamp']}] {event.mission_id} - {entry['event']}")
+        logger.debug(f"[MissionTimeline] [{entry['timestamp']}] {event.mission_id} - {entry['event']}")
 
     def get_timeline(self, mission_id: str) -> List[Dict[str, Any]]:
         return self._timelines.get(mission_id, [])

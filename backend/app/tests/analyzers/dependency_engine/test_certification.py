@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 import random
 import tracemalloc
@@ -68,7 +70,7 @@ def test_mathematical_correctness():
     assert len(result.findings) > 0, "Spof DB should generate findings."
     spof_finding = next((f for f in result.findings if f.resource_id == "db-1"), None)
     assert spof_finding is not None
-    print("[Correctness] Passed Topological Validation.")
+    logger.debug("[Correctness] Passed Topological Validation.")
 
 def test_performance(num_nodes: int):
     """Phase 2: Performance & Memory Scaling"""
@@ -88,7 +90,7 @@ def test_performance(num_nodes: int):
     peak_mb = peak / (1024 * 1024)
     nodes_per_sec = num_nodes / duration if duration > 0 else float('inf')
     
-    print(f"[Performance] {num_nodes:7d} nodes | Time: {duration:6.2f}s | Nodes/sec: {nodes_per_sec:8.0f} | Peak Mem: {peak_mb:6.2f} MB | Findings: {len(result.findings)}")
+    logger.debug(f"[Performance] {num_nodes:7d} nodes | Time: {duration:6.2f}s | Nodes/sec: {nodes_per_sec:8.0f} | Peak Mem: {peak_mb:6.2f} MB | Findings: {len(result.findings)}")
     # Big-O assertion: we expect O(V+E) behavior.
     assert duration < (num_nodes / 10), f"Scaling violation: {num_nodes} took {duration}s"
 
@@ -114,7 +116,7 @@ def test_concurrency(num_threads: int):
     first_result = results[0]
     assert all(r == first_result for r in results), "Race condition detected: Non-deterministic thread results."
     
-    print(f"[Concurrency] {num_threads:4d} threads | Time: {duration:5.2f}s | Status: PASSED (Immutable State Verified)")
+    logger.debug(f"[Concurrency] {num_threads:4d} threads | Time: {duration:5.2f}s | Status: PASSED (Immutable State Verified)")
 
 def test_fault_injection():
     """Phase 4: Fault Tolerance"""
@@ -131,28 +133,28 @@ def test_fault_injection():
         try:
             ctx = AnalyzerContext(graph=vec["data"])
             analyzer.analyze(ctx)
-            print(f"[Fault Tolerant] Handled: {vec['name']}")
+            logger.debug(f"[Fault Tolerant] Handled: {vec['name']}")
         except Exception as e:
-            print(f"[Fault Tolerant] FAILED: {vec['name']} crashed with {e}")
+            logger.debug(f"[Fault Tolerant] FAILED: {vec['name']} crashed with {e}")
             raise
 
 if __name__ == "__main__":
-    print("======================================================")
-    print(" DEPENDENCY ANALYZER : ENTERPRISE CERTIFICATION SUITE ")
-    print("======================================================")
+    logger.debug("======================================================")
+    logger.debug(" DEPENDENCY ANALYZER : ENTERPRISE CERTIFICATION SUITE ")
+    logger.debug("======================================================")
     
     test_mathematical_correctness()
-    print("-" * 54)
+    logger.debug("-" * 54)
     
     for size in [100, 1000, 10000, 50000, 100000]:
         test_performance(size)
-    print("-" * 54)
+    logger.debug("-" * 54)
     
     for threads in [10, 25, 50, 100, 250, 500]:
         test_concurrency(threads)
-    print("-" * 54)
+    logger.debug("-" * 54)
     
     test_fault_injection()
-    print("======================================================")
-    print(" ALL ENTERPRISE CERTIFICATION TESTS COMPLETED & PASSED")
-    print("======================================================")
+    logger.debug("======================================================")
+    logger.debug(" ALL ENTERPRISE CERTIFICATION TESTS COMPLETED & PASSED")
+    logger.debug("======================================================")

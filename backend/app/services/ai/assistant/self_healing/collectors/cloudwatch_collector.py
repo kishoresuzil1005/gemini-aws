@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..detection.incident_detector import IncidentDetector
 
@@ -9,7 +11,7 @@ class CloudWatchCollector:
         self.detector = detector
 
     def process_sns_payload(self, sns_message: Dict[str, Any]):
-        print("[CloudWatchCollector] Parsing SNS payload from CloudWatch...")
+        logger.debug("[CloudWatchCollector] Parsing SNS payload from CloudWatch...")
         # Translate CloudWatch format to unified format
         normalized = {
             "instance_id": sns_message.get("Trigger", {}).get("Dimensions", [{}])[0].get("value"),

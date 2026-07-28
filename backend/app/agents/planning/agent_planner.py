@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import List
 from ..base.base_task import AgentTask, SubTask
 from ..core.capability_registry import CapabilityRegistry
@@ -20,7 +22,7 @@ class AgentPlanner:
                 # Pick the first available candidate
                 subtask.assigned_agent_id = candidates[0]
             else:
-                print(f"[AgentPlanner] No agent found with capability: {capability_needed}")
+                logger.debug(f"[AgentPlanner] No agent found with capability: {capability_needed}")
                 
         return task
 

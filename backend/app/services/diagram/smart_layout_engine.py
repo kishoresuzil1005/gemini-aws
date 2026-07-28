@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from collections import defaultdict
 import math
 
@@ -207,10 +209,10 @@ class SmartLayoutEngine:
         layout["canvas"]["width"] = max(layout["canvas"]["width"], svg_width)
         layout["canvas"]["height"] = max(layout["canvas"]["height"], svg_height)
 
-        print("================================")
-        print("SMART LAYOUT")
-        print("Nodes :", len(layout["nodes"]))
-        print("Edges :", len(layout["edges"]))
-        print("================================")
+        logger.debug("================================")
+        logger.debug("SMART LAYOUT")
+        logger.debug(f"Nodes : {len(layout["nodes"])}")
+        logger.debug(f"Edges : {len(layout["edges"])}")
+        logger.debug("================================")
 
         return layout

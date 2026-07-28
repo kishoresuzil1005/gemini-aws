@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..cluster_service import K8sClusterService
 
@@ -9,7 +11,7 @@ class K8sDiscoveryEngine:
         self.cluster_service = K8sClusterService(client_manager)
 
     def run_full_discovery(self) -> Dict[str, Any]:
-        print("[K8sDiscoveryEngine] Starting full Kubernetes discovery...")
+        logger.debug("[K8sDiscoveryEngine] Starting full Kubernetes discovery...")
         namespaces = ["default", "kube-system"]
         inventory = {"pods": [], "deployments": []}
         

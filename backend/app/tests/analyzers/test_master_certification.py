@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from concurrent.futures import ThreadPoolExecutor
 from app.services.ai.analyzers.engines.graph.infrastructure_graph import InfrastructureGraph
@@ -117,20 +119,20 @@ def master_test_fault_injection():
     assert len(findings) == 0
 
 if __name__ == "__main__":
-    print("[MASTER CERTIFICATION] Phase 2: Correctness Certification...")
+    logger.debug("[MASTER CERTIFICATION] Phase 2: Correctness Certification...")
     master_test_correctness()
-    print("[MASTER CERTIFICATION] Correctness Passed.")
+    logger.debug("[MASTER CERTIFICATION] Correctness Passed.")
     
-    print("[MASTER CERTIFICATION] Phase 3: Performance Certification...")
+    logger.debug("[MASTER CERTIFICATION] Phase 3: Performance Certification...")
     master_test_performance()
-    print("[MASTER CERTIFICATION] Performance Passed. O(V) Validated.")
+    logger.debug("[MASTER CERTIFICATION] Performance Passed. O(V) Validated.")
     
-    print("[MASTER CERTIFICATION] Phase 4: Thread Safety...")
+    logger.debug("[MASTER CERTIFICATION] Phase 4: Thread Safety...")
     master_test_thread_safety()
-    print("[MASTER CERTIFICATION] Thread Safety Passed.")
+    logger.debug("[MASTER CERTIFICATION] Thread Safety Passed.")
     
-    print("[MASTER CERTIFICATION] Phase 5: Fault Injection...")
+    logger.debug("[MASTER CERTIFICATION] Phase 5: Fault Injection...")
     master_test_fault_injection()
-    print("[MASTER CERTIFICATION] Fault Injection Passed. Graceful Degradation Verified.")
+    logger.debug("[MASTER CERTIFICATION] Fault Injection Passed. Graceful Degradation Verified.")
     
-    print("\n[MASTER CERTIFICATION] THE ENTERPRISE SECURITY ANALYZER IS OFFICIALLY CERTIFIED AND FROZEN.")
+    logger.debug("\n[MASTER CERTIFICATION] THE ENTERPRISE SECURITY ANALYZER IS OFFICIALLY CERTIFIED AND FROZEN.")

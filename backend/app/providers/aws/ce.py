@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from .auth import get_aws_client
 import datetime
 
@@ -28,10 +30,10 @@ class CEAdapter:
             if response.get("ResultsByTime") and len(response["ResultsByTime"]) > 0:
                 groups = response["ResultsByTime"][0].get("Groups", [])
                 if groups:
-                    print("Successfully fetched current month cost data.")
+                    logger.debug("Successfully fetched current month cost data.")
                     return response
         except Exception as e:
-            print(f"Current month Cost Explorer API fetch skipped or failed: {e}")
+            logger.debug(f"Current month Cost Explorer API fetch skipped or failed: {e}")
 
         # Second attempt (Fallback): Sliding last 30 days window aggregated by Service
         try:
@@ -53,6 +55,6 @@ class CEAdapter:
             )
             return response
         except Exception as e:
-            print(f"Fallback 30-day sliding window Cost Explorer API fetch skipped or failed: {e}")
+            logger.debug(f"Fallback 30-day sliding window Cost Explorer API fetch skipped or failed: {e}")
             return {"ResultsByTime": []}
 

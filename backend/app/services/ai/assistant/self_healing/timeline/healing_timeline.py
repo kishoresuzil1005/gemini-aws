@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from datetime import datetime
 
@@ -18,4 +20,4 @@ class HealingTimeline:
             "details": details
         }
         self._timeline[incident_id].append(entry)
-        print(f"[HealingTimeline] {incident_id}: {event_name}")
+        logger.debug(f"[HealingTimeline] {incident_id}: {event_name}")

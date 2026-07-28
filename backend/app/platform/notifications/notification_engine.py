@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 import requests
 
@@ -11,7 +13,7 @@ class WebhookSender:
         if secret:
             headers["X-Webhook-Signature"] = "mock_signature_here"
         
-        print(f"[WebhookSender] POST {url} with {payload}")
+        logger.debug(f"[WebhookSender] POST {url} with {payload}")
         # In a real environment, wrap in try/except and retry logic
         # requests.post(url, json=payload, headers=headers)
         return True
@@ -24,5 +26,5 @@ class NotificationEngine:
         self.webhook = webhook_sender
         
     def dispatch_alert(self, tenant_id: str, message: str, level: str = "INFO"):
-        print(f"[NotificationEngine] Tenant {tenant_id} - {level}: {message}")
+        logger.debug(f"[NotificationEngine] Tenant {tenant_id} - {level}: {message}")
         # Route to configured channels (Email, Slack, etc.)

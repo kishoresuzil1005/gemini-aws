@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from enum import Enum
 from typing import Dict, Any
 
@@ -21,7 +23,7 @@ class HealingStateMachine:
         self._states: Dict[str, HealingState] = {}
 
     def transition(self, incident_id: str, new_state: HealingState):
-        print(f"[HealingStateMachine] Incident {incident_id} transitioned to {new_state.value}")
+        logger.debug(f"[HealingStateMachine] Incident {incident_id} transitioned to {new_state.value}")
         self._states[incident_id] = new_state
         
     def get_state(self, incident_id: str) -> HealingState:

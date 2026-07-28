@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import List, Dict, Any
 from .azure_client import AzureClientManager
 
@@ -6,13 +8,13 @@ class AzureComputeService:
         self.client = client_manager.get_compute_client()
 
     def list_virtual_machines(self) -> List[Dict[str, Any]]:
-        print("[AzureComputeService] Discovering Virtual Machines...")
+        logger.debug("[AzureComputeService] Discovering Virtual Machines...")
         vms = []
         try:
             for vm in self.client.virtual_machines.list_all():
                 vms.append({"id": vm.id, "name": vm.name, "location": vm.location, "type": "Azure::Compute::VirtualMachine"})
         except Exception as e:
-            print(f"[AzureComputeService] Skipping real API call, mock returning empty list due to: {e}")
+            logger.debug(f"[AzureComputeService] Skipping real API call, mock returning empty list due to: {e}")
         return vms
 
     def start_vm(self, resource_group: str, vm_name: str):

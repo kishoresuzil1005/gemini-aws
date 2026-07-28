@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.database import (
     SessionLocal
 )
@@ -18,7 +20,7 @@ def run_optimization_job():
             .generate(db)
         )
 
-        print(
+        logger.debug(
             f"[JOB] Generated "
             f"{len(recommendations)} "
             f"recommendations."

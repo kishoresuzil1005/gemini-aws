@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 
 class ExposureService:
@@ -85,6 +87,6 @@ class ExposureService:
                             })
 
             except Exception as e:
-                print(region, e)
+                logger.debug(f"{region} {e}")
 
         return expose

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 from app.providers.aws.models import NormalizedResource, ResourceDependency
 from .auth import get_aws_client
@@ -82,5 +84,5 @@ class EC2Discovery:
                     
             return instances
         except Exception as e:
-            print(f"Error in EC2Discovery: {e}")
+            logger.debug(f"Error in EC2Discovery: {e}")
             return []

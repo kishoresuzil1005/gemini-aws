@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 from app.providers.aws.models import NormalizedResource, ResourceDependency
 
@@ -39,5 +41,5 @@ class IGWDiscovery:
                 
             return igws
         except Exception as e:
-            print(f"Error in IGWDiscovery: {e}")
+            logger.debug(f"Error in IGWDiscovery: {e}")
             return []

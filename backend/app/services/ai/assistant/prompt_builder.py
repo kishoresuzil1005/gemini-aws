@@ -4,7 +4,8 @@ import json
 import logging
 from typing import Any, Dict, List
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger, LogHelper
+logger = get_logger(__name__)
 
 from app.services.ai.assistant.context.prompt_templates import SYSTEM_PROMPT, build_user_prompt
 from app.services.ai.context_engine.models import AIContext
@@ -25,6 +26,9 @@ class PromptBuilder:
         intent: str,
         reasoning: ReasoningResult | None = None,
     ) -> tuple[List[Dict[str, str]], str]:
+        import time
+        start_time = time.time()
+        
         prompt_context = context.model_dump(exclude={"provider_data", "debug"})
         if reasoning:
             prompt_context["reasoning"] = reasoning.model_dump()
@@ -43,4 +47,29 @@ class PromptBuilder:
                 "content": build_user_prompt(question, history, context_text, intent),
             },
         ]
+        
+        duration_ms = (time.time() - start_time) * 1000
+        chars = sum(len(m["content"]) for m in prompt)
+        tokens = chars // 4
+        
+        sections = []
+        if context.resource: sections.append("Inventory")
+        if context.subgraph: sections.append("Graph")
+        if context.security: sections.append("Security")
+        if context.metrics: sections.append("Metrics")
+        if context.cost: sections.append("Cost")
+        if getattr(context, "documentation", None): sections.append("Documentation")
+        if getattr(context, "recommendations", None): sections.append("Recommendations")
+        
+        LogHelper.summary("Prompt Summary", {
+            "Sections Included": sections or ["None"],
+            "Prompt Size": f"{chars / 1024:.1f} KB",
+            "Characters": chars,
+            "Estimated Tokens": tokens,
+            "Duration": f"{duration_ms:.1f} ms"
+        })
+        
+        # Log actual prompt only in debug
+        logger.debug(f"Prompt:\n{prompt}")
+        
         return prompt, context_text

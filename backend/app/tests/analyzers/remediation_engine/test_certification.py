@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from concurrent.futures import ThreadPoolExecutor
 from app.services.ai.analyzers.engines.remediation.remediation_engine import RemediationEngine
@@ -88,20 +90,20 @@ def test_thread_safety():
         assert len(r) == 100
 
 if __name__ == '__main__':
-    print("[REMEDIATION CERTIFICATION] Testing Registry...")
+    logger.debug("[REMEDIATION CERTIFICATION] Testing Registry...")
     test_registry()
-    print("[REMEDIATION CERTIFICATION] Registry Passed.")
+    logger.debug("[REMEDIATION CERTIFICATION] Registry Passed.")
     
-    print("[REMEDIATION CERTIFICATION] Testing Validation and Rollback Engine...")
+    logger.debug("[REMEDIATION CERTIFICATION] Testing Validation and Rollback Engine...")
     test_generation_and_validation()
-    print("[REMEDIATION CERTIFICATION] Validation Passed.")
+    logger.debug("[REMEDIATION CERTIFICATION] Validation Passed.")
     
-    print("[REMEDIATION CERTIFICATION] Testing Thread Safety...")
+    logger.debug("[REMEDIATION CERTIFICATION] Testing Thread Safety...")
     test_thread_safety()
-    print("[REMEDIATION CERTIFICATION] Thread Safety Passed.")
+    logger.debug("[REMEDIATION CERTIFICATION] Thread Safety Passed.")
     
-    print("[REMEDIATION CERTIFICATION] Testing Performance (100,000 Findings)...")
+    logger.debug("[REMEDIATION CERTIFICATION] Testing Performance (100,000 Findings)...")
     test_performance()
-    print("[REMEDIATION CERTIFICATION] Performance Passed (O(N) validated).")
+    logger.debug("[REMEDIATION CERTIFICATION] Performance Passed (O(N) validated).")
     
-    print("\n[REMEDIATION CERTIFICATION] ALL PHASES PASSED. Remediation Engine 100% Certified.")
+    logger.debug("\n[REMEDIATION CERTIFICATION] ALL PHASES PASSED. Remediation Engine 100% Certified.")

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..core.mission_engine import MissionEngine
 
@@ -12,7 +14,7 @@ class GraphAssistant:
     def handle_user_request(self, user_intent: str, context: Dict[str, Any]) -> str:
         # Determine if it's a mission or a simple task. Assume mission for now.
         if "reduce" in user_intent.lower() or "improve" in user_intent.lower() or "mission" in user_intent.lower():
-            print("[GraphAssistant] Routing complex goal to Mission Engine...")
+            logger.debug("[GraphAssistant] Routing complex goal to Mission Engine...")
             mission_id = self.mission_engine.start_mission(user_intent, context)
             return f"Mission started with ID: {mission_id}"
         else:

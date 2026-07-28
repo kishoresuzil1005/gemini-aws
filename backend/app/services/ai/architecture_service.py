@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import json
 from typing import Dict, Any, List
 from app.services.ai.architecture_patterns import ArchitecturePatterns
@@ -136,7 +138,7 @@ class ArchitectureService:
                     if crit:
                         criticality_context = crit
                 except Exception as e:
-                    print(f"[ArchitectureService] Error fetching graph/criticality context: {e}")
+                    logger.debug(f"[ArchitectureService] Error fetching graph/criticality context: {e}")
             
             # Simple mock inventory signal for "review my architecture"
             if "review" in query_lower and "architecture" in query_lower:

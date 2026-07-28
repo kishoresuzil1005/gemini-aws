@@ -3,7 +3,8 @@ from fastapi import HTTPException
 from knowledge.service.client_factory import get_default_client
 from exceptions.analyzer_exceptions import KnowledgeNotFoundError
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger, LogHelper
+logger = get_logger(__name__)
 
 class DependencyAnalyzer:
     def __init__(self, knowledge_client=None):
@@ -14,6 +15,9 @@ class DependencyAnalyzer:
         Fetches upstream and downstream dependencies for a given resource
         up to the specified depth.
         """
+        import time
+        start_time = time.time()
+        
         # Using Knowledge Service to verify resource existence
         resource = self.client.get_resource(resource_id)
         if not resource:
@@ -21,6 +25,15 @@ class DependencyAnalyzer:
             
         downstream = self.get_downstream(resource_id, depth)
         upstream = self.get_upstream(resource_id, depth)
+        
+        duration_ms = (time.time() - start_time) * 1000
+        LogHelper.summary("Dependency Summary", {
+            "Resource": resource_id,
+            "Upstream Count": len(upstream),
+            "Downstream Count": len(downstream),
+            "Depth": depth,
+            "Duration": f"{duration_ms:.1f} ms"
+        })
         
         return {
             "resource": resource_id,

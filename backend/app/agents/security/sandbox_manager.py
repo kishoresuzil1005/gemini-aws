@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Callable, Any
 
 class SandboxManager:
@@ -9,7 +11,7 @@ class SandboxManager:
         """
         Mock sandbox execution.
         """
-        print(f"[Sandbox] Agent {agent_id} executing action in isolated environment.")
+        logger.debug(f"[Sandbox] Agent {agent_id} executing action in isolated environment.")
         try:
             # For this mock, we just run the action and pretend it was sandboxed
             result = action(*args, **kwargs)

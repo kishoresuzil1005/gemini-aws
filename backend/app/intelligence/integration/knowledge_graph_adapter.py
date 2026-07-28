@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class KnowledgeGraphAdapter:
@@ -6,6 +8,6 @@ class KnowledgeGraphAdapter:
     Transforms graph traversal results into flat metrics for analytics.
     """
     def fetch_blast_radius(self, resource_id: str) -> Dict[str, Any]:
-        print(f"[KnowledgeGraphAdapter] Querying Knowledge Graph for {resource_id} blast radius...")
+        logger.debug(f"[KnowledgeGraphAdapter] Querying Knowledge Graph for {resource_id} blast radius...")
         # Mocking an adapter translation
         return {"affected_nodes": 12, "critical_path": True}

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..models.healing_models import Incident, RepairPlan
 
@@ -6,7 +8,7 @@ class HealingPlanner:
     Transforms a diagnosis into a step-by-step repair strategy (Workflow/Mission objectives).
     """
     def create_repair_plan(self, incident: Incident, diagnosis: Dict[str, Any]) -> RepairPlan:
-        print("[HealingPlanner] Formulating safe remediation plan...")
+        logger.debug("[HealingPlanner] Formulating safe remediation plan...")
         return RepairPlan(
             plan_id="rp-001",
             incident_id=incident.incident_id,

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class GitHubIntegration:
@@ -9,10 +11,10 @@ class GitHubIntegration:
         self.access_token = access_token
         
     def create_pull_request(self, repo: str, title: str, body: str, head: str, base: str = "main") -> Dict[str, Any]:
-        print(f"[GitHubIntegration] Opening PR '{title}' on {repo}")
+        logger.debug(f"[GitHubIntegration] Opening PR '{title}' on {repo}")
         # Mock logic using PyGithub or requests
         return {"pr_url": f"https://github.com/{repo}/pull/1", "status": "created"}
         
     def add_comment(self, repo: str, issue_number: int, comment: str):
-        print(f"[GitHubIntegration] Adding comment to {repo}#{issue_number}")
+        logger.debug(f"[GitHubIntegration] Adding comment to {repo}#{issue_number}")
         # Mock logic

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import logging
 import time
 import uuid
@@ -72,244 +74,244 @@ class AWSDiscoveryScanner:
             logger.info(f"Starting scan for region: {reg}")
 
             try:
-                print("EC2 START")
+                logger.debug("EC2 START")
                 resources.extend(EC2Discovery.discover(reg))
-                print("EC2 DONE")
+                logger.debug("EC2 DONE")
             except Exception as e:
                 logger.warning(f"EC2Discovery failed in region {reg}: {e}")
 
             try:
-                print("RDS START")
+                logger.debug("RDS START")
                 resources.extend(RDSDiscovery.discover(reg))
-                print("RDS DONE")
+                logger.debug("RDS DONE")
             except Exception as e:
                 logger.warning(f"RDSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("LAMBDA START")
+                logger.debug("LAMBDA START")
                 lambda_resources = LambdaDiscovery.discover(reg)
-                print("=" * 80)
-                print("LAMBDA DISCOVERED:", len(lambda_resources))
+                logger.debug("=" * 80)
+                logger.debug(f"LAMBDA DISCOVERED: {len(lambda_resources)}")
                 for r in lambda_resources:
-                    print("RESOURCE:", r.get("resource_id", "UNKNOWN"))
-                    print("DEPENDENCIES:", r.get("dependencies"))
-                    print("CONFIGURATION:", r.get("configuration"))
-                print("=" * 80)
+                    logger.debug(f"RESOURCE: {r.get("resource_id", "UNKNOWN")}")
+                    logger.debug(f"DEPENDENCIES: {r.get("dependencies")}")
+                    logger.debug(f"CONFIGURATION: {r.get("configuration")}")
+                logger.debug("=" * 80)
                 resources.extend(lambda_resources)
-                print("LAMBDA DONE")
+                logger.debug("LAMBDA DONE")
             except Exception as e:
                 logger.warning(f"LambdaDiscovery failed in region {reg}: {e}")
 
             try:
-                print("VPC START")
+                logger.debug("VPC START")
                 resources.extend(VPCDiscovery.discover(reg))
-                print("VPC DONE")
+                logger.debug("VPC DONE")
             except Exception as e:
                 logger.warning(f"VPCDiscovery failed in region {reg}: {e}")
 
             try:
-                print("ALB START")
+                logger.debug("ALB START")
                 alb_resources = ALBDiscovery.discover(reg)
-                print("=" * 80)
-                print("ALB DISCOVERED:", len(alb_resources))
+                logger.debug("=" * 80)
+                logger.debug(f"ALB DISCOVERED: {len(alb_resources)}")
                 for r in alb_resources:
-                    print("RESOURCE:", r.get("resource_id", "UNKNOWN"))
-                    print("DEPENDENCIES:", r.get("dependencies"))
-                    print("METADATA:", r.get("metadata"))
-                print("=" * 80)
+                    logger.debug(f"RESOURCE: {r.get("resource_id", "UNKNOWN")}")
+                    logger.debug(f"DEPENDENCIES: {r.get("dependencies")}")
+                    logger.debug(f"METADATA: {r.get("metadata")}")
+                logger.debug("=" * 80)
                 resources.extend(alb_resources)
-                print("ALB DONE")
+                logger.debug("ALB DONE")
             except Exception as e:
                 logger.warning(f"ALBDiscovery failed in region {reg}: {e}")
 
             try:
-                print("EBS START")
+                logger.debug("EBS START")
                 resources.extend(EBSDiscovery.discover(reg))
-                print("EBS DONE")
+                logger.debug("EBS DONE")
             except Exception as e:
                 logger.warning(f"EBSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("ECS START")
+                logger.debug("ECS START")
                 resources.extend(ECSDiscovery.discover(reg))
-                print("ECS DONE")
+                logger.debug("ECS DONE")
             except Exception as e:
                 logger.warning(f"ECSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("EKS START")
+                logger.debug("EKS START")
                 resources.extend(EKSDiscovery.discover(reg))
-                print("EKS DONE")
+                logger.debug("EKS DONE")
             except Exception as e:
                 logger.warning(f"EKSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("IGW START")
+                logger.debug("IGW START")
                 resources.extend(IGWDiscovery.discover(reg))
-                print("IGW DONE")
+                logger.debug("IGW DONE")
             except Exception as e:
                 logger.warning(f"IGWDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SUBNET START")
+                logger.debug("SUBNET START")
                 resources.extend(SubnetDiscovery.discover(reg))
-                print("SUBNET DONE")
+                logger.debug("SUBNET DONE")
             except Exception as e:
                 logger.warning(f"SubnetDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SECURITYGROUP START")
+                logger.debug("SECURITYGROUP START")
                 resources.extend(SecurityGroupDiscovery.discover(reg))
-                print("SECURITYGROUP DONE")
+                logger.debug("SECURITYGROUP DONE")
             except Exception as e:
                 logger.warning(f"SecurityGroupDiscovery failed in region {reg}: {e}")
 
             try:
-                print("ROUTETABLE START")
+                logger.debug("ROUTETABLE START")
                 resources.extend(RouteTableDiscovery.discover(reg))
-                print("ROUTETABLE DONE")
+                logger.debug("ROUTETABLE DONE")
             except Exception as e:
                 logger.warning(f"RouteTableDiscovery failed in region {reg}: {e}")
 
             try:
-                print("NATGATEWAY START")
+                logger.debug("NATGATEWAY START")
                 resources.extend(NatGatewayDiscovery.discover(reg))
-                print("NATGATEWAY DONE")
+                logger.debug("NATGATEWAY DONE")
             except Exception as e:
                 logger.warning(f"NatGatewayDiscovery failed in region {reg}: {e}")
 
             try:
-                print("NETWORKINTERFACE START")
+                logger.debug("NETWORKINTERFACE START")
                 resources.extend(NetworkInterfaceDiscovery.discover(reg))
-                print("NETWORKINTERFACE DONE")
+                logger.debug("NETWORKINTERFACE DONE")
             except Exception as e:
                 logger.warning(f"NetworkInterfaceDiscovery failed in region {reg}: {e}")
 
             try:
-                print("ELASTICIP START")
+                logger.debug("ELASTICIP START")
                 resources.extend(ElasticIPDiscovery.discover(reg))
-                print("ELASTICIP DONE")
+                logger.debug("ELASTICIP DONE")
             except Exception as e:
                 logger.warning(f"ElasticIPDiscovery failed in region {reg}: {e}")
 
             try:
-                print("AUTOSCALING START")
+                logger.debug("AUTOSCALING START")
                 resources.extend(AutoScalingDiscovery.discover(reg))
-                print("AUTOSCALING DONE")
+                logger.debug("AUTOSCALING DONE")
             except Exception as e:
                 logger.warning(f"AutoScalingDiscovery failed in region {reg}: {e}")
 
             try:
-                print("TARGETGROUP START")
+                logger.debug("TARGETGROUP START")
                 resources.extend(TargetGroupDiscovery.discover(reg))
-                print("TARGETGROUP DONE")
+                logger.debug("TARGETGROUP DONE")
             except Exception as e:
                 logger.warning(f"TargetGroupDiscovery failed in region {reg}: {e}")
 
             try:
-                print("APIGATEWAY START")
+                logger.debug("APIGATEWAY START")
                 resources.extend(APIGatewayDiscovery.discover(reg))
-                print("APIGATEWAY DONE")
+                logger.debug("APIGATEWAY DONE")
             except Exception as e:
                 logger.warning(f"APIGatewayDiscovery failed in region {reg}: {e}")
 
             try:
-                print("WAF START")
+                logger.debug("WAF START")
                 resources.extend(WAFDiscovery.discover(reg))
-                print("WAF DONE")
+                logger.debug("WAF DONE")
             except Exception as e:
                 logger.warning(f"WAFDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SECRETSMANAGER START")
+                logger.debug("SECRETSMANAGER START")
                 resources.extend(SecretsManagerDiscovery.discover(reg))
-                print("SECRETSMANAGER DONE")
+                logger.debug("SECRETSMANAGER DONE")
             except Exception as e:
                 logger.warning(f"SecretsManagerDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SSM START")
+                logger.debug("SSM START")
                 resources.extend(SSMDiscovery.discover(reg))
-                print("SSM DONE")
+                logger.debug("SSM DONE")
             except Exception as e:
                 logger.warning(f"SSMDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SNS START")
+                logger.debug("SNS START")
                 resources.extend(SNSDiscovery.discover(reg))
-                print("SNS DONE")
+                logger.debug("SNS DONE")
             except Exception as e:
                 logger.warning(f"SNSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("SQS START")
+                logger.debug("SQS START")
                 resources.extend(SQSDiscovery.discover(reg))
-                print("SQS DONE")
+                logger.debug("SQS DONE")
             except Exception as e:
                 logger.warning(f"SQSDiscovery failed in region {reg}: {e}")
 
             try:
-                print("EVENTBRIDGE START")
+                logger.debug("EVENTBRIDGE START")
                 resources.extend(EventBridgeDiscovery.discover(reg))
-                print("EVENTBRIDGE DONE")
+                logger.debug("EVENTBRIDGE DONE")
             except Exception as e:
                 logger.warning(f"EventBridgeDiscovery failed in region {reg}: {e}")
 
             try:
-                print("DYNAMODB START")
+                logger.debug("DYNAMODB START")
                 resources.extend(DynamoDBDiscovery.discover(reg))
-                print("DYNAMODB DONE")
+                logger.debug("DYNAMODB DONE")
             except Exception as e:
                 logger.warning(f"DynamoDBDiscovery failed in region {reg}: {e}")
 
             try:
-                print("ELASTICACHE START")
+                logger.debug("ELASTICACHE START")
                 resources.extend(ElastiCacheDiscovery.discover(reg))
-                print("ELASTICACHE DONE")
+                logger.debug("ELASTICACHE DONE")
             except Exception as e:
                 logger.warning(f"ElastiCacheDiscovery failed in region {reg}: {e}")
 
             try:
-                print("OPENSEARCH START")
+                logger.debug("OPENSEARCH START")
                 resources.extend(OpenSearchDiscovery.discover(reg))
-                print("OPENSEARCH DONE")
+                logger.debug("OPENSEARCH DONE")
             except Exception as e:
                 logger.warning(f"OpenSearchDiscovery failed in region {reg}: {e}")
 
             try:
-                print("EFS START")
+                logger.debug("EFS START")
                 resources.extend(EFSDiscovery.discover(reg))
-                print("EFS DONE")
+                logger.debug("EFS DONE")
             except Exception as e:
                 logger.warning(f"EFSDiscovery failed in region {reg}: {e}")
 
         # Global providers
 
         try:
-            print("S3 START")
+            logger.debug("S3 START")
             resources.extend(S3Discovery.discover())
-            print("S3 DONE")
+            logger.debug("S3 DONE")
         except Exception as e:
             logger.warning(f"S3Discovery failed: {e}")
 
         try:
-            print("IAM START")
+            logger.debug("IAM START")
             resources.extend(IAMDiscovery.discover())
-            print("IAM DONE")
+            logger.debug("IAM DONE")
         except Exception as e:
             logger.warning(f"IAMDiscovery failed: {e}")
 
         try:
-            print("CLOUDFRONT START")
+            logger.debug("CLOUDFRONT START")
             resources.extend(CloudFrontDiscovery.discover())
-            print("CLOUDFRONT DONE")
+            logger.debug("CLOUDFRONT DONE")
         except Exception as e:
             logger.warning(f"CloudFrontDiscovery failed: {e}")
 
         try:
-            print("ROUTE53 START")
+            logger.debug("ROUTE53 START")
             resources.extend(Route53Discovery.discover())
-            print("ROUTE53 DONE")
+            logger.debug("ROUTE53 DONE")
         except Exception as e:
             logger.warning(f"Route53Discovery failed: {e}")
 

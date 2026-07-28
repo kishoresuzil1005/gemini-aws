@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import List, Dict, Any
 from .k8s_client import KubernetesClientManager
 
@@ -7,14 +9,14 @@ class K8sClusterService:
         self.apps_api = client_manager.get_apps_client()
 
     def list_pods(self, namespace: str = "default") -> List[Dict[str, Any]]:
-        print(f"[K8sClusterService] Discovering Pods in namespace '{namespace}'...")
+        logger.debug(f"[K8sClusterService] Discovering Pods in namespace '{namespace}'...")
         pods = []
         try:
             ret = self.core_api.list_namespaced_pod(namespace=namespace)
             for i in ret.items:
                 pods.append({"name": i.metadata.name, "ip": i.status.pod_ip, "type": "K8s::Pod"})
         except Exception as e:
-            print(f"[K8sClusterService] Skipping real API call, mock returning empty list due to: {e}")
+            logger.debug(f"[K8sClusterService] Skipping real API call, mock returning empty list due to: {e}")
         return pods
 
     def list_deployments(self, namespace: str = "default") -> List[Dict[str, Any]]:

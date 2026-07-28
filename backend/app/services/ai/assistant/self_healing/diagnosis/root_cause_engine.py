@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..models.healing_models import Incident
 
@@ -7,7 +9,7 @@ class RootCauseEngine:
     Integrates with Knowledge Graph to trace paths of failure.
     """
     def diagnose(self, incident: Incident) -> Dict[str, Any]:
-        print(f"[RootCauseEngine] Diagnosing incident {incident.incident_id}...")
+        logger.debug(f"[RootCauseEngine] Diagnosing incident {incident.incident_id}...")
         return {
             "root_cause_node": "db-connection-pool",
             "confidence": 94.5,

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..models.intelligence_models import BusinessRecommendation
 
@@ -7,7 +9,7 @@ class SecurityScoreEngine:
     an aggregate business security score.
     """
     def calculate_score(self, security_graph_data: Dict[str, Any]) -> Dict[str, Any]:
-        print("[SecurityScoreEngine] Evaluating blast radius of known vulnerabilities...")
+        logger.debug("[SecurityScoreEngine] Evaluating blast radius of known vulnerabilities...")
         # Mock calculation
         return {
             "overall_score": 88.5,

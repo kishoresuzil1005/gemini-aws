@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ...models.healing_models import RepairPlan
 
@@ -6,7 +8,7 @@ class RestartStrategy:
     Defines the specific steps required to safely restart a service.
     """
     def build_plan(self, incident_id: str, target: str) -> RepairPlan:
-        print(f"[RestartStrategy] Formulating restart steps for {target}...")
+        logger.debug(f"[RestartStrategy] Formulating restart steps for {target}...")
         return RepairPlan(
             plan_id=f"rp-restart-{target}",
             incident_id=incident_id,

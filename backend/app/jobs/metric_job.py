@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.services.metrics.collector import (
     MetricCollector
 )
@@ -5,12 +7,12 @@ from app.services.metrics.collector import (
 
 def run_metric_job():
 
-    print(
+    logger.debug(
         "[JOB] Collecting metrics..."
     )
 
     MetricCollector.collect()
 
-    print(
+    logger.debug(
         "[JOB] Metrics collected."
     )

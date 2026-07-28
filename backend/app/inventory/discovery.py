@@ -5,12 +5,13 @@ from app.services.discovery.scanner import AWSDiscoveryScanner
 from app.services.discovery.normalizer import ResourceNormalizer
 from datetime import datetime
 
+from app.core.logging import get_logger, LogHelper, set_module
+
+logger = get_logger("DiscoveryService")
+
 def discover_resources(db: Session, cloud_account_id: int, region: str | None = None):
-    print("=" * 80)
-    print("HELLO FROM DISCOVERY")
-    print("cloud_account_id =", cloud_account_id)
-    print("region =", region)
-    print("=" * 80)
+    set_module("DiscoveryService")
+    logger.debug(f"Discovery Started for Account: {cloud_account_id} Region: {region}")
 
     account = (
         db.query(CloudAccountDB)
@@ -24,37 +25,21 @@ def discover_resources(db: Session, cloud_account_id: int, region: str | None = 
     if account.provider == "AWS":
         try:
             # 1. Discover AWS
-            print("BEFORE SCANNER")
             scan_result = AWSDiscoveryScanner.scan_all(region=region)
-            print("POINT 2")
-            print("=" * 80)
-            print("SCAN RESULT")
-            print("scan_id =", scan_result.scan_id)
-            print("resources =", len(scan_result.resources))
-            print("=" * 80)
 
             # 2. Normalize
             normalized_resources = ResourceNormalizer.normalize(scan_result.resources)
 
-            print("POINT 3")
-            print("=" * 80)
-            print("NORMALIZED =", len(normalized_resources))
-            if normalized_resources:
-                print(normalized_resources[0])
-            print("=" * 80)
+            logger.debug(f"Resources Discovered: {len(normalized_resources)}")
 
             scan_result.account_id = str(cloud_account_id)
 
             # 3. Save Inventory
-            print("POINT 4 - Saving inventory")
             for norm in normalized_resources:
                 # Debug RDS resources
                 if norm.get("resource_type") == "RDS":
                     import json
-                    print("=" * 80)
-                    print("RDS NORMALIZED")
-                    print(json.dumps(norm, indent=2, default=str))
-                    print("=" * 80)
+                    logger.debug(f"RDS NORMALIZED\n{json.dumps(norm, indent=2, default=str)}")
 
                 # Save / update resource
                 existing = db.query(ResourceDB).filter(ResourceDB.resource_id == norm["resource_id"]).first()
@@ -98,7 +83,6 @@ def discover_resources(db: Session, cloud_account_id: int, region: str | None = 
                     )
 
             # 4. Save Scan History
-            print("POINT 5 - Saving scan history")
             db.add(
                 ScanHistoryDB(
                     id=uuid.UUID(scan_result.scan_id),
@@ -114,7 +98,6 @@ def discover_resources(db: Session, cloud_account_id: int, region: str | None = 
             )
 
             # 5. Save Dependencies / Relationships
-            print("POINT 6 - Saving relationships")
             relationships = []
             for norm in normalized_resources:
                 source_id = norm["resource_id"]
@@ -146,18 +129,22 @@ def discover_resources(db: Session, cloud_account_id: int, region: str | None = 
                     ResourceRelationshipDB.source_resource_id.in_(all_resource_ids)
                 ).delete(synchronize_session=False)
 
-            print("=" * 80)
-            print("TOTAL RELATIONSHIPS CREATED:", len(relationships))
-            for rel in relationships[:30]:
-                print(rel.source_resource_id, rel.relationship_type, rel.target_resource_id)
-            print("=" * 80)
+            logger.debug(f"Relationships Built: {len(relationships)}")
 
             db.add_all(relationships)
 
             # 6. Commit
-            print("POINT 7 - COMMIT")
             db.commit()
-            print("POINT 8 - DONE")
+            
+            LogHelper.summary("Discovery Summary", {
+                "Cloud Account": cloud_account_id,
+                "Region": region or "ALL",
+                "Resources Found": len(normalized_resources),
+                "Relationships Built": len(relationships),
+                "Errors": len(scan_result.errors),
+                "Warnings": len(scan_result.warnings),
+                "Duration": f"{scan_result.duration} sec"
+            })
 
             # Phase 4 removes Neo4j syncing from here; GraphSyncService handles it offline
             return scan_result
@@ -166,10 +153,7 @@ def discover_resources(db: Session, cloud_account_id: int, region: str | None = 
             db.rollback()
             import traceback
 
-            print("=" * 80)
-            print("DISCOVERY FAILED")
-            traceback.print_exc()
-            print("=" * 80)
+            logger.error("DISCOVERY FAILED", exc_info=True)
             raise
     else:
         raise Exception(f"Provider {account.provider} not supported")

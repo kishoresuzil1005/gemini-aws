@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import uuid
 from typing import List
 from ..models.mission_models import MissionGoal, MissionObjective
@@ -7,7 +9,7 @@ class ObjectivePlanner:
     Breaks down a single MissionGoal into sequential or parallel MissionObjectives.
     """
     def generate_objectives(self, goal: MissionGoal) -> List[MissionObjective]:
-        print("[ObjectivePlanner] Generating objectives for goal...")
+        logger.debug("[ObjectivePlanner] Generating objectives for goal...")
         # Mock logic
         obj1 = MissionObjective(
             objective_id=str(uuid.uuid4()),

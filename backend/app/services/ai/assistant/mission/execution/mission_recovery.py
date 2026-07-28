@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from .mission_checkpoint import MissionCheckpointManager
 from ..core.mission_manager import MissionManager
 from ..models.mission_models import MissionStatus
@@ -17,7 +19,7 @@ class MissionRecoveryManager:
 
         latest_checkpoint = self.checkpoint_manager.get_latest_checkpoint(mission_id)
         if latest_checkpoint:
-            print(f"[MissionRecovery] Recovering mission {mission_id} from objective {latest_checkpoint.objective_id}")
+            logger.debug(f"[MissionRecovery] Recovering mission {mission_id} from objective {latest_checkpoint.objective_id}")
             self.manager.update_status(mission_id, MissionStatus.RUNNING)
             return True
             

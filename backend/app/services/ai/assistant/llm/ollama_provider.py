@@ -11,13 +11,9 @@ from app.services.ai.assistant.llm.retry import with_retry
 from app.services.ai.assistant.llm.exceptions import LlmConnectionError, LlmTimeoutError, LlmProviderError
 from app.services.ai.assistant.llm.metrics import MetricsTracker
 
-logger = logging.getLogger("OllamaProvider")
-logger.setLevel(logging.INFO)
-if not logger.handlers:
-    ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+from app.core.logging import get_logger, LogHelper
+logger = get_logger("OllamaProvider")
+
 
 
 class OllamaProvider(BaseProvider):
@@ -32,8 +28,8 @@ class OllamaProvider(BaseProvider):
     def _execute_request(self, url: str, payload: dict, stream: bool):
         try:
             response = self.session.post(url, json=payload, timeout=self.settings.timeout, stream=stream)
-            logger.info(f"HTTP Status: {response.status_code}")
-            logger.info(f"Response Body: {response.text[:500]}")
+            logger.debug(f"HTTP Status: {response.status_code}")
+            logger.debug(f"Response Body: {response.text[:500]}")
             response.raise_for_status()
             return response
         except requests.exceptions.Timeout:
@@ -57,7 +53,7 @@ class OllamaProvider(BaseProvider):
 
     def generate_response(self, messages: List[Dict[str, str]], request_id: str, model_profile: Dict[str, Any], stream: bool = False) -> Union[str, AsyncGenerator[str, None]]:
         start_time = time.time()
-        logger.info(f"[Req: {request_id}] Connecting to Ollama at {self.settings.ollama_url}")
+        logger.debug(f"[Req: {request_id}] Connecting to Ollama at {self.settings.ollama_url}")
         
         status = HealthManager.get_health_status(self.session)
         model_name = model_profile["model"]
@@ -71,7 +67,7 @@ class OllamaProvider(BaseProvider):
                 logger.error(f"[Req: {request_id}] Ollama connection failed")
                 return self._format_error("OLLAMA_CONNECTION_FAILED", "Cannot connect to Ollama server.")
         
-        logger.info(f"[Req: {request_id}] Health OK. Model {model_name} Loaded.")
+        logger.debug(f"[Req: {request_id}] Health OK. Model {model_name} Loaded.")
 
         url = f"{self.settings.ollama_url}/api/chat"
         payload = {
@@ -89,17 +85,30 @@ class OllamaProvider(BaseProvider):
 
 
         try:
-            logger.info(f"[Req: {request_id}] Chat Started")
+            logger.debug(f"[Req: {request_id}] Chat Started")
             if not stream:
-                logger.info(f"Ollama URL: {url}")
-                logger.info(f"Payload: {json.dumps(payload, indent=2)}")
+                logger.debug(f"Ollama URL: {url}")
+                logger.debug(f"Payload: {json.dumps(payload, indent=2)}")
                 response = self._execute_request(url, payload, stream=False)
                 data = response.json()
                 result = data.get("message", {}).get("content", "")
                 
                 latency = int((time.time() - start_time) * 1000)
                 MetricsTracker.record_success(latency)
-                logger.info(f"[Req: {request_id}] Chat Finished. Elapsed {latency / 1000.0} sec")
+                
+                prompt_eval_count = data.get("prompt_eval_count", sum(len(m["content"]) for m in messages)//4)
+                eval_count = data.get("eval_count", len(result)//4)
+                
+                LogHelper.summary("LLM Request", {
+                    "Model": model_name,
+                    "Prompt Tokens": prompt_eval_count,
+                    "Completion Tokens": eval_count,
+                    "Inference Time": f"{latency / 1000.0:.2f} sec",
+                    "Status": "SUCCESS"
+                })
+                
+                logger.debug(f"[Req: {request_id}] Chat Finished. Elapsed {latency / 1000.0} sec")
+                logger.debug(f"LLM Response:\n{result}")
                 return result
             else:
                 # Basic stream handling via generator
@@ -117,7 +126,16 @@ class OllamaProvider(BaseProvider):
                     
                     latency = int((time.time() - start_time) * 1000)
                     MetricsTracker.record_success(latency)
-                    logger.info(f"[Req: {request_id}] Chat Finished (Stream). Elapsed {latency / 1000.0} sec")
+                    
+                    LogHelper.summary("LLM Request", {
+                        "Model": model_name,
+                        "Prompt Tokens": sum(len(m["content"]) for m in messages)//4,
+                        "Completion Tokens": len(full_text)//4,
+                        "Inference Time": f"{latency / 1000.0:.2f} sec",
+                        "Status": "SUCCESS (STREAM)"
+                    })
+                    
+                    logger.debug(f"[Req: {request_id}] Chat Finished (Stream). Elapsed {latency / 1000.0} sec")
                     
                 return stream_generator()
         except LlmTimeoutError as e:

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..base.base_task import AgentTask, SubTask
 from ..base.base_agent import BaseAgent
@@ -21,7 +23,7 @@ class WorkflowAgent(BaseAgent):
         Here we assume the SubTask description or name contains the intent.
         """
         intent = task.description
-        print(f"[WorkflowAgent {self.agent_id}] Coordinating high-level intent: '{intent}'")
+        logger.debug(f"[WorkflowAgent {self.agent_id}] Coordinating high-level intent: '{intent}'")
         
         # 1. Plan and Decompose
         plan = self.collaboration_engine.prepare_collaboration_plan(intent, context)
@@ -29,7 +31,7 @@ class WorkflowAgent(BaseAgent):
         # 2. Seek Consensus (if risky, skipping full impl details here for brevity)
         consensus = self.consensus_engine.reach_consensus("Execution of " + intent, [])
         if not consensus:
-            print("[WorkflowAgent] Consensus failed. Aborting.")
+            logger.debug("[WorkflowAgent] Consensus failed. Aborting.")
             return {"status": "error", "message": "Consensus failed"}
 
         # 3. Dispatch to Sub-Agents

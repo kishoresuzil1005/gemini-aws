@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class ExplainabilityEngine:
@@ -6,7 +8,7 @@ class ExplainabilityEngine:
     Crucial for SOC2 compliance and building trust with SRE teams.
     """
     def generate_explanation(self, incident_id: str, diagnosis: Dict, plan: Dict, alternative_plans: list) -> str:
-        print(f"[ExplainabilityEngine] Generating forensic audit report for {incident_id}...")
+        logger.debug(f"[ExplainabilityEngine] Generating forensic audit report for {incident_id}...")
         explanation = f"""
         [AUTONOMOUS ACTION AUDIT]
         Incident: {incident_id}

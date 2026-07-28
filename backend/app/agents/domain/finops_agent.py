@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..base.base_task import SubTask
 from ..base.base_agent import BaseAgent
@@ -10,6 +12,6 @@ class FinOpsAgent(BaseAgent):
         super().__init__(agent_id, "finops")
 
     def execute(self, task: SubTask, context: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"[FinOpsAgent {self.agent_id}] Executing task: {task.name}")
+        logger.debug(f"[FinOpsAgent {self.agent_id}] Executing task: {task.name}")
         # Implementation to optimize costs
         return {"status": "success", "estimated_savings": 150.00}

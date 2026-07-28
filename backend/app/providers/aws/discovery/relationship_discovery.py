@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List, Tuple
 
 class RelationshipDiscovery:
@@ -6,7 +8,7 @@ class RelationshipDiscovery:
     dependencies and relationships without manual tagging.
     """
     def build_graph(self, raw_inventory: Dict[str, List[Any]]) -> Tuple[List[Dict], List[Dict]]:
-        print("[RelationshipDiscovery] Building dependency graph from raw inventory...")
+        logger.debug("[RelationshipDiscovery] Building dependency graph from raw inventory...")
         nodes = []
         edges = []
 

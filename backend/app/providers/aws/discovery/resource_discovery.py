@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..ec2_service import EC2Service
 from ..vpc_service import VPCService
@@ -17,7 +19,7 @@ class ResourceDiscovery:
         self.s3 = S3Service(client_manager)
 
     def discover_all(self) -> Dict[str, List[Any]]:
-        print("[ResourceDiscovery] Fetching resources from AWS APIs...")
+        logger.debug("[ResourceDiscovery] Fetching resources from AWS APIs...")
         
         inventory = {
             "ec2_instances": self.ec2.describe_instances(),
@@ -29,5 +31,5 @@ class ResourceDiscovery:
             "s3_buckets": self.s3.list_buckets()
         }
         
-        print(f"[ResourceDiscovery] Found {len(inventory['ec2_instances'])} EC2 instances.")
+        logger.debug(f"[ResourceDiscovery] Found {len(inventory['ec2_instances'])} EC2 instances.")
         return inventory

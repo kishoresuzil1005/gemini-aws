@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import jwt
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
@@ -20,5 +22,5 @@ class JWTManager:
         try:
             return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except jwt.PyJWTError as e:
-            print(f"[JWTManager] Verification failed: {e}")
+            logger.debug(f"[JWTManager] Verification failed: {e}")
             return None

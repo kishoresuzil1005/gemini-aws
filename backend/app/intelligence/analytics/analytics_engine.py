@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from .trend_analyzer import TrendAnalyzer
 from .benchmark_engine import BenchmarkEngine
@@ -12,7 +14,7 @@ class AnalyticsEngine:
         self.benchmark_engine = benchmark_engine
 
     def generate_system_insights(self) -> Dict[str, Any]:
-        print("[AnalyticsEngine] Aggregating multi-source telemetry data...")
+        logger.debug("[AnalyticsEngine] Aggregating multi-source telemetry data...")
         trends = self.trend_analyzer.analyze_usage_trends()
         benchmarks = self.benchmark_engine.compare_to_industry_standards()
         

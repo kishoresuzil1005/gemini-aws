@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, Callable
 from .service_registry import ServiceRegistry
 
@@ -17,11 +19,11 @@ class LifecycleManager:
         self.shutdown_hooks.append(hook)
 
     def trigger_startup(self):
-        print("[LifecycleManager] Executing startup hooks...")
+        logger.debug("[LifecycleManager] Executing startup hooks...")
         for hook in self.startup_hooks:
             hook()
             
     def trigger_shutdown(self):
-        print("[LifecycleManager] Executing shutdown hooks...")
+        logger.debug("[LifecycleManager] Executing shutdown hooks...")
         for hook in self.shutdown_hooks:
             hook()

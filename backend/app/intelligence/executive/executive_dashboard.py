@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import uuid
 from typing import Dict, Any
 from ..models.intelligence_models import ExecutiveSummary
@@ -8,7 +10,7 @@ class ExecutiveDashboard:
     Designed for CTOs, VPs, and FinOps leaders.
     """
     def generate_summary(self, analytics_data: Dict[str, Any]) -> ExecutiveSummary:
-        print("[ExecutiveDashboard] Compiling executive summary...")
+        logger.debug("[ExecutiveDashboard] Compiling executive summary...")
         return ExecutiveSummary(
             summary_id=str(uuid.uuid4()),
             automation_rate=85.4,

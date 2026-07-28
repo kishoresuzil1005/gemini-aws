@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class ServiceRegistry:
@@ -8,7 +10,7 @@ class ServiceRegistry:
         self._services: Dict[str, Any] = {}
 
     def register(self, name: str, service_instance: Any):
-        print(f"[ServiceRegistry] Registered service: {name}")
+        logger.debug(f"[ServiceRegistry] Registered service: {name}")
         self._services[name] = service_instance
 
     def get_service(self, name: str) -> Any:

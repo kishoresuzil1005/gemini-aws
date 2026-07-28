@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import boto3
 import logging
 import time
@@ -106,7 +108,7 @@ class EC2ExtendedService:
                 "savings_plans": savings_future.result()
             }
 
-        print(f"[EC2 EXTENDED] {round(time.time() - start, 2)}s")
+        logger.debug(f"[EC2 EXTENDED] {round(time.time() - start, 2)}s")
         return res
 
     # --- Details List methods with Fallbacks ---

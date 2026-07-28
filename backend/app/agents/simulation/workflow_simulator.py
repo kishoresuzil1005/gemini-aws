@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from ..base.base_task import AgentTask
 from .agent_simulator import AgentSimulator
@@ -11,7 +13,7 @@ class WorkflowSimulator:
         self.agent_simulator = agent_simulator
 
     def simulate_workflow(self, task: AgentTask) -> Dict[str, Any]:
-        print(f"[WorkflowSimulator] Simulating workflow for '{task.title}'")
+        logger.debug(f"[WorkflowSimulator] Simulating workflow for '{task.title}'")
         simulation_results = {}
         
         for subtask in task.subtasks:

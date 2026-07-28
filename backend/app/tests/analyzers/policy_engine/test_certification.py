@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from concurrent.futures import ThreadPoolExecutor
 from app.services.ai.analyzers.engines.policy.policy_engine import PolicyEngine
@@ -61,20 +63,20 @@ def test_thread_safety():
         assert r.rule_overrides["AWS-S3-001"].severity_override.value == "CRITICAL"
 
 if __name__ == '__main__':
-    print("[POLICY CERTIFICATION] Testing Registry...")
+    logger.debug("[POLICY CERTIFICATION] Testing Registry...")
     test_registry()
-    print("[POLICY CERTIFICATION] Registry Passed.")
+    logger.debug("[POLICY CERTIFICATION] Registry Passed.")
     
-    print("[POLICY CERTIFICATION] Testing Environment Resolution...")
+    logger.debug("[POLICY CERTIFICATION] Testing Environment Resolution...")
     test_environment_resolution()
-    print("[POLICY CERTIFICATION] Resolution Passed.")
+    logger.debug("[POLICY CERTIFICATION] Resolution Passed.")
     
-    print("[POLICY CERTIFICATION] Testing Thread Safety...")
+    logger.debug("[POLICY CERTIFICATION] Testing Thread Safety...")
     test_thread_safety()
-    print("[POLICY CERTIFICATION] Thread Safety Passed.")
+    logger.debug("[POLICY CERTIFICATION] Thread Safety Passed.")
     
-    print("[POLICY CERTIFICATION] Testing Performance...")
+    logger.debug("[POLICY CERTIFICATION] Testing Performance...")
     test_performance()
-    print("[POLICY CERTIFICATION] Performance Passed (O(N) validated).")
+    logger.debug("[POLICY CERTIFICATION] Performance Passed (O(N) validated).")
     
-    print("\n[POLICY CERTIFICATION] ALL PHASES PASSED. Policy Engine 100% Certified.")
+    logger.debug("\n[POLICY CERTIFICATION] ALL PHASES PASSED. Policy Engine 100% Certified.")

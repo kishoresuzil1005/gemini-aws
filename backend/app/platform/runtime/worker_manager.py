@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import asyncio
 from typing import Dict, Any, Callable
 
@@ -10,7 +12,7 @@ class TaskQueue:
         self.queue = asyncio.Queue()
 
     async def enqueue(self, task_name: str, payload: Dict[str, Any]):
-        print(f"[TaskQueue] Enqueued task: {task_name}")
+        logger.debug(f"[TaskQueue] Enqueued task: {task_name}")
         await self.queue.put({"name": task_name, "payload": payload})
 
 class WorkerManager:
@@ -25,7 +27,7 @@ class WorkerManager:
     async def start_workers(self, worker_count: int = 4):
         self.is_running = True
         workers = [asyncio.create_task(self._worker_loop(i)) for i in range(worker_count)]
-        print(f"[WorkerManager] Started {worker_count} background workers.")
+        logger.debug(f"[WorkerManager] Started {worker_count} background workers.")
         await asyncio.gather(*workers)
 
     async def _worker_loop(self, worker_id: int):
@@ -33,9 +35,9 @@ class WorkerManager:
             task = await self.queue.queue.get()
             name = task["name"]
             if name in self.handlers:
-                print(f"[Worker {worker_id}] Executing {name}...")
+                logger.debug(f"[Worker {worker_id}] Executing {name}...")
                 try:
                     await self.handlers[name](task["payload"])
                 except Exception as e:
-                    print(f"[Worker {worker_id}] Error in task {name}: {e}")
+                    logger.debug(f"[Worker {worker_id}] Error in task {name}: {e}")
             self.queue.queue.task_done()

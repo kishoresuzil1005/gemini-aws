@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from app.services.diagram.smart_layout_engine import SmartLayoutEngine
 
 from app.services.diagram.background_renderer import (
@@ -58,10 +60,10 @@ class SVGRenderer:
 
         model = self.layout.build()
 
-        print("========== SVG RENDERER ==========")
-        print("Nodes :", len(model["nodes"]))
-        print("Edges :", len(model["edges"]))
-        print("==================================")
+        logger.debug("========== SVG RENDERER ==========")
+        logger.debug(f"Nodes : {len(model["nodes"])}")
+        logger.debug(f"Edges : {len(model["edges"])}")
+        logger.debug("==================================")
 
         svg = []
 

@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.models import ResourceDB, ResourceNodeDB
 from app.services.graph.neo4j_service import Neo4jService
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger, LogHelper
+logger = get_logger(__name__)
 
 
 class GraphSyncService:
@@ -14,6 +15,8 @@ class GraphSyncService:
         self.graph = Neo4jService()
 
     def sync_resources(self):
+        import time
+        start_time = time.time()
         # Phase 4
         # PostgreSQL is the single source of truth.
         # Always rebuild the graph from inventory.
@@ -159,6 +162,17 @@ class GraphSyncService:
 
         from app.services.graph.sync_tracker import SyncTracker
         SyncTracker.update()
+
+        duration_ms = (time.time() - start_time) * 1000
+        
+        LogHelper.summary("Sync Summary", {
+            "Total Resources": total,
+            "Nodes Synced": synced,
+            "Nodes Failed": failed,
+            "Edges Added": len(relationships),
+            "Success Rate": f"{success_rate}%",
+            "Duration": f"{duration_ms:.1f} ms"
+        })
 
         return {
             "total_resources": total,

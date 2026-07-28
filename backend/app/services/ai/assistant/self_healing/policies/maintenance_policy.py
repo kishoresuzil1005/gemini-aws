@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 from datetime import datetime
 
@@ -9,6 +11,6 @@ class MaintenancePolicy:
         # Mock logic: block repairs on weekends
         day = datetime.utcnow().weekday()
         if day >= 5:
-            print("[MaintenancePolicy] BLOCKED: System is in weekend maintenance lock.")
+            logger.debug("[MaintenancePolicy] BLOCKED: System is in weekend maintenance lock.")
             return False
         return True

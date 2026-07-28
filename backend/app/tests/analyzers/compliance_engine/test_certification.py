@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import time
 from concurrent.futures import ThreadPoolExecutor
 from app.services.ai.analyzers.engines.compliance.compliance_engine import ComplianceEngine
@@ -101,20 +103,20 @@ def test_thread_safety():
         assert r.summary.total_frameworks_evaluated >= 7
 
 if __name__ == '__main__':
-    print("[COMPLIANCE CERTIFICATION] Testing Registry...")
+    logger.debug("[COMPLIANCE CERTIFICATION] Testing Registry...")
     test_registry()
-    print("[COMPLIANCE CERTIFICATION] Registry Passed.")
+    logger.debug("[COMPLIANCE CERTIFICATION] Registry Passed.")
     
-    print("[COMPLIANCE CERTIFICATION] Testing Fault Tolerance and Aggregation...")
+    logger.debug("[COMPLIANCE CERTIFICATION] Testing Fault Tolerance and Aggregation...")
     test_aggregation_and_fault_tolerance()
-    print("[COMPLIANCE CERTIFICATION] Fault Tolerance Passed.")
+    logger.debug("[COMPLIANCE CERTIFICATION] Fault Tolerance Passed.")
     
-    print("[COMPLIANCE CERTIFICATION] Testing Thread Safety...")
+    logger.debug("[COMPLIANCE CERTIFICATION] Testing Thread Safety...")
     test_thread_safety()
-    print("[COMPLIANCE CERTIFICATION] Thread Safety Passed.")
+    logger.debug("[COMPLIANCE CERTIFICATION] Thread Safety Passed.")
     
-    print("[COMPLIANCE CERTIFICATION] Testing Performance (100,000 Findings)...")
+    logger.debug("[COMPLIANCE CERTIFICATION] Testing Performance (100,000 Findings)...")
     test_performance()
-    print("[COMPLIANCE CERTIFICATION] Performance Passed (O(N) validated).")
+    logger.debug("[COMPLIANCE CERTIFICATION] Performance Passed (O(N) validated).")
     
-    print("\n[COMPLIANCE CERTIFICATION] ALL PHASES PASSED. Compliance Engine 100% Certified.")
+    logger.debug("\n[COMPLIANCE CERTIFICATION] ALL PHASES PASSED. Compliance Engine 100% Certified.")

@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class ModelRouter:
@@ -19,5 +21,5 @@ class ModelRouter:
 
     def select_model(self, intent: str) -> str:
         selected = self.model_map.get(intent, self.model_map["default"])
-        print(f"[ModelRouter] Intent='{intent}' -> Model='{selected}'")
+        logger.debug(f"[ModelRouter] Intent='{intent}' -> Model='{selected}'")
         return selected

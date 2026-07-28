@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 import re
 import json
 from typing import Dict, Any, Optional, Tuple
@@ -29,5 +31,5 @@ class ToolCallParser:
             tool_call = json.loads(raw_json)
             return tool_call, clean_text
         except json.JSONDecodeError as e:
-            print(f"[ToolCallParser] Failed to parse tool call JSON: {e}")
+            logger.debug(f"[ToolCallParser] Failed to parse tool call JSON: {e}")
             return None, llm_respons

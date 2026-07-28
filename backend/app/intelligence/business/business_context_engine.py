@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any
 
 class BusinessContextEngine:
@@ -6,7 +8,7 @@ class BusinessContextEngine:
     (e.g. Payroll System, Mission Critical, Owner: John).
     """
     def get_context(self, resource_id: str) -> Dict[str, Any]:
-        print(f"[BusinessContext] Mapping resource {resource_id} to business topology...")
+        logger.debug(f"[BusinessContext] Mapping resource {resource_id} to business topology...")
         return {
             "application": "Payroll System",
             "department": "Finance",

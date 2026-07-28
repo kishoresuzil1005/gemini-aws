@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 
 class WebSocketManager:
@@ -11,7 +13,7 @@ class WebSocketManager:
         if tenant_id not in self.active_connections:
             self.active_connections[tenant_id] = []
         self.active_connections[tenant_id].append(websocket)
-        print(f"[WebSocket] Connected tenant {tenant_id}")
+        logger.debug(f"[WebSocket] Connected tenant {tenant_id}")
 
     def disconnect(self, tenant_id: str, websocket: Any):
         if tenant_id in self.active_connections:
@@ -22,7 +24,7 @@ class WebSocketManager:
         for conn in connections:
             try:
                 # Mock send logic (await conn.send_json(message))
-                print(f"[WebSocket] Streaming to {tenant_id}: {message}")
+                logger.debug(f"[WebSocket] Streaming to {tenant_id}: {message}")
             except Exception as e:
-                print(f"[WebSocket] Failed to stream: {e}")
+                logger.debug(f"[WebSocket] Failed to stream: {e}")
                 self.disconnect(tenant_id, conn)

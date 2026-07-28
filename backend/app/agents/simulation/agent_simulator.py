@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from typing import Dict, Any, List
 from ..base.base_task import SubTask
 
@@ -7,7 +9,7 @@ class AgentSimulator:
     without applying changes to production.
     """
     def simulate(self, agent_id: str, task: SubTask, context: Dict[str, Any]) -> Dict[str, Any]:
-        print(f"[AgentSimulator] Simulating agent {agent_id} executing '{task.name}'")
+        logger.debug(f"[AgentSimulator] Simulating agent {agent_id} executing '{task.name}'")
         # In a real system, this might invoke the agent in a dry-run mode
         return {
             "status": "success",

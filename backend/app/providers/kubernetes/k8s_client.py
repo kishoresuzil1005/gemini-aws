@@ -1,3 +1,5 @@
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 from kubernetes import client, config
 
 class KubernetesClientManager:
@@ -11,7 +13,7 @@ class KubernetesClientManager:
             try:
                 config.load_incluster_config()
             except Exception as e:
-                print(f"[KubernetesClientManager] Failed to load config: {e}")
+                logger.debug(f"[KubernetesClientManager] Failed to load config: {e}")
         
     def get_core_client(self):
         return client.CoreV1Api()
