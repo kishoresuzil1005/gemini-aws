@@ -15,8 +15,8 @@ class OrthogonalRouter:
     def route(self, graph: dict):
 
         logger.debug("========== ORTHOGONAL ROUTER ==========")
-        logger.debug(f"Graph edges : {len(graph["edges"])}")
-        logger.debug(f"Node lookup : {len(graph["node_lookup"])}")
+        logger.debug(f"Graph edges : {len(graph['edges'])}")
+        logger.debug(f"Node lookup : {len(graph['node_lookup'])}")
 
         node_lookup = graph["node_lookup"]
 

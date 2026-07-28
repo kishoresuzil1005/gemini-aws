@@ -61,8 +61,8 @@ class SVGRenderer:
         model = self.layout.build()
 
         logger.debug("========== SVG RENDERER ==========")
-        logger.debug(f"Nodes : {len(model["nodes"])}")
-        logger.debug(f"Edges : {len(model["edges"])}")
+        logger.debug(f"Nodes : {len(model['nodes'])}")
+        logger.debug(f"Edges : {len(model['edges'])}")
         logger.debug("==================================")
 
         svg = []

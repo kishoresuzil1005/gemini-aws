@@ -59,7 +59,7 @@ class ALBDiscovery:
                     logger.debug("=" * 80)
                     logger.debug("RAW ALB")
                     logger.debug(f"vpc_id: {vpc_id}")
-                    logger.debug(f"subnets: {[az.get("SubnetId") for az in lb.get("AvailabilityZones", [])]}")
+                    logger.debug(f"subnets: {[az.get('SubnetId') for az in lb.get('AvailabilityZones', [])]}")
                     logger.debug(f"security_groups: {security_groups}")
                     logger.debug("=" * 80)
 

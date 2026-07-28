@@ -34,7 +34,7 @@ class IconRenderer:
 
             icon_svg = SVGIconCache.get(node["type"])
 
-            logger.debug(f"{node["type"]} -> {"FOUND" if icon_svg else "MISSING"}")
+            logger.debug(f"{node['type']} -> {'FOUND' if icon_svg else 'MISSING'}")
 
             #
             # Unknown resource
@@ -52,6 +52,6 @@ class IconRenderer:
                 size=self.ICON_SIZE
             )
 
-            logger.debug(f"Embedded: {node["type"]}")
+            logger.debug(f"Embedded: {node['type']}")
 
             svg.append(transformed)

@@ -211,8 +211,8 @@ class SmartLayoutEngine:
 
         logger.debug("================================")
         logger.debug("SMART LAYOUT")
-        logger.debug(f"Nodes : {len(layout["nodes"])}")
-        logger.debug(f"Edges : {len(layout["edges"])}")
+        logger.debug(f"Nodes : {len(layout['nodes'])}")
+        logger.debug(f"Edges : {len(layout['edges'])}")
         logger.debug("================================")
 
         return layout
