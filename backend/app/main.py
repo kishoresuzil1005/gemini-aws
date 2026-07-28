@@ -37,10 +37,10 @@ from app.services.graph.analysis.dependency_analyzer import DependencyAnalyzer
 from app.services.graph.analysis.blast_radius import BlastRadiusAnalyzer
 from app.services.graph.analysis.root_cause import RootCauseAnalyzer
 from app.services.graph.analysis.criticality import CriticalityAnalyzer
-from app.services.graph.analysis.cost import CostAnalyzer
+from app.services.analysis.cost_service import CostService
 from app.services.graph.analysis.migration import MigrationPlanner
 from app.services.graph.analysis.architecture_review import ArchitectureReviewer
-from app.services.graph.analysis.security.orchestrator import SecurityImpactAnalyzer
+from app.services.analysis.security_service import SecurityService
 from app.services.graph.analysis.ai_graph_agent import AIGraphAgent
 from app.services.graph.analysis.ai_query import NLQueryEngine
 from app.services.graph.graph_analysis_service import GraphAnalysisService
@@ -2206,8 +2206,7 @@ def security_group_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
         return {"error": "resource_id is required"}
-    analyzer = SecurityImpactAnalyzer()
-    return analyzer.analyze(resource_id)
+    return SecurityService().analyze(resource_id)
 
 @app.get("/api/v1/graph/security-group/{resource_id}")
 def analyze_security_group(resource_id: str):
@@ -2400,8 +2399,7 @@ def cost_analysis(request: dict):
     resource_id = request.get("resource_id")
     if not resource_id:
         return {"error": "resource_id is required"}
-    analyzer = CostAnalyzer()
-    return analyzer.analyze(resource_id)
+    return CostService().analyze_resource(resource_id)
 
 @app.post("/api/v1/migrations/analysis")
 def migration_analysis(request: dict):
@@ -2436,4 +2434,3 @@ def dependency_tree(resource_id: str):
         return service.dependency_tree(resource_id)
     finally:
         service.close()
-

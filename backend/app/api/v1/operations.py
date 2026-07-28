@@ -6,7 +6,7 @@ from app.services.anomaly.idle_detector import IdleResourceDetector
 
 from app.services.forecast.forecast_engine import ForecastEngine
 
-from app.services.optimization.recommendations import RecommendationEngine
+from app.services.analysis.recommendation_service import RecommendationService
 from app.services.optimization.savings import SavingsCalculator
 
 from app.services.budget.budget_engine import BudgetEngine
@@ -76,8 +76,8 @@ def recommendations():
     db = SessionLocal()
 
     result = (
-        RecommendationEngine
-        .generate(db)
+        RecommendationService()
+        .generate_finops(db)
     )
 
     db.close()
@@ -91,8 +91,8 @@ def savings():
     db = SessionLocal()
 
     recs = (
-        RecommendationEngine
-        .generate(db)
+        RecommendationService()
+        .generate_finops(db)
     )
 
     result = (
@@ -345,4 +345,3 @@ def jobs():
         "ai_job":
         "every 1 hour"
     }
-

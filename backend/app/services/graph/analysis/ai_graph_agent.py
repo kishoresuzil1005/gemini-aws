@@ -1,6 +1,7 @@
 import logging
 from knowledge.service.client_factory import get_default_client
 from app.services.graph.analysis.architecture_review import ArchitectureReviewer
+from app.services.analysis.recommendation_service import RecommendationService
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +18,10 @@ class AIGraphAgent:
         # Step 1: Gather Context
         arch_data = self.architecture_reviewer.analyze()
         
-        # MOCK LLM RESPONSE
+        recommendations = RecommendationService().generate_ai()
         recommendations = [
-            "Unused Security Groups detected: Consider cleaning up orphaned SGs to reduce attack surface.",
-            "Unused EBS Volumes: Several volumes have no ATTACHED_TO relationships. Deleting them will save costs.",
-            "Single Point of Failure: Some EC2 instances are not part of an Auto Scaling Group.",
-            "Missing Backup: RDS instances are missing cross-region snapshot replication.",
-            "High Blast Radius: The primary VPC Route Table routes traffic for 14 downstream subnets."
+            getattr(item, "recommendation_text", getattr(item, "description", str(item)))
+            for item in recommendations
         ]
         
         return {

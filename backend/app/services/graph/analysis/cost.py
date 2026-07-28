@@ -34,35 +34,37 @@ class CostAnalyzer:
             if res_type:
                 pricing_map[res_type] = rule.get("estimated_cost", 0)
         
-        # Fallback values if rule catalog is empty for these types
-        default_pricing = {
-            "EC2": 100,
-            "RDS": 200,
-            "ALB": 50,
-            "Lambda": 85,
-            "NATGateway": 32,
-            "DynamoDBTable": 15
-        }
-        
         total_cost = 0
         breakdown = []
+        unavailable_resources = []
         
         for item in downstream:
             labels = item.get("labels", [])
             label = labels[0] if labels else "Unknown"
             
-            # Lookup cost in KS rules, fallback to default, then 5
-            cost = pricing_map.get(label, default_pricing.get(label, 5))
-                
+            cost = pricing_map.get(label)
+            if cost is None:
+                unavailable_resources.append(item.get("id"))
+                breakdown.append({
+                    "resource": item.get("id"),
+                    "type": label,
+                    "estimated_monthly_cost": None,
+                    "status": "unavailable",
+                    "reason": "No authoritative cost rule is available."
+                })
+                continue
+
             total_cost += cost
             breakdown.append({
                 "resource": item.get("id"),
                 "type": label,
-                "estimated_monthly_cost": cost
+                "estimated_monthly_cost": cost,
+                "status": "available"
             })
             
         return {
             "application_root": root_resource_id,
             "total_monthly_cost": total_cost,
-            "breakdown": breakdown
+            "breakdown": breakdown,
+            "unavailable_resources": unavailable_resources
         }

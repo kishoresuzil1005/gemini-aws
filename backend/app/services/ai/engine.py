@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, List
 from app.services.ai.assistant.graph_assistant import GraphAssistant
-from app.services.ai.recommendation_engine import AIRecommendationEngine
+from app.services.analysis.recommendation_service import RecommendationService
 from app.services.ai.remediation_planner import RemediationPlanner
 from app.services.ai.orchestrator.remediation_orchestrator import RemediationOrchestrator
 
@@ -18,14 +18,7 @@ class AIEngine:
         return assistant.chat(request, stream=stream)
         
     def recommend(self, resource_id: Optional[str] = None, category: Optional[str] = None) -> List[Any]:
-        engine = AIRecommendationEngine()
-        if resource_id:
-            return engine.analyze_resource(resource_id)
-        
-        recs = engine.analyze_environment()
-        if category:
-            recs = [r for r in recs if r.category == category.upper()]
-        return recs
+        return RecommendationService().generate_ai(resource_id, category)
 
     def plan_remediation(self, resource_id: Optional[str] = None) -> List[Any]:
         planner = RemediationPlanner()

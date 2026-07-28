@@ -16,6 +16,7 @@ class Recommendation(BaseModel):
     estimated_impact: str
 
 class AIRecommendationEngine:
+    """Deprecated compatibility adapter; RecommendationService is the public entry point."""
     def __init__(self, knowledge_client=None):
         self.client = knowledge_client or get_default_client()
         self.security_analyzer = SecurityImpactAnalyzer(self.client)

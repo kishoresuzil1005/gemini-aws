@@ -1,7 +1,7 @@
 import datetime
-import random
 import boto3
 import logging
+from typing import Optional
 from app.providers.aws.auth import get_aws_client
 from app.providers.aws.models import NormalizedResource, ResourceDependency
 
@@ -69,7 +69,7 @@ class CloudWatchMetrics:
     def get_ec2_cpu(
         cloud_account_id: int,
         instance_id: str
-    ):
+    ) -> Optional[float]:
         try:
             client = get_aws_client(
                 "cloudwatch",
@@ -107,10 +107,11 @@ class CloudWatchMetrics:
             datapoints = response.get("Datapoints", [])
 
             if not datapoints:
-                # Return standard fallback logic if no actual statistics exist
-                res_suffix = instance_id[-3:] if instance_id else "abc"
-                char_sum = sum(ord(c) for c in res_suffix)
-                return 1.4 if (char_sum % 2 == 0) else 14.5
+                logger.warning(
+                    "CloudWatch unavailable for %s: no CPU datapoints returned.",
+                    instance_id,
+                )
+                return None
 
             latest = sorted(
                 datapoints,
@@ -121,11 +122,10 @@ class CloudWatchMetrics:
                 latest["Average"],
                 2
             )
-        except Exception as e:
-            logger.warning(f"Could not retrieve live CloudWatch metrics for {instance_id}: {e}. Employing offline profiling.")
-            # For testing/demo accuracy: we can make "legacy-report-worker" (ends in '2ef', sum % 2 == 0) extremely idle
-            res_suffix = instance_id[-3:] if instance_id else "abc"
-            char_sum = sum(ord(c) for c in res_suffix)
-            if "legacy" in instance_id.lower() or "report" in instance_id.lower() or char_sum % 2 == 0:
-                return round(random.uniform(0.8, 3.2), 2)
-            return round(random.uniform(8.5, 24.5), 2)
+        except Exception as error:
+            logger.warning(
+                "CloudWatch unavailable for %s: %s",
+                instance_id,
+                error,
+            )
+            return None

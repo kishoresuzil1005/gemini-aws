@@ -16,7 +16,7 @@ from knowledge.service.knowledge_client import KnowledgeClient
 logger = logging.getLogger(__name__)
 
 class CostIntelligenceEngine:
-    """Authoritative FinOps Reasoning Engine for the CloudOps Platform."""
+    """Legacy internal engine; CostService is the public analysis boundary."""
 
     def __init__(self, knowledge_client: KnowledgeClient, dependency_engine: DependencyIntelligenceEngine, security_engine: SecurityIntelligenceEngine):
         self.client = knowledge_client

@@ -4,9 +4,7 @@ from app.database import (
     SessionLocal
 )
 
-from app.services.optimization.recommendations import (
-    RecommendationEngine
-)
+from app.services.analysis.recommendation_service import RecommendationService
 
 
 def run_optimization_job():
@@ -16,8 +14,8 @@ def run_optimization_job():
     try:
 
         recommendations = (
-            RecommendationEngine
-            .generate(db)
+            RecommendationService()
+            .generate_finops(db)
         )
 
         logger.debug(

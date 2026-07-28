@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.database import SessionLocal
 
-from app.services.optimization.recommendations import RecommendationEngine
+from app.services.analysis.recommendation_service import RecommendationService
 
 from app.services.optimization.savings import SavingsCalculator
 
@@ -17,8 +17,8 @@ def recommendations():
     db = SessionLocal()
 
     recs = (
-        RecommendationEngine
-        .generate(db)
+        RecommendationService()
+        .generate_finops(db)
     )
 
     db.close()
@@ -34,8 +34,8 @@ def savings():
     db = SessionLocal()
 
     recs = (
-        RecommendationEngine
-        .generate(db)
+        RecommendationService()
+        .generate_finops(db)
     )
 
     db.close()
@@ -50,16 +50,7 @@ def savings():
                 "saving": round(float(saving_val), 2)
             })
 
-    # Fallback to keep UI happy/consistent with example data
-    if not recs_list:
-        recs_list.append({
-            "resource": "i-06d74665d9e16da17",
-            "saving": 33.87
-        })
-
     monthly_savings = sum(r["saving"] for r in recs_list)
-    if monthly_savings < 0.01:
-        monthly_savings = 45.00
 
     return {
         "monthly_savings": round(monthly_savings, 2),

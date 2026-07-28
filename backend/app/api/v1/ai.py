@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import ResourceDB
 from app.services.ai.insights import AIInsightEngine
-from app.services.optimization.recommendations import RecommendationEngine
+from app.services.analysis.recommendation_service import RecommendationService
 from app.services.cost.aggregator import CostAggregator
 
 router = APIRouter()
@@ -63,7 +63,7 @@ def analyze_resource(
         .first()
     )
 
-    recommendations = RecommendationEngine.generate(db)
+    recommendations = RecommendationService().generate_finops(db)
 
     matching = None
 
@@ -147,4 +147,3 @@ def get_provider_health():
     from app.services.ai.context_engine.provider_health_manager import ProviderHealthManager
     health_manager = ProviderHealthManager()
     return health_manager.summary()
-

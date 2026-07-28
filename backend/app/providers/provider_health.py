@@ -9,6 +9,7 @@ class ProviderHealthStatus(BaseModel):
     message: str
 
 class ProviderHealthEngine:
+    """Deprecated mock-only helper. It must not be used for production health."""
     def __init__(self):
         # Mocks health checks for all providers
         self.health_states: Dict[CloudProvider, ProviderHealthStatus] = {

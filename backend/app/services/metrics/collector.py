@@ -39,6 +39,10 @@ class MetricCollector:
                     )
                 )
 
+                if cpu is None:
+                    # Do not persist invented metrics when CloudWatch is unavailable.
+                    continue
+
                 metric = MetricDB(
 
                     resource_id=

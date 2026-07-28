@@ -7,6 +7,7 @@ from app.services.optimization.ebs_optimizer import EBSOptimizer
 
 
 class RecommendationEngine:
+    """Deprecated compatibility adapter; use RecommendationService at API boundaries."""
 
     @staticmethod
     def generate(db):

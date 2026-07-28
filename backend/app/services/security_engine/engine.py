@@ -12,7 +12,7 @@ from knowledge.service.knowledge_client import KnowledgeClient
 logger = logging.getLogger(__name__)
 
 class SecurityIntelligenceEngine:
-    """Authoritative Security Reasoning Engine for the CloudOps Platform."""
+    """Legacy internal engine; SecurityService is the public analysis boundary."""
 
     def __init__(self, knowledge_client: KnowledgeClient, dependency_engine: DependencyIntelligenceEngine):
         self.client = knowledge_client
