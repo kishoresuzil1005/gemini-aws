@@ -54,7 +54,7 @@ class PromptBuilder:
         
         sections = []
         if context.resource: sections.append("Inventory")
-        if context.subgraph: sections.append("Graph")
+        if context.graph: sections.append("Graph")
         if context.security: sections.append("Security")
         if context.metrics: sections.append("Metrics")
         if context.cost: sections.append("Cost")

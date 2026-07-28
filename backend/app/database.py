@@ -41,8 +41,6 @@ def init_db():
                 conn.execute(text(f'ALTER TABLE resources ADD COLUMN "{col_name}" {col_type}'))
                 conn.commit()
             except Exception as e:
-                import logging
-                logging.warning(f"Could not add {col_name}: {e}")
                 conn.rollback()
         
         try:
