@@ -38,10 +38,35 @@ class CostProvider(BaseProvider):
         
         try:
             cost_rules = self.knowledge_client.get_rules(category="cost")
-            data = {"cost_rules": cost_rules}
+            data = {"cost_rules": cost_rules, "status": "unavailable"}
+            from app.database import SessionLocal
+            from app.models import CostReportDB
+
+            db = SessionLocal()
+            try:
+                report = (
+                    db.query(CostReportDB)
+                    .order_by(CostReportDB.period_end.desc())
+                    .first()
+                )
+                if report:
+                    data.update({
+                        "status": "available",
+                        "latest_report": {
+                            "provider": report.provider,
+                            "amount": report.amount,
+                            "currency": report.currency,
+                            "period_start": report.period_start,
+                            "period_end": report.period_end,
+                        },
+                    })
+                else:
+                    data["reason"] = "No Cost Explorer report has been collected yet."
+            finally:
+                db.close()
         except Exception as exc:
             logger.debug("CostProvider lookup failed: %s", exc)
-            data = {"cost_rules": []}
+            data = {"cost_rules": [], "status": "unavailable", "reason": str(exc)}
             
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)

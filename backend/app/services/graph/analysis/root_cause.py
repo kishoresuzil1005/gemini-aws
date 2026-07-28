@@ -21,8 +21,18 @@ class RootCauseAnalyzer:
             raise HTTPException(status_code=404, detail="Resource not found")
             
         upstream_nodes = self.dependency_analyzer.get_upstream(resource_id, depth=10)
+        most_likely = upstream_nodes[0] if upstream_nodes else None
+        confidence = 0.6 if most_likely else 0.0
         
         return {
             "symptom_resource": resource_id,
-            "possible_root_causes": upstream_nodes
+            "symptoms": [f"Analysis requested for {resource_id}"],
+            "evidence": upstream_nodes,
+            "possible_root_causes": upstream_nodes,
+            "most_likely_cause": most_likely,
+            "confidence": confidence,
+            "recommended_actions": (
+                ["Inspect the upstream dependency configuration and health status."]
+                if most_likely else []
+            ),
         }

@@ -22,6 +22,7 @@ from app.services.ai.assistant.response.response_generator import ResponseGenera
 from app.services.ai.context_engine import ContextEngine, ContextLevel, ContextRequest
 from app.services.ai.context_engine.analysis_engine import AnalysisEngine
 from app.services.ai.context_engine.models import AIContext
+from app.services.analysis.evidence_aggregator import EvidenceAggregator
 
 
 class AssistantPipeline:
@@ -39,6 +40,7 @@ class AssistantPipeline:
         reasoning_engine: Optional[ReasoningEngine] = None,
         prompt_builder: Optional[PromptBuilder] = None,
         response_generator: Optional[ResponseGenerator] = None,
+        evidence_aggregator: Optional[EvidenceAggregator] = None,
     ) -> None:
         self.conversation = conversation
         self.memory = conversation.memory
@@ -49,6 +51,7 @@ class AssistantPipeline:
         self.reasoning_engine = reasoning_engine or ReasoningEngine()
         self.prompt_builder = prompt_builder or PromptBuilder()
         self.generator = response_generator or ResponseGenerator(provider)
+        self.evidence_aggregator = evidence_aggregator or EvidenceAggregator()
 
     def process(self, request: ChatRequest, stream: bool = False) -> ChatResponse:
         start_total = time.time()
@@ -110,6 +113,10 @@ class AssistantPipeline:
         metrics.finish("Context Providers")
         
         ai_context = self.analysis_engine.analyze(ai_context)
+        ai_context = self.evidence_aggregator.aggregate(
+            ai_context,
+            execution_context.identifier,
+        )
         
         reasoning = self.reasoning_engine.process(request.conversation_id, ai_context)
         history = self.conversation.get_formatted_history(request.conversation_id, limit=5)

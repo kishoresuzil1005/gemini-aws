@@ -83,6 +83,10 @@ class AIContext(BaseModel):
     findings:        Dict[str, Any] = Field(default_factory=dict)
     recommendations: List[Dict[str, Any]] = Field(default_factory=list)
 
+    # ── Authoritative evidence aggregate ──────────────────────────────
+    # This is the only object handed to reasoning and prompt construction.
+    evidence: Dict[str, Any] = Field(default_factory=dict)
+
     # ── Internals ─────────────────────────────────────────────────────
     provider_data: Dict[str, Any] = Field(
         default_factory=dict,
@@ -106,4 +110,3 @@ class AnalyzerResult(BaseModel):
     recommendations: List[Dict[str, Any]] = Field(default_factory=list)
     confidence: float = 1.0
     metadata: Dict[str, Any] = Field(default_factory=dict)
-

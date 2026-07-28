@@ -35,6 +35,35 @@ class MetricsProvider(BaseProvider):
 
     async def fetch(self, resource: ResolvedResource, request: ContextRequest) -> Dict[str, Any]:
         t0 = time.monotonic()
-        data = {"summary": "Metrics are now provided via Knowledge Service rule evaluation."}
+        data: Dict[str, Any] = {
+            "status": "unavailable",
+            "reason": "No stored CloudWatch metric is available for this resource.",
+            "latest": {},
+        }
+        try:
+            from app.database import SessionLocal
+            from app.models import MetricDB
+
+            db = SessionLocal()
+            try:
+                metric = (
+                    db.query(MetricDB)
+                    .filter(MetricDB.resource_id == resource.resource_id)
+                    .order_by(MetricDB.timestamp.desc())
+                    .first()
+                )
+                if metric:
+                    data = {
+                        "status": "available",
+                        "latest": {
+                            "name": metric.name,
+                            "value": metric.value,
+                            "timestamp": metric.timestamp,
+                        },
+                    }
+            finally:
+                db.close()
+        except Exception as exc:
+            logger.debug("MetricsProvider lookup failed: %s", exc)
         exec_ms = (time.monotonic() - t0) * 1000
         return self._build_response(data, execution_time_ms=exec_ms)
