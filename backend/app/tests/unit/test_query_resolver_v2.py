@@ -129,8 +129,8 @@ def test_resolver_wrong_resource_type(mock_postgres, mock_neo4j, mock_cache):
 
 def test_resolver_duplicate_resources(mock_postgres, mock_neo4j, mock_cache):
     mock_postgres.find_candidates.return_value = [
-        {"id": "i-dup1", "name": "ambig_dup_1", "type": ["EC2"]},
-        {"id": "i-dup2", "name": "ambig_dup_2", "type": ["EC2"]}
+        {"id": "i-dup1", "name": "ambig_dup_1", "type": ["EC2"], "source": "postgres"},
+        {"id": "i-dup2", "name": "ambig_dup_2", "type": ["EC2"], "source": "postgres"}
     ]
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze ambig", session_id="test")
@@ -140,8 +140,8 @@ def test_resolver_duplicate_resources(mock_postgres, mock_neo4j, mock_cache):
 
 def test_resolver_clarification_flow(mock_postgres, mock_neo4j, mock_cache):
     mock_postgres.find_candidates.return_value = [
-        {"id": "i-ambig1", "name": "ambig_1", "type": ["EC2"]},
-        {"id": "i-ambig2", "name": "ambig_2", "type": ["EC2"]}
+        {"id": "i-ambig1", "name": "ambig_1", "type": ["EC2"], "source": "postgres"},
+        {"id": "i-ambig2", "name": "ambig_2", "type": ["EC2"], "source": "postgres"}
     ]
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze ambig", session_id="test")
