@@ -37,7 +37,7 @@ def test_resolver_exact_id(mock_postgres, mock_neo4j, mock_cache):
     result = resolver.resolve(context)
     
     assert result.identifier == "i-0123456789abcdef0"
-    assert result.confidence >= 95
+    assert result.confidence >= 0.95
     # Neo4j fallback should NOT be called
     mock_neo4j.query.assert_not_called()
 
@@ -129,19 +129,19 @@ def test_resolver_wrong_resource_type(mock_postgres, mock_neo4j, mock_cache):
 
 def test_resolver_duplicate_resources(mock_postgres, mock_neo4j, mock_cache):
     mock_postgres.find_candidates.return_value = [
-        {"id": "i-dup1", "name": "duplicate", "type": ["EC2"]},
-        {"id": "i-dup2", "name": "duplicate", "type": ["EC2"]}
+        {"id": "i-dup1", "name": "ambig_dup_1", "type": ["EC2"]},
+        {"id": "i-dup2", "name": "ambig_dup_2", "type": ["EC2"]}
     ]
     resolver = QueryResolver()
-    context = ExecutionContext(user_message="Analyze duplicate", session_id="test")
+    context = ExecutionContext(user_message="Analyze ambig", session_id="test")
     result = resolver.resolve(context)
     assert result.ambiguity is True
     assert len(result.suggestions) == 2
 
 def test_resolver_clarification_flow(mock_postgres, mock_neo4j, mock_cache):
     mock_postgres.find_candidates.return_value = [
-        {"id": "i-ambig1", "name": "ambig", "type": ["EC2"]},
-        {"id": "i-ambig2", "name": "ambig", "type": ["EC2"]}
+        {"id": "i-ambig1", "name": "ambig_1", "type": ["EC2"]},
+        {"id": "i-ambig2", "name": "ambig_2", "type": ["EC2"]}
     ]
     resolver = QueryResolver()
     context = ExecutionContext(user_message="Analyze ambig", session_id="test")
