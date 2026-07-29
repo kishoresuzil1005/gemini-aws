@@ -1,0 +1,13 @@
+exact_id: 99
+exact_arn: 98
+exact_name: 95
+inventory: 90
+tag: 88
+neo4j: 80
+fuzzy: 70
+
+penalties:
+  wrong_resource_type: 50
+  wrong_region: 20
+  wrong_account: 20
+  wrong_intent: 25

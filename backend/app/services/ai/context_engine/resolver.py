@@ -92,6 +92,72 @@ class ResourceResolver:
             return None
         finally:
             db.close()
+            
+    def find_candidates(self, resource_ids: list[str], keywords: list[str], tag_filters: dict[str, str] = None) -> list[dict]:
+        """Search PostgreSQL inventory for candidates based on IDs, names, types, or tags."""
+        db = SessionLocal()
+        candidates = []
+        try:
+            from app.models import ResourceDB
+            
+            # Combine all search terms for flexible matching
+            search_terms = resource_ids + keywords
+            if not search_terms and not tag_filters:
+                return candidates
+                
+            seen_ids = set()
+            
+            # 1. Check exact IDs
+            if resource_ids:
+                rows = db.query(ResourceDB).filter(ResourceDB.resource_id.in_(resource_ids)).all()
+                for row in rows:
+                    if row.resource_id not in seen_ids:
+                        candidates.append(self._row_to_dict(row, "postgres"))
+                        seen_ids.add(row.resource_id)
+            
+            # 2. Check Tag filters if provided
+            if tag_filters:
+                # Basic JSONB contains check (assumes tags is a JSON string or JSONB)
+                for tag_key, tag_val in tag_filters.items():
+                    # For text field, we just do a string contains
+                    rows = db.query(ResourceDB).filter(ResourceDB.tags.ilike(f"%\"{tag_key}\":%\"{tag_val}\"%")).limit(10).all()
+                    for row in rows:
+                        if row.resource_id not in seen_ids:
+                            candidates.append(self._row_to_dict(row, "tag_store"))
+                            seen_ids.add(row.resource_id)
+                            
+            # 3. Check Names and Types (Keywords)
+            if keywords:
+                for kw in keywords:
+                    rows = db.query(ResourceDB).filter(
+                        (ResourceDB.name.ilike(kw)) | 
+                        (ResourceDB.resource_type.ilike(kw))
+                    ).limit(10).all()
+                    for row in rows:
+                        if row.resource_id not in seen_ids:
+                            candidates.append(self._row_to_dict(row, "postgres"))
+                            seen_ids.add(row.resource_id)
+                            
+            return candidates
+        except Exception as exc:
+            logger.warning("ResourceResolver DB error in find_candidates: %s", exc)
+            return candidates
+        finally:
+            db.close()
+            
+    @staticmethod
+    def _row_to_dict(row, source: str) -> dict:
+        meta = row.resource_metadata if isinstance(row.resource_metadata, dict) else {}
+        arn = meta.get("arn", "") if meta else ""
+        return {
+            "id": row.resource_id,
+            "arn": arn,
+            "name": row.name or row.resource_id,
+            "type": [row.resource_type] if row.resource_type else [],
+            "region": row.region,
+            "account": str(row.cloud_account_id or ""),
+            "source": source
+        }
 
     @staticmethod
     def _row_to_resolved(row, original_identifier: str) -> ResolvedResource:

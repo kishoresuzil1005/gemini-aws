@@ -44,7 +44,7 @@ class QueryResolver:
             return result
             
         # 3. Generate Candidates
-        candidates = self.generator.generate(entities)
+        candidates = self.generator.generate(entities, session_id=context.session_id)
         
         # 4. Score Candidates
         scored_candidates = self.scorer.score(candidates, entities)

@@ -6,7 +6,11 @@ from app.services.graph.analysis.security.orchestrator import SecurityImpactAnal
 
 
 class SecurityService:
-    """Normalizes access to the existing graph security providers."""
+    """
+    @deprecated
+    Legacy Compatibility Wrapper
+    Normalizes access to the existing graph security providers.
+    """
 
     def __init__(self, knowledge_client: Any = None) -> None:
         self._analyzer = SecurityImpactAnalyzer(knowledge_client)

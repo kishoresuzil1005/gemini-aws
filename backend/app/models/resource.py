@@ -8,9 +8,9 @@ class ResourceDB(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     cloud_account_id = Column(Integer, nullable=True)
     provider = Column(String(50), nullable=False)
-    resource_type = Column(String(100), nullable=False)
+    resource_type = Column(String(100), index=True, nullable=False)
     resource_id = Column(Text, index=True, nullable=False)
-    name = Column(String(255), nullable=True)
+    name = Column(String(255), index=True, nullable=True)
     region = Column(String(100), nullable=True)
     status = Column(String(50), nullable=True)
     tags = Column(Text, nullable=True) # JSON store

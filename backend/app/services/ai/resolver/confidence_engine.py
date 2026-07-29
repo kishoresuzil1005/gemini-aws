@@ -36,6 +36,8 @@ class ConfidenceResult:
 
 class ConfidenceEngine:
     """
+    @deprecated
+    Legacy Compatibility Wrapper
     Applies source-reliability weights and recency bonuses,
     then makes a final selection decision.
     """

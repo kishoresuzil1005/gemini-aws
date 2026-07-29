@@ -54,7 +54,10 @@ _STOP_WORDS = frozenset(
 
 class EntityExtractor:
     """
-    Extracts structured query intent from raw natural language.
+    @deprecated
+    Legacy Compatibility Wrapper
+    Extracts entities (like AWS resource IDs, types, and keywords) 
+    from a natural language query.
     All methods are pure functions — no I/O, no LLM calls.
     """
 

@@ -38,6 +38,8 @@ _HIGH_CONFIDENCE_THRESHOLD = 0.93
 
 class MultiSourceResolver:
     """
+    @deprecated
+    Legacy Compatibility Wrapper
     Chains multiple resolution strategies and returns a ranked
     list of ResolvedResource candidates.
     """
