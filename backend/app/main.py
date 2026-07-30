@@ -14,12 +14,11 @@ from app.core.logging import LoggingMiddleware
 from sqlalchemy.orm import Session
 
 from .config import is_aws_configured, AWS_DEFAULT_REGION
-from .database import init_db, get_db, SessionLocal
+from .database import get_db, SessionLocal
 from .models import (
-    CloudAccountDB, DiscoveryResourceDB, 
-    SavedMigrationDB, CloudIncidentDB, BackgroundJobDB, UserDB, OrganizationDB, ResourceDB,
     ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB
 )
+from app.repositories import cloud_account_repo, resource_repo
 
 from .services.session_manager import (
     assume_target_aws_role, connect_azure_tenant, connect_gcp_project
@@ -51,6 +50,7 @@ from app.services.graph.analysis.security.security_group_analyzer import Securit
 from app.services.graph.analysis.security.iam_analyzer import IAMAnalyzer
 from app.services.graph.analysis.security.network_analyzer import NetworkAnalyzer
 from app.services.graph.analysis.security.attack_path_analyzer import AttackPathAnalyzer
+from knowledge.service.client_factory import get_default_client as get_knowledge_client
 
 # Sprint 9 AI Operations Engine
 from app.services.ai.engine import AIEngine
@@ -468,7 +468,7 @@ class AIChatResponseSchema(BaseModel):
 # --- Startup Event to SeedTest Data ---
 @app.on_event("startup")
 def startup_event():
-    init_db()
+    # Removed init_db() in favor of Alembic migrations
     db = next(get_db())
 
     # Register Context Engine providers automatically
@@ -545,7 +545,7 @@ def shutdown_event():
 
 @app.get("/api/v1/accounts", response_model=List[CloudAccountSchema])
 def get_accounts(db: Session = Depends(get_db)):
-    accts = db.query(CloudAccountDB).order_by(CloudAccountDB.created_at.desc()).all()
+    accts = cloud_account_repo.get_all_ordered_by_created_at(db)
     # map to camelcase output schema safely
     return [
         CloudAccountSchema(
@@ -559,15 +559,13 @@ def get_accounts(db: Session = Depends(get_db)):
 
 @app.post("/api/v1/accounts", response_model=CloudAccountSchema)
 def add_account(account: CloudAccountSchema, db: Session = Depends(get_db)):
-    db_acct = CloudAccountDB(
-        provider=account.provider,
-        name=account.name,
-        credentials_hint=account.credentialsHint,
-        region=account.region
-    )
-    db.add(db_acct)
-    db.commit()
-    db.refresh(db_acct)
+    obj_in = {
+        "provider": account.provider,
+        "name": account.name,
+        "credentials_hint": account.credentialsHint,
+        "region": account.region
+    }
+    db_acct = cloud_account_repo.create(db, obj_in=obj_in)
     return CloudAccountSchema(
         id=db_acct.id,
         provider=db_acct.provider,
@@ -578,11 +576,9 @@ def add_account(account: CloudAccountSchema, db: Session = Depends(get_db)):
 
 @app.delete("/api/v1/accounts/{account_id}")
 def delete_account(account_id: int, db: Session = Depends(get_db)):
-    db_acct = db.query(CloudAccountDB).filter(CloudAccountDB.id == account_id).first()
+    db_acct = cloud_account_repo.delete(db, id=account_id)
     if not db_acct:
         raise HTTPException(status_code=404, detail="Account not found.")
-    db.delete(db_acct)
-    db.commit()
     return {"status": "SUCCESS", "message": f"Successfully deleted cloud account: {account_id}"}
 
 
@@ -593,10 +589,7 @@ from app.providers.aws.ce import CEAdapter
 @app.get("/api/v1/inventory/resources", response_model=List[DiscoveryResourceSchema])
 def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
     # Fetch real resources
-    query = db.query(ResourceDB)
-    if region and region.lower() != "all":
-        query = query.filter(ResourceDB.region.ilike(region))
-    real_resources = query.all()
+    real_resources = resource_repo.get_by_region(db, region=region)
         
     # Try to map service costs by cloud account
     cloud_cost_map = {}
@@ -705,10 +698,7 @@ def get_resources(region: Optional[str] = None, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/inventory/resources/summary", response_model=ResourceSummarySchema)
 def get_resources_summary(region: Optional[str] = None, db: Session = Depends(get_db)):
-    query = db.query(ResourceDB)
-    if region and region.lower() != "all":
-        query = query.filter(ResourceDB.region.ilike(region))
-    resources = query.all()
+    resources = resource_repo.get_by_region(db, region=region)
     if not resources:
         # Fallback to simulated mapping
         return ResourceSummarySchema(
@@ -736,7 +726,7 @@ def get_resources_summary(region: Optional[str] = None, db: Session = Depends(ge
 
 @app.get("/api/v1/inventory/resources/{resource_id}", response_model=DiscoveryResourceSchema)
 def get_single_resource(resource_id: str, db: Session = Depends(get_db)):
-    res = db.query(ResourceDB).filter(ResourceDB.resource_id == resource_id).first()
+    res = resource_repo.get_by_resource_id(db, resource_id=resource_id)
     if not res:
         raise HTTPException(status_code=404, detail="Resource not found in inventory")
     
@@ -2210,27 +2200,27 @@ def security_group_analysis(request: dict):
 
 @app.get("/api/v1/graph/security-group/{resource_id}")
 def analyze_security_group(resource_id: str):
-    analyzer = SecurityGroupAnalyzer(Neo4jService())
+    analyzer = SecurityGroupAnalyzer(get_knowledge_client())
     return analyzer.analyze(resource_id)
 
 @app.get("/api/v1/graph/attack-path/{resource_id}")
 def analyze_attack_path(resource_id: str):
-    analyzer = AttackPathAnalyzer(Neo4jService())
+    analyzer = AttackPathAnalyzer(get_knowledge_client())
     return analyzer.analyze(resource_id)
 
 @app.get("/api/v1/graph/exposure/{resource_id}")
 def analyze_exposure(resource_id: str):
-    analyzer = ExposureAnalyzer(Neo4jService())
+    analyzer = ExposureAnalyzer(get_knowledge_client())
     return analyzer.analyze(resource_id)
 
 @app.get("/api/v1/graph/iam-analysis/{role_id}")
 def analyze_iam(role_id: str):
-    analyzer = IAMAnalyzer(Neo4jService())
+    analyzer = IAMAnalyzer(get_knowledge_client())
     return analyzer.analyze(role_id)
 
 @app.get("/api/v1/graph/network-analysis/{resource_id}")
 def analyze_network(resource_id: str):
-    analyzer = NetworkAnalyzer(Neo4jService())
+    analyzer = NetworkAnalyzer(get_knowledge_client())
     return analyzer.analyze(resource_id)
 
 @app.get("/api/v1/ai/recommendations")

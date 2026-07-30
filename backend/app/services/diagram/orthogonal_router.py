@@ -77,4 +77,4 @@ class OrthogonalRouter:
         logger.debug(f"Routes created : {len(routed_edges)}")
         logger.debug("======================================")
 
-        return routed_edge
+        return routed_edges

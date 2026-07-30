@@ -37,4 +37,4 @@ class ALBOptimizer:
                 "remediation_type": "AUTOMATIC"
             })
             
-        return recommendation
+        return recommendations

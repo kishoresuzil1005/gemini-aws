@@ -201,4 +201,4 @@ class AlignmentEngine:
 
         nodes = self.snap(nodes)
 
-        return node
+        return nodes

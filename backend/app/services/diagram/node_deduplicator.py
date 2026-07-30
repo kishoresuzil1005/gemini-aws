@@ -1,5 +1,3 @@
-from app.core.logging import get_logger
-logger = get_logger(__name__)
 import logging
 
 logger = logging.getLogger("NodeDeduplicator")
@@ -29,8 +27,6 @@ class NodeDeduplicator:
 
         result = list(unique.values())
 
-        logger.debug(f"Nodes before deduplication: {len(nodes)} | after: {len(result)}")
-
         logger.debug(f"[NodeDeduplicator] Nodes before: {len(nodes)} | after: {len(result)}")
 
-        return resul
+        return result

@@ -48,4 +48,4 @@ class EBSOptimizer:
                 "remediation_type": "AUTOMATIC"
             })
 
-        return recommendation
+        return recommendations

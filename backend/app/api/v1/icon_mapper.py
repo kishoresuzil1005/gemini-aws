@@ -16,4 +16,5 @@ mapper = AWSIconMapper()
 @router.get("/icons")
 def icons():
 
-    return mapper.build()
+    return mapper.ICONS
+

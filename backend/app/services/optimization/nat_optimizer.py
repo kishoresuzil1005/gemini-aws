@@ -35,4 +35,4 @@ class NATOptimizer:
                 "remediation_type": "MANUAL"
             })
             
-        return recommendation
+        return recommendations
