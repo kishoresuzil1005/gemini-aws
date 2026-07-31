@@ -1,4 +1,0 @@
-# Enterprise Architecture Inventory
-
-- Models: ArchitectureProfile, ArchitectureTopology, ArchitecturePattern, ArchitectureAntiPattern, WellArchitectedAssessment, ScalabilityAssessment, ArchitectureModernizationPlan, ArchitectureTradeoff, ArchitectureDecision, ArchitectureAssessment, ArchitectureImplementationReport.
-- Engine: EnterpriseArchitectureIntelligenceEngine.

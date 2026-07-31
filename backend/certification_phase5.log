@@ -1,0 +1,17 @@
+======================================================
+ DEPENDENCY ANALYZER : ENTERPRISE CERTIFICATION SUITE 
+======================================================
+[Correctness] Passed Topological Validation.
+------------------------------------------------------
+[Performance]     100 nodes | Time:   0.20s | Nodes/sec:      495 | Peak Mem:   1.19 MB | Findings: 99
+[Performance]    1000 nodes | Time:   4.52s | Nodes/sec:      221 | Peak Mem:  15.56 MB | Findings: 936
+[Performance]   10000 nodes | Time: 368.25s | Nodes/sec:       27 | Peak Mem: 170.04 MB | Findings: 9585
+[Performance]   50000 nodes | Time: 8675.89s | Nodes/sec:        6 | Peak Mem: 853.41 MB | Findings: 47973
+Traceback (most recent call last):
+  File "/Users/ironman/Downloads/build-your-own-x/gemini-aws/backend/app/tests/analyzers/dependency_engine/test_certification.py", line 148, in <module>
+    test_performance(size)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/ironman/Downloads/build-your-own-x/gemini-aws/backend/app/tests/analyzers/dependency_engine/test_certification.py", line 93, in test_performance
+    assert duration < (num_nodes / 10), f"Scaling violation: {num_nodes} took {duration}s"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Scaling violation: 50000 took 8675.889482021332s
