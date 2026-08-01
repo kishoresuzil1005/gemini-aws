@@ -36,14 +36,23 @@ class OrthogonalRouter:
                 continue
 
             #
-            # Node centers
+            # Node centers (use .get() with defaults to avoid KeyError on missing layout data)
             #
+            src_x = source.get("x", 0)
+            src_y = source.get("y", 0)
+            src_w = source.get("width", 120)
+            src_h = source.get("height", 60)
 
-            sx = source["x"] + source["width"] / 2
-            sy = source["y"] + source["height"] / 2
+            tgt_x = target.get("x", 0)
+            tgt_y = target.get("y", 0)
+            tgt_w = target.get("width", 120)
+            tgt_h = target.get("height", 60)
 
-            tx = target["x"] + target["width"] / 2
-            ty = target["y"] + target["height"] / 2
+            sx = src_x + src_w / 2
+            sy = src_y + src_h / 2
+
+            tx = tgt_x + tgt_w / 2
+            ty = tgt_y + tgt_h / 2
 
             #
             # Midpoint
