@@ -16,7 +16,12 @@ from sqlalchemy.orm import Session
 from .config import is_aws_configured, AWS_DEFAULT_REGION
 from .database import get_db, SessionLocal
 from .models import (
-    ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB, CloudAccountDB
+    ScanHistoryDB, ResourceRelationshipDB, ResourceSnapshotDB, ResourceEdgeDB,
+    CloudAccountDB, ResourceDB, ResourceNodeDB, DiscoveryResourceDB,
+    UserDB, OrganizationDB, SavedMigrationDB, CloudIncidentDB,
+    BackgroundJobDB, MetricDB, LogDB, AlertDB, CostReportDB,
+    AutomationActionDB, PricingCacheDB, OptimizationRecommendationDB,
+    AnomalyDB, BudgetDB, RemediationRequestDB
 )
 from app.repositories import cloud_account_repo, resource_repo
 
