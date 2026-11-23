@@ -174,4 +174,3 @@ class EC2SummaryService:
             
         # Return top 3 recommendations
         return filtered[:3]
-        return filtered[:3]

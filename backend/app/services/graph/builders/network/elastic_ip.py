@@ -23,7 +23,6 @@ class ElasticIPGraphBuilder(BaseGraphBuilder):
                 target_type="NetworkInterface"
             )
             if edge: edges.append(edge)
-            if edge: edges.append(edge)
             
         # ElasticIP -> EC2
         instance_id = NetworkMetadata.get_instance_id(resource)

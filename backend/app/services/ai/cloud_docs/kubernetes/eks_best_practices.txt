@@ -16,7 +16,6 @@ Source: https://aws.github.io/aws-eks-best-practices/
 [English](https://aws.github.io/aws-eks-best-practices/)
 [한국어](https://aws.github.io/aws-eks-best-practices/ko/)
 [aws/aws-eks-best-practices](https://github.com/aws/aws-eks-best-practices)
-[aws/aws-eks-best-practices](https://github.com/aws/aws-eks-best-practices)
 - 
 
 
